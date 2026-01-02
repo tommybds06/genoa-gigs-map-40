@@ -12,11 +12,11 @@ const sampleJobs = [
 
 export function MapPlaceholder() {
   return (
-    <div className="relative w-full h-full bg-muted overflow-hidden">
+    <div className="relative w-full h-full bg-muted overflow-hidden rounded-3xl">
       {/* Stylized map background - representing Genova's terrain */}
       <div className="absolute inset-0">
         {/* Water/Sea */}
-        <div className="absolute bottom-0 left-0 right-0 h-1/4 bg-blue-200/50" />
+        <div className="absolute bottom-0 left-0 right-0 h-1/4 bg-blue-100/60" />
         
         {/* Hills/Terrain Lines */}
         <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
@@ -25,22 +25,22 @@ export function MapPlaceholder() {
             d="M0 70 Q20 60 40 65 T80 55 T100 60"
             fill="none"
             stroke="hsl(var(--muted-foreground))"
-            strokeWidth="0.3"
-            opacity="0.3"
+            strokeWidth="0.2"
+            opacity="0.2"
           />
           <path
             d="M0 50 Q30 40 50 45 T90 35 T100 40"
             fill="none"
             stroke="hsl(var(--muted-foreground))"
-            strokeWidth="0.3"
-            opacity="0.3"
+            strokeWidth="0.2"
+            opacity="0.2"
           />
           <path
             d="M0 30 Q25 20 45 25 T85 15 T100 20"
             fill="none"
             stroke="hsl(var(--muted-foreground))"
-            strokeWidth="0.3"
-            opacity="0.3"
+            strokeWidth="0.2"
+            opacity="0.2"
           />
           
           {/* Roads */}
@@ -48,27 +48,27 @@ export function MapPlaceholder() {
             d="M10 90 L30 50 L60 40 L90 20"
             fill="none"
             stroke="hsl(var(--foreground))"
-            strokeWidth="0.5"
-            opacity="0.2"
+            strokeWidth="0.4"
+            opacity="0.15"
           />
           <path
             d="M0 60 L40 55 L100 50"
             fill="none"
             stroke="hsl(var(--foreground))"
-            strokeWidth="0.5"
-            opacity="0.2"
+            strokeWidth="0.4"
+            opacity="0.15"
           />
         </svg>
 
         {/* Grid overlay */}
         <div
-          className="absolute inset-0 opacity-10"
+          className="absolute inset-0 opacity-5"
           style={{
             backgroundImage: `
               linear-gradient(hsl(var(--foreground)) 1px, transparent 1px),
               linear-gradient(90deg, hsl(var(--foreground)) 1px, transparent 1px)
             `,
-            backgroundSize: "40px 40px",
+            backgroundSize: "50px 50px",
           }}
         />
       </div>
@@ -79,8 +79,8 @@ export function MapPlaceholder() {
         return (
           <button
             key={job.id}
-            className="job-marker absolute transform -translate-x-1/2 -translate-y-1/2 hover:scale-110 transition-transform cursor-pointer animate-bounce-subtle"
-            style={{ top: job.position.top, left: job.position.left, animationDelay: `${job.id * 0.2}s` }}
+            className="job-marker absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer"
+            style={{ top: job.position.top, left: job.position.left }}
           >
             <Icon className="w-5 h-5" />
           </button>
@@ -90,30 +90,30 @@ export function MapPlaceholder() {
       {/* Center Location Marker */}
       <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
         <div className="relative">
-          <MapPin className="w-8 h-8 text-secondary" fill="hsl(var(--secondary))" />
-          <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-3 h-3 bg-secondary/30 rounded-full animate-ping" />
+          <div className="w-4 h-4 bg-blue-500 rounded-full shadow-material-lg" />
+          <div className="absolute -inset-2 bg-blue-500/20 rounded-full animate-pulse-soft" />
         </div>
       </div>
 
-      {/* Location Label */}
-      <div className="absolute bottom-4 left-4 brutal-card-sm px-3 py-2 bg-card">
+      {/* Location Label Card */}
+      <div className="absolute bottom-4 left-4 material-card px-4 py-3">
         <p className="text-sm font-semibold">📍 Genova Centro</p>
         <p className="text-xs text-muted-foreground">6 lavoretti disponibili</p>
       </div>
 
       {/* Zoom Controls */}
       <div className="absolute top-4 right-4 flex flex-col gap-2">
-        <button className="w-10 h-10 brutal-card-sm bg-card flex items-center justify-center text-lg font-bold hover:bg-primary transition-colors">
+        <button className="w-10 h-10 material-card flex items-center justify-center text-lg font-medium hover:bg-muted transition-colors">
           +
         </button>
-        <button className="w-10 h-10 brutal-card-sm bg-card flex items-center justify-center text-lg font-bold hover:bg-primary transition-colors">
+        <button className="w-10 h-10 material-card flex items-center justify-center text-lg font-medium hover:bg-muted transition-colors">
           −
         </button>
       </div>
 
-      {/* "Map-First" Badge */}
-      <div className="absolute top-4 left-4 bg-primary border-2 border-foreground rounded-full px-3 py-1 shadow-brutal-sm">
-        <span className="text-xs font-bold">🗺️ Map-First</span>
+      {/* Map-First Chip */}
+      <div className="absolute top-4 left-4 material-chip-selected">
+        <span className="text-xs font-semibold">🗺️ Map-First</span>
       </div>
     </div>
   );

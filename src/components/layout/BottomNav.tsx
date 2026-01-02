@@ -18,8 +18,8 @@ export function BottomNav() {
   const location = useLocation();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card border-t-2 border-foreground safe-bottom">
-      <div className="flex items-center justify-around h-16">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 material-nav safe-bottom">
+      <div className="flex items-center justify-around h-16 max-w-lg mx-auto">
         {navItems.map((item) => {
           const isActive = location.pathname === item.path;
           const Icon = item.icon;
@@ -28,8 +28,10 @@ export function BottomNav() {
             <Link
               key={item.path}
               to={item.path}
-              className={`flex flex-col items-center justify-center gap-0.5 px-4 py-2 transition-colors ${
-                isActive ? "nav-active" : "nav-inactive hover:text-foreground"
+              className={`flex flex-col items-center justify-center gap-0.5 px-6 py-2 rounded-2xl transition-all duration-200 ${
+                isActive 
+                  ? "nav-active bg-accent" 
+                  : "nav-inactive hover:bg-muted"
               }`}
             >
               <Icon className="w-6 h-6" strokeWidth={isActive ? 2.5 : 2} />
