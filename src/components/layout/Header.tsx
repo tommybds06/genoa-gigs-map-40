@@ -5,7 +5,7 @@ export function Header() {
   const [searchQuery, setSearchQuery] = useState("");
 
   return (
-    <header className="sticky top-0 z-40 bg-background px-4 pt-4 pb-3 safe-top">
+    <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-md px-4 pt-4 pb-3 safe-top">
       {/* Title */}
       <h1 className="text-2xl font-bold text-foreground mb-3">GenoaGigs</h1>
 
@@ -17,13 +17,13 @@ export function Header() {
           placeholder="Cerca lavoretti..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="brutal-input w-full pl-12 pr-4 text-base placeholder:text-muted-foreground"
+          className="material-input w-full pl-12 pr-4 text-base placeholder:text-muted-foreground"
         />
       </div>
 
-      {/* Filter Button */}
+      {/* Filter Chips */}
       <div className="flex items-center gap-2">
-        <button className="filter-pill">
+        <button className="material-chip">
           <SlidersHorizontal className="w-4 h-4" />
           <span>Filtri</span>
         </button>
