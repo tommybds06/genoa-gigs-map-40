@@ -1,12 +1,22 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { Header } from "@/components/layout/Header";
+import { BottomNav } from "@/components/layout/BottomNav";
+import { MapPlaceholder } from "@/components/map/MapPlaceholder";
 
 const Index = () => {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
+    <div className="flex flex-col h-screen bg-background">
+      {/* Header with Search */}
+      <Header />
+
+      {/* Map Container - Takes remaining space */}
+      <main className="flex-1 px-4 pb-20 overflow-hidden">
+        <div className="map-container w-full h-full">
+          <MapPlaceholder />
+        </div>
+      </main>
+
+      {/* Bottom Navigation */}
+      <BottomNav />
     </div>
   );
 };
