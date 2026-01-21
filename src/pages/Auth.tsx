@@ -162,7 +162,7 @@ const Auth = () => {
                     }`}>
                       <GraduationCap className="w-6 h-6" />
                     </div>
-                    <h3 className="font-semibold text-sm text-foreground">Cerco Lavoretti</h3>
+                    <h3 className="font-semibold text-sm text-foreground">Cerco Impiego</h3>
                     <p className="text-xs text-muted-foreground mt-1">Sono uno Studente</p>
                     {selectedRole === 'worker' && (
                       <div className="absolute top-2 right-2 w-3 h-3 bg-secondary rounded-full" />
@@ -184,7 +184,7 @@ const Auth = () => {
                     }`}>
                       <Store className="w-6 h-6" />
                     </div>
-                    <h3 className="font-semibold text-sm text-foreground">Offro Lavoretti</h3>
+                    <h3 className="font-semibold text-sm text-foreground">Offro Impiego</h3>
                     <p className="text-xs text-muted-foreground mt-1">Privato o Attività</p>
                     {selectedRole === 'employer' && (
                       <div className="absolute top-2 right-2 w-3 h-3 bg-secondary rounded-full" />
@@ -219,7 +219,7 @@ const Auth = () => {
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
                   type="email"
-                  placeholder="studente@unige.it"
+                  placeholder="mario.rossi@email.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="material-input pl-12 h-12 rounded-xl bg-muted border-none focus:ring-2 focus:ring-primary"
