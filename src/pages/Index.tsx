@@ -1,6 +1,6 @@
 import { Header } from "@/components/layout/Header";
 import { BottomNav } from "@/components/layout/BottomNav";
-import { MapPlaceholder } from "@/components/map/MapPlaceholder";
+import { InteractiveMap } from "@/components/map/InteractiveMap";
 
 const Index = () => {
   return (
@@ -10,8 +10,8 @@ const Index = () => {
 
       {/* Map Container - Takes remaining space */}
       <main className="flex-1 px-4 pb-20 overflow-hidden">
-        <div className="map-container w-full h-full">
-          <MapPlaceholder />
+        <div className="map-container w-full h-full rounded-3xl overflow-hidden">
+          <InteractiveMap />
         </div>
       </main>
 
