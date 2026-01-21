@@ -99,12 +99,12 @@ const Auth = () => {
         const { error } = await signIn(email, password);
         if (error) {
           if (error.message.includes('Invalid login credentials')) {
-            toast.error('Email o password non corretti');
+            toast.error('Email o password non corretti', { duration: 2000 });
           } else {
-            toast.error(error.message);
+            toast.error(error.message, { duration: 2000 });
           }
         } else {
-          toast.success('Benvenuto su GenoaGigs!');
+          toast.success('Bentornato!', { duration: 2000 });
           // Redirect will be handled by useEffect after checking onboarding status
         }
       } else {
@@ -117,12 +117,12 @@ const Auth = () => {
         const { error } = await signUp(email, password, selectedRole, fullName || undefined);
         if (error) {
           if (error.message.includes('already registered')) {
-            toast.error('Email già registrata. Prova ad accedere.');
+            toast.error('Email già registrata.', { duration: 2000 });
           } else {
-            toast.error(error.message);
+            toast.error(error.message, { duration: 2000 });
           }
         } else {
-          toast.success('Account creato! Benvenuto su GenoaGigs!');
+          toast.success('Benvenuto!', { duration: 2000 });
           // Redirect will be handled by useEffect - new users go to onboarding
         }
       }
@@ -213,12 +213,14 @@ const Auth = () => {
             {/* Full Name (only for signup) */}
             {!isLogin && (
               <div className="space-y-2">
-                <label className="text-sm font-medium text-foreground">Nome completo</label>
+                <label className="text-sm font-medium text-foreground">
+                  {selectedRole === 'employer' ? 'Nome attività (se ne si ha una)' : 'Nome completo'}
+                </label>
                 <div className="relative">
                   <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                   <Input
                     type="text"
-                    placeholder="Mario Rossi"
+                    placeholder={selectedRole === 'employer' ? 'Trattoria Da Luigi' : 'Mario Rossi'}
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     className="material-input pl-12 h-12 rounded-xl bg-muted border-none focus:ring-2 focus:ring-primary"

@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import Map, { Marker, Popup, NavigationControl } from "react-map-gl";
-import { GraduationCap, Truck, PartyPopper, Briefcase, Clock, ChevronRight } from "lucide-react";
+import { GraduationCap, Truck, PartyPopper, Briefcase, Clock, ChevronRight, Bike, Utensils, Coffee, BookOpen, Sparkles, Laptop, Palette } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { JobDetailsSheet } from "./JobDetailsSheet";
 import { supabase } from "@/integrations/supabase/client";
@@ -115,9 +115,27 @@ const sampleJobs = [
   },
 ];
 
+// Helper function to get icon based on job tags
+const getIconFromTags = (tags: string[] | null): typeof Briefcase => {
+  if (!tags || tags.length === 0) return Briefcase;
+  
+  const tagsLower = tags.map(t => t.toLowerCase());
+  
+  // Check for specific tag matches
+  if (tagsLower.some(t => t.includes('rider') || t.includes('consegn'))) return Bike;
+  if (tagsLower.some(t => t.includes('cameriere') || t.includes('bar') || t.includes('cassa'))) return Utensils;
+  if (tagsLower.some(t => t.includes('ripetizioni') || t.includes('studio'))) return GraduationCap;
+  if (tagsLower.some(t => t.includes('pulizie'))) return Sparkles;
+  if (tagsLower.some(t => t.includes('grafico') || t.includes('design'))) return Palette;
+  if (tagsLower.some(t => t.includes('tech') || t.includes('software') || t.includes('social'))) return Laptop;
+  if (tagsLower.some(t => t.includes('staff') || t.includes('event'))) return PartyPopper;
+  
+  return Briefcase; // Default
+};
+
 const categoryIcons: Record<string, typeof GraduationCap> = {
   tutoring: GraduationCap,
-  delivery: Truck,
+  delivery: Bike,
   event: PartyPopper,
   general: Briefcase,
 };
@@ -227,7 +245,8 @@ export function InteractiveMap() {
         <NavigationControl position="top-right" showCompass={false} />
 
         {sampleJobs.map((job) => {
-          const Icon = categoryIcons[job.category] || Briefcase;
+          // Use dynamic icon based on tags
+          const Icon = getIconFromTags(job.tags);
 
           return (
             <Marker
@@ -360,7 +379,8 @@ function MapFallback({
 
       {/* Job Markers */}
       {jobs.map((job, index) => {
-        const Icon = categoryIcons[job.category] || Briefcase;
+        // Use dynamic icon based on tags
+        const Icon = getIconFromTags(job.tags);
         const positions = [
           { top: "25%", left: "30%" },
           { top: "45%", left: "60%" },

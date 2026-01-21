@@ -39,11 +39,11 @@ const Profilo = () => {
   const handleSaveTags = async () => {
     try {
       await updateTags(selectedTags);
-      toast.success("Tag aggiornati!");
+      toast.success("Tag aggiornati!", { duration: 2000 });
       setHasChanges(false);
       setEditMode(false);
     } catch (error) {
-      toast.error("Errore nell'aggiornamento dei tag");
+      toast.error("Errore aggiornamento", { duration: 2000 });
     }
   };
 
@@ -182,17 +182,19 @@ const Profilo = () => {
           )}
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-2 gap-3 mb-4">
-          <div className="material-card p-4 text-center animate-fade-in" style={{ animationDelay: "0.1s" }}>
-            <div className={`text-2xl font-bold ${primaryTextClasses}`}>{profile?.xp_points || 0}</div>
-            <div className="text-sm text-muted-foreground">Punti XP</div>
+        {/* Stats (Worker only - no gamification for Employers) */}
+        {!isEmployer && (
+          <div className="grid grid-cols-2 gap-3 mb-4">
+            <div className="material-card p-4 text-center animate-fade-in" style={{ animationDelay: "0.1s" }}>
+              <div className={`text-2xl font-bold ${primaryTextClasses}`}>{profile?.xp_points || 0}</div>
+              <div className="text-sm text-muted-foreground">Punti XP</div>
+            </div>
+            <div className="material-card p-4 text-center animate-fade-in" style={{ animationDelay: "0.15s" }}>
+              <div className={`text-2xl font-bold ${theme.secondaryText}`}>Lv.{profile?.level || 1}</div>
+              <div className="text-sm text-muted-foreground">Livello</div>
+            </div>
           </div>
-          <div className="material-card p-4 text-center animate-fade-in" style={{ animationDelay: "0.15s" }}>
-            <div className={`text-2xl font-bold ${theme.secondaryText}`}>Lv.{profile?.level || 1}</div>
-            <div className="text-sm text-muted-foreground">Livello</div>
-          </div>
-        </div>
+        )}
 
         {/* Bio Section */}
         {profile?.bio && (
