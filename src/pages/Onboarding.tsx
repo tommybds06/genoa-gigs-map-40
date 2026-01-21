@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { useProfile } from '@/hooks/useProfile';
+import { useUser } from '@/contexts/UserContext';
+import { useAppTheme } from '@/hooks/useAppTheme';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -14,7 +15,8 @@ import { Instagram, Globe, User, Briefcase, Camera, Hash, Loader2, Store, Search
 
 const Onboarding = () => {
   const { user } = useAuth();
-  const { profile, loading: profileLoading } = useProfile();
+  const { profile, loading: profileLoading } = useUser();
+  const { theme, isEmployer } = useAppTheme();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   
@@ -31,9 +33,8 @@ const Onboarding = () => {
   // Employer-specific fields
   const [lookingFor, setLookingFor] = useState('');
   
+  
   const [errors, setErrors] = useState<{ bio?: string; tags?: string; lookingFor?: string }>({});
-
-  const isEmployer = profile?.role === 'employer';
 
   const validateForm = (): boolean => {
     const newErrors: { bio?: string; tags?: string; lookingFor?: string } = {};
@@ -113,11 +114,11 @@ const Onboarding = () => {
     );
   }
 
-  // Theme classes based on role
-  const headerBgClass = isEmployer ? 'bg-blue-600' : 'bg-primary';
-  const headerTextClass = isEmployer ? 'text-white' : 'text-primary-foreground';
-  const buttonBgClass = isEmployer ? 'bg-blue-600 hover:bg-blue-700' : 'bg-primary hover:bg-primary/90';
-  const iconColorClass = isEmployer ? 'text-blue-600' : 'text-primary';
+  // Theme classes based on role using the centralized hook
+  const headerBgClass = theme.headerBg;
+  const headerTextClass = theme.headerText;
+  const buttonBgClass = `${theme.btnFilled} ${theme.btnFilledHover}`;
+  const iconColorClass = theme.primaryText;
 
   return (
     <div className="min-h-screen bg-background">

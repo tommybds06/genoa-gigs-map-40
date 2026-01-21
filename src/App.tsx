@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
+import { UserProvider } from "@/contexts/UserContext";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import Index from "./pages/Index";
 import Lista from "./pages/Lista";
@@ -19,22 +20,24 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
-            <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
-            <Route path="/lista" element={<ProtectedRoute><Lista /></ProtectedRoute>} />
-            <Route path="/annunci" element={<ProtectedRoute><Annunci /></ProtectedRoute>} />
-            <Route path="/messaggi" element={<ProtectedRoute><Messaggi /></ProtectedRoute>} />
-            <Route path="/profilo" element={<ProtectedRoute><Profilo /></ProtectedRoute>} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
+      <UserProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
+              <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+              <Route path="/lista" element={<ProtectedRoute><Lista /></ProtectedRoute>} />
+              <Route path="/annunci" element={<ProtectedRoute><Annunci /></ProtectedRoute>} />
+              <Route path="/messaggi" element={<ProtectedRoute><Messaggi /></ProtectedRoute>} />
+              <Route path="/profilo" element={<ProtectedRoute><Profilo /></ProtectedRoute>} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </UserProvider>
     </AuthProvider>
   </QueryClientProvider>
 );

@@ -3,7 +3,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Star, Clock, MapPin, GraduationCap, Truck, PartyPopper, Briefcase, Eye } from "lucide-react";
-import { useRoleTheme } from "@/hooks/useRoleTheme";
+import { useUser } from "@/contexts/UserContext";
+import { useAppTheme } from "@/hooks/useAppTheme";
 
 interface JobOwner {
   name: string;
@@ -52,13 +53,19 @@ const categoryColors: Record<string, string> = {
 };
 
 export function JobDetailsSheet({ job, isOpen, onClose }: JobDetailsSheetProps) {
-  const { isEmployer } = useRoleTheme();
+  const { isEmployer } = useUser();
+  const { theme } = useAppTheme();
   
   if (!job) return null;
 
   const Icon = categoryIcons[job.category] || Briefcase;
   const categoryLabel = categoryLabels[job.category] || "Altro";
   const categoryColor = categoryColors[job.category] || "bg-muted text-muted-foreground";
+
+  // Dynamic button class based on role
+  const candidateButtonClass = isEmployer 
+    ? "bg-blue-600 hover:bg-blue-700" 
+    : "bg-secondary hover:bg-secondary/90";
 
   return (
     <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -85,7 +92,7 @@ export function JobDetailsSheet({ job, isOpen, onClose }: JobDetailsSheetProps) 
                 <SheetTitle className="text-2xl font-bold text-foreground leading-tight">
                   {job.title}
                 </SheetTitle>
-                <Badge className="bg-primary text-primary-foreground font-bold text-base px-3 py-1.5 rounded-full shrink-0">
+                <Badge className={`${theme.btnFilled} font-bold text-base px-3 py-1.5 rounded-full shrink-0`}>
                   {job.price}
                 </Badge>
               </div>
@@ -105,15 +112,15 @@ export function JobDetailsSheet({ job, isOpen, onClose }: JobDetailsSheetProps) 
             <div className="py-4 border-t border-b border-border">
               <h3 className="text-sm font-semibold text-muted-foreground mb-3">CHI OFFRE</h3>
               <div className="flex items-center gap-3">
-                <Avatar className="w-12 h-12 border-2 border-primary/20">
-                  <AvatarFallback className="bg-secondary text-secondary-foreground font-bold">
+                <Avatar className={`w-12 h-12 border-2 ${isEmployer ? "border-blue-600/20" : "border-primary/20"}`}>
+                  <AvatarFallback className={`${theme.accentBg} ${theme.accentText} font-bold`}>
                     {job.owner.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1">
                   <p className="font-semibold text-foreground">{job.owner.name}</p>
                   <div className="flex items-center gap-1">
-                    <Star className="w-4 h-4 fill-primary text-primary" />
+                    <Star className={`w-4 h-4 ${theme.primaryText} fill-current`} />
                     <span className="font-medium text-sm">{job.owner.rating}</span>
                     <span className="text-muted-foreground text-sm">
                       ({job.owner.reviewCount} recensioni)
@@ -146,7 +153,7 @@ export function JobDetailsSheet({ job, isOpen, onClose }: JobDetailsSheetProps) 
                 
                 {/* Center marker */}
                 <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                  <div className="w-6 h-6 bg-secondary rounded-full flex items-center justify-center shadow-md">
+                  <div className={`w-6 h-6 ${theme.primary} rounded-full flex items-center justify-center shadow-md`}>
                     <MapPin className="w-4 h-4 text-white" />
                   </div>
                 </div>
@@ -168,7 +175,7 @@ export function JobDetailsSheet({ job, isOpen, onClose }: JobDetailsSheetProps) 
               </div>
             ) : (
               <Button 
-                className="w-full h-14 bg-secondary hover:bg-secondary/90 text-white font-bold text-lg rounded-xl shadow-material-md"
+                className={`w-full h-14 ${candidateButtonClass} text-white font-bold text-lg rounded-xl shadow-material-md`}
                 onClick={onClose}
               >
                 Candidati Ora

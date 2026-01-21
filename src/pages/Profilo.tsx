@@ -1,14 +1,17 @@
 import { BottomNav } from "@/components/layout/BottomNav";
 import { User, Star, MapPin, Briefcase, Settings, LogOut, Save, Instagram, Globe, ChevronLeft, ChevronRight } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { useProfile } from "@/hooks/useProfile";
+import { useUser } from "@/contexts/UserContext";
+import { useAppTheme } from "@/hooks/useAppTheme";
 import { useNavigate } from "react-router-dom";
 import { TagSelector, TagBadges } from "@/components/tags/TagSelector";
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
 
 const Profilo = () => {
   const { user, signOut } = useAuth();
-  const { profile, loading, updateTags } = useProfile();
+  const { profile, loading, updateTags } = useUser();
+  const { theme, isEmployer } = useAppTheme();
   const navigate = useNavigate();
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [hasChanges, setHasChanges] = useState(false);
@@ -34,9 +37,14 @@ const Profilo = () => {
   };
 
   const handleSaveTags = async () => {
-    await updateTags(selectedTags);
-    setHasChanges(false);
-    setEditMode(false);
+    try {
+      await updateTags(selectedTags);
+      toast.success("Tag aggiornati!");
+      setHasChanges(false);
+      setEditMode(false);
+    } catch (error) {
+      toast.error("Errore nell'aggiornamento dei tag");
+    }
   };
 
   const nextPhoto = () => {
@@ -50,6 +58,11 @@ const Profilo = () => {
       setCurrentPhotoIndex((prev) => (prev - 1 + profile.photos.length) % profile.photos.length);
     }
   };
+
+  // Dynamic classes based on role
+  const primaryBtnClasses = `${theme.btnFilled} ${theme.btnFilledHover}`;
+  const accentBgClasses = theme.accentBg;
+  const primaryTextClasses = theme.primaryText;
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
@@ -98,7 +111,7 @@ const Profilo = () => {
                       onClick={() => setCurrentPhotoIndex(index)}
                       className={`w-2 h-2 rounded-full transition-all ${
                         index === currentPhotoIndex
-                          ? "bg-primary w-4"
+                          ? `${theme.primary} w-4`
                           : "bg-background/60"
                       }`}
                     />
@@ -112,7 +125,7 @@ const Profilo = () => {
         {/* Profile Card */}
         <div className="material-card-elevated p-6 mb-4 animate-fade-in">
           <div className="flex items-center gap-4">
-            <div className="w-20 h-20 bg-primary text-primary-foreground rounded-full flex items-center justify-center shadow-material-md overflow-hidden">
+            <div className={`w-20 h-20 ${theme.primary} text-white rounded-full flex items-center justify-center shadow-material-md overflow-hidden`}>
               {profile?.photos && profile.photos.length > 0 ? (
                 <img 
                   src={profile.photos[0]} 
@@ -126,10 +139,16 @@ const Profilo = () => {
             <div>
               <h2 className="text-xl font-bold">{profile?.full_name || user?.user_metadata?.full_name || "Utente"}</h2>
               <p className="text-muted-foreground text-sm mb-1">{user?.email}</p>
-              <div className="flex items-center gap-1 text-primary">
-                <Star className="w-4 h-4" fill="currentColor" />
-                <span className="font-semibold text-sm">4.8</span>
-                <span className="text-muted-foreground text-sm">(12 recensioni)</span>
+              <div className="flex items-center gap-2">
+                <span className={`font-medium text-sm ${primaryTextClasses}`}>
+                  {isEmployer ? "Employer" : "Worker"}
+                </span>
+                <span className="text-muted-foreground text-sm">•</span>
+                <div className={`flex items-center gap-1 ${primaryTextClasses}`}>
+                  <Star className="w-4 h-4" fill="currentColor" />
+                  <span className="font-semibold text-sm">4.8</span>
+                  <span className="text-muted-foreground text-sm">(12)</span>
+                </div>
               </div>
             </div>
           </div>
@@ -166,11 +185,11 @@ const Profilo = () => {
         {/* Stats */}
         <div className="grid grid-cols-2 gap-3 mb-4">
           <div className="material-card p-4 text-center animate-fade-in" style={{ animationDelay: "0.1s" }}>
-            <div className="text-2xl font-bold text-primary">{profile?.xp_points || 0}</div>
+            <div className={`text-2xl font-bold ${primaryTextClasses}`}>{profile?.xp_points || 0}</div>
             <div className="text-sm text-muted-foreground">Punti XP</div>
           </div>
           <div className="material-card p-4 text-center animate-fade-in" style={{ animationDelay: "0.15s" }}>
-            <div className="text-2xl font-bold text-secondary">Lv.{profile?.level || 1}</div>
+            <div className={`text-2xl font-bold ${theme.secondaryText}`}>Lv.{profile?.level || 1}</div>
             <div className="text-sm text-muted-foreground">Livello</div>
           </div>
         </div>
@@ -178,61 +197,76 @@ const Profilo = () => {
         {/* Bio Section */}
         {profile?.bio && (
           <div className="material-card p-4 mb-4 animate-fade-in" style={{ animationDelay: "0.2s" }}>
-            <h3 className="font-semibold mb-2">Presentazione</h3>
+            <h3 className="font-semibold mb-2">
+              {isEmployer ? "Descrizione Attività" : "Presentazione"}
+            </h3>
             <p className="text-sm text-muted-foreground leading-relaxed">{profile.bio}</p>
           </div>
         )}
 
-        {/* Experience Section */}
-        {profile?.experience && (
+        {/* Looking For Section (Employer only) */}
+        {isEmployer && profile?.looking_for && (
           <div className="material-card p-4 mb-4 animate-fade-in" style={{ animationDelay: "0.25s" }}>
             <h3 className="font-semibold mb-2 flex items-center gap-2">
-              <Briefcase className="w-4 h-4 text-primary" />
+              <Briefcase className={`w-4 h-4 ${primaryTextClasses}`} />
+              Chi cerco
+            </h3>
+            <p className="text-sm text-muted-foreground leading-relaxed">{profile.looking_for}</p>
+          </div>
+        )}
+
+        {/* Experience Section (Worker only) */}
+        {!isEmployer && profile?.experience && (
+          <div className="material-card p-4 mb-4 animate-fade-in" style={{ animationDelay: "0.25s" }}>
+            <h3 className="font-semibold mb-2 flex items-center gap-2">
+              <Briefcase className={`w-4 h-4 ${primaryTextClasses}`} />
               Esperienze
             </h3>
             <p className="text-sm text-muted-foreground leading-relaxed">{profile.experience}</p>
           </div>
         )}
 
-        {/* Tags Display / Edit */}
-        <div className="material-card p-4 mb-4 animate-fade-in" style={{ animationDelay: "0.3s" }}>
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="font-semibold">I tuoi Interessi</h3>
-            <div className="flex gap-2">
-              {hasChanges && (
-                <button 
-                  onClick={handleSaveTags}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-primary-foreground rounded-full text-sm font-medium hover:bg-primary/90 transition-colors"
-                >
-                  <Save className="w-4 h-4" />
-                  Salva
-                </button>
-              )}
-              {!editMode && (
-                <button 
-                  onClick={() => setEditMode(true)}
-                  className="text-sm text-primary font-medium"
-                >
-                  Modifica
-                </button>
-              )}
+        {/* Tags Display / Edit (Worker only) */}
+        {!isEmployer && (
+          <div className="material-card p-4 mb-4 animate-fade-in" style={{ animationDelay: "0.3s" }}>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-semibold">I tuoi Interessi</h3>
+              <div className="flex gap-2">
+                {hasChanges && (
+                  <button 
+                    onClick={handleSaveTags}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${primaryBtnClasses}`}
+                  >
+                    <Save className="w-4 h-4" />
+                    Salva
+                  </button>
+                )}
+                {!editMode && (
+                  <button 
+                    onClick={() => setEditMode(true)}
+                    className={`text-sm font-medium ${primaryTextClasses}`}
+                  >
+                    Modifica
+                  </button>
+                )}
+              </div>
             </div>
+            
+            {editMode ? (
+              <>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Seleziona i tag per personalizzare la tua esperienza nella Lista
+                </p>
+                <TagSelector 
+                  selectedTags={selectedTags} 
+                  onChange={setSelectedTags} 
+                />
+              </>
+            ) : (
+              <TagBadges tags={selectedTags} />
+            )}
           </div>
-          
-          {editMode ? (
-            <>
-              <p className="text-sm text-muted-foreground mb-4">
-                Seleziona i tag per personalizzare la tua esperienza nella Lista
-              </p>
-              <TagSelector 
-                selectedTags={selectedTags} 
-                onChange={setSelectedTags} 
-              />
-            </>
-          ) : (
-            <TagBadges tags={selectedTags} />
-          )}
-        </div>
+        )}
 
         {/* Info */}
         <div className="material-card p-4 mb-4 animate-fade-in" style={{ animationDelay: "0.35s" }}>
@@ -244,7 +278,7 @@ const Profilo = () => {
             </div>
             <div className="flex items-center gap-3 text-sm">
               <Briefcase className="w-4 h-4 text-muted-foreground" />
-              <span>Ruolo: {profile?.role === "employer" ? "Datore di Lavoro" : "Lavoratore"}</span>
+              <span>Ruolo: <span className={`font-medium ${primaryTextClasses}`}>{isEmployer ? "Employer" : "Worker"}</span></span>
             </div>
           </div>
         </div>
