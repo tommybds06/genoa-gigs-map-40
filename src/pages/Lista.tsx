@@ -1,100 +1,231 @@
 import { Header } from "@/components/layout/Header";
 import { BottomNav } from "@/components/layout/BottomNav";
-import { GraduationCap, Truck, PartyPopper, MapPin, Clock, Euro } from "lucide-react";
+import { GraduationCap, Truck, PartyPopper, MapPin, Clock, Euro, Briefcase, SearchX, Tag } from "lucide-react";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { useProfile } from "@/hooks/useProfile";
+import { TagBadges } from "@/components/tags/TagSelector";
+import { Link } from "react-router-dom";
 
-const sampleJobs = [
-  {
-    id: 1,
-    title: "Ripetizioni di Matematica",
-    category: "Ripetizioni",
-    icon: GraduationCap,
-    location: "Castelletto",
-    distance: "1.2 km",
-    pay: "15€/ora",
-    time: "2 ore fa",
-  },
-  {
-    id: 2,
-    title: "Consegna Spesa Centro",
-    category: "Consegne",
-    icon: Truck,
-    location: "Centro Storico",
-    distance: "0.8 km",
-    pay: "10€",
-    time: "30 min fa",
-  },
-  {
-    id: 3,
-    title: "Staff Evento Universitario",
-    category: "Eventi",
-    icon: PartyPopper,
-    location: "Porto Antico",
-    distance: "2.1 km",
-    pay: "50€",
-    time: "1 ora fa",
-  },
-  {
-    id: 4,
-    title: "Aiuto Trasloco Studente",
-    category: "Generale",
-    icon: Truck,
-    location: "Sampierdarena",
-    distance: "3.5 km",
-    pay: "25€",
-    time: "5 ore fa",
-  },
-];
+interface Job {
+  id: string;
+  title: string;
+  category: string | null;
+  description: string | null;
+  price: string | null;
+  lat: number | null;
+  lng: number | null;
+  created_at: string;
+  tags: string[];
+  owner_id: string;
+}
+
+const categoryIcons: Record<string, typeof GraduationCap> = {
+  tutoring: GraduationCap,
+  delivery: Truck,
+  event: PartyPopper,
+  general: Briefcase,
+};
+
+const categoryLabels: Record<string, string> = {
+  tutoring: "Ripetizioni",
+  delivery: "Consegne",
+  event: "Eventi",
+  general: "Generale",
+};
+
+function getTimeAgo(dateString: string): string {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+
+  if (diffMins < 60) return `${diffMins} min fa`;
+  if (diffHours < 24) return `${diffHours} ore fa`;
+  return `${diffDays} giorni fa`;
+}
 
 const Lista = () => {
+  const { user } = useAuth();
+  const { profile, loading: profileLoading } = useProfile();
+  const [jobs, setJobs] = useState<Job[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchJobs = async () => {
+      if (!user || profileLoading) return;
+      
+      setLoading(true);
+      
+      try {
+        // If employer, show only their own jobs
+        if (profile?.role === "employer") {
+          const { data, error } = await supabase
+            .from("jobs")
+            .select("*")
+            .eq("owner_id", user.id)
+            .order("created_at", { ascending: false });
+          
+          if (error) throw error;
+          setJobs((data || []).map(j => ({ ...j, tags: j.tags || [] })));
+        } else {
+          // Worker: show jobs matching their tags
+          const userTags = profile?.tags || [];
+          
+          if (userTags.length === 0) {
+            // No tags selected, show empty state
+            setJobs([]);
+          } else {
+            // Fetch jobs with overlapping tags
+            const { data, error } = await supabase
+              .from("jobs")
+              .select("*")
+              .eq("status", "open")
+              .overlaps("tags", userTags)
+              .order("created_at", { ascending: false });
+            
+            if (error) throw error;
+            setJobs((data || []).map(j => ({ ...j, tags: j.tags || [] })));
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching jobs:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchJobs();
+  }, [user, profile, profileLoading]);
+
+  const isEmployer = profile?.role === "employer";
+
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <Header />
 
       <main className="flex-1 px-4 pb-20 overflow-y-auto">
-        <h2 className="text-lg font-semibold mb-3">Lavoretti Disponibili</h2>
+        <h2 className="text-lg font-semibold mb-3">
+          {isEmployer ? "I Tuoi Annunci" : "Impieghi per Te"}
+        </h2>
         
-        <div className="space-y-3">
-          {sampleJobs.map((job, index) => {
-            const Icon = job.icon;
-            return (
-              <div 
-                key={job.id} 
-                className="material-card p-4 animate-fade-in"
-                style={{ animationDelay: `${index * 0.05}s` }}
-              >
+        {loading ? (
+          <div className="space-y-3">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="material-card p-4 animate-pulse">
                 <div className="flex items-start gap-3">
-                  <div className="w-12 h-12 bg-accent text-accent-foreground rounded-2xl flex items-center justify-center shrink-0">
-                    <Icon className="w-5 h-5" />
+                  <div className="w-12 h-12 bg-muted rounded-2xl"></div>
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 bg-muted rounded w-3/4"></div>
+                    <div className="h-3 bg-muted rounded w-1/2"></div>
+                    <div className="h-3 bg-muted rounded w-1/3"></div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-base truncate">{job.title}</h3>
-                    <p className="text-sm text-muted-foreground mb-2">{job.category}</p>
-                    
-                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
-                      <span className="inline-flex items-center gap-1 text-muted-foreground">
-                        <MapPin className="w-3.5 h-3.5" />
-                        {job.location} · {job.distance}
-                      </span>
-                      <span className="inline-flex items-center gap-1 text-primary font-semibold">
-                        <Euro className="w-3.5 h-3.5" />
-                        {job.pay}
-                      </span>
-                    </div>
-                  </div>
-                  <span className="text-xs text-muted-foreground flex items-center gap-1 shrink-0">
-                    <Clock className="w-3 h-3" />
-                    {job.time}
-                  </span>
                 </div>
               </div>
-            );
-          })}
-        </div>
+            ))}
+          </div>
+        ) : jobs.length === 0 ? (
+          <EmptyState isEmployer={isEmployer} hasTags={(profile?.tags?.length || 0) > 0} />
+        ) : (
+          <div className="space-y-3">
+            {jobs.map((job, index) => {
+              const Icon = categoryIcons[job.category || "general"] || Briefcase;
+              const categoryLabel = categoryLabels[job.category || "general"] || "Generale";
+              
+              return (
+                <div 
+                  key={job.id} 
+                  className="material-card p-4 animate-fade-in"
+                  style={{ animationDelay: `${index * 0.05}s` }}
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="w-12 h-12 bg-accent text-accent-foreground rounded-2xl flex items-center justify-center shrink-0">
+                      <Icon className="w-5 h-5" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-base truncate">{job.title}</h3>
+                      <p className="text-sm text-muted-foreground mb-2">{categoryLabel}</p>
+                      
+                      {job.tags && job.tags.length > 0 && (
+                        <TagBadges tags={job.tags} className="mb-2" />
+                      )}
+                      
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+                        {job.lat && job.lng && (
+                          <span className="inline-flex items-center gap-1 text-muted-foreground">
+                            <MapPin className="w-3.5 h-3.5" />
+                            Genova
+                          </span>
+                        )}
+                        {job.price && (
+                          <span className="inline-flex items-center gap-1 text-primary font-semibold">
+                            <Euro className="w-3.5 h-3.5" />
+                            {job.price}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <span className="text-xs text-muted-foreground flex items-center gap-1 shrink-0">
+                      <Clock className="w-3 h-3" />
+                      {getTimeAgo(job.created_at)}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </main>
 
       <BottomNav />
     </div>
   );
 };
+
+function EmptyState({ isEmployer, hasTags }: { isEmployer: boolean; hasTags: boolean }) {
+  if (isEmployer) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 text-center">
+        <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-4">
+          <Briefcase className="w-8 h-8 text-muted-foreground" />
+        </div>
+        <h3 className="font-semibold text-lg mb-2">Nessun annuncio creato</h3>
+        <p className="text-muted-foreground text-sm max-w-xs">
+          Crea il tuo primo annuncio di lavoro per trovare lavoratori
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col items-center justify-center py-16 text-center">
+      <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-4">
+        {hasTags ? (
+          <SearchX className="w-8 h-8 text-muted-foreground" />
+        ) : (
+          <Tag className="w-8 h-8 text-muted-foreground" />
+        )}
+      </div>
+      <h3 className="font-semibold text-lg mb-2">
+        {hasTags ? "Nessun lavoro trovato" : "Imposta i tuoi interessi"}
+      </h3>
+      <p className="text-muted-foreground text-sm max-w-xs mb-4">
+        {hasTags 
+          ? "Non ci sono lavori che corrispondono ai tuoi tag. Prova a modificarli o cerca sulla Mappa!" 
+          : "Seleziona i tag nel tuo profilo per vedere i lavori personalizzati per te"
+        }
+      </p>
+      <Link 
+        to="/profilo" 
+        className="px-4 py-2 bg-primary text-primary-foreground rounded-full text-sm font-medium hover:bg-primary/90 transition-colors"
+      >
+        {hasTags ? "Modifica Tag" : "Vai al Profilo"}
+      </Link>
+    </div>
+  );
+}
 
 export default Lista;
