@@ -2,7 +2,8 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Star, Clock, MapPin, GraduationCap, Truck, PartyPopper, Briefcase } from "lucide-react";
+import { Star, Clock, MapPin, GraduationCap, Truck, PartyPopper, Briefcase, Eye } from "lucide-react";
+import { useRoleTheme } from "@/hooks/useRoleTheme";
 
 interface JobOwner {
   name: string;
@@ -51,6 +52,8 @@ const categoryColors: Record<string, string> = {
 };
 
 export function JobDetailsSheet({ job, isOpen, onClose }: JobDetailsSheetProps) {
+  const { isEmployer } = useRoleTheme();
+  
   if (!job) return null;
 
   const Icon = categoryIcons[job.category] || Briefcase;
@@ -158,12 +161,19 @@ export function JobDetailsSheet({ job, isOpen, onClose }: JobDetailsSheetProps) 
 
           {/* Sticky Footer */}
           <div className="absolute bottom-0 left-0 right-0 p-4 bg-background border-t border-border">
-            <Button 
-              className="w-full h-14 bg-secondary hover:bg-secondary/90 text-white font-bold text-lg rounded-xl shadow-material-md"
-              onClick={onClose}
-            >
-              Candidati Ora
-            </Button>
+            {isEmployer ? (
+              <div className="flex items-center justify-center gap-2 text-muted-foreground py-4">
+                <Eye className="w-5 h-5" />
+                <span className="text-sm font-medium">Visualizzazione anteprima Employer</span>
+              </div>
+            ) : (
+              <Button 
+                className="w-full h-14 bg-secondary hover:bg-secondary/90 text-white font-bold text-lg rounded-xl shadow-material-md"
+                onClick={onClose}
+              >
+                Candidati Ora
+              </Button>
+            )}
           </div>
         </div>
       </SheetContent>

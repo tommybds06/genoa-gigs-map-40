@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { useProfile } from '@/hooks/useProfile';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -9,31 +10,44 @@ import { Label } from '@/components/ui/label';
 import { TagSelector } from '@/components/tags/TagSelector';
 import { PhotoUploader } from '@/components/onboarding/PhotoUploader';
 import { toast } from 'sonner';
-import { Instagram, Globe, User, Briefcase, Camera, Hash, Loader2 } from 'lucide-react';
+import { Instagram, Globe, User, Briefcase, Camera, Hash, Loader2, Store, Search } from 'lucide-react';
 
 const Onboarding = () => {
   const { user } = useAuth();
+  const { profile, loading: profileLoading } = useProfile();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   
+  // Common fields
   const [bio, setBio] = useState('');
-  const [experience, setExperience] = useState('');
   const [photos, setPhotos] = useState<string[]>([]);
   const [instagram, setInstagram] = useState('');
   const [website, setWebsite] = useState('');
+  
+  // Worker-specific fields
+  const [experience, setExperience] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   
-  const [errors, setErrors] = useState<{ bio?: string; tags?: string }>({});
+  // Employer-specific fields
+  const [lookingFor, setLookingFor] = useState('');
+  
+  const [errors, setErrors] = useState<{ bio?: string; tags?: string; lookingFor?: string }>({});
+
+  const isEmployer = profile?.role === 'employer';
 
   const validateForm = (): boolean => {
-    const newErrors: { bio?: string; tags?: string } = {};
+    const newErrors: { bio?: string; tags?: string; lookingFor?: string } = {};
     
     if (!bio.trim()) {
-      newErrors.bio = 'La presentazione è obbligatoria';
+      newErrors.bio = isEmployer ? 'La descrizione attività è obbligatoria' : 'La presentazione è obbligatoria';
     }
     
-    if (selectedTags.length === 0) {
+    if (!isEmployer && selectedTags.length === 0) {
       newErrors.tags = 'Seleziona almeno un tag';
+    }
+    
+    if (isEmployer && !lookingFor.trim()) {
+      newErrors.lookingFor = 'Questo campo è obbligatorio';
     }
     
     setErrors(newErrors);
@@ -59,16 +73,24 @@ const Onboarding = () => {
         website: website.trim() || null,
       };
 
+      const updateData: Record<string, unknown> = {
+        bio: bio.trim(),
+        photos,
+        social_links: socialLinks,
+        is_onboarded: true,
+      };
+
+      // Add role-specific fields
+      if (isEmployer) {
+        updateData.looking_for = lookingFor.trim();
+      } else {
+        updateData.experience = experience.trim() || null;
+        updateData.tags = selectedTags;
+      }
+
       const { error } = await supabase
         .from('profiles')
-        .update({
-          bio: bio.trim(),
-          experience: experience.trim() || null,
-          photos,
-          social_links: socialLinks,
-          tags: selectedTags,
-          is_onboarded: true,
-        })
+        .update(updateData)
         .eq('id', user.id);
 
       if (error) throw error;
@@ -83,32 +105,54 @@ const Onboarding = () => {
     }
   };
 
+  if (profileLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  // Theme classes based on role
+  const headerBgClass = isEmployer ? 'bg-blue-600' : 'bg-primary';
+  const headerTextClass = isEmployer ? 'text-white' : 'text-primary-foreground';
+  const buttonBgClass = isEmployer ? 'bg-blue-600 hover:bg-blue-700' : 'bg-primary hover:bg-primary/90';
+  const iconColorClass = isEmployer ? 'text-blue-600' : 'text-primary';
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="bg-primary text-primary-foreground px-6 py-8 text-center">
-        <h1 className="text-2xl font-bold">Completa il tuo profilo</h1>
-        <p className="text-primary-foreground/80 mt-1">
-          Fatti conoscere dalla community!
+      <div className={`${headerBgClass} ${headerTextClass} px-6 py-8 text-center`}>
+        <h1 className="text-2xl font-bold">
+          {isEmployer ? 'Configura la tua Attività' : 'Completa il tuo profilo'}
+        </h1>
+        <p className={`${isEmployer ? 'text-white/80' : 'text-primary-foreground/80'} mt-1`}>
+          {isEmployer ? 'Fatti trovare dai migliori candidati!' : 'Fatti conoscere dalla community!'}
         </p>
       </div>
 
       <div className="px-6 py-6 space-y-8 pb-24">
-        {/* Section A: Chi sei */}
+        {/* Section A: Chi sei / Descrizione Attività */}
         <section className="space-y-4">
           <div className="flex items-center gap-2 text-lg font-semibold">
-            <User className="h-5 w-5 text-primary" />
-            <span>Chi sei</span>
+            {isEmployer ? (
+              <Store className={`h-5 w-5 ${iconColorClass}`} />
+            ) : (
+              <User className={`h-5 w-5 ${iconColorClass}`} />
+            )}
+            <span>{isEmployer ? 'La tua Attività' : 'Chi sei'}</span>
           </div>
           
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="bio" className="text-base font-medium">
-                Presentazione <span className="text-destructive">*</span>
+                {isEmployer ? 'Descrizione Attività' : 'Presentazione'} <span className="text-destructive">*</span>
               </Label>
               <Textarea
                 id="bio"
-                placeholder="Parlaci di te, cosa sai fare o cosa cerchi..."
+                placeholder={isEmployer 
+                  ? "Descrivi la tua attività, cosa fate e cosa offrite..." 
+                  : "Parlaci di te, cosa sai fare o cosa cerchi..."}
                 value={bio}
                 onChange={(e) => setBio(e.target.value)}
                 className={`min-h-[120px] ${errors.bio ? 'border-destructive' : ''}`}
@@ -118,31 +162,56 @@ const Onboarding = () => {
               )}
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="experience" className="text-base font-medium flex items-center gap-2">
-                <Briefcase className="h-4 w-4" />
-                Esperienze
-              </Label>
-              <Textarea
-                id="experience"
-                placeholder="Hai già lavorato come rider o cameriere? Scrivilo qui..."
-                value={experience}
-                onChange={(e) => setExperience(e.target.value)}
-                className="min-h-[100px]"
-              />
-            </div>
+            {/* Worker-only: Experiences */}
+            {!isEmployer && (
+              <div className="space-y-2">
+                <Label htmlFor="experience" className="text-base font-medium flex items-center gap-2">
+                  <Briefcase className="h-4 w-4" />
+                  Esperienze
+                </Label>
+                <Textarea
+                  id="experience"
+                  placeholder="Hai già lavorato come rider o cameriere? Scrivilo qui..."
+                  value={experience}
+                  onChange={(e) => setExperience(e.target.value)}
+                  className="min-h-[100px]"
+                />
+              </div>
+            )}
+
+            {/* Employer-only: Looking For */}
+            {isEmployer && (
+              <div className="space-y-2">
+                <Label htmlFor="lookingFor" className="text-base font-medium flex items-center gap-2">
+                  <Search className="h-4 w-4" />
+                  Chi cerchi solitamente? <span className="text-destructive">*</span>
+                </Label>
+                <Textarea
+                  id="lookingFor"
+                  placeholder="es. Rider per consegne, Staff per eventi, Camerieri per il weekend..."
+                  value={lookingFor}
+                  onChange={(e) => setLookingFor(e.target.value)}
+                  className={`min-h-[100px] ${errors.lookingFor ? 'border-destructive' : ''}`}
+                />
+                {errors.lookingFor && (
+                  <p className="text-sm text-destructive">{errors.lookingFor}</p>
+                )}
+              </div>
+            )}
           </div>
         </section>
 
-        {/* Section B: La tua Vetrina */}
+        {/* Section B: La tua Vetrina / Foto Attività */}
         <section className="space-y-4">
           <div className="flex items-center gap-2 text-lg font-semibold">
-            <Camera className="h-5 w-5 text-primary" />
-            <span>La tua Vetrina</span>
+            <Camera className={`h-5 w-5 ${iconColorClass}`} />
+            <span>{isEmployer ? 'Foto Attività / Logo' : 'La tua Vetrina'}</span>
           </div>
           
           <p className="text-sm text-muted-foreground">
-            Carica fino a 10 foto per mostrarti al meglio
+            {isEmployer 
+              ? 'Carica foto della tua attività o il logo' 
+              : 'Carica fino a 10 foto per mostrarti al meglio'}
           </p>
           
           <PhotoUploader
@@ -156,7 +225,7 @@ const Onboarding = () => {
         {/* Section C: Social */}
         <section className="space-y-4">
           <div className="flex items-center gap-2 text-lg font-semibold">
-            <Globe className="h-5 w-5 text-primary" />
+            <Globe className={`h-5 w-5 ${iconColorClass}`} />
             <span>Social</span>
           </div>
 
@@ -189,21 +258,23 @@ const Onboarding = () => {
           </div>
         </section>
 
-        {/* Section D: I tuoi Interessi */}
-        <section className="space-y-4">
-          <div className="flex items-center gap-2 text-lg font-semibold">
-            <Hash className="h-5 w-5 text-primary" />
-            <span>I tuoi Interessi <span className="text-destructive">*</span></span>
-          </div>
+        {/* Section D: I tuoi Interessi (Worker Only) */}
+        {!isEmployer && (
+          <section className="space-y-4">
+            <div className="flex items-center gap-2 text-lg font-semibold">
+              <Hash className={`h-5 w-5 ${iconColorClass}`} />
+              <span>I tuoi Interessi <span className="text-destructive">*</span></span>
+            </div>
 
-          <TagSelector
-            selectedTags={selectedTags}
-            onChange={setSelectedTags}
-          />
-          {errors.tags && (
-            <p className="text-sm text-destructive">{errors.tags}</p>
-          )}
-        </section>
+            <TagSelector
+              selectedTags={selectedTags}
+              onChange={setSelectedTags}
+            />
+            {errors.tags && (
+              <p className="text-sm text-destructive">{errors.tags}</p>
+            )}
+          </section>
+        )}
       </div>
 
       {/* Fixed Footer */}
@@ -211,7 +282,7 @@ const Onboarding = () => {
         <Button
           onClick={handleComplete}
           disabled={loading}
-          className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-6"
+          className={`w-full ${buttonBgClass} text-white font-semibold py-6`}
         >
           {loading ? (
             <>
@@ -219,7 +290,7 @@ const Onboarding = () => {
               Salvataggio...
             </>
           ) : (
-            'Completa Profilo'
+            isEmployer ? 'Configura Attività' : 'Completa Profilo'
           )}
         </Button>
       </div>

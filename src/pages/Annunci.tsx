@@ -3,7 +3,7 @@ import { Header } from '@/components/layout/Header';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
-import { Briefcase, Users, ChevronRight, Clock, Euro, MapPin, ArrowLeft, MessageCircle, Loader2 } from 'lucide-react';
+import { Briefcase, Users, ChevronRight, Clock, Euro, ArrowLeft, MessageCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useNavigate } from 'react-router-dom';
@@ -160,6 +160,11 @@ const Annunci = () => {
     navigate('/messaggi');
   };
 
+  // Employer theme colors
+  const primaryBtnClass = "bg-blue-600 hover:bg-blue-700";
+  const primaryBgClass = "bg-blue-600/10";
+  const primaryTextClass = "text-blue-600";
+
   if (selectedJob) {
     return (
       <div className="flex flex-col min-h-screen bg-background">
@@ -201,9 +206,9 @@ const Annunci = () => {
                   key={app.id}
                   className="material-card p-4 flex items-center gap-4"
                 >
-                  <Avatar className="h-14 w-14 border-2 border-primary/20">
+                  <Avatar className="h-14 w-14 border-2 border-blue-600/20">
                     <AvatarImage src={app.applicant.avatar_url || undefined} />
-                    <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+                    <AvatarFallback className={`${primaryBgClass} ${primaryTextClass} font-semibold`}>
                       {(app.applicant.full_name || 'U')[0].toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
@@ -224,7 +229,7 @@ const Annunci = () => {
 
                   <Button
                     onClick={() => handleChatClick(app.applicant.id)}
-                    className="bg-secondary hover:bg-secondary/90 text-secondary-foreground rounded-full px-4"
+                    className={`${primaryBtnClass} text-white rounded-full px-4`}
                   >
                     <MessageCircle className="h-4 w-4 mr-2" />
                     Chatta
@@ -263,7 +268,7 @@ const Annunci = () => {
           </div>
         ) : jobs.length === 0 ? (
           <div className="text-center py-12">
-            <Briefcase className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+            <Briefcase className={`h-12 w-12 ${primaryTextClass} mx-auto mb-3`} />
             <h3 className="font-semibold text-lg mb-1">Nessun annuncio</h3>
             <p className="text-sm text-muted-foreground">
               Non hai ancora creato annunci di lavoro
@@ -278,8 +283,8 @@ const Annunci = () => {
                 className="material-card p-4 cursor-pointer hover:shadow-md transition-shadow"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center shrink-0">
-                    <Briefcase className="h-6 w-6 text-primary" />
+                  <div className={`w-12 h-12 ${primaryBgClass} rounded-2xl flex items-center justify-center shrink-0`}>
+                    <Briefcase className={`h-6 w-6 ${primaryTextClass}`} />
                   </div>
 
                   <div className="flex-1 min-w-0">

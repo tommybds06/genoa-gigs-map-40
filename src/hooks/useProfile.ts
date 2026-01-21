@@ -22,6 +22,7 @@ export interface Profile {
   experience: string | null;
   social_links: SocialLinks | null;
   is_onboarded: boolean;
+  looking_for: string | null;
 }
 
 export function useProfile() {
@@ -50,7 +51,8 @@ export function useProfile() {
         tags: data.tags || [],
         photos: data.photos || [],
         social_links: data.social_links as SocialLinks | null,
-        is_onboarded: data.is_onboarded || false
+        is_onboarded: data.is_onboarded || false,
+        looking_for: data.looking_for || null
       } : null);
     } catch (error) {
       console.error("Error fetching profile:", error);
