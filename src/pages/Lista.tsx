@@ -9,6 +9,12 @@ import { TagBadges } from "@/components/tags/TagSelector";
 import { Link } from "react-router-dom";
 import { JobDetailsSheet } from "@/components/map/JobDetailsSheet";
 
+interface JobProfile {
+  full_name: string | null;
+  avatar_url: string | null;
+  address_text: string | null;
+}
+
 interface Job {
   id: string;
   title: string;
@@ -21,6 +27,7 @@ interface Job {
   created_at: string;
   tags: string[];
   owner_id: string;
+  profiles?: JobProfile | null;
 }
 
 const categoryIcons: Record<string, typeof GraduationCap> = {
@@ -72,7 +79,7 @@ const Lista = () => {
         if (profile?.role === "employer") {
           const { data, error } = await supabase
             .from("jobs")
-            .select("*")
+            .select("*, profiles(full_name, avatar_url, address_text)")
             .eq("owner_id", user.id)
             .gte("created_at", fortyEightHoursAgo)
             .order("created_at", { ascending: false });
@@ -90,7 +97,7 @@ const Lista = () => {
             // Fetch jobs with overlapping tags
             const { data, error } = await supabase
               .from("jobs")
-              .select("*")
+              .select("*, profiles(full_name, avatar_url, address_text)")
               .eq("status", "open")
               .gte("created_at", fortyEightHoursAgo)
               .overlaps("tags", userTags)
@@ -215,6 +222,7 @@ const Lista = () => {
           lng: selectedJob.lng || 0,
           schedule: selectedJob.schedule || undefined,
           tags: selectedJob.tags || undefined,
+          profiles: selectedJob.profiles || undefined,
         } : null}
         isOpen={isDetailsOpen}
         onClose={handleCloseDetails}
