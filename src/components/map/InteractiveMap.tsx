@@ -6,6 +6,7 @@ import { JobDetailsSheet } from "./JobDetailsSheet";
 import { supabase } from "@/integrations/supabase/client";
 import { useUser } from "@/contexts/UserContext";
 import { useAppTheme } from "@/hooks/useAppTheme";
+import { isRoleTag, isTypeTag } from "@/constants/tags";
 import "mapbox-gl/dist/mapbox-gl.css";
 
 // Sample job data for Genova
@@ -17,6 +18,7 @@ const sampleJobs = [
     price: "15€/h",
     category: "tutoring",
     schedule: "Lun-Ven 15:00-18:00",
+    tags: ["Ripetizioni", "Settimanale"],
     lat: 44.4110,
     lng: 8.9340,
     owner: {
@@ -33,6 +35,7 @@ const sampleJobs = [
     price: "8€/consegna",
     category: "delivery",
     schedule: "Lun-Sab 11:30-14:30",
+    tags: ["Rider", "A Chiamata"],
     lat: 44.4070,
     lng: 8.9320,
     owner: {
@@ -49,6 +52,7 @@ const sampleJobs = [
     price: "50€",
     category: "event",
     schedule: "Sab 18:00-24:00",
+    tags: ["Cameriere", "Staff", "Occasionale"],
     lat: 44.4045,
     lng: 8.9450,
     owner: {
@@ -65,6 +69,7 @@ const sampleJobs = [
     price: "80€",
     category: "general",
     schedule: "Dom 09:00-13:00",
+    tags: ["Occasionale"],
     lat: 44.4150,
     lng: 8.9480,
     owner: {
@@ -81,6 +86,7 @@ const sampleJobs = [
     price: "20€/h",
     category: "tutoring",
     schedule: "Flessibile",
+    tags: ["Ripetizioni", "Settimanale", "A Chiamata"],
     lat: 44.4020,
     lng: 8.9280,
     owner: {
@@ -97,6 +103,7 @@ const sampleJobs = [
     price: "6€/consegna",
     category: "delivery",
     schedule: "Ven-Dom 19:00-23:00",
+    tags: ["Rider", "Weekend"],
     lat: 44.3980,
     lng: 8.9400,
     owner: {
@@ -267,6 +274,24 @@ export function InteractiveMap() {
               <Badge className={`${theme.btnFilled} font-semibold text-xs px-2 py-1 rounded-full`}>
                 {selectedJob.price}
               </Badge>
+              
+              {/* Colored Tags */}
+              {selectedJob.tags && selectedJob.tags.length > 0 && (
+                <div className="flex flex-wrap gap-1 mt-2">
+                  {selectedJob.tags.map((tag) => (
+                    <span
+                      key={tag}
+                      className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                        isRoleTag(tag)
+                          ? 'bg-orange-100 text-orange-700'
+                          : 'bg-blue-100 text-blue-700'
+                      }`}
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              )}
               
               <div className="flex items-center gap-1 mt-2 text-muted-foreground">
                 <Clock className="w-3 h-3" />

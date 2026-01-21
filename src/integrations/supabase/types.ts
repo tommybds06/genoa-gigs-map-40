@@ -111,6 +111,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          address_text: string | null
           avatar_url: string | null
           bio: string | null
           created_at: string
@@ -118,7 +119,9 @@ export type Database = {
           full_name: string | null
           id: string
           is_onboarded: boolean | null
+          lat: number | null
           level: number
+          lng: number | null
           looking_for: string | null
           photos: string[] | null
           role: Database["public"]["Enums"]["user_role"]
@@ -129,6 +132,7 @@ export type Database = {
           xp_points: number
         }
         Insert: {
+          address_text?: string | null
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
@@ -136,7 +140,9 @@ export type Database = {
           full_name?: string | null
           id: string
           is_onboarded?: boolean | null
+          lat?: number | null
           level?: number
+          lng?: number | null
           looking_for?: string | null
           photos?: string[] | null
           role?: Database["public"]["Enums"]["user_role"]
@@ -147,6 +153,7 @@ export type Database = {
           xp_points?: number
         }
         Update: {
+          address_text?: string | null
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
@@ -154,7 +161,9 @@ export type Database = {
           full_name?: string | null
           id?: string
           is_onboarded?: boolean | null
+          lat?: number | null
           level?: number
+          lng?: number | null
           looking_for?: string | null
           photos?: string[] | null
           role?: Database["public"]["Enums"]["user_role"]

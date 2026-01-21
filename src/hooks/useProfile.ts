@@ -23,6 +23,9 @@ export interface Profile {
   social_links: SocialLinks | null;
   is_onboarded: boolean;
   looking_for: string | null;
+  address_text: string | null;
+  lat: number | null;
+  lng: number | null;
 }
 
 export function useProfile() {
@@ -52,7 +55,10 @@ export function useProfile() {
         photos: data.photos || [],
         social_links: data.social_links as SocialLinks | null,
         is_onboarded: data.is_onboarded || false,
-        looking_for: data.looking_for || null
+        looking_for: data.looking_for || null,
+        address_text: data.address_text || null,
+        lat: data.lat || null,
+        lng: data.lng || null
       } : null);
     } catch (error) {
       console.error("Error fetching profile:", error);

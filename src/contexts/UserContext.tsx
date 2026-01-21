@@ -24,6 +24,9 @@ export interface UserProfile {
   social_links: SocialLinks | null;
   is_onboarded: boolean;
   looking_for: string | null;
+  address_text: string | null;
+  lat: number | null;
+  lng: number | null;
 }
 
 interface UserContextType {
@@ -107,6 +110,9 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
           social_links: data.social_links as SocialLinks | null,
           is_onboarded: data.is_onboarded || false,
           looking_for: data.looking_for || null,
+          address_text: data.address_text || null,
+          lat: data.lat || null,
+          lng: data.lng || null,
         };
         
         setProfile(userProfile);
