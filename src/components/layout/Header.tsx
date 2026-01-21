@@ -14,7 +14,7 @@ export function Header() {
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
         <input
           type="text"
-          placeholder="Cerca lavoretti..."
+          placeholder="Cerca impiego..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="material-input w-full pl-12 pr-4 text-base placeholder:text-muted-foreground"

@@ -275,10 +275,6 @@ export function InteractiveMap() {
           <p className="text-xs text-muted-foreground">{sampleJobs.length} impieghi disponibili</p>
         </div>
 
-        {/* Map-First Chip */}
-        <div className="absolute top-4 left-4 material-chip-selected">
-          <span className="text-xs font-semibold">🗺️ Map-First</span>
-        </div>
       </Map>
 
       <JobDetailsSheet
@@ -365,10 +361,6 @@ function MapFallback({ jobs, onJobSelect }: { jobs: Job[]; onJobSelect: (job: Jo
         </button>
       </div>
 
-      {/* Map-First Chip */}
-      <div className="absolute top-4 left-4 material-chip-selected">
-        <span className="text-xs font-semibold">🗺️ Map-First</span>
-      </div>
     </div>
   );
 }
