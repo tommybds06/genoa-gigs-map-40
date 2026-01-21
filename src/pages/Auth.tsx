@@ -191,19 +191,19 @@ const Auth = () => {
                     onClick={() => setSelectedRole('employer')}
                     className={`relative p-4 rounded-2xl transition-all duration-300 text-left ${
                       selectedRole === 'employer'
-                        ? 'bg-primary/20 ring-2 ring-secondary shadow-md'
+                        ? 'bg-blue-600/20 ring-2 ring-blue-600 shadow-md'
                         : 'bg-muted hover:bg-muted/80'
                     }`}
                   >
                     <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-3 ${
-                      selectedRole === 'employer' ? 'bg-secondary text-white' : 'bg-background'
+                      selectedRole === 'employer' ? 'bg-blue-600 text-white' : 'bg-background'
                     }`}>
                       <Store className="w-6 h-6" />
                     </div>
                     <h3 className="font-semibold text-sm text-foreground">Offro Impiego</h3>
                     <p className="text-xs text-muted-foreground mt-1">Privato o Attività</p>
                     {selectedRole === 'employer' && (
-                      <div className="absolute top-2 right-2 w-3 h-3 bg-secondary rounded-full" />
+                      <div className="absolute top-2 right-2 w-3 h-3 bg-blue-600 rounded-full" />
                     )}
                   </button>
                 </div>

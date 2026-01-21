@@ -4,7 +4,7 @@ import { BottomNav } from '@/components/layout/BottomNav';
 import { useAuth } from '@/hooks/useAuth';
 import { useAppTheme } from '@/hooks/useAppTheme';
 import { supabase } from '@/integrations/supabase/client';
-import { Briefcase, Users, ChevronRight, Clock, Euro, ArrowLeft, MessageCircle, Loader2 } from 'lucide-react';
+import { Briefcase, Users, ChevronRight, Clock, Euro, ArrowLeft, MessageCircle, Loader2, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useNavigate } from 'react-router-dom';
@@ -247,7 +247,17 @@ const Annunci = () => {
       <Header />
 
       <main className="flex-1 px-4 pb-20 overflow-y-auto">
-        <h2 className="text-lg font-semibold mb-3">I Tuoi Annunci Pubblicati</h2>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-lg font-semibold">I Tuoi Annunci Pubblicati</h2>
+          <Button
+            onClick={() => navigate('/create-job')}
+            className="bg-blue-600 hover:bg-blue-700 text-white rounded-full px-4"
+            size="sm"
+          >
+            <Plus className="h-4 w-4 mr-1" />
+            Crea
+          </Button>
+        </div>
 
         {loading ? (
           <div className="space-y-3">

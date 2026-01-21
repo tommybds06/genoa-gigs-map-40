@@ -10,8 +10,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { TagSelector } from '@/components/tags/TagSelector';
 import { PhotoUploader } from '@/components/onboarding/PhotoUploader';
+import { LocationPicker } from '@/components/onboarding/LocationPicker';
 import { toast } from 'sonner';
-import { Instagram, Globe, User, Briefcase, Camera, Hash, Loader2, Store, Search } from 'lucide-react';
+import { Instagram, Globe, User, Briefcase, Camera, Hash, Loader2, Store, Search, MapPin } from 'lucide-react';
 
 const Onboarding = () => {
   const { user } = useAuth();
@@ -32,12 +33,14 @@ const Onboarding = () => {
   
   // Employer-specific fields
   const [lookingFor, setLookingFor] = useState('');
+  const [locationLat, setLocationLat] = useState<number | null>(null);
+  const [locationLng, setLocationLng] = useState<number | null>(null);
   
   
-  const [errors, setErrors] = useState<{ bio?: string; tags?: string; lookingFor?: string }>({});
+  const [errors, setErrors] = useState<{ bio?: string; tags?: string; lookingFor?: string; location?: string }>({});
 
   const validateForm = (): boolean => {
-    const newErrors: { bio?: string; tags?: string; lookingFor?: string } = {};
+    const newErrors: { bio?: string; tags?: string; lookingFor?: string; location?: string } = {};
     
     if (!bio.trim()) {
       newErrors.bio = isEmployer ? 'La descrizione attività è obbligatoria' : 'La presentazione è obbligatoria';
@@ -49,6 +52,10 @@ const Onboarding = () => {
     
     if (isEmployer && !lookingFor.trim()) {
       newErrors.lookingFor = 'Questo campo è obbligatorio';
+    }
+    
+    if (isEmployer && (locationLat === null || locationLng === null)) {
+      newErrors.location = 'Seleziona la posizione della tua attività';
     }
     
     setErrors(newErrors);
@@ -84,6 +91,8 @@ const Onboarding = () => {
       // Add role-specific fields
       if (isEmployer) {
         updateData.looking_for = lookingFor.trim();
+        updateData.lat = locationLat;
+        updateData.lng = locationLng;
       } else {
         updateData.experience = experience.trim() || null;
         updateData.tags = selectedTags;
@@ -196,6 +205,30 @@ const Onboarding = () => {
                 />
                 {errors.lookingFor && (
                   <p className="text-sm text-destructive">{errors.lookingFor}</p>
+                )}
+              </div>
+            )}
+
+            {/* Employer-only: Location Picker */}
+            {isEmployer && (
+              <div className="space-y-2">
+                <Label className="text-base font-medium flex items-center gap-2">
+                  <MapPin className="h-4 w-4" />
+                  Dove si trova l'attività? <span className="text-destructive">*</span>
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  Clicca o trascina il pin per impostare la posizione
+                </p>
+                <LocationPicker
+                  lat={locationLat}
+                  lng={locationLng}
+                  onLocationChange={(lat, lng) => {
+                    setLocationLat(lat);
+                    setLocationLng(lng);
+                  }}
+                />
+                {errors.location && (
+                  <p className="text-sm text-destructive">{errors.location}</p>
                 )}
               </div>
             )}
