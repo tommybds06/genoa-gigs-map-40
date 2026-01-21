@@ -61,14 +61,18 @@ export function InteractiveMap() {
   const markerBgClass = isEmployer ? "bg-blue-600" : "bg-primary";
   const markerPointerClass = isEmployer ? "border-t-blue-600" : "border-t-primary";
 
-  // Fetch jobs from database
+  // Fetch jobs from database (only last 48 hours)
   useEffect(() => {
     const fetchJobs = async () => {
       try {
+        // Calculate 48 hours ago
+        const fortyEightHoursAgo = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
+        
         const { data, error } = await supabase
           .from('jobs')
           .select('*')
-          .eq('status', 'open');
+          .eq('status', 'open')
+          .gte('created_at', fortyEightHoursAgo);
 
         if (error) throw error;
 

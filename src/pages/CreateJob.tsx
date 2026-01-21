@@ -100,6 +100,7 @@ const CreateJob = () => {
           owner_id: user.id,
           title: title.trim(),
           description: description.trim(),
+          schedule: schedule.trim() || null,
           price: price.trim() || null,
           category: selectedRoleTags[0]?.toLowerCase() || 'general',
           tags: allTags,
