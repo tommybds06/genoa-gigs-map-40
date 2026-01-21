@@ -1,119 +1,34 @@
 import { useState, useCallback, useEffect } from "react";
 import Map, { Marker, Popup, NavigationControl } from "react-map-gl";
-import { GraduationCap, Truck, PartyPopper, Briefcase, Clock, ChevronRight, Bike, Utensils, Coffee, BookOpen, Sparkles, Laptop, Palette } from "lucide-react";
+import { GraduationCap, Briefcase, Clock, ChevronRight, Bike, Utensils, Sparkles, Laptop, Palette, PartyPopper } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { JobDetailsSheet } from "./JobDetailsSheet";
 import { supabase } from "@/integrations/supabase/client";
 import { useUser } from "@/contexts/UserContext";
 import { useAppTheme } from "@/hooks/useAppTheme";
-import { isRoleTag, isTypeTag } from "@/constants/tags";
+import { isRoleTag } from "@/constants/tags";
 import "mapbox-gl/dist/mapbox-gl.css";
 
-// Sample job data for Genova
-const sampleJobs = [
-  {
-    id: "1",
-    title: "Ripetizioni Matematica",
-    description: "Cerco studente universitario per ripetizioni di matematica a mio figlio (3° media). Preferibilmente con esperienza didattica. Le lezioni si terranno a casa nostra in zona Castelletto.",
-    price: "15€/h",
-    category: "tutoring",
-    schedule: "Lun-Ven 15:00-18:00",
-    tags: ["Ripetizioni", "Settimanale"],
-    lat: 44.4110,
-    lng: 8.9340,
-    owner: {
-      name: "Maria Rossi",
-      avatar: null,
-      rating: 4.8,
-      reviewCount: 12
-    }
-  },
-  {
-    id: "2",
-    title: "Consegne Pranzo Centro",
-    description: "Ristorante in centro cerca rider per consegne pranzo. Orario flessibile, pagamento giornaliero. Necessario mezzo proprio (bici o scooter).",
-    price: "8€/consegna",
-    category: "delivery",
-    schedule: "Lun-Sab 11:30-14:30",
-    tags: ["Rider", "A Chiamata"],
-    lat: 44.4070,
-    lng: 8.9320,
-    owner: {
-      name: "Trattoria Da Luigi",
-      avatar: null,
-      rating: 4.5,
-      reviewCount: 28
-    }
-  },
-  {
-    id: "3",
-    title: "Staff Evento Laurea",
-    description: "Cerchiamo 3 persone per servizio cameriere/a alla festa di laurea. Esperienza preferibile ma non necessaria. Divisa fornita.",
-    price: "50€",
-    category: "event",
-    schedule: "Sab 18:00-24:00",
-    tags: ["Cameriere", "Staff", "Occasionale"],
-    lat: 44.4045,
-    lng: 8.9450,
-    owner: {
-      name: "Eventi Genova",
-      avatar: null,
-      rating: 4.9,
-      reviewCount: 45
-    }
-  },
-  {
-    id: "4",
-    title: "Aiuto Trasloco",
-    description: "Cerco 2 persone robuste per aiutarmi con un piccolo trasloco. Solo scatoloni e mobili leggeri, furgone già organizzato.",
-    price: "80€",
-    category: "general",
-    schedule: "Dom 09:00-13:00",
-    tags: ["Occasionale"],
-    lat: 44.4150,
-    lng: 8.9480,
-    owner: {
-      name: "Paolo Bianchi",
-      avatar: null,
-      rating: 4.3,
-      reviewCount: 5
-    }
-  },
-  {
-    id: "5",
-    title: "Lezioni Inglese B2",
-    description: "Offro lezioni di conversazione inglese livello B2/C1. Sono madrelingua UK con certificazione TEFL. Lezioni in presenza o online.",
-    price: "20€/h",
-    category: "tutoring",
-    schedule: "Flessibile",
-    tags: ["Ripetizioni", "Settimanale", "A Chiamata"],
-    lat: 44.4020,
-    lng: 8.9280,
-    owner: {
-      name: "Sarah Johnson",
-      avatar: null,
-      rating: 5.0,
-      reviewCount: 18
-    }
-  },
-  {
-    id: "6",
-    title: "Rider Serale Pizzeria",
-    description: "Pizzeria zona Foce cerca rider per consegne serali. Compenso a consegna + mance. Richiesta puntualità e affidabilità.",
-    price: "6€/consegna",
-    category: "delivery",
-    schedule: "Ven-Dom 19:00-23:00",
-    tags: ["Rider", "Weekend"],
-    lat: 44.3980,
-    lng: 8.9400,
-    owner: {
-      name: "Pizza Express",
-      avatar: null,
-      rating: 4.6,
-      reviewCount: 32
-    }
-  },
-];
+// Job type from database
+interface Job {
+  id: string;
+  title: string;
+  description: string | null;
+  price: string | null;
+  category: string | null;
+  tags: string[] | null;
+  lat: number;
+  lng: number;
+  owner_id: string;
+  status: string;
+  schedule?: string;
+  owner?: {
+    name: string;
+    avatar: string | null;
+    rating: number;
+    reviewCount: number;
+  };
+}
 
 // Helper function to get icon based on job tags
 const getIconFromTags = (tags: string[] | null): typeof Briefcase => {
@@ -133,16 +48,8 @@ const getIconFromTags = (tags: string[] | null): typeof Briefcase => {
   return Briefcase; // Default
 };
 
-const categoryIcons: Record<string, typeof GraduationCap> = {
-  tutoring: GraduationCap,
-  delivery: Bike,
-  event: PartyPopper,
-  general: Briefcase,
-};
-
-type Job = typeof sampleJobs[0];
-
 export function InteractiveMap() {
+  const [jobs, setJobs] = useState<Job[]>([]);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [mapboxToken, setMapboxToken] = useState<string | null>(null);
@@ -153,6 +60,33 @@ export function InteractiveMap() {
   // Dynamic marker colors based on role
   const markerBgClass = isEmployer ? "bg-blue-600" : "bg-primary";
   const markerPointerClass = isEmployer ? "border-t-blue-600" : "border-t-primary";
+
+  // Fetch jobs from database
+  useEffect(() => {
+    const fetchJobs = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('jobs')
+          .select('*')
+          .eq('status', 'open');
+
+        if (error) throw error;
+
+        // Filter jobs with valid coordinates
+        const validJobs = (data || []).filter(job => 
+          job.lat != null && job.lng != null && 
+          job.lat !== 0 && job.lng !== 0
+        );
+
+        console.log("Totale Jobs:", data?.length || 0, "Jobs Validi:", validJobs.length);
+        setJobs(validJobs as Job[]);
+      } catch (err) {
+        console.error('Failed to fetch jobs:', err);
+      }
+    };
+
+    fetchJobs();
+  }, []);
 
   useEffect(() => {
     const fetchMapboxToken = async () => {
@@ -218,7 +152,7 @@ export function InteractiveMap() {
   // Fallback if token failed to load
   if (mapboxToken === "") {
     return <MapFallback 
-      jobs={sampleJobs} 
+      jobs={jobs} 
       markerBgClass={markerBgClass}
       markerPointerClass={markerPointerClass}
       onJobSelect={(job) => {
@@ -244,7 +178,7 @@ export function InteractiveMap() {
       >
         <NavigationControl position="top-right" showCompass={false} />
 
-        {sampleJobs.map((job) => {
+        {jobs.map((job) => {
           // Use dynamic icon based on tags
           const Icon = getIconFromTags(job.tags);
 
@@ -290,9 +224,11 @@ export function InteractiveMap() {
                 {selectedJob.title}
               </h3>
               
-              <Badge className={`${theme.btnFilled} font-semibold text-xs px-2 py-1 rounded-full`}>
-                {selectedJob.price}
-              </Badge>
+              {selectedJob.price && (
+                <Badge className={`${theme.btnFilled} font-semibold text-xs px-2 py-1 rounded-full`}>
+                  {selectedJob.price}
+                </Badge>
+              )}
               
               {/* Colored Tags */}
               {selectedJob.tags && selectedJob.tags.length > 0 && (
@@ -312,10 +248,12 @@ export function InteractiveMap() {
                 </div>
               )}
               
-              <div className="flex items-center gap-1 mt-2 text-muted-foreground">
-                <Clock className="w-3 h-3" />
-                <span className="text-xs">{selectedJob.schedule}</span>
-              </div>
+              {selectedJob.schedule && (
+                <div className="flex items-center gap-1 mt-2 text-muted-foreground">
+                  <Clock className="w-3 h-3" />
+                  <span className="text-xs">{selectedJob.schedule}</span>
+                </div>
+              )}
               
               <div className={`flex items-center justify-end mt-2 ${theme.primaryText} font-medium text-xs`}>
                 Vedi dettagli
@@ -328,7 +266,7 @@ export function InteractiveMap() {
         {/* Location Label Card */}
         <div className="absolute bottom-4 left-4 material-card px-4 py-3">
           <p className="text-sm font-semibold">📍 Genova Centro</p>
-          <p className="text-xs text-muted-foreground">{sampleJobs.length} impieghi disponibili</p>
+          <p className="text-xs text-muted-foreground">{jobs.length} impieghi disponibili</p>
         </div>
 
       </Map>
