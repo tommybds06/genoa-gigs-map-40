@@ -1,16 +1,16 @@
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Star, Clock, MapPin, GraduationCap, Truck, PartyPopper, Briefcase, Eye } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Star, Clock, MapPin, GraduationCap, Truck, PartyPopper, Briefcase, Eye, ChevronRight } from "lucide-react";
 import { useUser } from "@/contexts/UserContext";
 import { useAppTheme } from "@/hooks/useAppTheme";
+import { useNavigate } from "react-router-dom";
 
-interface JobOwner {
-  name: string;
-  avatar: string | null;
-  rating: number;
-  reviewCount: number;
+interface JobProfile {
+  full_name: string | null;
+  avatar_url: string | null;
+  address_text: string | null;
 }
 
 interface Job {
@@ -19,13 +19,13 @@ interface Job {
   description: string | null;
   price: string | null;
   category: string | null;
-  schedule?: string;
+  schedule?: string | null;
   tags?: string[] | null;
   lat: number;
   lng: number;
   owner_id?: string;
   status?: string;
-  owner?: JobOwner;
+  profiles?: JobProfile | null;
 }
 
 interface JobDetailsSheetProps {
@@ -58,6 +58,7 @@ const categoryColors: Record<string, string> = {
 export function JobDetailsSheet({ job, isOpen, onClose }: JobDetailsSheetProps) {
   const { isEmployer } = useUser();
   const { theme } = useAppTheme();
+  const navigate = useNavigate();
   
   if (!job) return null;
 
@@ -65,10 +66,23 @@ export function JobDetailsSheet({ job, isOpen, onClose }: JobDetailsSheetProps) 
   const categoryLabel = categoryLabels[job.category || 'general'] || "Altro";
   const categoryColor = categoryColors[job.category || 'general'] || "bg-muted text-muted-foreground";
 
+  // Get employer info from profiles join
+  const employerName = job.profiles?.full_name || "Employer";
+  const employerAvatar = job.profiles?.avatar_url || null;
+  const employerAddress = job.profiles?.address_text || null;
+  const employerInitials = employerName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
+
   // Dynamic button class based on role
   const candidateButtonClass = isEmployer 
     ? "bg-blue-600 hover:bg-blue-700" 
     : "bg-secondary hover:bg-secondary/90";
+
+  const handleEmployerClick = () => {
+    if (job.owner_id) {
+      onClose();
+      navigate(`/profile/${job.owner_id}`);
+    }
+  };
 
   return (
     <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -85,11 +99,30 @@ export function JobDetailsSheet({ job, isOpen, onClose }: JobDetailsSheetProps) 
         <div className="flex flex-col h-full overflow-hidden">
           {/* Scrollable Content */}
           <div className="flex-1 overflow-y-auto px-6 pb-24">
-            {/* Header with Category Icon */}
+            {/* Header with Employer Profile */}
             <SheetHeader className="text-left pb-4">
-              <div className={`w-16 h-16 ${categoryColor} rounded-2xl flex items-center justify-center mb-4`}>
-                <Icon className="w-8 h-8" />
-              </div>
+              {/* Clickable Employer Section */}
+              <button
+                onClick={handleEmployerClick}
+                className="flex items-center gap-3 mb-4 p-3 -mx-3 rounded-2xl hover:bg-muted/50 transition-colors text-left"
+              >
+                <Avatar className={`w-14 h-14 border-2 ${isEmployer ? "border-blue-600/20" : "border-primary/20"}`}>
+                  <AvatarImage src={employerAvatar || undefined} alt={employerName} />
+                  <AvatarFallback className={`${theme.accentBg} ${theme.accentText} font-bold text-lg`}>
+                    {employerInitials}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-foreground truncate">{employerName}</p>
+                  {employerAddress && (
+                    <p className="text-sm text-muted-foreground truncate flex items-center gap-1">
+                      <MapPin className="w-3 h-3 shrink-0" />
+                      {employerAddress}
+                    </p>
+                  )}
+                </div>
+                <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0" />
+              </button>
               
               <div className="flex items-start justify-between gap-3">
                 <SheetTitle className="text-2xl font-bold text-foreground leading-tight">
@@ -102,46 +135,25 @@ export function JobDetailsSheet({ job, isOpen, onClose }: JobDetailsSheetProps) 
                 )}
               </div>
 
+              {/* Schedule Display */}
+              {job.schedule && (
+                <div className="flex items-center gap-2 mt-2 text-muted-foreground">
+                  <Clock className="w-4 h-4" />
+                  <span className="text-sm font-medium">{job.schedule}</span>
+                </div>
+              )}
+
               <div className="flex items-center gap-4 mt-3">
                 <Badge variant="outline" className={`${categoryColor} border-none font-medium`}>
+                  <Icon className="w-3.5 h-3.5 mr-1" />
                   {categoryLabel}
                 </Badge>
-                {job.schedule && (
-                  <div className="flex items-center gap-1 text-muted-foreground text-sm">
-                    <Clock className="w-4 h-4" />
-                    <span>{job.schedule}</span>
-                  </div>
-                )}
               </div>
             </SheetHeader>
 
-            {/* Owner Section */}
-            {job.owner && (
-              <div className="py-4 border-t border-b border-border">
-                <h3 className="text-sm font-semibold text-muted-foreground mb-3">CHI OFFRE</h3>
-                <div className="flex items-center gap-3">
-                  <Avatar className={`w-12 h-12 border-2 ${isEmployer ? "border-blue-600/20" : "border-primary/20"}`}>
-                    <AvatarFallback className={`${theme.accentBg} ${theme.accentText} font-bold`}>
-                      {job.owner.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1">
-                    <p className="font-semibold text-foreground">{job.owner.name}</p>
-                    <div className="flex items-center gap-1">
-                      <Star className={`w-4 h-4 ${theme.primaryText} fill-current`} />
-                      <span className="font-medium text-sm">{job.owner.rating}</span>
-                      <span className="text-muted-foreground text-sm">
-                        ({job.owner.reviewCount} recensioni)
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
             {/* Description */}
             {job.description && (
-              <div className="py-4">
+              <div className="py-4 border-t border-border">
                 <h3 className="text-sm font-semibold text-muted-foreground mb-3">DESCRIZIONE</h3>
                 <p className="text-foreground leading-relaxed">
                   {job.description}
@@ -171,7 +183,7 @@ export function JobDetailsSheet({ job, isOpen, onClose }: JobDetailsSheetProps) 
 
                 {/* Location label */}
                 <div className="absolute bottom-2 left-2 bg-background/90 backdrop-blur-sm rounded-lg px-2 py-1">
-                  <p className="text-xs font-medium">Genova Centro</p>
+                  <p className="text-xs font-medium">{employerAddress || "Genova Centro"}</p>
                 </div>
               </div>
             </div>

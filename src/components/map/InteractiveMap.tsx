@@ -9,6 +9,13 @@ import { useAppTheme } from "@/hooks/useAppTheme";
 import { isRoleTag } from "@/constants/tags";
 import "mapbox-gl/dist/mapbox-gl.css";
 
+// Profile type from join
+interface JobProfile {
+  full_name: string | null;
+  avatar_url: string | null;
+  address_text: string | null;
+}
+
 // Job type from database
 interface Job {
   id: string;
@@ -21,13 +28,8 @@ interface Job {
   lng: number;
   owner_id: string;
   status: string;
-  schedule?: string;
-  owner?: {
-    name: string;
-    avatar: string | null;
-    rating: number;
-    reviewCount: number;
-  };
+  schedule?: string | null;
+  profiles?: JobProfile | null;
 }
 
 // Helper function to get icon based on job tags
@@ -70,7 +72,7 @@ export function InteractiveMap() {
         
         const { data, error } = await supabase
           .from('jobs')
-          .select('*')
+          .select('*, profiles(full_name, avatar_url, address_text)')
           .eq('status', 'open')
           .gte('created_at', fortyEightHoursAgo);
 
