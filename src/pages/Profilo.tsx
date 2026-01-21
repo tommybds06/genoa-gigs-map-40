@@ -1,7 +1,17 @@
 import { BottomNav } from "@/components/layout/BottomNav";
 import { User, Star, MapPin, Briefcase, Settings, LogOut } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { useNavigate } from "react-router-dom";
 
 const Profilo = () => {
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await signOut();
+    navigate("/auth");
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-background">
       {/* Header */}
@@ -22,8 +32,8 @@ const Profilo = () => {
               <User className="w-10 h-10" />
             </div>
             <div>
-              <h2 className="text-xl font-bold">Studente Demo</h2>
-              <p className="text-muted-foreground text-sm mb-1">studente@unige.it</p>
+              <h2 className="text-xl font-bold">{user?.user_metadata?.full_name || "Utente"}</h2>
+              <p className="text-muted-foreground text-sm mb-1">{user?.email}</p>
               <div className="flex items-center gap-1 text-primary">
                 <Star className="w-4 h-4" fill="currentColor" />
                 <span className="font-semibold text-sm">4.8</span>
@@ -61,7 +71,11 @@ const Profilo = () => {
         </div>
 
         {/* Logout Button */}
-        <button className="material-btn-outlined w-full p-4 flex items-center justify-center gap-2 text-destructive border-destructive/30 animate-fade-in" style={{ animationDelay: "0.25s" }}>
+        <button 
+          onClick={handleLogout}
+          className="material-btn-outlined w-full p-4 flex items-center justify-center gap-2 text-destructive border-destructive/30 animate-fade-in" 
+          style={{ animationDelay: "0.25s" }}
+        >
           <LogOut className="w-5 h-5" />
           <span className="font-medium">Esci</span>
         </button>
