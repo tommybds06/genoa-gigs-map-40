@@ -172,13 +172,17 @@ export function InteractiveMap() {
     setIsDetailsOpen(false);
   }, []);
 
+  // Dynamic loading colors
+  const loadingBgClass = isEmployer ? "bg-blue-600/20" : "bg-primary/20";
+  const loadingIconClass = isEmployer ? "text-blue-600" : "text-primary";
+
   // Show loading state while fetching token
   if (mapboxToken === null) {
     return (
       <div className="relative w-full h-full bg-muted overflow-hidden rounded-3xl flex items-center justify-center">
         <div className="text-center p-6">
-          <div className="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Clock className="w-6 h-6 text-primary animate-pulse" />
+          <div className={`w-12 h-12 ${loadingBgClass} rounded-full flex items-center justify-center mx-auto mb-4`}>
+            <Clock className={`w-6 h-6 ${loadingIconClass} animate-pulse`} />
           </div>
           <p className="text-muted-foreground">Caricamento mappa...</p>
         </div>
@@ -260,7 +264,7 @@ export function InteractiveMap() {
                 {selectedJob.title}
               </h3>
               
-              <Badge className="bg-primary text-primary-foreground font-semibold text-xs px-2 py-1 rounded-full">
+              <Badge className={`${theme.btnFilled} font-semibold text-xs px-2 py-1 rounded-full`}>
                 {selectedJob.price}
               </Badge>
               
@@ -269,7 +273,7 @@ export function InteractiveMap() {
                 <span className="text-xs">{selectedJob.schedule}</span>
               </div>
               
-              <div className="flex items-center justify-end mt-2 text-secondary font-medium text-xs">
+              <div className={`flex items-center justify-end mt-2 ${theme.primaryText} font-medium text-xs`}>
                 Vedi dettagli
                 <ChevronRight className="w-3 h-3" />
               </div>
