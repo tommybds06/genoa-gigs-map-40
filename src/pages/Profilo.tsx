@@ -1,15 +1,39 @@
 import { BottomNav } from "@/components/layout/BottomNav";
-import { User, Star, MapPin, Briefcase, Settings, LogOut } from "lucide-react";
+import { User, Star, MapPin, Briefcase, Settings, LogOut, Save } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useProfile } from "@/hooks/useProfile";
 import { useNavigate } from "react-router-dom";
+import { TagSelector } from "@/components/tags/TagSelector";
+import { useState, useEffect } from "react";
 
 const Profilo = () => {
   const { user, signOut } = useAuth();
+  const { profile, loading, updateTags } = useProfile();
   const navigate = useNavigate();
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [hasChanges, setHasChanges] = useState(false);
+
+  useEffect(() => {
+    if (profile?.tags) {
+      setSelectedTags(profile.tags);
+    }
+  }, [profile?.tags]);
+
+  useEffect(() => {
+    if (profile?.tags) {
+      const tagsChanged = JSON.stringify(selectedTags.sort()) !== JSON.stringify([...profile.tags].sort());
+      setHasChanges(tagsChanged);
+    }
+  }, [selectedTags, profile?.tags]);
 
   const handleLogout = async () => {
     await signOut();
     navigate("/auth");
+  };
+
+  const handleSaveTags = async () => {
+    await updateTags(selectedTags);
+    setHasChanges(false);
   };
 
   return (
@@ -32,7 +56,7 @@ const Profilo = () => {
               <User className="w-10 h-10" />
             </div>
             <div>
-              <h2 className="text-xl font-bold">{user?.user_metadata?.full_name || "Utente"}</h2>
+              <h2 className="text-xl font-bold">{profile?.full_name || user?.user_metadata?.full_name || "Utente"}</h2>
               <p className="text-muted-foreground text-sm mb-1">{user?.email}</p>
               <div className="flex items-center gap-1 text-primary">
                 <Star className="w-4 h-4" fill="currentColor" />
@@ -46,17 +70,40 @@ const Profilo = () => {
         {/* Stats */}
         <div className="grid grid-cols-2 gap-3 mb-4">
           <div className="material-card p-4 text-center animate-fade-in" style={{ animationDelay: "0.1s" }}>
-            <div className="text-2xl font-bold text-primary">8</div>
-            <div className="text-sm text-muted-foreground">Lavori Completati</div>
+            <div className="text-2xl font-bold text-primary">{profile?.xp_points || 0}</div>
+            <div className="text-sm text-muted-foreground">Punti XP</div>
           </div>
           <div className="material-card p-4 text-center animate-fade-in" style={{ animationDelay: "0.15s" }}>
-            <div className="text-2xl font-bold text-secondary">3</div>
-            <div className="text-sm text-muted-foreground">In Corso</div>
+            <div className="text-2xl font-bold text-secondary">Lv.{profile?.level || 1}</div>
+            <div className="text-sm text-muted-foreground">Livello</div>
           </div>
         </div>
 
-        {/* Info */}
+        {/* Tag Selector */}
         <div className="material-card p-4 mb-4 animate-fade-in" style={{ animationDelay: "0.2s" }}>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-semibold">I tuoi Interessi</h3>
+            {hasChanges && (
+              <button 
+                onClick={handleSaveTags}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-primary-foreground rounded-full text-sm font-medium hover:bg-primary/90 transition-colors"
+              >
+                <Save className="w-4 h-4" />
+                Salva
+              </button>
+            )}
+          </div>
+          <p className="text-sm text-muted-foreground mb-4">
+            Seleziona i tag per personalizzare la tua esperienza nella Lista
+          </p>
+          <TagSelector 
+            selectedTags={selectedTags} 
+            onChange={setSelectedTags} 
+          />
+        </div>
+
+        {/* Info */}
+        <div className="material-card p-4 mb-4 animate-fade-in" style={{ animationDelay: "0.25s" }}>
           <h3 className="font-semibold mb-3">Informazioni</h3>
           <div className="space-y-3">
             <div className="flex items-center gap-3 text-sm">
@@ -65,7 +112,7 @@ const Profilo = () => {
             </div>
             <div className="flex items-center gap-3 text-sm">
               <Briefcase className="w-4 h-4 text-muted-foreground" />
-              <span>Disponibile per: Ripetizioni, Consegne, Eventi</span>
+              <span>Ruolo: {profile?.role === "employer" ? "Datore di Lavoro" : "Lavoratore"}</span>
             </div>
           </div>
         </div>
@@ -74,7 +121,7 @@ const Profilo = () => {
         <button 
           onClick={handleLogout}
           className="material-btn-outlined w-full p-4 flex items-center justify-center gap-2 text-destructive border-destructive/30 animate-fade-in" 
-          style={{ animationDelay: "0.25s" }}
+          style={{ animationDelay: "0.3s" }}
         >
           <LogOut className="w-5 h-5" />
           <span className="font-medium">Esci</span>

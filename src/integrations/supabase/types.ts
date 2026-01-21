@@ -25,6 +25,7 @@ export type Database = {
           owner_id: string
           price: string | null
           status: string
+          tags: string[] | null
           title: string
           updated_at: string
         }
@@ -38,6 +39,7 @@ export type Database = {
           owner_id: string
           price?: string | null
           status?: string
+          tags?: string[] | null
           title: string
           updated_at?: string
         }
@@ -51,6 +53,7 @@ export type Database = {
           owner_id?: string
           price?: string | null
           status?: string
+          tags?: string[] | null
           title?: string
           updated_at?: string
         }
@@ -73,6 +76,7 @@ export type Database = {
           id: string
           level: number
           role: Database["public"]["Enums"]["user_role"]
+          tags: string[] | null
           updated_at: string
           username: string | null
           xp_points: number
@@ -85,6 +89,7 @@ export type Database = {
           id: string
           level?: number
           role?: Database["public"]["Enums"]["user_role"]
+          tags?: string[] | null
           updated_at?: string
           username?: string | null
           xp_points?: number
@@ -97,6 +102,7 @@ export type Database = {
           id?: string
           level?: number
           role?: Database["public"]["Enums"]["user_role"]
+          tags?: string[] | null
           updated_at?: string
           username?: string | null
           xp_points?: number

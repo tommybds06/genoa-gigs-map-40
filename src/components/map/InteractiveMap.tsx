@@ -218,16 +218,19 @@ export function InteractiveMap() {
               key={job.id}
               longitude={job.lng}
               latitude={job.lat}
-              anchor="center"
+              anchor="bottom"
               onClick={(e) => {
                 e.originalEvent.stopPropagation();
                 handleMarkerClick(job);
               }}
             >
-              <button
-                className={`w-10 h-10 ${bgColor} rounded-full flex items-center justify-center shadow-material-md hover:scale-110 transition-transform cursor-pointer`}
-              >
-                <Icon className="w-5 h-5 text-white" />
+              <button className="group flex flex-col items-center hover:scale-110 transition-transform cursor-pointer">
+                {/* Pin body */}
+                <div className={`w-10 h-10 ${bgColor} rounded-full flex items-center justify-center shadow-material-md relative`}>
+                  <Icon className="w-5 h-5 text-white" />
+                </div>
+                {/* Pin pointer */}
+                <div className={`w-0 h-0 border-l-[8px] border-r-[8px] border-t-[10px] border-l-transparent border-r-transparent ${bgColor === 'bg-primary' ? 'border-t-primary' : 'border-t-secondary'} -mt-1`} />
               </button>
             </Marker>
           );
@@ -328,11 +331,16 @@ function MapFallback({ jobs, onJobSelect }: { jobs: Job[]; onJobSelect: (job: Jo
         return (
           <button
             key={job.id}
-            className={`absolute transform -translate-x-1/2 -translate-y-1/2 w-10 h-10 ${bgColor} rounded-full flex items-center justify-center shadow-material-md hover:scale-110 transition-transform cursor-pointer`}
+            className="absolute transform -translate-x-1/2 -translate-y-full flex flex-col items-center hover:scale-110 transition-transform cursor-pointer"
             style={{ top: pos.top, left: pos.left }}
             onClick={() => onJobSelect(job)}
           >
-            <Icon className="w-5 h-5 text-white" />
+            {/* Pin body */}
+            <div className={`w-10 h-10 ${bgColor} rounded-full flex items-center justify-center shadow-material-md`}>
+              <Icon className="w-5 h-5 text-white" />
+            </div>
+            {/* Pin pointer */}
+            <div className={`w-0 h-0 border-l-[8px] border-r-[8px] border-t-[10px] border-l-transparent border-r-transparent ${bgColor === 'bg-primary' ? 'border-t-primary' : 'border-t-secondary'} -mt-1`} />
           </button>
         );
       })}
