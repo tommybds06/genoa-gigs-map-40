@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Header } from '@/components/layout/Header';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { useAuth } from '@/hooks/useAuth';
+import { useAppTheme } from '@/hooks/useAppTheme';
 import { supabase } from '@/integrations/supabase/client';
 import { Briefcase, Users, ChevronRight, Clock, Euro, ArrowLeft, MessageCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -50,6 +51,7 @@ function getTimeAgo(dateString: string): string {
 
 const Annunci = () => {
   const { user } = useAuth();
+  const { theme } = useAppTheme();
   const navigate = useNavigate();
   const [jobs, setJobs] = useState<JobWithCount[]>([]);
   const [loading, setLoading] = useState(true);
@@ -160,11 +162,6 @@ const Annunci = () => {
     navigate('/messaggi');
   };
 
-  // Employer theme colors
-  const primaryBtnClass = "bg-blue-600 hover:bg-blue-700";
-  const primaryBgClass = "bg-blue-600/10";
-  const primaryTextClass = "text-blue-600";
-
   if (selectedJob) {
     return (
       <div className="flex flex-col min-h-screen bg-background">
@@ -208,7 +205,7 @@ const Annunci = () => {
                 >
                   <Avatar className="h-14 w-14 border-2 border-blue-600/20">
                     <AvatarImage src={app.applicant.avatar_url || undefined} />
-                    <AvatarFallback className={`${primaryBgClass} ${primaryTextClass} font-semibold`}>
+                    <AvatarFallback className={`${theme.accentBg} ${theme.primaryText} font-semibold`}>
                       {(app.applicant.full_name || 'U')[0].toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
@@ -229,7 +226,7 @@ const Annunci = () => {
 
                   <Button
                     onClick={() => handleChatClick(app.applicant.id)}
-                    className={`${primaryBtnClass} text-white rounded-full px-4`}
+                    className={`${theme.btnFilled} ${theme.btnFilledHover} rounded-full px-4`}
                   >
                     <MessageCircle className="h-4 w-4 mr-2" />
                     Chatta
@@ -268,7 +265,7 @@ const Annunci = () => {
           </div>
         ) : jobs.length === 0 ? (
           <div className="text-center py-12">
-            <Briefcase className={`h-12 w-12 ${primaryTextClass} mx-auto mb-3`} />
+            <Briefcase className={`h-12 w-12 ${theme.primaryText} mx-auto mb-3`} />
             <h3 className="font-semibold text-lg mb-1">Nessun annuncio</h3>
             <p className="text-sm text-muted-foreground">
               Non hai ancora creato annunci di lavoro
@@ -283,8 +280,8 @@ const Annunci = () => {
                 className="material-card p-4 cursor-pointer hover:shadow-md transition-shadow"
               >
                 <div className="flex items-center gap-3">
-                  <div className={`w-12 h-12 ${primaryBgClass} rounded-2xl flex items-center justify-center shrink-0`}>
-                    <Briefcase className={`h-6 w-6 ${primaryTextClass}`} />
+                  <div className={`w-12 h-12 ${theme.accentBg} rounded-2xl flex items-center justify-center shrink-0`}>
+                    <Briefcase className={`h-6 w-6 ${theme.primaryText}`} />
                   </div>
 
                   <div className="flex-1 min-w-0">
