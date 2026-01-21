@@ -114,10 +114,10 @@ const categoryIcons: Record<string, typeof GraduationCap> = {
 };
 
 const categoryColors: Record<string, string> = {
-  tutoring: "bg-blue-500",
-  delivery: "bg-green-500",
-  event: "bg-purple-500",
-  general: "bg-secondary",
+  tutoring: "bg-primary",
+  delivery: "bg-primary",
+  event: "bg-primary",
+  general: "bg-primary",
 };
 
 type Job = typeof sampleJobs[0];
@@ -126,6 +126,7 @@ export function InteractiveMap() {
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [mapboxToken, setMapboxToken] = useState<string | null>(null);
+  const [lastSelectedJob, setLastSelectedJob] = useState<Job | null>(null);
 
   useEffect(() => {
     const fetchMapboxToken = async () => {
@@ -134,21 +135,32 @@ export function InteractiveMap() {
         if (error) throw error;
         if (data?.token) {
           setMapboxToken(data.token);
+        } else {
+          setMapboxToken(""); // Empty string means failed
         }
       } catch (err) {
         console.error('Failed to fetch Mapbox token:', err);
+        setMapboxToken(""); // Empty string means failed
       }
     };
     
     fetchMapboxToken();
   }, []);
 
+  // Store the last selected job for the drawer
+  useEffect(() => {
+    if (selectedJob) {
+      setLastSelectedJob(selectedJob);
+    }
+  }, [selectedJob]);
+
   const handleMarkerClick = useCallback((job: Job) => {
     setSelectedJob(job);
   }, []);
 
   const handlePopupClick = useCallback(() => {
-    setIsDetailsOpen(true);
+    setSelectedJob(null); // Close popup first
+    setIsDetailsOpen(true); // Then open drawer
   }, []);
 
   const handleMapClick = useCallback(() => {
@@ -159,8 +171,22 @@ export function InteractiveMap() {
     setIsDetailsOpen(false);
   }, []);
 
-  // Fallback to static placeholder if no token
-  if (!mapboxToken) {
+  // Show loading state while fetching token
+  if (mapboxToken === null) {
+    return (
+      <div className="relative w-full h-full bg-muted overflow-hidden rounded-3xl flex items-center justify-center">
+        <div className="text-center p-6">
+          <div className="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Clock className="w-6 h-6 text-primary animate-pulse" />
+          </div>
+          <p className="text-muted-foreground">Caricamento mappa...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Fallback if token failed to load
+  if (mapboxToken === "") {
     return <MapFallback jobs={sampleJobs} onJobSelect={(job) => {
       setSelectedJob(job);
       setIsDetailsOpen(true);
@@ -171,12 +197,12 @@ export function InteractiveMap() {
     <>
       <Map
         initialViewState={{
-          longitude: 8.9340,
-          latitude: 44.4070,
-          zoom: 13.5,
+          longitude: 8.9463,
+          latitude: 44.4056,
+          zoom: 13,
         }}
         style={{ width: "100%", height: "100%" }}
-        mapStyle="mapbox://styles/mapbox/light-v11"
+        mapStyle="mapbox://styles/mapbox/streets-v12"
         mapboxAccessToken={mapboxToken}
         onClick={handleMapClick}
         reuseMaps
@@ -256,7 +282,7 @@ export function InteractiveMap() {
       </Map>
 
       <JobDetailsSheet
-        job={selectedJob}
+        job={lastSelectedJob}
         isOpen={isDetailsOpen}
         onClose={handleCloseDetails}
       />
