@@ -86,7 +86,7 @@ const Onboarding = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="bg-primary text-primary-foreground px-6 py-8">
+      <div className="bg-primary text-primary-foreground px-6 py-8 text-center">
         <h1 className="text-2xl font-bold">Completa il tuo profilo</h1>
         <p className="text-primary-foreground/80 mt-1">
           Fatti conoscere dalla community!
