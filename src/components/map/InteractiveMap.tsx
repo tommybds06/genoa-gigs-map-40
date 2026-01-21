@@ -4,6 +4,8 @@ import { GraduationCap, Truck, PartyPopper, Briefcase, Clock, ChevronRight } fro
 import { Badge } from "@/components/ui/badge";
 import { JobDetailsSheet } from "./JobDetailsSheet";
 import { supabase } from "@/integrations/supabase/client";
+import { useUser } from "@/contexts/UserContext";
+import { useAppTheme } from "@/hooks/useAppTheme";
 import "mapbox-gl/dist/mapbox-gl.css";
 
 // Sample job data for Genova
@@ -113,13 +115,6 @@ const categoryIcons: Record<string, typeof GraduationCap> = {
   general: Briefcase,
 };
 
-const categoryColors: Record<string, string> = {
-  tutoring: "bg-primary",
-  delivery: "bg-primary",
-  event: "bg-primary",
-  general: "bg-primary",
-};
-
 type Job = typeof sampleJobs[0];
 
 export function InteractiveMap() {
@@ -127,6 +122,12 @@ export function InteractiveMap() {
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [mapboxToken, setMapboxToken] = useState<string | null>(null);
   const [lastSelectedJob, setLastSelectedJob] = useState<Job | null>(null);
+  const { isEmployer } = useUser();
+  const { theme } = useAppTheme();
+
+  // Dynamic marker colors based on role
+  const markerBgClass = isEmployer ? "bg-blue-600" : "bg-primary";
+  const markerPointerClass = isEmployer ? "border-t-blue-600" : "border-t-primary";
 
   useEffect(() => {
     const fetchMapboxToken = async () => {
@@ -187,10 +188,15 @@ export function InteractiveMap() {
 
   // Fallback if token failed to load
   if (mapboxToken === "") {
-    return <MapFallback jobs={sampleJobs} onJobSelect={(job) => {
-      setSelectedJob(job);
-      setIsDetailsOpen(true);
-    }} />;
+    return <MapFallback 
+      jobs={sampleJobs} 
+      markerBgClass={markerBgClass}
+      markerPointerClass={markerPointerClass}
+      onJobSelect={(job) => {
+        setSelectedJob(job);
+        setIsDetailsOpen(true);
+      }} 
+    />;
   }
 
   return (
@@ -211,7 +217,6 @@ export function InteractiveMap() {
 
         {sampleJobs.map((job) => {
           const Icon = categoryIcons[job.category] || Briefcase;
-          const bgColor = categoryColors[job.category] || "bg-secondary";
 
           return (
             <Marker
@@ -226,11 +231,11 @@ export function InteractiveMap() {
             >
               <button className="group flex flex-col items-center hover:scale-110 transition-transform cursor-pointer">
                 {/* Pin body */}
-                <div className={`w-10 h-10 ${bgColor} rounded-full flex items-center justify-center shadow-material-md relative`}>
+                <div className={`w-10 h-10 ${markerBgClass} rounded-full flex items-center justify-center shadow-material-md relative`}>
                   <Icon className="w-5 h-5 text-white" />
                 </div>
                 {/* Pin pointer */}
-                <div className={`w-0 h-0 border-l-[8px] border-r-[8px] border-t-[10px] border-l-transparent border-r-transparent ${bgColor === 'bg-primary' ? 'border-t-primary' : 'border-t-secondary'} -mt-1`} />
+                <div className={`w-0 h-0 border-l-[8px] border-r-[8px] border-t-[10px] border-l-transparent border-r-transparent ${markerPointerClass} -mt-1`} />
               </button>
             </Marker>
           );
@@ -290,7 +295,17 @@ export function InteractiveMap() {
 }
 
 // Fallback component when Mapbox token is not available
-function MapFallback({ jobs, onJobSelect }: { jobs: Job[]; onJobSelect: (job: Job) => void }) {
+function MapFallback({ 
+  jobs, 
+  markerBgClass, 
+  markerPointerClass, 
+  onJobSelect 
+}: { 
+  jobs: Job[]; 
+  markerBgClass: string;
+  markerPointerClass: string;
+  onJobSelect: (job: Job) => void;
+}) {
   return (
     <div className="relative w-full h-full bg-muted overflow-hidden rounded-3xl">
       {/* Stylized map background */}
@@ -317,7 +332,6 @@ function MapFallback({ jobs, onJobSelect }: { jobs: Job[]; onJobSelect: (job: Jo
       {/* Job Markers */}
       {jobs.map((job, index) => {
         const Icon = categoryIcons[job.category] || Briefcase;
-        const bgColor = categoryColors[job.category] || "bg-secondary";
         const positions = [
           { top: "25%", left: "30%" },
           { top: "45%", left: "60%" },
@@ -336,11 +350,11 @@ function MapFallback({ jobs, onJobSelect }: { jobs: Job[]; onJobSelect: (job: Jo
             onClick={() => onJobSelect(job)}
           >
             {/* Pin body */}
-            <div className={`w-10 h-10 ${bgColor} rounded-full flex items-center justify-center shadow-material-md`}>
+            <div className={`w-10 h-10 ${markerBgClass} rounded-full flex items-center justify-center shadow-material-md`}>
               <Icon className="w-5 h-5 text-white" />
             </div>
             {/* Pin pointer */}
-            <div className={`w-0 h-0 border-l-[8px] border-r-[8px] border-t-[10px] border-l-transparent border-r-transparent ${bgColor === 'bg-primary' ? 'border-t-primary' : 'border-t-secondary'} -mt-1`} />
+            <div className={`w-0 h-0 border-l-[8px] border-r-[8px] border-t-[10px] border-l-transparent border-r-transparent ${markerPointerClass} -mt-1`} />
           </button>
         );
       })}

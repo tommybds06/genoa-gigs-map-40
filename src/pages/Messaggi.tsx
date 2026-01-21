@@ -1,7 +1,10 @@
 import { BottomNav } from "@/components/layout/BottomNav";
 import { MessageCircle } from "lucide-react";
+import { useAppTheme } from "@/hooks/useAppTheme";
 
 const Messaggi = () => {
+  const { theme } = useAppTheme();
+
   return (
     <div className="flex flex-col min-h-screen bg-background">
       {/* Simple Header */}
@@ -11,7 +14,7 @@ const Messaggi = () => {
 
       <main className="flex-1 flex flex-col items-center justify-center px-4 pb-20">
         <div className="material-card-elevated p-8 text-center max-w-sm animate-scale-in">
-          <div className="w-16 h-16 bg-accent text-accent-foreground rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className={`w-16 h-16 ${theme.accentBg} ${theme.accentText} rounded-full flex items-center justify-center mx-auto mb-4`}>
             <MessageCircle className="w-8 h-8" />
           </div>
           <h2 className="text-xl font-semibold mb-2">Nessun Messaggio</h2>
