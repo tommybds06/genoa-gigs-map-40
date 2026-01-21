@@ -228,6 +228,30 @@
   }
 }
 
+/* Mapbox Popup Styling - Material Design */
+.mapboxgl-popup {
+  z-index: 100;
+}
+
+.mapboxgl-popup-content {
+  @apply bg-card rounded-xl p-0 !important;
+  box-shadow: var(--shadow-lg);
+  border: none !important;
+  min-width: 200px;
+}
+
+.mapboxgl-popup-tip {
+  border-top-color: hsl(var(--card)) !important;
+}
+
+.mapboxgl-popup-close-button {
+  display: none;
+}
+
+.job-popup .mapboxgl-popup-content {
+  padding: 0 !important;
+}
+
 @layer utilities {
   .shadow-material-sm {
     box-shadow: var(--shadow-sm);
