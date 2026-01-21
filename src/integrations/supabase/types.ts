@@ -119,6 +119,7 @@ export type Database = {
           id: string
           is_onboarded: boolean | null
           level: number
+          looking_for: string | null
           photos: string[] | null
           role: Database["public"]["Enums"]["user_role"]
           social_links: Json | null
@@ -136,6 +137,7 @@ export type Database = {
           id: string
           is_onboarded?: boolean | null
           level?: number
+          looking_for?: string | null
           photos?: string[] | null
           role?: Database["public"]["Enums"]["user_role"]
           social_links?: Json | null
@@ -153,6 +155,7 @@ export type Database = {
           id?: string
           is_onboarded?: boolean | null
           level?: number
+          looking_for?: string | null
           photos?: string[] | null
           role?: Database["public"]["Enums"]["user_role"]
           social_links?: Json | null

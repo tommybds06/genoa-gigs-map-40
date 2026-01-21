@@ -23,6 +23,10 @@ export function BottomNav() {
     { icon: User, label: "Profilo", path: "/profilo" },
   ];
 
+  // Dynamic active color based on role
+  const activeColorClass = isEmployer ? "text-blue-600" : "text-secondary";
+  const activeBgClass = isEmployer ? "bg-blue-50" : "bg-accent";
+
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 material-nav safe-bottom">
       <div className="flex items-center justify-around h-16 max-w-lg mx-auto">
@@ -36,8 +40,8 @@ export function BottomNav() {
               to={item.path}
               className={`flex flex-col items-center justify-center gap-0.5 px-6 py-2 rounded-2xl transition-all duration-200 ${
                 isActive 
-                  ? "nav-active bg-accent" 
-                  : "nav-inactive hover:bg-muted"
+                  ? `${activeColorClass} ${activeBgClass}` 
+                  : "text-muted-foreground hover:bg-muted"
               }`}
             >
               <Icon className="w-6 h-6" strokeWidth={isActive ? 2.5 : 2} />
