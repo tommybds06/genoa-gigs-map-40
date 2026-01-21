@@ -3,6 +3,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
+export interface SocialLinks {
+  instagram?: string | null;
+  website?: string | null;
+}
+
 export interface Profile {
   id: string;
   full_name: string | null;
@@ -13,6 +18,10 @@ export interface Profile {
   xp_points: number;
   level: number;
   tags: string[];
+  photos: string[];
+  experience: string | null;
+  social_links: SocialLinks | null;
+  is_onboarded: boolean;
 }
 
 export function useProfile() {
@@ -36,7 +45,13 @@ export function useProfile() {
 
       if (error) throw error;
       
-      setProfile(data ? { ...data, tags: data.tags || [] } : null);
+      setProfile(data ? { 
+        ...data, 
+        tags: data.tags || [],
+        photos: data.photos || [],
+        social_links: data.social_links as SocialLinks | null,
+        is_onboarded: data.is_onboarded || false
+      } : null);
     } catch (error) {
       console.error("Error fetching profile:", error);
     } finally {

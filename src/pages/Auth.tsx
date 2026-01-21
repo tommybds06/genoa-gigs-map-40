@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { 
@@ -34,9 +35,24 @@ const Auth = () => {
   const [errors, setErrors] = useState<{ email?: string; password?: string; name?: string; role?: string }>({});
 
   useEffect(() => {
-    if (user && !authLoading) {
-      navigate('/');
-    }
+    const checkOnboarding = async () => {
+      if (user && !authLoading) {
+        // Check if user has completed onboarding
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('is_onboarded')
+          .eq('id', user.id)
+          .single();
+        
+        if (profile?.is_onboarded) {
+          navigate('/');
+        } else {
+          navigate('/onboarding');
+        }
+      }
+    };
+    
+    checkOnboarding();
   }, [user, authLoading, navigate]);
 
   const validateForm = (): boolean => {
@@ -89,7 +105,7 @@ const Auth = () => {
           }
         } else {
           toast.success('Benvenuto su GenoaGigs!');
-          navigate('/');
+          // Redirect will be handled by useEffect after checking onboarding status
         }
       } else {
         if (!selectedRole) {
@@ -107,7 +123,7 @@ const Auth = () => {
           }
         } else {
           toast.success('Account creato! Benvenuto su GenoaGigs!');
-          navigate('/');
+          // Redirect will be handled by useEffect - new users go to onboarding
         }
       }
     } catch (err) {
@@ -254,7 +270,7 @@ const Auth = () => {
                 <Loader2 className="w-5 h-5 animate-spin" />
               ) : (
                 <>
-                  {isLogin ? 'Accedi' : 'Entra in GenoaGigs'}
+                  {isLogin ? 'Accedi' : 'Prosegui'}
                   <ArrowRight className="w-5 h-5 ml-2" />
                 </>
               )}

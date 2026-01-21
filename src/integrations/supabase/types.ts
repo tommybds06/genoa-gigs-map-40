@@ -72,10 +72,14 @@ export type Database = {
           avatar_url: string | null
           bio: string | null
           created_at: string
+          experience: string | null
           full_name: string | null
           id: string
+          is_onboarded: boolean | null
           level: number
+          photos: string[] | null
           role: Database["public"]["Enums"]["user_role"]
+          social_links: Json | null
           tags: string[] | null
           updated_at: string
           username: string | null
@@ -85,10 +89,14 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
+          experience?: string | null
           full_name?: string | null
           id: string
+          is_onboarded?: boolean | null
           level?: number
+          photos?: string[] | null
           role?: Database["public"]["Enums"]["user_role"]
+          social_links?: Json | null
           tags?: string[] | null
           updated_at?: string
           username?: string | null
@@ -98,10 +106,14 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
+          experience?: string | null
           full_name?: string | null
           id?: string
+          is_onboarded?: boolean | null
           level?: number
+          photos?: string[] | null
           role?: Database["public"]["Enums"]["user_role"]
+          social_links?: Json | null
           tags?: string[] | null
           updated_at?: string
           username?: string | null
