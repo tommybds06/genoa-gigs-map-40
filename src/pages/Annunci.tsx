@@ -4,16 +4,20 @@ import { BottomNav } from '@/components/layout/BottomNav';
 import { useAuth } from '@/hooks/useAuth';
 import { useAppTheme } from '@/hooks/useAppTheme';
 import { supabase } from '@/integrations/supabase/client';
-import { Briefcase, Users, ChevronRight, Clock, Euro, ArrowLeft, MessageCircle, Loader2, Plus } from 'lucide-react';
+import { Briefcase, Users, ChevronRight, Clock, Euro, ArrowLeft, MessageCircle, Loader2, Plus, Pencil, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
+import { EditJobDialog } from '@/components/jobs/EditJobDialog';
+import { DeleteJobDialog } from '@/components/jobs/DeleteJobDialog';
 
 interface Job {
   id: string;
   title: string;
   description: string | null;
   price: string | null;
+  schedule: string | null;
   category: string | null;
   created_at: string;
   status: string;
@@ -58,44 +62,52 @@ const Annunci = () => {
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [applications, setApplications] = useState<Application[]>([]);
   const [loadingApplications, setLoadingApplications] = useState(false);
+  
+  // Edit/Delete dialogs
+  const [editingJob, setEditingJob] = useState<Job | null>(null);
+  const [deletingJob, setDeletingJob] = useState<Job | null>(null);
+
+  const fetchJobs = async () => {
+    if (!user) return;
+
+    try {
+      // Calculate 48 hours ago
+      const fortyEightHoursAgo = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
+
+      // Fetch employer's jobs from last 48 hours
+      const { data: jobsData, error: jobsError } = await supabase
+        .from('jobs')
+        .select('*')
+        .eq('owner_id', user.id)
+        .gte('created_at', fortyEightHoursAgo)
+        .order('created_at', { ascending: false });
+
+      if (jobsError) throw jobsError;
+
+      // Fetch application counts for each job
+      const jobsWithCounts = await Promise.all(
+        (jobsData || []).map(async (job) => {
+          const { count } = await supabase
+            .from('applications')
+            .select('*', { count: 'exact', head: true })
+            .eq('job_id', job.id);
+
+          return {
+            ...job,
+            applicationCount: count || 0,
+          };
+        })
+      );
+
+      setJobs(jobsWithCounts);
+    } catch (error) {
+      console.error('Error fetching jobs:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchJobs = async () => {
-      if (!user) return;
-
-      try {
-        // Fetch employer's jobs
-        const { data: jobsData, error: jobsError } = await supabase
-          .from('jobs')
-          .select('*')
-          .eq('owner_id', user.id)
-          .order('created_at', { ascending: false });
-
-        if (jobsError) throw jobsError;
-
-        // Fetch application counts for each job
-        const jobsWithCounts = await Promise.all(
-          (jobsData || []).map(async (job) => {
-            const { count } = await supabase
-              .from('applications')
-              .select('*', { count: 'exact', head: true })
-              .eq('job_id', job.id);
-
-            return {
-              ...job,
-              applicationCount: count || 0,
-            };
-          })
-        );
-
-        setJobs(jobsWithCounts);
-      } catch (error) {
-        console.error('Error fetching jobs:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchJobs();
   }, [user]);
 
@@ -158,8 +170,29 @@ const Annunci = () => {
   };
 
   const handleChatClick = (applicantId: string) => {
-    // Navigate to messages tab (simulating opening a chat)
     navigate('/messaggi');
+  };
+
+  const handleEditClick = (e: React.MouseEvent, job: Job) => {
+    e.stopPropagation();
+    setEditingJob(job);
+  };
+
+  const handleDeleteClick = (e: React.MouseEvent, job: Job) => {
+    e.stopPropagation();
+    setDeletingJob(job);
+  };
+
+  const handleEditSuccess = () => {
+    setEditingJob(null);
+    fetchJobs(); // Refresh the list
+    toast.success('Annuncio aggiornato!', { duration: 2000 });
+  };
+
+  const handleDeleteSuccess = () => {
+    setDeletingJob(null);
+    fetchJobs(); // Refresh the list
+    toast.success('Annuncio eliminato!', { duration: 2000 });
   };
 
   if (selectedJob) {
@@ -309,6 +342,12 @@ const Annunci = () => {
                         <Clock className="h-3 w-3" />
                         {getTimeAgo(job.created_at)}
                       </span>
+                      {job.schedule && (
+                        <span className="flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          {job.schedule}
+                        </span>
+                      )}
                       {job.price && (
                         <span className="flex items-center gap-1">
                           <Euro className="h-3 w-3" />
@@ -323,6 +362,26 @@ const Annunci = () => {
                     </p>
                   </div>
 
+                  {/* Edit/Delete buttons */}
+                  <div className="flex items-center gap-1 shrink-0">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={(e) => handleEditClick(e, job)}
+                      className="h-8 w-8 rounded-full hover:bg-blue-100"
+                    >
+                      <Pencil className="h-4 w-4 text-blue-600" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={(e) => handleDeleteClick(e, job)}
+                      className="h-8 w-8 rounded-full hover:bg-red-100"
+                    >
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
+
                   <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
                 </div>
               </div>
@@ -332,6 +391,22 @@ const Annunci = () => {
       </main>
 
       <BottomNav />
+
+      {/* Edit Dialog */}
+      <EditJobDialog
+        job={editingJob}
+        isOpen={!!editingJob}
+        onClose={() => setEditingJob(null)}
+        onSuccess={handleEditSuccess}
+      />
+
+      {/* Delete Dialog */}
+      <DeleteJobDialog
+        job={deletingJob}
+        isOpen={!!deletingJob}
+        onClose={() => setDeletingJob(null)}
+        onSuccess={handleDeleteSuccess}
+      />
     </div>
   );
 };

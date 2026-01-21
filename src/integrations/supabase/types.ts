@@ -66,6 +66,7 @@ export type Database = {
           lng: number | null
           owner_id: string
           price: string | null
+          schedule: string | null
           status: string
           tags: string[] | null
           title: string
@@ -80,6 +81,7 @@ export type Database = {
           lng?: number | null
           owner_id: string
           price?: string | null
+          schedule?: string | null
           status?: string
           tags?: string[] | null
           title: string
@@ -94,6 +96,7 @@ export type Database = {
           lng?: number | null
           owner_id?: string
           price?: string | null
+          schedule?: string | null
           status?: string
           tags?: string[] | null
           title?: string

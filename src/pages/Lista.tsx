@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { TagBadges } from "@/components/tags/TagSelector";
 import { Link } from "react-router-dom";
+import { JobDetailsSheet } from "@/components/map/JobDetailsSheet";
 
 interface Job {
   id: string;
@@ -14,6 +15,7 @@ interface Job {
   category: string | null;
   description: string | null;
   price: string | null;
+  schedule: string | null;
   lat: number | null;
   lng: number | null;
   created_at: string;
@@ -53,12 +55,17 @@ const Lista = () => {
   const { profile, loading: profileLoading } = useProfile();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedJob, setSelectedJob] = useState<Job | null>(null);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
 
   useEffect(() => {
     const fetchJobs = async () => {
       if (!user || profileLoading) return;
       
       setLoading(true);
+      
+      // Calculate 48 hours ago
+      const fortyEightHoursAgo = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
       
       try {
         // If employer, show only their own jobs
@@ -67,6 +74,7 @@ const Lista = () => {
             .from("jobs")
             .select("*")
             .eq("owner_id", user.id)
+            .gte("created_at", fortyEightHoursAgo)
             .order("created_at", { ascending: false });
           
           if (error) throw error;
@@ -84,6 +92,7 @@ const Lista = () => {
               .from("jobs")
               .select("*")
               .eq("status", "open")
+              .gte("created_at", fortyEightHoursAgo)
               .overlaps("tags", userTags)
               .order("created_at", { ascending: false });
             
@@ -100,6 +109,15 @@ const Lista = () => {
 
     fetchJobs();
   }, [user, profile, profileLoading]);
+
+  const handleJobClick = (job: Job) => {
+    setSelectedJob(job);
+    setIsDetailsOpen(true);
+  };
+
+  const handleCloseDetails = () => {
+    setIsDetailsOpen(false);
+  };
 
   const isEmployer = profile?.role === "employer";
 
@@ -138,8 +156,9 @@ const Lista = () => {
               return (
                 <div 
                   key={job.id} 
-                  className="material-card p-4 animate-fade-in"
+                  className="material-card p-4 animate-fade-in cursor-pointer hover:shadow-md transition-shadow"
                   style={{ animationDelay: `${index * 0.05}s` }}
+                  onClick={() => handleJobClick(job)}
                 >
                   <div className="flex items-start gap-3">
                     <div className="w-12 h-12 bg-accent text-accent-foreground rounded-2xl flex items-center justify-center shrink-0">
@@ -154,6 +173,12 @@ const Lista = () => {
                       )}
                       
                       <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+                        {job.schedule && (
+                          <span className="inline-flex items-center gap-1 text-muted-foreground">
+                            <Clock className="w-3.5 h-3.5" />
+                            {job.schedule}
+                          </span>
+                        )}
                         {job.lat && job.lng && (
                           <span className="inline-flex items-center gap-1 text-muted-foreground">
                             <MapPin className="w-3.5 h-3.5" />
@@ -181,6 +206,19 @@ const Lista = () => {
       </main>
 
       <BottomNav />
+
+      {/* Job Details Sheet */}
+      <JobDetailsSheet
+        job={selectedJob ? {
+          ...selectedJob,
+          lat: selectedJob.lat || 0,
+          lng: selectedJob.lng || 0,
+          schedule: selectedJob.schedule || undefined,
+          tags: selectedJob.tags || undefined,
+        } : null}
+        isOpen={isDetailsOpen}
+        onClose={handleCloseDetails}
+      />
     </div>
   );
 };
