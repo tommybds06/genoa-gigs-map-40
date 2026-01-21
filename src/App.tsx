@@ -10,6 +10,7 @@ import Lista from "./pages/Lista";
 import Messaggi from "./pages/Messaggi";
 import Profilo from "./pages/Profilo";
 import Auth from "./pages/Auth";
+import Onboarding from "./pages/Onboarding";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -23,6 +24,7 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/auth" element={<Auth />} />
+            <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
             <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
             <Route path="/lista" element={<ProtectedRoute><Lista /></ProtectedRoute>} />
             <Route path="/messaggi" element={<ProtectedRoute><Messaggi /></ProtectedRoute>} />
