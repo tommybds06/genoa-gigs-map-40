@@ -1,5 +1,6 @@
-import { Map, List, MessageCircle, User } from "lucide-react";
+import { Map, List, MessageCircle, User, Store } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
+import { useProfile } from "@/hooks/useProfile";
 
 interface NavItem {
   icon: React.ElementType;
@@ -7,15 +8,20 @@ interface NavItem {
   path: string;
 }
 
-const navItems: NavItem[] = [
-  { icon: Map, label: "Mappa", path: "/" },
-  { icon: List, label: "Lista", path: "/lista" },
-  { icon: MessageCircle, label: "Messaggi", path: "/messaggi" },
-  { icon: User, label: "Profilo", path: "/profilo" },
-];
-
 export function BottomNav() {
   const location = useLocation();
+  const { profile } = useProfile();
+  
+  const isEmployer = profile?.role === "employer";
+
+  const navItems: NavItem[] = [
+    { icon: Map, label: "Mappa", path: "/" },
+    isEmployer 
+      ? { icon: Store, label: "Annunci", path: "/annunci" }
+      : { icon: List, label: "Lista", path: "/lista" },
+    { icon: MessageCircle, label: "Messaggi", path: "/messaggi" },
+    { icon: User, label: "Profilo", path: "/profilo" },
+  ];
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 material-nav safe-bottom">
