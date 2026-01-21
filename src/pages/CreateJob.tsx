@@ -82,15 +82,17 @@ const CreateJob = () => {
       return;
     }
 
+    // Check if employer has set their location
+    if (!profile.lat || !profile.lng) {
+      toast.error('Imposta la posizione della tua attività nel Profilo', { duration: 3000 });
+      return;
+    }
+
     setLoading(true);
 
     try {
       // Combine all tags
       const allTags = [...selectedTypeTags, ...selectedRoleTags];
-      
-      // Get location from employer profile
-      const employerLat = profile.lat ?? null;
-      const employerLng = profile.lng ?? null;
 
       const { error } = await supabase
         .from('jobs')
@@ -101,8 +103,8 @@ const CreateJob = () => {
           price: price.trim() || null,
           category: selectedRoleTags[0]?.toLowerCase() || 'general',
           tags: allTags,
-          lat: employerLat,
-          lng: employerLng,
+          lat: profile.lat,
+          lng: profile.lng,
           status: 'open',
         });
 

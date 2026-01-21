@@ -16,13 +16,16 @@ interface JobOwner {
 interface Job {
   id: string;
   title: string;
-  description: string;
-  price: string;
-  category: string;
-  schedule: string;
+  description: string | null;
+  price: string | null;
+  category: string | null;
+  schedule?: string;
+  tags?: string[] | null;
   lat: number;
   lng: number;
-  owner: JobOwner;
+  owner_id?: string;
+  status?: string;
+  owner?: JobOwner;
 }
 
 interface JobDetailsSheetProps {
@@ -58,9 +61,9 @@ export function JobDetailsSheet({ job, isOpen, onClose }: JobDetailsSheetProps) 
   
   if (!job) return null;
 
-  const Icon = categoryIcons[job.category] || Briefcase;
-  const categoryLabel = categoryLabels[job.category] || "Altro";
-  const categoryColor = categoryColors[job.category] || "bg-muted text-muted-foreground";
+  const Icon = categoryIcons[job.category || 'general'] || Briefcase;
+  const categoryLabel = categoryLabels[job.category || 'general'] || "Altro";
+  const categoryColor = categoryColors[job.category || 'general'] || "bg-muted text-muted-foreground";
 
   // Dynamic button class based on role
   const candidateButtonClass = isEmployer 
@@ -92,51 +95,59 @@ export function JobDetailsSheet({ job, isOpen, onClose }: JobDetailsSheetProps) 
                 <SheetTitle className="text-2xl font-bold text-foreground leading-tight">
                   {job.title}
                 </SheetTitle>
-                <Badge className={`${theme.btnFilled} font-bold text-base px-3 py-1.5 rounded-full shrink-0`}>
-                  {job.price}
-                </Badge>
+                {job.price && (
+                  <Badge className={`${theme.btnFilled} font-bold text-base px-3 py-1.5 rounded-full shrink-0`}>
+                    {job.price}
+                  </Badge>
+                )}
               </div>
 
               <div className="flex items-center gap-4 mt-3">
                 <Badge variant="outline" className={`${categoryColor} border-none font-medium`}>
                   {categoryLabel}
                 </Badge>
-                <div className="flex items-center gap-1 text-muted-foreground text-sm">
-                  <Clock className="w-4 h-4" />
-                  <span>{job.schedule}</span>
-                </div>
+                {job.schedule && (
+                  <div className="flex items-center gap-1 text-muted-foreground text-sm">
+                    <Clock className="w-4 h-4" />
+                    <span>{job.schedule}</span>
+                  </div>
+                )}
               </div>
             </SheetHeader>
 
             {/* Owner Section */}
-            <div className="py-4 border-t border-b border-border">
-              <h3 className="text-sm font-semibold text-muted-foreground mb-3">CHI OFFRE</h3>
-              <div className="flex items-center gap-3">
-                <Avatar className={`w-12 h-12 border-2 ${isEmployer ? "border-blue-600/20" : "border-primary/20"}`}>
-                  <AvatarFallback className={`${theme.accentBg} ${theme.accentText} font-bold`}>
-                    {job.owner.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex-1">
-                  <p className="font-semibold text-foreground">{job.owner.name}</p>
-                  <div className="flex items-center gap-1">
-                    <Star className={`w-4 h-4 ${theme.primaryText} fill-current`} />
-                    <span className="font-medium text-sm">{job.owner.rating}</span>
-                    <span className="text-muted-foreground text-sm">
-                      ({job.owner.reviewCount} recensioni)
-                    </span>
+            {job.owner && (
+              <div className="py-4 border-t border-b border-border">
+                <h3 className="text-sm font-semibold text-muted-foreground mb-3">CHI OFFRE</h3>
+                <div className="flex items-center gap-3">
+                  <Avatar className={`w-12 h-12 border-2 ${isEmployer ? "border-blue-600/20" : "border-primary/20"}`}>
+                    <AvatarFallback className={`${theme.accentBg} ${theme.accentText} font-bold`}>
+                      {job.owner.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1">
+                    <p className="font-semibold text-foreground">{job.owner.name}</p>
+                    <div className="flex items-center gap-1">
+                      <Star className={`w-4 h-4 ${theme.primaryText} fill-current`} />
+                      <span className="font-medium text-sm">{job.owner.rating}</span>
+                      <span className="text-muted-foreground text-sm">
+                        ({job.owner.reviewCount} recensioni)
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            )}
 
             {/* Description */}
-            <div className="py-4">
-              <h3 className="text-sm font-semibold text-muted-foreground mb-3">DESCRIZIONE</h3>
-              <p className="text-foreground leading-relaxed">
-                {job.description}
-              </p>
-            </div>
+            {job.description && (
+              <div className="py-4">
+                <h3 className="text-sm font-semibold text-muted-foreground mb-3">DESCRIZIONE</h3>
+                <p className="text-foreground leading-relaxed">
+                  {job.description}
+                </p>
+              </div>
+            )}
 
             {/* Static Map Preview */}
             <div className="py-4 border-t border-border">
