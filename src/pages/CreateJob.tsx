@@ -73,12 +73,12 @@ const CreateJob = () => {
 
   const handleSubmit = async () => {
     if (!validateForm()) {
-      toast.error('Compila tutti i campi obbligatori');
+      toast.error('Compila i campi obbligatori', { duration: 2000 });
       return;
     }
 
     if (!user || !profile) {
-      toast.error('Devi essere autenticato');
+      toast.error('Devi essere autenticato', { duration: 2000 });
       return;
     }
 
@@ -108,11 +108,11 @@ const CreateJob = () => {
 
       if (error) throw error;
 
-      toast.success('Annuncio pubblicato!');
+      toast.success('Annuncio pubblicato!', { duration: 2000 });
       navigate('/annunci');
     } catch (error) {
       console.error('Error creating job:', error);
-      toast.error('Errore nella creazione dell\'annuncio');
+      toast.error('Errore nella pubblicazione', { duration: 2000 });
     } finally {
       setLoading(false);
     }
