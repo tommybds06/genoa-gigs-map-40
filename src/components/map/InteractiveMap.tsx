@@ -230,15 +230,24 @@ export function InteractiveMap() {
                 {selectedJob.title}
               </h3>
               
-              {selectedJob.price && (
-                <Badge className={`${theme.btnFilled} font-semibold text-xs px-2 py-1 rounded-full`}>
-                  {selectedJob.price}
-                </Badge>
-              )}
+              {/* Price + Schedule row */}
+              <div className="flex items-center justify-between gap-2 mb-2">
+                {selectedJob.price && (
+                  <Badge className={`${theme.btnFilled} font-semibold text-xs px-2 py-1 rounded-full`}>
+                    {selectedJob.price}
+                  </Badge>
+                )}
+                {selectedJob.schedule && (
+                  <div className="flex items-center gap-1 text-muted-foreground">
+                    <Clock className="w-3 h-3" />
+                    <span className="text-xs">{selectedJob.schedule}</span>
+                  </div>
+                )}
+              </div>
               
               {/* Colored Tags */}
               {selectedJob.tags && selectedJob.tags.length > 0 && (
-                <div className="flex flex-wrap gap-1 mt-2">
+                <div className="flex flex-wrap gap-1">
                   {selectedJob.tags.map((tag) => (
                     <span
                       key={tag}
@@ -251,13 +260,6 @@ export function InteractiveMap() {
                       {tag}
                     </span>
                   ))}
-                </div>
-              )}
-              
-              {selectedJob.schedule && (
-                <div className="flex items-center gap-1 mt-2 text-muted-foreground">
-                  <Clock className="w-3 h-3" />
-                  <span className="text-xs">{selectedJob.schedule}</span>
                 </div>
               )}
               
