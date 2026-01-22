@@ -4,9 +4,10 @@ import { BottomNav } from '@/components/layout/BottomNav';
 import { useAuth } from '@/hooks/useAuth';
 import { useAppTheme } from '@/hooks/useAppTheme';
 import { supabase } from '@/integrations/supabase/client';
-import { Briefcase, Users, ChevronRight, Clock, Euro, ArrowLeft, MessageCircle, Loader2, Plus, Pencil, Trash2 } from 'lucide-react';
+import { Briefcase, Users, ChevronRight, ArrowLeft, Loader2, Plus, Pencil, Trash2, Check, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { EditJobDialog } from '@/components/jobs/EditJobDialog';
@@ -27,6 +28,7 @@ interface Application {
   id: string;
   created_at: string;
   status: string;
+  job_id: string;
   applicant: {
     id: string;
     full_name: string | null;
@@ -62,6 +64,7 @@ const Annunci = () => {
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [applications, setApplications] = useState<Application[]>([]);
   const [loadingApplications, setLoadingApplications] = useState(false);
+  const [processingAppId, setProcessingAppId] = useState<string | null>(null);
   
   // Edit/Delete dialogs
   const [editingJob, setEditingJob] = useState<Job | null>(null);
@@ -120,7 +123,8 @@ const Annunci = () => {
           id,
           created_at,
           status,
-          applicant_id
+          applicant_id,
+          job_id
         `)
         .eq('job_id', jobId)
         .order('created_at', { ascending: false });
@@ -140,6 +144,7 @@ const Annunci = () => {
             id: app.id,
             created_at: app.created_at,
             status: app.status,
+            job_id: app.job_id,
             applicant: profile || {
               id: app.applicant_id,
               full_name: null,
@@ -169,8 +174,78 @@ const Annunci = () => {
     setApplications([]);
   };
 
-  const handleChatClick = (applicantId: string) => {
-    navigate('/messaggi');
+  const handleReject = async (app: Application) => {
+    setProcessingAppId(app.id);
+    try {
+      const { error } = await supabase
+        .from('applications')
+        .update({ status: 'rejected' })
+        .eq('id', app.id);
+
+      if (error) throw error;
+
+      // Update local state
+      setApplications(prev => 
+        prev.map(a => a.id === app.id ? { ...a, status: 'rejected' } : a)
+      );
+      toast.success('Candidatura rifiutata');
+    } catch (error) {
+      console.error('Error rejecting application:', error);
+      toast.error('Errore nel rifiutare la candidatura');
+    } finally {
+      setProcessingAppId(null);
+    }
+  };
+
+  const handleAccept = async (app: Application) => {
+    if (!user || !selectedJob) return;
+    setProcessingAppId(app.id);
+    
+    try {
+      // 1. Update application status
+      const { error: updateError } = await supabase
+        .from('applications')
+        .update({ status: 'accepted' })
+        .eq('id', app.id);
+
+      if (updateError) throw updateError;
+
+      // 2. Create or get existing chat
+      const { data: existingChat } = await supabase
+        .from('chats')
+        .select('id')
+        .eq('job_id', app.job_id)
+        .eq('worker_id', app.applicant.id)
+        .eq('employer_id', user.id)
+        .maybeSingle();
+
+      let chatId = existingChat?.id;
+
+      if (!chatId) {
+        const { data: newChat, error: chatError } = await supabase
+          .from('chats')
+          .insert({
+            job_id: app.job_id,
+            worker_id: app.applicant.id,
+            employer_id: user.id,
+          })
+          .select('id')
+          .single();
+
+        if (chatError) throw chatError;
+        chatId = newChat.id;
+      }
+
+      toast.success('Candidatura accettata! Apri la chat...');
+      
+      // 3. Navigate to messages with chat id
+      navigate(`/messaggi?chat=${chatId}`);
+    } catch (error) {
+      console.error('Error accepting application:', error);
+      toast.error('Errore nell\'accettare la candidatura');
+    } finally {
+      setProcessingAppId(null);
+    }
   };
 
   const handleEditClick = (e: React.MouseEvent, job: Job) => {
@@ -185,14 +260,25 @@ const Annunci = () => {
 
   const handleEditSuccess = () => {
     setEditingJob(null);
-    fetchJobs(); // Refresh the list
+    fetchJobs();
     toast.success('Annuncio aggiornato!', { duration: 2000 });
   };
 
   const handleDeleteSuccess = () => {
     setDeletingJob(null);
-    fetchJobs(); // Refresh the list
+    fetchJobs();
     toast.success('Annuncio eliminato!', { duration: 2000 });
+  };
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'accepted':
+        return <Badge className="bg-green-500 text-white">Accettato</Badge>;
+      case 'rejected':
+        return <Badge className="bg-red-500 text-white">Rifiutato</Badge>;
+      default:
+        return <Badge className="bg-yellow-500 text-white">In attesa</Badge>;
+    }
   };
 
   if (selectedJob) {
@@ -234,36 +320,71 @@ const Annunci = () => {
               {applications.map((app) => (
                 <div
                   key={app.id}
-                  className="material-card p-4 flex items-center gap-4"
+                  className="material-card p-4"
                 >
-                  <Avatar className="h-14 w-14 border-2 border-blue-600/20">
-                    <AvatarImage src={app.applicant.avatar_url || undefined} />
-                    <AvatarFallback className={`${theme.accentBg} ${theme.primaryText} font-semibold`}>
-                      {(app.applicant.full_name || 'U')[0].toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
+                  <div className="flex items-center gap-4">
+                    <Avatar className="h-14 w-14 border-2 border-blue-600/20">
+                      <AvatarImage src={app.applicant.avatar_url || undefined} />
+                      <AvatarFallback className={`${theme.accentBg} ${theme.primaryText} font-semibold`}>
+                        {(app.applicant.full_name || 'U')[0].toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
 
-                  <div className="flex-1 min-w-0">
-                    <h4 className="font-semibold truncate">
-                      {app.applicant.full_name || 'Utente'}
-                    </h4>
-                    <p className="text-sm text-muted-foreground">
-                      Lv. {app.applicant.level}
-                    </p>
-                    {app.applicant.bio && (
-                      <p className="text-sm text-muted-foreground truncate mt-1">
-                        {app.applicant.bio}
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-semibold truncate">
+                        {app.applicant.full_name || 'Utente'}
+                      </h4>
+                      <p className="text-sm text-muted-foreground">
+                        Lv. {app.applicant.level}
                       </p>
-                    )}
+                      {app.applicant.bio && (
+                        <p className="text-sm text-muted-foreground truncate mt-1">
+                          {app.applicant.bio}
+                        </p>
+                      )}
+                    </div>
                   </div>
 
-                  <Button
-                    onClick={() => handleChatClick(app.applicant.id)}
-                    className={`${theme.btnFilled} ${theme.btnFilledHover} rounded-full px-4`}
-                  >
-                    <MessageCircle className="h-4 w-4 mr-2" />
-                    Chatta
-                  </Button>
+                  {/* Actions row */}
+                  <div className="mt-4 flex items-center justify-between">
+                    {app.status === 'pending' ? (
+                      <div className="flex items-center gap-2 w-full">
+                        <Button
+                          onClick={() => handleReject(app)}
+                          disabled={processingAppId === app.id}
+                          variant="outline"
+                          className="flex-1 border-red-300 text-red-600 hover:bg-red-50"
+                        >
+                          {processingAppId === app.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <>
+                              <X className="h-4 w-4 mr-1" />
+                              Rifiuta
+                            </>
+                          )}
+                        </Button>
+                        <Button
+                          onClick={() => handleAccept(app)}
+                          disabled={processingAppId === app.id}
+                          className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                        >
+                          {processingAppId === app.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <>
+                              <Check className="h-4 w-4 mr-1" />
+                              Accetta
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="w-full flex justify-center">
+                        {getStatusBadge(app.status)}
+                      </div>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
