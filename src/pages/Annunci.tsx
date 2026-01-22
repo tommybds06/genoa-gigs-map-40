@@ -322,47 +322,17 @@ const Annunci = () => {
                 onClick={() => handleJobClick(job)}
                 className="material-card p-4 cursor-pointer hover:shadow-md transition-shadow"
               >
-                <div className="flex items-center gap-3">
-                  <div className={`w-12 h-12 ${theme.accentBg} rounded-2xl flex items-center justify-center shrink-0`}>
-                    <Briefcase className={`h-6 w-6 ${theme.primaryText}`} />
-                  </div>
-
+                <div className="flex items-start justify-between gap-3">
+                  {/* Left: Title + Candidature */}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-semibold truncate">{job.title}</h3>
-                      {job.applicationCount > 0 && (
-                        <span className="bg-destructive text-destructive-foreground text-xs font-bold px-2 py-0.5 rounded-full shrink-0">
-                          {job.applicationCount}
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        {getTimeAgo(job.created_at)}
-                      </span>
-                      {job.schedule && (
-                        <span className="flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
-                          {job.schedule}
-                        </span>
-                      )}
-                      {job.price && (
-                        <span className="flex items-center gap-1">
-                          <Euro className="h-3 w-3" />
-                          {job.price}
-                        </span>
-                      )}
-                    </div>
-
-                    <p className="text-sm text-muted-foreground mt-1">
-                      <Users className="h-3 w-3 inline mr-1" />
+                    <h3 className="font-bold text-base truncate">{job.title}</h3>
+                    <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1">
+                      <Users className="h-4 w-4" />
                       {job.applicationCount} candidatur{job.applicationCount === 1 ? 'a' : 'e'}
                     </p>
                   </div>
 
-                  {/* Edit/Delete buttons */}
+                  {/* Right: Edit/Delete + Chevron */}
                   <div className="flex items-center gap-1 shrink-0">
                     <Button
                       variant="ghost"
@@ -380,9 +350,8 @@ const Annunci = () => {
                     >
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
+                    <ChevronRight className="h-5 w-5 text-muted-foreground" />
                   </div>
-
-                  <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
                 </div>
               </div>
             ))}
