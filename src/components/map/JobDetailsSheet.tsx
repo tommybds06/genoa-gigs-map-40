@@ -1,11 +1,15 @@
+import { useState, useEffect } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Star, Clock, MapPin, GraduationCap, Truck, PartyPopper, Briefcase, Eye, ChevronRight } from "lucide-react";
+import { Clock, MapPin, GraduationCap, Truck, PartyPopper, Briefcase, Eye, ChevronRight, Loader2, Check } from "lucide-react";
 import { useUser } from "@/contexts/UserContext";
 import { useAppTheme } from "@/hooks/useAppTheme";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface JobProfile {
   full_name: string | null;
@@ -58,7 +62,43 @@ const categoryColors: Record<string, string> = {
 export function JobDetailsSheet({ job, isOpen, onClose }: JobDetailsSheetProps) {
   const { isEmployer } = useUser();
   const { theme } = useAppTheme();
+  const { user } = useAuth();
   const navigate = useNavigate();
+  
+  const [hasApplied, setHasApplied] = useState(false);
+  const [isApplying, setIsApplying] = useState(false);
+  const [checkingStatus, setCheckingStatus] = useState(false);
+  
+  // Check if worker has already applied when sheet opens
+  useEffect(() => {
+    const checkApplicationStatus = async () => {
+      if (!job || !user || isEmployer) return;
+      
+      setCheckingStatus(true);
+      try {
+        const { data, error } = await supabase
+          .from('applications')
+          .select('id')
+          .eq('job_id', job.id)
+          .eq('applicant_id', user.id)
+          .maybeSingle();
+        
+        if (!error && data) {
+          setHasApplied(true);
+        } else {
+          setHasApplied(false);
+        }
+      } catch (error) {
+        console.error('Error checking application status:', error);
+      } finally {
+        setCheckingStatus(false);
+      }
+    };
+
+    if (isOpen && job) {
+      checkApplicationStatus();
+    }
+  }, [isOpen, job, user, isEmployer]);
   
   if (!job) return null;
 
@@ -72,15 +112,42 @@ export function JobDetailsSheet({ job, isOpen, onClose }: JobDetailsSheetProps) 
   const employerAddress = job.profiles?.address_text || null;
   const employerInitials = employerName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
 
-  // Dynamic button class based on role
-  const candidateButtonClass = isEmployer 
-    ? "bg-blue-600 hover:bg-blue-700" 
-    : "bg-secondary hover:bg-secondary/90";
-
   const handleEmployerClick = () => {
     if (job.owner_id) {
       onClose();
       navigate(`/profile/${job.owner_id}`);
+    }
+  };
+
+  const handleApply = async () => {
+    if (!user || !job || hasApplied || isApplying) return;
+    
+    setIsApplying(true);
+    try {
+      const { error } = await supabase
+        .from('applications')
+        .insert({
+          job_id: job.id,
+          applicant_id: user.id,
+        });
+
+      if (error) {
+        if (error.code === '23505') {
+          // Duplicate - already applied
+          setHasApplied(true);
+          toast.info('Ti sei già candidato a questo lavoro');
+        } else {
+          throw error;
+        }
+      } else {
+        setHasApplied(true);
+        toast.success('Candidatura inviata!', { duration: 2000 });
+      }
+    } catch (error) {
+      console.error('Error applying to job:', error);
+      toast.error('Errore nell\'invio della candidatura');
+    } finally {
+      setIsApplying(false);
     }
   };
 
@@ -196,12 +263,36 @@ export function JobDetailsSheet({ job, isOpen, onClose }: JobDetailsSheetProps) 
                 <Eye className="w-5 h-5" />
                 <span className="text-sm font-medium">Visualizzazione anteprima Employer</span>
               </div>
+            ) : checkingStatus ? (
+              <Button 
+                className="w-full h-14 bg-muted text-muted-foreground font-bold text-lg rounded-xl"
+                disabled
+              >
+                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                Verifica...
+              </Button>
+            ) : hasApplied ? (
+              <Button 
+                className="w-full h-14 bg-muted text-muted-foreground font-bold text-lg rounded-xl cursor-not-allowed"
+                disabled
+              >
+                <Check className="w-5 h-5 mr-2" />
+                Candidatura Inviata
+              </Button>
             ) : (
               <Button 
-                className={`w-full h-14 ${candidateButtonClass} text-white font-bold text-lg rounded-xl shadow-material-md`}
-                onClick={onClose}
+                className={`w-full h-14 ${theme.btnFilled} text-white font-bold text-lg rounded-xl shadow-material-md`}
+                onClick={handleApply}
+                disabled={isApplying}
               >
-                Candidati Ora
+                {isApplying ? (
+                  <>
+                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                    Invio...
+                  </>
+                ) : (
+                  'Candidati Ora'
+                )}
               </Button>
             )}
           </div>
