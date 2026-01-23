@@ -63,20 +63,29 @@ const Messaggi = () => {
 
         if (error) throw error;
 
-        // Fetch other user's profile for each chat
+        // Fetch other user's profile for each chat (include photos for avatar)
         const chatsWithUsers = await Promise.all(
           (data || []).map(async (chat) => {
             const otherUserId = chat.worker_id === user.id ? chat.employer_id : chat.worker_id;
             const { data: profile } = await supabase
               .from('profiles')
-              .select('id, full_name, avatar_url')
+              .select('id, full_name, avatar_url, photos')
               .eq('id', otherUserId)
               .single();
+
+            // Use first photo as avatar if available
+            const avatarUrl = profile?.photos && profile.photos.length > 0 
+              ? profile.photos[0] 
+              : profile?.avatar_url;
 
             return {
               ...chat,
               job: chat.jobs,
-              other_user: profile || { id: otherUserId, full_name: null, avatar_url: null },
+              other_user: profile ? { 
+                id: profile.id, 
+                full_name: profile.full_name, 
+                avatar_url: avatarUrl 
+              } : { id: otherUserId, full_name: null, avatar_url: null },
             };
           })
         );

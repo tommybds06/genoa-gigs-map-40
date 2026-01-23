@@ -10,11 +10,13 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { supabase as supabaseClient } from "@/integrations/supabase/client";
 
 interface JobProfile {
   full_name: string | null;
   avatar_url: string | null;
   address_text: string | null;
+  photos?: string[] | null;
 }
 
 interface Job {
@@ -106,9 +108,12 @@ export function JobDetailsSheet({ job, isOpen, onClose }: JobDetailsSheetProps) 
   const categoryLabel = categoryLabels[job.category || 'general'] || "Altro";
   const categoryColor = categoryColors[job.category || 'general'] || "bg-muted text-muted-foreground";
 
-  // Get employer info from profiles join
+  // Get employer info from profiles join - use first photo as avatar
   const employerName = job.profiles?.full_name || "Employer";
-  const employerAvatar = job.profiles?.avatar_url || null;
+  const employerPhotos = job.profiles?.photos;
+  const employerAvatar = employerPhotos && employerPhotos.length > 0 
+    ? employerPhotos[0] 
+    : job.profiles?.avatar_url || null;
   const employerAddress = job.profiles?.address_text || null;
   const employerInitials = employerName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
 
@@ -135,7 +140,7 @@ export function JobDetailsSheet({ job, isOpen, onClose }: JobDetailsSheetProps) 
         if (error.code === '23505') {
           // Duplicate - already applied
           setHasApplied(true);
-          toast.info('Ti sei già candidato a questo lavoro');
+          toast.info('Ti sei già candidato a questo lavoro', { duration: 2000 });
         } else {
           throw error;
         }
@@ -145,7 +150,7 @@ export function JobDetailsSheet({ job, isOpen, onClose }: JobDetailsSheetProps) 
       }
     } catch (error) {
       console.error('Error applying to job:', error);
-      toast.error('Errore nell\'invio della candidatura');
+      toast.error('Errore nell\'invio della candidatura', { duration: 2000 });
     } finally {
       setIsApplying(false);
     }

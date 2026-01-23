@@ -24,7 +24,7 @@ export const PhotoUploader = ({
     if (!files || files.length === 0) return;
 
     if (photos.length + files.length > maxPhotos) {
-      toast.error(`Puoi caricare massimo ${maxPhotos} foto`);
+      toast.error(`Puoi caricare massimo ${maxPhotos} foto`, { duration: 2000 });
       return;
     }
 
@@ -36,13 +36,13 @@ export const PhotoUploader = ({
       for (const file of Array.from(files)) {
         // Validate file type
         if (!file.type.startsWith('image/')) {
-          toast.error(`${file.name} non è un'immagine valida`);
+          toast.error(`${file.name} non è un'immagine valida`, { duration: 2000 });
           continue;
         }
 
         // Validate file size (max 5MB)
         if (file.size > 5 * 1024 * 1024) {
-          toast.error(`${file.name} è troppo grande (max 5MB)`);
+          toast.error(`${file.name} è troppo grande (max 5MB)`, { duration: 2000 });
           continue;
         }
 
@@ -55,7 +55,7 @@ export const PhotoUploader = ({
 
         if (uploadError) {
           console.error('Upload error:', uploadError);
-          toast.error(`Errore nel caricamento di ${file.name}`);
+          toast.error(`Errore nel caricamento di ${file.name}`, { duration: 2000 });
           continue;
         }
 
@@ -68,11 +68,11 @@ export const PhotoUploader = ({
 
       if (newPhotos.length > 0) {
         onPhotosChange([...photos, ...newPhotos]);
-        toast.success(`${newPhotos.length} foto caricate!`);
+        toast.success(`${newPhotos.length} foto caricate!`, { duration: 2000 });
       }
     } catch (error) {
       console.error('Error uploading photos:', error);
-      toast.error('Errore nel caricamento delle foto');
+      toast.error('Errore nel caricamento delle foto', { duration: 2000 });
     } finally {
       setUploading(false);
       // Reset input
@@ -91,6 +91,11 @@ export const PhotoUploader = ({
 
   return (
     <div className="space-y-4">
+      {/* Info text about first photo = avatar */}
+      <p className="text-sm text-muted-foreground text-center bg-muted/50 rounded-lg p-3">
+        📸 La prima foto che carichi sarà la tua immagine di profilo.
+      </p>
+      
       <input
         ref={fileInputRef}
         type="file"

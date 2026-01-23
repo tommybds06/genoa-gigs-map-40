@@ -131,26 +131,31 @@ const Annunci = () => {
 
       if (error) throw error;
 
-      // Fetch profile data for each applicant
+      // Fetch profile data for each applicant (include photos for avatar)
       const applicationsWithProfiles = await Promise.all(
         (data || []).map(async (app) => {
           const { data: profile } = await supabase
             .from('profiles')
-            .select('id, full_name, avatar_url, bio, level')
+            .select('id, full_name, avatar_url, bio, level, photos')
             .eq('id', app.applicant_id)
             .single();
+
+          // Use first photo as avatar if available
+          const avatarUrl = profile?.photos && profile.photos.length > 0 
+            ? profile.photos[0] 
+            : profile?.avatar_url;
 
           return {
             id: app.id,
             created_at: app.created_at,
             status: app.status,
             job_id: app.job_id,
-            applicant: profile || {
-              id: app.applicant_id,
-              full_name: null,
-              avatar_url: null,
-              bio: null,
-              level: 1,
+            applicant: {
+              id: profile?.id || app.applicant_id,
+              full_name: profile?.full_name || null,
+              avatar_url: avatarUrl || null,
+              bio: profile?.bio || null,
+              level: profile?.level || 1,
             },
           };
         })
@@ -188,10 +193,10 @@ const Annunci = () => {
       setApplications(prev => 
         prev.map(a => a.id === app.id ? { ...a, status: 'rejected' } : a)
       );
-      toast.success('Candidatura rifiutata');
+      toast.success('Candidatura rifiutata', { duration: 2000 });
     } catch (error) {
       console.error('Error rejecting application:', error);
-      toast.error('Errore nel rifiutare la candidatura');
+      toast.error('Errore nel rifiutare la candidatura', { duration: 2000 });
     } finally {
       setProcessingAppId(null);
     }
@@ -236,13 +241,13 @@ const Annunci = () => {
         chatId = newChat.id;
       }
 
-      toast.success('Candidatura accettata! Apri la chat...');
+      toast.success('Candidatura accettata! Apri la chat...', { duration: 2000 });
       
       // 3. Navigate to messages with chat id
       navigate(`/messaggi?chat=${chatId}`);
     } catch (error) {
       console.error('Error accepting application:', error);
-      toast.error('Errore nell\'accettare la candidatura');
+      toast.error('Errore nell\'accettare la candidatura', { duration: 2000 });
     } finally {
       setProcessingAppId(null);
     }
