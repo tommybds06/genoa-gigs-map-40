@@ -248,8 +248,8 @@ export function InteractiveMap() {
               </div>
               
               {/* ROW 3: Colored Tags */}
-              {selectedJob.tags && selectedJob.tags.length > 0 && (
-                <div className="flex flex-wrap gap-1 mb-2">
+              {selectedJob.tags && selectedJob.tags.filter(tag => tag.toLowerCase() !== 'altro').length > 0 && (
+                <div className="flex flex-wrap gap-1">
                   {selectedJob.tags.filter(tag => tag.toLowerCase() !== 'altro').map((tag) => (
                     <span
                       key={tag}
@@ -264,11 +264,6 @@ export function InteractiveMap() {
                   ))}
                 </div>
               )}
-              
-              <div className={`self-end flex items-center ${theme.primaryText} font-medium text-xs mt-2`}>
-                Vedi dettagli
-                <ChevronRight className="w-3 h-3" />
-              </div>
             </div>
           </Popup>
         )}
