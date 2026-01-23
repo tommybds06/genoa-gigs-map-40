@@ -223,22 +223,21 @@ export function InteractiveMap() {
             className="job-popup"
           >
             <div
-              className="p-3 cursor-pointer min-w-[200px]"
+              className="p-3 cursor-pointer min-w-[220px]"
               onClick={handlePopupClick}
             >
-              <h3 className="font-bold text-foreground text-sm mb-2">
-                {selectedJob.title}
-              </h3>
-              
-              {/* Price + Schedule row */}
-              <div className="flex items-center justify-between gap-2 mb-2">
+              {/* Header row: Title + Price + Schedule */}
+              <div className="flex items-center gap-2 mb-2">
+                <h3 className="font-bold text-foreground text-sm truncate flex-1 min-w-0">
+                  {selectedJob.title}
+                </h3>
                 {selectedJob.price && (
-                  <Badge className={`${theme.btnFilled} font-semibold text-xs px-2 py-1 rounded-full`}>
+                  <Badge className={`${theme.btnFilled} font-semibold text-xs px-2 py-0.5 rounded-full shrink-0`}>
                     {selectedJob.price}
                   </Badge>
                 )}
                 {selectedJob.schedule && (
-                  <div className="flex items-center gap-1 text-muted-foreground">
+                  <div className="flex items-center gap-1 text-muted-foreground shrink-0">
                     <Clock className="w-3 h-3" />
                     <span className="text-xs">{selectedJob.schedule}</span>
                   </div>
@@ -247,8 +246,8 @@ export function InteractiveMap() {
               
               {/* Colored Tags */}
               {selectedJob.tags && selectedJob.tags.length > 0 && (
-                <div className="flex flex-wrap gap-1">
-                  {selectedJob.tags.map((tag) => (
+                <div className="flex flex-wrap gap-1 mb-2">
+                  {selectedJob.tags.filter(tag => tag.toLowerCase() !== 'altro').map((tag) => (
                     <span
                       key={tag}
                       className={`px-2 py-0.5 rounded-full text-xs font-medium ${
@@ -263,7 +262,7 @@ export function InteractiveMap() {
                 </div>
               )}
               
-              <div className={`flex items-center justify-end mt-2 ${theme.primaryText} font-medium text-xs`}>
+              <div className={`flex items-center justify-end ${theme.primaryText} font-medium text-xs`}>
                 Vedi dettagli
                 <ChevronRight className="w-3 h-3" />
               </div>

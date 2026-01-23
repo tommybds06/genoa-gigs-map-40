@@ -19,6 +19,7 @@ import {
   MessageCircle
 } from "lucide-react";
 import { useAppTheme } from "@/hooks/useAppTheme";
+import { useUser } from "@/contexts/UserContext";
 
 interface Profile {
   id: string;
@@ -71,6 +72,7 @@ const PublicProfile = () => {
   const { userId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
   const { theme } = useAppTheme();
+  const { isEmployer } = useUser();
   
   const [profile, setProfile] = useState<Profile | null>(null);
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -183,7 +185,7 @@ const PublicProfile = () => {
             variant="ghost" 
             size="sm" 
             onClick={() => navigate(-1)}
-            className="text-muted-foreground"
+            className={`rounded-full ${isEmployer ? 'bg-blue-50 text-blue-600 hover:bg-blue-100' : 'bg-accent text-primary hover:bg-accent/80'}`}
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Indietro

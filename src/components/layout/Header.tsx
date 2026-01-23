@@ -1,8 +1,15 @@
 import { Search, SlidersHorizontal } from "lucide-react";
 import { useState } from "react";
+import { useUser } from "@/contexts/UserContext";
 
 export function Header() {
   const [searchQuery, setSearchQuery] = useState("");
+  const { isEmployer } = useUser();
+
+  // Dynamic filter button styles based on role
+  const filterButtonClass = isEmployer 
+    ? "bg-blue-50 text-blue-600 hover:bg-blue-100" 
+    : "bg-accent text-primary hover:bg-accent/80";
 
   return (
     <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-md px-4 pt-4 pb-3 safe-top">
@@ -23,7 +30,7 @@ export function Header() {
 
       {/* Filter Chips */}
       <div className="flex items-center gap-2">
-        <button className="material-chip">
+        <button className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-colors ${filterButtonClass}`}>
           <SlidersHorizontal className="w-4 h-4" />
           <span>Filtri</span>
         </button>

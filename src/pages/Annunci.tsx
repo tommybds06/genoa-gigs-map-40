@@ -293,7 +293,7 @@ const Annunci = () => {
               variant="ghost"
               size="icon"
               onClick={handleBack}
-              className="rounded-full"
+              className="rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100"
             >
               <ArrowLeft className="h-5 w-5" />
             </Button>
