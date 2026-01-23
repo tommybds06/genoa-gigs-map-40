@@ -210,18 +210,23 @@ export function JobDetailsSheet({ job, isOpen, onClose }: JobDetailsSheetProps) 
                 </div>
               )}
 
-              <div className="flex items-center gap-4 mt-3">
-                <Badge variant="outline" className={`${categoryColor} border-none font-medium`}>
-                  <Icon className="w-3.5 h-3.5 mr-1" />
-                  {categoryLabel}
-                </Badge>
-              </div>
+              {/* Only show category badge if not "Altro" */}
+              {categoryLabel !== "Altro" && (
+                <div className="flex items-center gap-4 mt-3">
+                  <Badge variant="outline" className={`${categoryColor} border-none font-medium`}>
+                    <Icon className="w-3.5 h-3.5 mr-1" />
+                    {categoryLabel}
+                  </Badge>
+                </div>
+              )}
             </SheetHeader>
 
             {/* Description */}
             {job.description && (
               <div className="py-4 border-t border-border">
-                <h3 className="text-sm font-semibold text-muted-foreground mb-3">DESCRIZIONE</h3>
+                <h3 className={`text-sm font-bold mb-3 ${isEmployer ? 'text-blue-600' : 'text-primary'}`}>
+                  DESCRIZIONE
+                </h3>
                 <p className="text-foreground leading-relaxed">
                   {job.description}
                 </p>
@@ -230,7 +235,9 @@ export function JobDetailsSheet({ job, isOpen, onClose }: JobDetailsSheetProps) 
 
             {/* Static Map Preview */}
             <div className="py-4 border-t border-border">
-              <h3 className="text-sm font-semibold text-muted-foreground mb-3">POSIZIONE</h3>
+              <h3 className={`text-sm font-bold mb-3 ${isEmployer ? 'text-blue-600' : 'text-primary'}`}>
+                POSIZIONE
+              </h3>
               <div className="relative h-32 bg-muted rounded-2xl overflow-hidden">
                 {/* Stylized mini map */}
                 <div className="absolute inset-0">
