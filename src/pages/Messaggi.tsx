@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { BottomNav } from "@/components/layout/BottomNav";
-import { MessageCircle, ArrowLeft, Send, Loader2, CheckCheck, ImagePlus, X, Reply } from "lucide-react";
+import { MessageCircle, ArrowLeft, Send, Loader2, ImagePlus, X } from "lucide-react";
 import { useAppTheme } from "@/hooks/useAppTheme";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,7 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from 'sonner';
-
+import { MessageBubble } from "@/components/chat/MessageBubble";
 interface Chat {
   id: string;
   job_id: string;
@@ -53,7 +53,7 @@ const formatMessageTime = (dateString: string): string => {
 };
 
 const Messaggi = () => {
-  const { theme } = useAppTheme();
+  const { theme, isEmployer } = useAppTheme();
   const { user } = useAuth();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -363,8 +363,8 @@ const Messaggi = () => {
   if (selectedChat) {
     return (
       <div className="flex flex-col h-screen bg-background">
-        {/* Chat header */}
-        <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-md px-4 pt-4 pb-3 safe-top border-b">
+        {/* Chat header with safe area padding */}
+        <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-md px-4 pt-8 pb-3 border-b">
           <div className="flex items-center gap-3">
             <Button
               variant="ghost"
@@ -396,8 +396,8 @@ const Messaggi = () => {
           </div>
         </header>
 
-        {/* Messages area */}
-        <main className="flex-1 overflow-y-auto px-4 py-4">
+        {/* Messages area with calculated height */}
+        <main className="flex-1 overflow-y-auto px-4 py-4" style={{ height: 'calc(100vh - 160px)' }}>
           {messages.length === 0 ? (
             <div className="flex items-center justify-center h-full">
               <p className="text-muted-foreground text-sm">
@@ -406,77 +406,16 @@ const Messaggi = () => {
             </div>
           ) : (
             <div className="space-y-3">
-              {messages.map((msg) => {
-                const isOwn = msg.sender_id === user?.id;
-                return (
-                  <div
-                    key={msg.id}
-                    className={`flex ${isOwn ? 'justify-end' : 'justify-start'} group`}
-                  >
-                    <div className="flex flex-col max-w-[75%]">
-                      {/* Reply preview */}
-                      {msg.reply_to && (
-                        <div 
-                          className={`text-xs px-3 py-1.5 rounded-t-xl mb-0.5 border-l-2 ${
-                            isOwn 
-                              ? 'bg-blue-700/50 border-blue-300 text-blue-100' 
-                              : 'bg-muted/80 border-muted-foreground/50 text-muted-foreground'
-                          }`}
-                        >
-                          <p className="font-medium truncate">
-                            {msg.reply_to.content.substring(0, 50)}{msg.reply_to.content.length > 50 ? '...' : ''}
-                          </p>
-                        </div>
-                      )}
-                      
-                      <div
-                        className={`px-4 py-2 rounded-2xl relative ${
-                          isOwn
-                            ? 'bg-blue-600 text-white rounded-br-sm'
-                            : 'bg-muted text-foreground rounded-bl-sm'
-                        }`}
-                        onClick={() => !isOwn && handleReply(msg)}
-                      >
-                        {/* Attachment image */}
-                        {msg.attachment_url && (
-                          <div className="mb-2 -mx-2 -mt-1">
-                            <img 
-                              src={msg.attachment_url} 
-                              alt="Allegato" 
-                              className="rounded-xl max-w-full h-auto object-cover max-h-64"
-                            />
-                          </div>
-                        )}
-                        
-                        {msg.content && msg.content !== '📷 Foto' && (
-                          <p className="text-sm">{msg.content}</p>
-                        )}
-                        
-                        {/* Timestamp and read receipts */}
-                        <div className={`flex items-center justify-end gap-1 mt-1 ${isOwn ? 'text-blue-200' : 'text-muted-foreground'}`}>
-                          <span className="text-xs">{formatMessageTime(msg.created_at)}</span>
-                          {isOwn && (
-                            <CheckCheck className={`w-4 h-4 ${msg.is_read ? 'text-blue-300' : 'text-blue-200/60'}`} />
-                          )}
-                        </div>
-
-                        {/* Reply button (visible on hover for own messages, always for others on mobile) */}
-                        {!isOwn && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleReply(msg);
-                            }}
-                            className="absolute -left-10 top-1/2 -translate-y-1/2 p-2 rounded-full hover:bg-muted transition-colors opacity-0 group-hover:opacity-100"
-                          >
-                            <Reply className="w-4 h-4 text-muted-foreground" />
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
+              {messages.map((msg) => (
+                <MessageBubble
+                  key={msg.id}
+                  message={msg}
+                  isOwn={msg.sender_id === user?.id}
+                  isEmployer={isEmployer}
+                  onReply={handleReply}
+                  formatTime={formatMessageTime}
+                />
+              ))}
               <div ref={messagesEndRef} />
             </div>
           )}
@@ -516,8 +455,8 @@ const Messaggi = () => {
           </div>
         )}
 
-        {/* Message input */}
-        <div className="sticky bottom-0 bg-background border-t px-4 py-3 safe-bottom">
+        {/* Message input with safe area padding */}
+        <div className="sticky bottom-0 bg-background border-t px-4 py-3 pb-8">
           <div className="flex items-center gap-2">
             {/* Image upload button */}
             <input
@@ -553,7 +492,7 @@ const Messaggi = () => {
               onClick={handleSendMessage}
               disabled={(!newMessage.trim() && !pendingAttachment) || sending}
               size="icon"
-              className="rounded-full bg-blue-600 hover:bg-blue-700"
+              className={`rounded-full ${isEmployer ? 'bg-blue-600 hover:bg-blue-700' : 'bg-primary hover:bg-primary/90'}`}
             >
               {sending ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -570,8 +509,8 @@ const Messaggi = () => {
   // Chats list view
   return (
     <div className="flex flex-col min-h-screen bg-background">
-      {/* Simple Header */}
-      <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-md px-4 pt-4 pb-3 safe-top">
+      {/* Simple Header with safe area */}
+      <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-md px-4 pt-8 pb-3">
         <h1 className="text-2xl font-bold text-foreground">Messaggi</h1>
       </header>
 
@@ -614,9 +553,9 @@ const Messaggi = () => {
                     {chat.job?.title}
                   </p>
                 </div>
-                {/* Unread badge */}
+                {/* Unread badge with dynamic color */}
                 {chat.unread_count && chat.unread_count > 0 && (
-                  <div className="shrink-0 w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center">
+                  <div className={`shrink-0 w-6 h-6 rounded-full flex items-center justify-center ${isEmployer ? 'bg-blue-600' : 'bg-primary'}`}>
                     <span className="text-xs text-white font-bold">
                       {chat.unread_count > 9 ? '9+' : chat.unread_count}
                     </span>
