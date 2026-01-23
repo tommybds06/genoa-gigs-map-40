@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { BottomNav } from "@/components/layout/BottomNav";
-import { MessageCircle, ArrowLeft, Send, Loader2 } from "lucide-react";
+import { MessageCircle, ArrowLeft, Send, Loader2, CheckCheck, ImagePlus, X, Reply } from "lucide-react";
 import { useAppTheme } from "@/hooks/useAppTheme";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,6 +8,7 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { toast } from 'sonner';
 
 interface Chat {
   id: string;
@@ -23,6 +24,7 @@ interface Chat {
     full_name: string | null;
     avatar_url: string | null;
   };
+  unread_count?: number;
 }
 
 interface Message {
@@ -32,7 +34,23 @@ interface Message {
   content: string;
   created_at: string;
   is_read: boolean;
+  reply_to_id: string | null;
+  attachment_url: string | null;
+  reply_to?: Message | null;
 }
+
+// Smart timestamp formatting
+const formatMessageTime = (dateString: string): string => {
+  const date = new Date(dateString);
+  const now = new Date();
+  const isToday = date.toDateString() === now.toDateString();
+  
+  if (isToday) {
+    return date.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+  } else {
+    return `${date.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' })} ${date.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}`;
+  }
+};
 
 const Messaggi = () => {
   const { theme } = useAppTheme();
@@ -46,7 +64,11 @@ const Messaggi = () => {
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [replyingTo, setReplyingTo] = useState<Message | null>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [pendingAttachment, setPendingAttachment] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Load chats list
   useEffect(() => {
@@ -63,7 +85,7 @@ const Messaggi = () => {
 
         if (error) throw error;
 
-        // Fetch other user's profile for each chat (include photos for avatar)
+        // Fetch other user's profile and unread count for each chat
         const chatsWithUsers = await Promise.all(
           (data || []).map(async (chat) => {
             const otherUserId = chat.worker_id === user.id ? chat.employer_id : chat.worker_id;
@@ -73,7 +95,14 @@ const Messaggi = () => {
               .eq('id', otherUserId)
               .single();
 
-            // Use first photo as avatar if available
+            // Count unread messages
+            const { count } = await supabase
+              .from('messages')
+              .select('*', { count: 'exact', head: true })
+              .eq('chat_id', chat.id)
+              .eq('is_read', false)
+              .neq('sender_id', user.id);
+
             const avatarUrl = profile?.photos && profile.photos.length > 0 
               ? profile.photos[0] 
               : profile?.avatar_url;
@@ -86,13 +115,13 @@ const Messaggi = () => {
                 full_name: profile.full_name, 
                 avatar_url: avatarUrl 
               } : { id: otherUserId, full_name: null, avatar_url: null },
+              unread_count: count || 0,
             };
           })
         );
 
         setChats(chatsWithUsers);
 
-        // Check if we need to open a specific chat
         const chatIdParam = searchParams.get('chat');
         if (chatIdParam) {
           const targetChat = chatsWithUsers.find(c => c.id === chatIdParam);
@@ -108,11 +137,49 @@ const Messaggi = () => {
     };
 
     fetchChats();
+
+    // Subscribe to new messages for notifications
+    const channel = supabase
+      .channel('global-messages')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+        },
+        async (payload) => {
+          const newMsg = payload.new as Message;
+          // If message is not from current user and not in current chat
+          if (newMsg.sender_id !== user.id && (!selectedChat || newMsg.chat_id !== selectedChat.id)) {
+            // Find sender name
+            const { data: sender } = await supabase
+              .from('profiles')
+              .select('full_name')
+              .eq('id', newMsg.sender_id)
+              .single();
+            
+            toast.info(`Nuovo messaggio da ${sender?.full_name || 'Utente'}`, { duration: 3000 });
+            
+            // Update unread count in chats list
+            setChats(prev => prev.map(chat => 
+              chat.id === newMsg.chat_id 
+                ? { ...chat, unread_count: (chat.unread_count || 0) + 1 }
+                : chat
+            ));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [user, searchParams]);
 
-  // Load messages for selected chat
+  // Load messages for selected chat and mark as read
   useEffect(() => {
-    if (!selectedChat) {
+    if (!selectedChat || !user) {
       setMessages([]);
       return;
     }
@@ -129,24 +196,73 @@ const Messaggi = () => {
         return;
       }
 
-      setMessages(data || []);
+      // Fetch reply_to messages
+      const messagesWithReplies = await Promise.all(
+        (data || []).map(async (msg) => {
+          if (msg.reply_to_id) {
+            const replyMsg = data?.find(m => m.id === msg.reply_to_id);
+            return { ...msg, reply_to: replyMsg || null };
+          }
+          return { ...msg, reply_to: null };
+        })
+      );
+
+      setMessages(messagesWithReplies);
+
+      // Mark received messages as read
+      const unreadMessageIds = data
+        ?.filter(msg => !msg.is_read && msg.sender_id !== user.id)
+        .map(msg => msg.id) || [];
+
+      if (unreadMessageIds.length > 0) {
+        await supabase
+          .from('messages')
+          .update({ is_read: true })
+          .in('id', unreadMessageIds);
+      }
+
+      // Clear unread count for this chat
+      setChats(prev => prev.map(chat => 
+        chat.id === selectedChat.id ? { ...chat, unread_count: 0 } : chat
+      ));
     };
 
     fetchMessages();
 
-    // Subscribe to new messages
+    // Subscribe to new messages and updates
     const channel = supabase
       .channel(`messages-${selectedChat.id}`)
       .on(
         'postgres_changes',
         {
-          event: 'INSERT',
+          event: '*',
           schema: 'public',
           table: 'messages',
           filter: `chat_id=eq.${selectedChat.id}`,
         },
-        (payload) => {
-          setMessages(prev => [...prev, payload.new as Message]);
+        async (payload) => {
+          if (payload.eventType === 'INSERT') {
+            const newMsg = payload.new as Message;
+            // Fetch reply if exists
+            if (newMsg.reply_to_id) {
+              const existingReply = messages.find(m => m.id === newMsg.reply_to_id);
+              setMessages(prev => [...prev, { ...newMsg, reply_to: existingReply || null }]);
+            } else {
+              setMessages(prev => [...prev, { ...newMsg, reply_to: null }]);
+            }
+            
+            // Mark as read if not from current user
+            if (newMsg.sender_id !== user.id) {
+              await supabase
+                .from('messages')
+                .update({ is_read: true })
+                .eq('id', newMsg.id);
+            }
+          } else if (payload.eventType === 'UPDATE') {
+            setMessages(prev => prev.map(msg => 
+              msg.id === payload.new.id ? { ...msg, ...payload.new } : msg
+            ));
+          }
         }
       )
       .subscribe();
@@ -154,15 +270,59 @@ const Messaggi = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [selectedChat]);
+  }, [selectedChat, user]);
 
   // Scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Solo immagini sono permesse', { duration: 2000 });
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Immagine troppo grande (max 5MB)', { duration: 2000 });
+      return;
+    }
+
+    setUploadingImage(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('chat-attachments')
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('chat-attachments')
+        .getPublicUrl(fileName);
+
+      setPendingAttachment(publicUrl);
+      toast.success('Immagine pronta per l\'invio', { duration: 2000 });
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      toast.error('Errore nel caricamento', { duration: 2000 });
+    } finally {
+      setUploadingImage(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
   const handleSendMessage = async () => {
-    if (!newMessage.trim() || !selectedChat || !user) return;
+    if ((!newMessage.trim() && !pendingAttachment) || !selectedChat || !user) return;
 
     setSending(true);
     try {
@@ -171,13 +331,18 @@ const Messaggi = () => {
         .insert({
           chat_id: selectedChat.id,
           sender_id: user.id,
-          content: newMessage.trim(),
+          content: newMessage.trim() || (pendingAttachment ? '📷 Foto' : ''),
+          reply_to_id: replyingTo?.id || null,
+          attachment_url: pendingAttachment,
         });
 
       if (error) throw error;
       setNewMessage('');
+      setReplyingTo(null);
+      setPendingAttachment(null);
     } catch (error) {
       console.error('Error sending message:', error);
+      toast.error('Errore nell\'invio del messaggio', { duration: 2000 });
     } finally {
       setSending(false);
     }
@@ -188,6 +353,10 @@ const Messaggi = () => {
       e.preventDefault();
       handleSendMessage();
     }
+  };
+
+  const handleReply = (msg: Message) => {
+    setReplyingTo(msg);
   };
 
   // Chat detail view
@@ -202,6 +371,8 @@ const Messaggi = () => {
               size="icon"
               onClick={() => {
                 setSelectedChat(null);
+                setReplyingTo(null);
+                setPendingAttachment(null);
                 navigate('/messaggi', { replace: true });
               }}
               className="rounded-full"
@@ -240,22 +411,68 @@ const Messaggi = () => {
                 return (
                   <div
                     key={msg.id}
-                    className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}
+                    className={`flex ${isOwn ? 'justify-end' : 'justify-start'} group`}
                   >
-                    <div
-                      className={`max-w-[75%] px-4 py-2 rounded-2xl ${
-                        isOwn
-                          ? 'bg-blue-600 text-white rounded-br-sm'
-                          : 'bg-muted text-foreground rounded-bl-sm'
-                      }`}
-                    >
-                      <p className="text-sm">{msg.content}</p>
-                      <p className={`text-xs mt-1 ${isOwn ? 'text-blue-200' : 'text-muted-foreground'}`}>
-                        {new Date(msg.created_at).toLocaleTimeString('it-IT', { 
-                          hour: '2-digit', 
-                          minute: '2-digit' 
-                        })}
-                      </p>
+                    <div className="flex flex-col max-w-[75%]">
+                      {/* Reply preview */}
+                      {msg.reply_to && (
+                        <div 
+                          className={`text-xs px-3 py-1.5 rounded-t-xl mb-0.5 border-l-2 ${
+                            isOwn 
+                              ? 'bg-blue-700/50 border-blue-300 text-blue-100' 
+                              : 'bg-muted/80 border-muted-foreground/50 text-muted-foreground'
+                          }`}
+                        >
+                          <p className="font-medium truncate">
+                            {msg.reply_to.content.substring(0, 50)}{msg.reply_to.content.length > 50 ? '...' : ''}
+                          </p>
+                        </div>
+                      )}
+                      
+                      <div
+                        className={`px-4 py-2 rounded-2xl relative ${
+                          isOwn
+                            ? 'bg-blue-600 text-white rounded-br-sm'
+                            : 'bg-muted text-foreground rounded-bl-sm'
+                        }`}
+                        onClick={() => !isOwn && handleReply(msg)}
+                      >
+                        {/* Attachment image */}
+                        {msg.attachment_url && (
+                          <div className="mb-2 -mx-2 -mt-1">
+                            <img 
+                              src={msg.attachment_url} 
+                              alt="Allegato" 
+                              className="rounded-xl max-w-full h-auto object-cover max-h-64"
+                            />
+                          </div>
+                        )}
+                        
+                        {msg.content && msg.content !== '📷 Foto' && (
+                          <p className="text-sm">{msg.content}</p>
+                        )}
+                        
+                        {/* Timestamp and read receipts */}
+                        <div className={`flex items-center justify-end gap-1 mt-1 ${isOwn ? 'text-blue-200' : 'text-muted-foreground'}`}>
+                          <span className="text-xs">{formatMessageTime(msg.created_at)}</span>
+                          {isOwn && (
+                            <CheckCheck className={`w-4 h-4 ${msg.is_read ? 'text-blue-300' : 'text-blue-200/60'}`} />
+                          )}
+                        </div>
+
+                        {/* Reply button (visible on hover for own messages, always for others on mobile) */}
+                        {!isOwn && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleReply(msg);
+                            }}
+                            className="absolute -left-10 top-1/2 -translate-y-1/2 p-2 rounded-full hover:bg-muted transition-colors opacity-0 group-hover:opacity-100"
+                          >
+                            <Reply className="w-4 h-4 text-muted-foreground" />
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 );
@@ -265,9 +482,65 @@ const Messaggi = () => {
           )}
         </main>
 
+        {/* Reply preview */}
+        {replyingTo && (
+          <div className="px-4 py-2 bg-muted/50 border-t flex items-center gap-3">
+            <div className="flex-1 min-w-0">
+              <p className="text-xs text-muted-foreground">Rispondendo a:</p>
+              <p className="text-sm truncate">{replyingTo.content}</p>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setReplyingTo(null)}
+              className="shrink-0 h-8 w-8"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
+
+        {/* Pending attachment preview */}
+        {pendingAttachment && (
+          <div className="px-4 py-2 bg-muted/50 border-t flex items-center gap-3">
+            <img src={pendingAttachment} alt="Allegato" className="h-12 w-12 rounded-lg object-cover" />
+            <p className="flex-1 text-sm text-muted-foreground">Immagine allegata</p>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setPendingAttachment(null)}
+              className="shrink-0 h-8 w-8"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
+
         {/* Message input */}
         <div className="sticky bottom-0 bg-background border-t px-4 py-3 safe-bottom">
           <div className="flex items-center gap-2">
+            {/* Image upload button */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleImageUpload}
+              className="hidden"
+            />
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploadingImage}
+              className="shrink-0 rounded-full"
+            >
+              {uploadingImage ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                <ImagePlus className="h-5 w-5 text-muted-foreground" />
+              )}
+            </Button>
+            
             <Input
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
@@ -278,7 +551,7 @@ const Messaggi = () => {
             />
             <Button
               onClick={handleSendMessage}
-              disabled={!newMessage.trim() || sending}
+              disabled={(!newMessage.trim() && !pendingAttachment) || sending}
               size="icon"
               className="rounded-full bg-blue-600 hover:bg-blue-700"
             >
@@ -341,6 +614,14 @@ const Messaggi = () => {
                     {chat.job?.title}
                   </p>
                 </div>
+                {/* Unread badge */}
+                {chat.unread_count && chat.unread_count > 0 && (
+                  <div className="shrink-0 w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center">
+                    <span className="text-xs text-white font-bold">
+                      {chat.unread_count > 9 ? '9+' : chat.unread_count}
+                    </span>
+                  </div>
+                )}
               </div>
             ))}
           </div>
