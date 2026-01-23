@@ -14,6 +14,7 @@ interface JobProfile {
   full_name: string | null;
   avatar_url: string | null;
   address_text: string | null;
+  photos?: string[] | null;
 }
 
 // Job type from database
@@ -72,7 +73,7 @@ export function InteractiveMap() {
         
         const { data, error } = await supabase
           .from('jobs')
-          .select('*, profiles(full_name, avatar_url, address_text)')
+          .select('*, profiles(full_name, avatar_url, address_text, photos)')
           .eq('status', 'open')
           .gte('created_at', fortyEightHoursAgo);
 
@@ -223,14 +224,16 @@ export function InteractiveMap() {
             className="job-popup"
           >
             <div
-              className="p-3 cursor-pointer min-w-[220px]"
+              className="p-3 cursor-pointer min-w-[220px] max-w-[280px]"
               onClick={handlePopupClick}
             >
-              {/* Header row: Title + Price + Schedule */}
+              {/* ROW 1: Title (full width, wrapping) */}
+              <h3 className="font-bold text-foreground text-sm whitespace-normal leading-tight mb-2">
+                {selectedJob.title}
+              </h3>
+              
+              {/* ROW 2: Price + Schedule */}
               <div className="flex items-center gap-2 mb-2">
-                <h3 className="font-bold text-foreground text-sm truncate flex-1 min-w-0">
-                  {selectedJob.title}
-                </h3>
                 {selectedJob.price && (
                   <Badge className={`${theme.btnFilled} font-semibold text-xs px-2 py-0.5 rounded-full shrink-0`}>
                     {selectedJob.price}
@@ -244,7 +247,7 @@ export function InteractiveMap() {
                 )}
               </div>
               
-              {/* Colored Tags */}
+              {/* ROW 3: Colored Tags */}
               {selectedJob.tags && selectedJob.tags.length > 0 && (
                 <div className="flex flex-wrap gap-1 mb-2">
                   {selectedJob.tags.filter(tag => tag.toLowerCase() !== 'altro').map((tag) => (

@@ -83,10 +83,10 @@ export function useProfile() {
       if (error) throw error;
 
       setProfile((prev) => (prev ? { ...prev, tags } : null));
-      toast.success("Tag aggiornati!");
+      toast.success("Tag aggiornati!", { duration: 2000 });
     } catch (error) {
       console.error("Error updating tags:", error);
-      toast.error("Errore nell'aggiornamento dei tag");
+      toast.error("Errore nell'aggiornamento dei tag", { duration: 2000 });
     }
   };
 
