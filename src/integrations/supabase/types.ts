@@ -163,27 +163,33 @@ export type Database = {
       }
       messages: {
         Row: {
+          attachment_url: string | null
           chat_id: string
           content: string
           created_at: string
           id: string
           is_read: boolean
+          reply_to_id: string | null
           sender_id: string
         }
         Insert: {
+          attachment_url?: string | null
           chat_id: string
           content: string
           created_at?: string
           id?: string
           is_read?: boolean
+          reply_to_id?: string | null
           sender_id: string
         }
         Update: {
+          attachment_url?: string | null
           chat_id?: string
           content?: string
           created_at?: string
           id?: string
           is_read?: boolean
+          reply_to_id?: string | null
           sender_id?: string
         }
         Relationships: [
@@ -192,6 +198,13 @@ export type Database = {
             columns: ["chat_id"]
             isOneToOne: false
             referencedRelation: "chats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_reply_to_id_fkey"
+            columns: ["reply_to_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
             referencedColumns: ["id"]
           },
           {
