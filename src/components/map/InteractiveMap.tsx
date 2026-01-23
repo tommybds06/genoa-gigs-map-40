@@ -224,7 +224,7 @@ export function InteractiveMap() {
             className="job-popup"
           >
             <div
-              className="p-3 cursor-pointer w-[260px]"
+              className="p-3 cursor-pointer flex flex-col items-start max-w-[250px]"
               onClick={handlePopupClick}
             >
               {/* ROW 1: Title (full width, wrapping) */}
@@ -265,7 +265,7 @@ export function InteractiveMap() {
                 </div>
               )}
               
-              <div className={`flex items-center justify-end ${theme.primaryText} font-medium text-xs mt-1`}>
+              <div className={`self-end flex items-center ${theme.primaryText} font-medium text-xs mt-2`}>
                 Vedi dettagli
                 <ChevronRight className="w-3 h-3" />
               </div>
