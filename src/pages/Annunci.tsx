@@ -327,7 +327,10 @@ const Annunci = () => {
                   key={app.id}
                   className="material-card p-4"
                 >
-                  <div className="flex items-center gap-4">
+                <div 
+                  className="flex items-center gap-4 cursor-pointer"
+                  onClick={() => navigate(`/profile/${app.applicant.id}`)}
+                >
                     <Avatar className="h-14 w-14 border-2 border-blue-600/20">
                       <AvatarImage src={app.applicant.avatar_url || undefined} />
                       <AvatarFallback className={`${theme.accentBg} ${theme.primaryText} font-semibold`}>

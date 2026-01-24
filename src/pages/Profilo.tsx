@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { TagSelector, TagBadges } from "@/components/tags/TagSelector";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
+import { WorkerJobHistory } from "@/components/profile/WorkerJobHistory";
 
 const Profilo = () => {
   const { user, signOut } = useAuth();
@@ -182,19 +183,8 @@ const Profilo = () => {
           )}
         </div>
 
-        {/* Stats (Worker only - no gamification for Employers) */}
-        {!isEmployer && (
-          <div className="grid grid-cols-2 gap-3 mb-4">
-            <div className="material-card p-4 text-center animate-fade-in" style={{ animationDelay: "0.1s" }}>
-              <div className={`text-2xl font-bold ${primaryTextClasses}`}>{profile?.xp_points || 0}</div>
-              <div className="text-sm text-muted-foreground">Punti XP</div>
-            </div>
-            <div className="material-card p-4 text-center animate-fade-in" style={{ animationDelay: "0.15s" }}>
-              <div className={`text-2xl font-bold ${theme.secondaryText}`}>Lv.{profile?.level || 1}</div>
-              <div className="text-sm text-muted-foreground">Livello</div>
-            </div>
-          </div>
-        )}
+        {/* Storico Lavori (Worker only - replaces XP/gamification) */}
+        {!isEmployer && <WorkerJobHistory primaryTextClasses={primaryTextClasses} />}
 
         {/* Bio Section */}
         {profile?.bio && (
