@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { BottomNav } from "@/components/layout/BottomNav";
-import { MessageCircle, ArrowLeft, Send, Loader2, ImagePlus, X } from "lucide-react";
+import { MessageCircle, ArrowLeft, Send, Loader2, ImagePlus, X, CheckCircle, Check } from "lucide-react";
 import { useAppTheme } from "@/hooks/useAppTheme";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,6 +10,19 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from 'sonner';
 import { MessageBubble } from "@/components/chat/MessageBubble";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
+
 interface Chat {
   id: string;
   job_id: string;
@@ -25,6 +38,7 @@ interface Chat {
     avatar_url: string | null;
   };
   unread_count?: number;
+  application_status?: string;
 }
 
 interface Message {
@@ -67,6 +81,8 @@ const Messaggi = () => {
   const [replyingTo, setReplyingTo] = useState<Message | null>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [pendingAttachment, setPendingAttachment] = useState<string | null>(null);
+  const [applicationStatus, setApplicationStatus] = useState<string | null>(null);
+  const [completingJob, setCompletingJob] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -85,7 +101,7 @@ const Messaggi = () => {
 
         if (error) throw error;
 
-        // Fetch other user's profile and unread count for each chat
+        // Fetch other user's profile, unread count, and application status for each chat
         const chatsWithUsers = await Promise.all(
           (data || []).map(async (chat) => {
             const otherUserId = chat.worker_id === user.id ? chat.employer_id : chat.worker_id;
@@ -103,6 +119,14 @@ const Messaggi = () => {
               .eq('is_read', false)
               .neq('sender_id', user.id);
 
+            // Get application status for this chat's job
+            const { data: applicationData } = await supabase
+              .from('applications')
+              .select('status')
+              .eq('job_id', chat.job_id)
+              .eq('applicant_id', chat.worker_id)
+              .single();
+
             const avatarUrl = profile?.photos && profile.photos.length > 0 
               ? profile.photos[0] 
               : profile?.avatar_url;
@@ -116,6 +140,7 @@ const Messaggi = () => {
                 avatar_url: avatarUrl 
               } : { id: otherUserId, full_name: null, avatar_url: null },
               unread_count: count || 0,
+              application_status: applicationData?.status || 'pending',
             };
           })
         );
@@ -181,6 +206,7 @@ const Messaggi = () => {
   useEffect(() => {
     if (!selectedChat || !user) {
       setMessages([]);
+      setApplicationStatus(null);
       return;
     }
 
@@ -227,7 +253,20 @@ const Messaggi = () => {
       ));
     };
 
+    // Fetch application status for this chat
+    const fetchApplicationStatus = async () => {
+      const { data: applicationData } = await supabase
+        .from('applications')
+        .select('status')
+        .eq('job_id', selectedChat.job_id)
+        .eq('applicant_id', selectedChat.worker_id)
+        .single();
+      
+      setApplicationStatus(applicationData?.status || null);
+    };
+
     fetchMessages();
+    fetchApplicationStatus();
 
     // Subscribe to new messages and updates
     const channel = supabase
@@ -359,13 +398,45 @@ const Messaggi = () => {
     setReplyingTo(msg);
   };
 
+  // Handle job completion
+  const handleCompleteJob = async () => {
+    if (!selectedChat) return;
+    
+    setCompletingJob(true);
+    try {
+      const { error } = await supabase
+        .from('applications')
+        .update({ status: 'completed' })
+        .eq('job_id', selectedChat.job_id)
+        .eq('applicant_id', selectedChat.worker_id);
+
+      if (error) throw error;
+      
+      setApplicationStatus('completed');
+      
+      // Update the chat in the list as well
+      setChats(prev => prev.map(chat => 
+        chat.id === selectedChat.id 
+          ? { ...chat, application_status: 'completed' }
+          : chat
+      ));
+      
+      toast.success('Lavoro concluso con successo!', { duration: 2000 });
+    } catch (error) {
+      console.error('Error completing job:', error);
+      toast.error('Errore nella chiusura del lavoro', { duration: 2000 });
+    } finally {
+      setCompletingJob(false);
+    }
+  };
+
   // Chat detail view
   if (selectedChat) {
     return (
       <div className="flex flex-col h-screen bg-background">
         {/* Chat header with safe area padding */}
         <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-md px-4 pt-8 pb-3 border-b">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <Button
               variant="ghost"
               size="icon"
@@ -373,24 +444,25 @@ const Messaggi = () => {
                 setSelectedChat(null);
                 setReplyingTo(null);
                 setPendingAttachment(null);
+                setApplicationStatus(null);
                 navigate('/messaggi', { replace: true });
               }}
-              className="rounded-full"
+              className="rounded-full shrink-0"
             >
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div 
-              className="flex items-center gap-3 flex-1 cursor-pointer"
+              className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer"
               onClick={() => navigate(`/profile/${selectedChat.other_user?.id}`)}
             >
-              <Avatar className="h-10 w-10">
+              <Avatar className="h-10 w-10 shrink-0">
                 <AvatarImage src={selectedChat.other_user?.avatar_url || undefined} />
                 <AvatarFallback className={`${theme.accentBg} ${theme.primaryText}`}>
                   {(selectedChat.other_user?.full_name || 'U')[0].toUpperCase()}
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1 min-w-0">
-                <h2 className="font-semibold truncate">
+                <h2 className="font-semibold truncate text-sm">
                   {selectedChat.other_user?.full_name || 'Utente'}
                 </h2>
                 <p className="text-xs text-muted-foreground truncate">
@@ -398,6 +470,54 @@ const Messaggi = () => {
                 </p>
               </div>
             </div>
+            
+            {/* Complete job button / badge for Employer */}
+            {isEmployer && applicationStatus === 'accepted' && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="shrink-0 text-blue-600 border-blue-600 hover:bg-blue-50"
+                    disabled={completingJob}
+                  >
+                    {completingJob ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <>
+                        <CheckCircle className="h-4 w-4 mr-1" />
+                        <span className="hidden sm:inline">Concludi</span>
+                      </>
+                    )}
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Concludi Lavoro</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Confermi che il lavoro è stato svolto? Questo aggiornerà lo storico del lavoratore.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Annulla</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={handleCompleteJob}
+                      className="bg-blue-600 hover:bg-blue-700"
+                    >
+                      Conferma
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
+            
+            {/* Completed badge */}
+            {applicationStatus === 'completed' && (
+              <Badge variant="outline" className="shrink-0 text-green-600 border-green-600">
+                <Check className="h-3 w-3 mr-1" />
+                Concluso
+              </Badge>
+            )}
           </div>
         </header>
 
@@ -538,42 +658,56 @@ const Messaggi = () => {
           </div>
         ) : (
           <div className="space-y-2">
-            {chats.map((chat) => (
-              <div
-                key={chat.id}
-                onClick={() => setSelectedChat(chat)}
-                className="material-card p-4 flex items-center gap-3 cursor-pointer hover:shadow-md transition-shadow"
-              >
-                <Avatar 
-                  className="h-12 w-12 cursor-pointer"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    navigate(`/profile/${chat.other_user?.id}`);
-                  }}
+            {chats.map((chat) => {
+              const isCompleted = chat.application_status === 'completed';
+              
+              return (
+                <div
+                  key={chat.id}
+                  onClick={() => setSelectedChat(chat)}
+                  className={`material-card p-4 flex items-center gap-3 cursor-pointer hover:shadow-md transition-shadow ${
+                    isCompleted ? 'bg-muted/50 opacity-80' : ''
+                  }`}
                 >
-                  <AvatarImage src={chat.other_user?.avatar_url || undefined} />
-                  <AvatarFallback className={`${theme.accentBg} ${theme.primaryText}`}>
-                    {(chat.other_user?.full_name || 'U')[0].toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold truncate">
-                    {chat.other_user?.full_name || 'Utente'}
-                  </h3>
-                  <p className="text-sm text-muted-foreground truncate">
-                    {chat.job?.title}
-                  </p>
-                </div>
-                {/* Unread badge with dynamic color */}
-                {chat.unread_count && chat.unread_count > 0 && (
-                  <div className={`shrink-0 w-6 h-6 rounded-full flex items-center justify-center ${isEmployer ? 'bg-blue-600' : 'bg-primary'}`}>
-                    <span className="text-xs text-white font-bold">
-                      {chat.unread_count > 9 ? '9+' : chat.unread_count}
-                    </span>
+                  <Avatar 
+                    className="h-12 w-12 cursor-pointer"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(`/profile/${chat.other_user?.id}`);
+                    }}
+                  >
+                    <AvatarImage src={chat.other_user?.avatar_url || undefined} />
+                    <AvatarFallback className={`${theme.accentBg} ${theme.primaryText}`}>
+                      {(chat.other_user?.full_name || 'U')[0].toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-semibold truncate">
+                        {chat.other_user?.full_name || 'Utente'}
+                      </h3>
+                      {isCompleted && (
+                        <Badge variant="outline" className="text-green-600 border-green-600 text-xs shrink-0">
+                          <Check className="h-3 w-3 mr-0.5" />
+                          Concluso
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-sm text-muted-foreground truncate">
+                      {chat.job?.title}
+                    </p>
                   </div>
-                )}
-              </div>
-            ))}
+                  {/* Unread badge with dynamic color */}
+                  {chat.unread_count && chat.unread_count > 0 && (
+                    <div className={`shrink-0 w-6 h-6 rounded-full flex items-center justify-center ${isEmployer ? 'bg-blue-600' : 'bg-primary'}`}>
+                      <span className="text-xs text-white font-bold">
+                        {chat.unread_count > 9 ? '9+' : chat.unread_count}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
       </main>

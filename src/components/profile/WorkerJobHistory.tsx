@@ -1,8 +1,14 @@
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { Briefcase, Loader2, Calendar, Building2 } from "lucide-react";
+import { Briefcase, Loader2, Calendar, Building2, ChevronDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 interface CompletedJob {
   id: string;
@@ -44,12 +50,12 @@ export const WorkerJobHistory = ({ primaryTextClasses }: WorkerJobHistoryProps) 
       if (!user) return;
 
       try {
-        // Fetch accepted applications for current worker
+        // Fetch ONLY completed applications for current worker
         const { data: applicationsData, error } = await supabase
           .from('applications')
           .select('id, job_id, created_at')
           .eq('applicant_id', user.id)
-          .eq('status', 'accepted')
+          .eq('status', 'completed')
           .order('created_at', { ascending: false });
 
         if (error) throw error;
@@ -101,7 +107,7 @@ export const WorkerJobHistory = ({ primaryTextClasses }: WorkerJobHistoryProps) 
       <div className="material-card p-4 mb-4 animate-fade-in">
         <h3 className="font-semibold mb-3 flex items-center gap-2">
           <Briefcase className={`w-4 h-4 ${primaryTextClasses}`} />
-          Storico Lavori
+          Storico Lavori Completati
         </h3>
         <div className="flex items-center justify-center py-6">
           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -112,40 +118,47 @@ export const WorkerJobHistory = ({ primaryTextClasses }: WorkerJobHistoryProps) 
 
   return (
     <div className="material-card p-4 mb-4 animate-fade-in" style={{ animationDelay: "0.1s" }}>
-      <h3 className="font-semibold mb-3 flex items-center gap-2">
-        <Briefcase className={`w-4 h-4 ${primaryTextClasses}`} />
-        Storico Lavori
-      </h3>
-
-      {jobs.length === 0 ? (
-        <div className="text-center py-6">
-          <p className="text-sm text-muted-foreground">
-            Nessun lavoro completato ancora
-          </p>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {jobs.map((job) => (
-            <div
-              key={job.id}
-              className="bg-muted/50 rounded-xl p-3 cursor-pointer hover:bg-muted transition-colors"
-              onClick={() => job.employer?.id && navigate(`/profile/${job.employer.id}`)}
-            >
-              <h4 className="font-medium text-sm">{job.job?.title || 'Lavoro'}</h4>
-              
-              <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
-                <Building2 className="w-3.5 h-3.5" />
-                <span>{job.employer?.full_name || 'Attività'}</span>
+      <Accordion type="single" collapsible className="w-full">
+        <AccordionItem value="job-history" className="border-none">
+          <AccordionTrigger className="py-0 hover:no-underline">
+            <h3 className="font-semibold flex items-center gap-2">
+              <Briefcase className={`w-4 h-4 ${primaryTextClasses}`} />
+              Storico Lavori Completati ({jobs.length})
+            </h3>
+          </AccordionTrigger>
+          <AccordionContent className="pt-3">
+            {jobs.length === 0 ? (
+              <div className="text-center py-4">
+                <p className="text-sm text-muted-foreground">
+                  Nessun lavoro completato ancora
+                </p>
               </div>
-              
-              <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
-                <Calendar className="w-3.5 h-3.5" />
-                <span>{formatJobDate(job.created_at)}</span>
+            ) : (
+              <div className="space-y-3">
+                {jobs.map((job) => (
+                  <div
+                    key={job.id}
+                    className="bg-muted/50 rounded-xl p-3 cursor-pointer hover:bg-muted transition-colors"
+                    onClick={() => job.employer?.id && navigate(`/profile/${job.employer.id}`)}
+                  >
+                    <h4 className="font-medium text-sm">{job.job?.title || 'Lavoro'}</h4>
+                    
+                    <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+                      <Building2 className="w-3.5 h-3.5" />
+                      <span>{job.employer?.full_name || 'Attività'}</span>
+                    </div>
+                    
+                    <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+                      <Calendar className="w-3.5 h-3.5" />
+                      <span>{formatJobDate(job.created_at)}</span>
+                    </div>
+                  </div>
+                ))}
               </div>
-            </div>
-          ))}
-        </div>
-      )}
+            )}
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
     </div>
   );
 };
