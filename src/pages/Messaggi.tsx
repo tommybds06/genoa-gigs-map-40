@@ -379,19 +379,24 @@ const Messaggi = () => {
             >
               <ArrowLeft className="h-5 w-5" />
             </Button>
-            <Avatar className="h-10 w-10">
-              <AvatarImage src={selectedChat.other_user?.avatar_url || undefined} />
-              <AvatarFallback className={`${theme.accentBg} ${theme.primaryText}`}>
-                {(selectedChat.other_user?.full_name || 'U')[0].toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex-1 min-w-0">
-              <h2 className="font-semibold truncate">
-                {selectedChat.other_user?.full_name || 'Utente'}
-              </h2>
-              <p className="text-xs text-muted-foreground truncate">
-                {selectedChat.job?.title}
-              </p>
+            <div 
+              className="flex items-center gap-3 flex-1 cursor-pointer"
+              onClick={() => navigate(`/profile/${selectedChat.other_user?.id}`)}
+            >
+              <Avatar className="h-10 w-10">
+                <AvatarImage src={selectedChat.other_user?.avatar_url || undefined} />
+                <AvatarFallback className={`${theme.accentBg} ${theme.primaryText}`}>
+                  {(selectedChat.other_user?.full_name || 'U')[0].toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1 min-w-0">
+                <h2 className="font-semibold truncate">
+                  {selectedChat.other_user?.full_name || 'Utente'}
+                </h2>
+                <p className="text-xs text-muted-foreground truncate">
+                  {selectedChat.job?.title}
+                </p>
+              </div>
             </div>
           </div>
         </header>
@@ -539,7 +544,13 @@ const Messaggi = () => {
                 onClick={() => setSelectedChat(chat)}
                 className="material-card p-4 flex items-center gap-3 cursor-pointer hover:shadow-md transition-shadow"
               >
-                <Avatar className="h-12 w-12">
+                <Avatar 
+                  className="h-12 w-12 cursor-pointer"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(`/profile/${chat.other_user?.id}`);
+                  }}
+                >
                   <AvatarImage src={chat.other_user?.avatar_url || undefined} />
                   <AvatarFallback className={`${theme.accentBg} ${theme.primaryText}`}>
                     {(chat.other_user?.full_name || 'U')[0].toUpperCase()}
