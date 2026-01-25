@@ -1,12 +1,13 @@
 import { useState, useCallback, useEffect } from "react";
 import Map, { Marker, Popup, NavigationControl } from "react-map-gl";
-import { GraduationCap, Briefcase, Clock, ChevronRight, Bike, Utensils, Sparkles, Laptop, Palette, PartyPopper } from "lucide-react";
+import { Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { JobDetailsSheet } from "./JobDetailsSheet";
 import { supabase } from "@/integrations/supabase/client";
 import { useUser } from "@/contexts/UserContext";
 import { useAppTheme } from "@/hooks/useAppTheme";
 import { isRoleTag } from "@/constants/tags";
+import { getJobIconFromTags } from "@/lib/jobIcons";
 import "mapbox-gl/dist/mapbox-gl.css";
 
 // Profile type from join
@@ -32,24 +33,6 @@ interface Job {
   schedule?: string | null;
   profiles?: JobProfile | null;
 }
-
-// Helper function to get icon based on job tags
-const getIconFromTags = (tags: string[] | null): typeof Briefcase => {
-  if (!tags || tags.length === 0) return Briefcase;
-  
-  const tagsLower = tags.map(t => t.toLowerCase());
-  
-  // Check for specific tag matches
-  if (tagsLower.some(t => t.includes('rider') || t.includes('consegn'))) return Bike;
-  if (tagsLower.some(t => t.includes('cameriere') || t.includes('bar') || t.includes('cassa'))) return Utensils;
-  if (tagsLower.some(t => t.includes('ripetizioni') || t.includes('studio'))) return GraduationCap;
-  if (tagsLower.some(t => t.includes('pulizie'))) return Sparkles;
-  if (tagsLower.some(t => t.includes('grafico') || t.includes('design'))) return Palette;
-  if (tagsLower.some(t => t.includes('tech') || t.includes('software') || t.includes('social'))) return Laptop;
-  if (tagsLower.some(t => t.includes('staff') || t.includes('event'))) return PartyPopper;
-  
-  return Briefcase; // Default
-};
 
 export function InteractiveMap() {
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -186,8 +169,8 @@ export function InteractiveMap() {
         <NavigationControl position="top-right" showCompass={false} />
 
         {jobs.map((job) => {
-          // Use dynamic icon based on tags
-          const Icon = getIconFromTags(job.tags);
+          // Use global icon helper
+          const Icon = getJobIconFromTags(job.tags);
 
           return (
             <Marker
@@ -322,8 +305,8 @@ function MapFallback({
 
       {/* Job Markers */}
       {jobs.map((job, index) => {
-        // Use dynamic icon based on tags
-        const Icon = getIconFromTags(job.tags);
+        // Use global icon helper
+        const Icon = getJobIconFromTags(job.tags);
         const positions = [
           { top: "25%", left: "30%" },
           { top: "45%", left: "60%" },
