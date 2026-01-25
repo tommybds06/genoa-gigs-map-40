@@ -10,7 +10,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { supabase as supabaseClient } from "@/integrations/supabase/client";
+import { getTagClasses } from "@/lib/tagColors";
 
 interface JobProfile {
   full_name: string | null;
@@ -218,18 +218,14 @@ export function JobDetailsSheet({ job, isOpen, onClose }: JobDetailsSheetProps) 
               {/* Colored Tags (same logic as map popup) */}
               {job.tags && job.tags.filter(tag => tag.toLowerCase() !== 'altro').length > 0 && (
                 <div className="flex flex-wrap gap-2 mt-3">
-                  {job.tags.filter(tag => tag.toLowerCase() !== 'altro').map((tag) => {
-                    // Use centralized tag color logic: TYPE_TAGS = Blue, everything else = Orange
-                    const { getTagClasses } = require('@/lib/tagColors');
-                    return (
-                      <span
-                        key={tag}
-                        className={`px-3 py-1 rounded-full text-sm font-medium ${getTagClasses(tag)}`}
-                      >
-                        {tag}
-                      </span>
-                    );
-                  })}
+                  {job.tags.filter(tag => tag.toLowerCase() !== 'altro').map((tag) => (
+                    <span
+                      key={tag}
+                      className={`px-3 py-1 rounded-full text-sm font-medium ${getTagClasses(tag)}`}
+                    >
+                      {tag}
+                    </span>
+                  ))}
                 </div>
               )}
             </SheetHeader>
