@@ -9,6 +9,8 @@ export const ROLE_TAGS = [
   "Staff",
   "Biglietteria",
   "Pulizie",
+  "Vendite",
+  "Security",
 ] as const;
 
 // Type Tags - Blue themed

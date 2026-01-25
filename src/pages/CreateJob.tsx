@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { toast } from 'sonner';
 import { 
   ArrowLeft, 
@@ -14,11 +15,12 @@ import {
   Clock, 
   Euro, 
   FileText, 
-  Hash, 
   Loader2,
-  Send
+  Send,
+  Pencil
 } from 'lucide-react';
-import { ROLE_TAGS, TYPE_TAGS, isRoleTag } from '@/constants/tags';
+import { ROLE_TAGS, TYPE_TAGS } from '@/constants/tags';
+import { getJobIcon } from '@/lib/jobIcons';
 
 const CreateJob = () => {
   const navigate = useNavigate();
@@ -31,25 +33,29 @@ const CreateJob = () => {
   const [description, setDescription] = useState('');
   const [schedule, setSchedule] = useState('');
   const [price, setPrice] = useState('');
-  const [selectedTypeTags, setSelectedTypeTags] = useState<string[]>([]);
-  const [selectedRoleTags, setSelectedRoleTags] = useState<string[]>([]);
+  
+  // Single selection tags
+  const [selectedTypeTag, setSelectedTypeTag] = useState<string>('');
+  const [selectedRoleTag, setSelectedRoleTag] = useState<string>('');
+  const [customRoleTag, setCustomRoleTag] = useState<string>('');
+  const [isCustomRole, setIsCustomRole] = useState(false);
   
   const [errors, setErrors] = useState<{ 
     title?: string; 
     description?: string; 
-    typeTags?: string;
+    typeTag?: string;
+    roleTag?: string;
   }>({});
 
-  const toggleTypeTag = (tag: string) => {
-    setSelectedTypeTags(prev => 
-      prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
-    );
-  };
-
-  const toggleRoleTag = (tag: string) => {
-    setSelectedRoleTags(prev => 
-      prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
-    );
+  const handleRoleSelect = (role: string) => {
+    if (role === 'custom') {
+      setIsCustomRole(true);
+      setSelectedRoleTag('');
+    } else {
+      setIsCustomRole(false);
+      setSelectedRoleTag(role);
+      setCustomRoleTag('');
+    }
   };
 
   const validateForm = (): boolean => {
@@ -63,8 +69,14 @@ const CreateJob = () => {
       newErrors.description = 'La descrizione è obbligatoria';
     }
     
-    if (selectedTypeTags.length === 0) {
-      newErrors.typeTags = 'Seleziona almeno una modalità';
+    if (!selectedTypeTag) {
+      newErrors.typeTag = 'Seleziona una modalità';
+    }
+    
+    // Role is required - either predefined or custom
+    const finalRole = isCustomRole ? customRoleTag.trim() : selectedRoleTag;
+    if (!finalRole) {
+      newErrors.roleTag = 'Seleziona o inserisci un ruolo';
     }
     
     setErrors(newErrors);
@@ -91,8 +103,11 @@ const CreateJob = () => {
     setLoading(true);
 
     try {
-      // Combine all tags
-      const allTags = [...selectedTypeTags, ...selectedRoleTags];
+      // Get final role tag
+      const finalRole = isCustomRole ? customRoleTag.trim() : selectedRoleTag;
+      
+      // Combine tags: one type + one role
+      const allTags = [selectedTypeTag, finalRole];
 
       const { error } = await supabase
         .from('jobs')
@@ -102,7 +117,7 @@ const CreateJob = () => {
           description: description.trim(),
           schedule: schedule.trim() || null,
           price: price.trim() || null,
-          category: selectedRoleTags[0]?.toLowerCase() || 'general',
+          category: finalRole.toLowerCase(),
           tags: allTags,
           lat: profile.lat,
           lng: profile.lng,
@@ -200,59 +215,105 @@ const CreateJob = () => {
           />
         </div>
 
-        {/* Type Tags (Modalità) - Required */}
+        {/* Type Tag (Modalità) - Single Selection Required */}
         <div className="space-y-3">
           <Label className="text-base font-medium flex items-center gap-2">
-            <Hash className="h-4 w-4 text-blue-600" />
+            <div className="w-3 h-3 rounded-full bg-blue-600" />
             Modalità <span className="text-destructive">*</span>
           </Label>
           <p className="text-sm text-muted-foreground">
             Seleziona il tipo di impiego
           </p>
-          <div className="flex flex-wrap gap-2">
+          <RadioGroup
+            value={selectedTypeTag}
+            onValueChange={setSelectedTypeTag}
+            className="grid grid-cols-2 gap-2"
+          >
             {TYPE_TAGS.map((tag) => (
-              <button
-                key={tag}
-                type="button"
-                onClick={() => toggleTypeTag(tag)}
-                className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
-                  selectedTypeTags.includes(tag)
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
-                }`}
-              >
-                {tag}
-              </button>
+              <div key={tag} className="relative">
+                <RadioGroupItem
+                  value={tag}
+                  id={`type-${tag}`}
+                  className="peer sr-only"
+                />
+                <Label
+                  htmlFor={`type-${tag}`}
+                  className={`flex items-center justify-center px-3 py-2.5 rounded-full text-sm font-medium cursor-pointer transition-all border-2 ${
+                    selectedTypeTag === tag
+                      ? 'bg-blue-600 text-white border-blue-600'
+                      : 'bg-blue-50 text-blue-700 border-transparent hover:bg-blue-100'
+                  }`}
+                >
+                  {tag}
+                </Label>
+              </div>
             ))}
-          </div>
-          {errors.typeTags && <p className="text-sm text-destructive">{errors.typeTags}</p>}
+          </RadioGroup>
+          {errors.typeTag && <p className="text-sm text-destructive">{errors.typeTag}</p>}
         </div>
 
-        {/* Role Tags (Ruoli) - Optional */}
+        {/* Role Tag (Ruoli) - Single Selection Required with Custom Option */}
         <div className="space-y-3">
           <Label className="text-base font-medium flex items-center gap-2">
-            <Hash className="h-4 w-4 text-orange-500" />
-            Ruolo <span className="text-muted-foreground text-sm font-normal">(opzionale)</span>
+            <div className="w-3 h-3 rounded-full bg-orange-500" />
+            Ruolo <span className="text-destructive">*</span>
           </Label>
           <p className="text-sm text-muted-foreground">
-            Specifica il ruolo richiesto
+            Seleziona il ruolo richiesto
           </p>
-          <div className="flex flex-wrap gap-2">
-            {ROLE_TAGS.map((tag) => (
-              <button
-                key={tag}
-                type="button"
-                onClick={() => toggleRoleTag(tag)}
-                className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
-                  selectedRoleTags.includes(tag)
-                    ? 'bg-orange-500 text-white'
-                    : 'bg-orange-100 text-orange-700 hover:bg-orange-200'
-                }`}
-              >
-                {tag}
-              </button>
-            ))}
+          <div className="grid grid-cols-3 gap-2">
+            {ROLE_TAGS.map((tag) => {
+              const Icon = getJobIcon(tag);
+              const isSelected = !isCustomRole && selectedRoleTag === tag;
+              
+              return (
+                <button
+                  key={tag}
+                  type="button"
+                  onClick={() => handleRoleSelect(tag)}
+                  className={`flex flex-col items-center gap-1.5 p-3 rounded-xl text-sm font-medium transition-all border-2 ${
+                    isSelected
+                      ? 'bg-orange-500 text-white border-orange-500'
+                      : 'bg-orange-50 text-orange-700 border-transparent hover:bg-orange-100'
+                  }`}
+                >
+                  <Icon className={`w-5 h-5 ${isSelected ? 'text-white' : 'text-orange-500'}`} />
+                  <span className="text-xs text-center leading-tight">{tag}</span>
+                </button>
+              );
+            })}
+            
+            {/* Custom Option */}
+            <button
+              type="button"
+              onClick={() => handleRoleSelect('custom')}
+              className={`flex flex-col items-center gap-1.5 p-3 rounded-xl text-sm font-medium transition-all border-2 ${
+                isCustomRole
+                  ? 'bg-orange-500 text-white border-orange-500'
+                  : 'bg-orange-50 text-orange-700 border-transparent hover:bg-orange-100'
+              }`}
+            >
+              <Pencil className={`w-5 h-5 ${isCustomRole ? 'text-white' : 'text-orange-500'}`} />
+              <span className="text-xs text-center leading-tight">Altro</span>
+            </button>
           </div>
+          
+          {/* Custom Role Input */}
+          {isCustomRole && (
+            <div className="mt-3">
+              <Input
+                placeholder="Scrivi il ruolo personalizzato..."
+                value={customRoleTag}
+                onChange={(e) => setCustomRoleTag(e.target.value)}
+                className="border-orange-200 focus:border-orange-500"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                L'icona visualizzata sarà una valigetta generica
+              </p>
+            </div>
+          )}
+          
+          {errors.roleTag && <p className="text-sm text-destructive">{errors.roleTag}</p>}
         </div>
       </div>
 

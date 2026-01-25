@@ -1,6 +1,6 @@
 import { Header } from "@/components/layout/Header";
 import { BottomNav } from "@/components/layout/BottomNav";
-import { GraduationCap, Truck, PartyPopper, MapPin, Clock, Euro, Briefcase, SearchX, Tag } from "lucide-react";
+import { MapPin, Clock, Euro, SearchX, Tag, Briefcase } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -8,6 +8,8 @@ import { useProfile } from "@/hooks/useProfile";
 import { TagBadges } from "@/components/tags/TagSelector";
 import { Link } from "react-router-dom";
 import { JobDetailsSheet } from "@/components/map/JobDetailsSheet";
+import { getJobIconFromTags } from "@/lib/jobIcons";
+import { isRoleTag } from "@/constants/tags";
 
 interface JobProfile {
   full_name: string | null;
@@ -29,20 +31,6 @@ interface Job {
   owner_id: string;
   profiles?: JobProfile | null;
 }
-
-const categoryIcons: Record<string, typeof GraduationCap> = {
-  tutoring: GraduationCap,
-  delivery: Truck,
-  event: PartyPopper,
-  general: Briefcase,
-};
-
-const categoryLabels: Record<string, string> = {
-  tutoring: "Ripetizioni",
-  delivery: "Consegne",
-  event: "Eventi",
-  general: "Generale",
-};
 
 function getTimeAgo(dateString: string): string {
   const date = new Date(dateString);
@@ -157,8 +145,10 @@ const Lista = () => {
         ) : (
           <div className="space-y-3">
             {jobs.map((job, index) => {
-              const Icon = categoryIcons[job.category || "general"] || Briefcase;
-              const categoryLabel = categoryLabels[job.category || "general"] || "Generale";
+              // Get dynamic icon based on role tags
+              const roleTag = job.tags?.find(t => isRoleTag(t));
+              const Icon = getJobIconFromTags(job.tags);
+              const roleLabel = roleTag || "Generale";
               
               return (
                 <div 
@@ -173,7 +163,7 @@ const Lista = () => {
                     </div>
                     <div className="flex-1 min-w-0">
                       <h3 className="font-semibold text-base truncate">{job.title}</h3>
-                      <p className="text-sm text-muted-foreground mb-2">{categoryLabel}</p>
+                      <p className="text-sm text-muted-foreground mb-2">{roleLabel}</p>
                       
                       {job.tags && job.tags.length > 0 && (
                         <TagBadges tags={job.tags} className="mb-2" />
