@@ -10,6 +10,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from 'sonner';
 import { MessageBubble } from "@/components/chat/MessageBubble";
+import { useChats, Chat } from "@/hooks/useChats";
+import { ChatListSkeleton } from "@/components/skeletons/ChatListSkeleton";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,24 +25,6 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
-
-interface Chat {
-  id: string;
-  job_id: string;
-  worker_id: string;
-  employer_id: string;
-  created_at: string;
-  job?: {
-    title: string;
-  };
-  other_user?: {
-    id: string;
-    full_name: string | null;
-    avatar_url: string | null;
-  };
-  unread_count?: number;
-  application_status?: string;
-}
 
 interface Message {
   id: string;
@@ -71,12 +56,14 @@ const Messaggi = () => {
   const { user } = useAuth();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   
-  const [chats, setChats] = useState<Chat[]>([]);
+  // Use React Query for cached chat list
+  const { data: chats = [], isLoading: loading, refetch: refetchChats } = useChats(user?.id);
+  
   const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
-  const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [replyingTo, setReplyingTo] = useState<Message | null>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -86,84 +73,21 @@ const Messaggi = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Load chats list
+  // Handle URL param for direct chat open
+  useEffect(() => {
+    const chatIdParam = searchParams.get('chat');
+    if (chatIdParam && chats.length > 0) {
+      const targetChat = chats.find(c => c.id === chatIdParam);
+      if (targetChat) {
+        setSelectedChat(targetChat);
+      }
+    }
+  }, [searchParams, chats]);
+
+  // Subscribe to new messages for notifications
   useEffect(() => {
     if (!user) return;
 
-    const fetchChats = async () => {
-      setLoading(true);
-      try {
-        const { data, error } = await supabase
-          .from('chats')
-          .select('*, jobs(title)')
-          .or(`worker_id.eq.${user.id},employer_id.eq.${user.id}`)
-          .order('updated_at', { ascending: false });
-
-        if (error) throw error;
-
-        // Fetch other user's profile, unread count, and application status for each chat
-        const chatsWithUsers = await Promise.all(
-          (data || []).map(async (chat) => {
-            const otherUserId = chat.worker_id === user.id ? chat.employer_id : chat.worker_id;
-            const { data: profile } = await supabase
-              .from('profiles')
-              .select('id, full_name, avatar_url, photos')
-              .eq('id', otherUserId)
-              .single();
-
-            // Count unread messages
-            const { count } = await supabase
-              .from('messages')
-              .select('*', { count: 'exact', head: true })
-              .eq('chat_id', chat.id)
-              .eq('is_read', false)
-              .neq('sender_id', user.id);
-
-            // Get application status for this chat's job
-            const { data: applicationData } = await supabase
-              .from('applications')
-              .select('status')
-              .eq('job_id', chat.job_id)
-              .eq('applicant_id', chat.worker_id)
-              .single();
-
-            const avatarUrl = profile?.photos && profile.photos.length > 0 
-              ? profile.photos[0] 
-              : profile?.avatar_url;
-
-            return {
-              ...chat,
-              job: chat.jobs,
-              other_user: profile ? { 
-                id: profile.id, 
-                full_name: profile.full_name, 
-                avatar_url: avatarUrl 
-              } : { id: otherUserId, full_name: null, avatar_url: null },
-              unread_count: count || 0,
-              application_status: applicationData?.status || 'pending',
-            };
-          })
-        );
-
-        setChats(chatsWithUsers);
-
-        const chatIdParam = searchParams.get('chat');
-        if (chatIdParam) {
-          const targetChat = chatsWithUsers.find(c => c.id === chatIdParam);
-          if (targetChat) {
-            setSelectedChat(targetChat);
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching chats:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchChats();
-
-    // Subscribe to new messages for notifications
     const channel = supabase
       .channel('global-messages')
       .on(
@@ -186,12 +110,8 @@ const Messaggi = () => {
             
             toast.info(`Nuovo messaggio da ${sender?.full_name || 'Utente'}`, { duration: 3000 });
             
-            // Update unread count in chats list
-            setChats(prev => prev.map(chat => 
-              chat.id === newMsg.chat_id 
-                ? { ...chat, unread_count: (chat.unread_count || 0) + 1 }
-                : chat
-            ));
+            // Invalidate chats cache to update unread count
+            queryClient.invalidateQueries({ queryKey: ['chats'] });
           }
         }
       )
@@ -200,7 +120,7 @@ const Messaggi = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user, searchParams]);
+  }, [user, selectedChat, queryClient]);
 
   // Load messages for selected chat and mark as read
   useEffect(() => {
@@ -245,12 +165,10 @@ const Messaggi = () => {
           .from('messages')
           .update({ is_read: true })
           .in('id', unreadMessageIds);
+        
+        // Invalidate cache to update badge
+        queryClient.invalidateQueries({ queryKey: ['chats'] });
       }
-
-      // Clear unread count for this chat
-      setChats(prev => prev.map(chat => 
-        chat.id === selectedChat.id ? { ...chat, unread_count: 0 } : chat
-      ));
     };
 
     // Fetch application status for this chat
@@ -309,7 +227,7 @@ const Messaggi = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [selectedChat, user]);
+  }, [selectedChat, user, queryClient]);
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -414,12 +332,8 @@ const Messaggi = () => {
       
       setApplicationStatus('completed');
       
-      // Update the chat in the list as well
-      setChats(prev => prev.map(chat => 
-        chat.id === selectedChat.id 
-          ? { ...chat, application_status: 'completed' }
-          : chat
-      ));
+      // Invalidate chats cache to update status
+      queryClient.invalidateQueries({ queryKey: ['chats'] });
       
       toast.success('Lavoro concluso con successo!', { duration: 2000 });
     } catch (error) {
@@ -641,9 +555,7 @@ const Messaggi = () => {
 
       <main className="flex-1 px-4 pb-20 overflow-y-auto">
         {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-          </div>
+          <ChatListSkeleton count={5} />
         ) : chats.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12">
             <div className="material-card-elevated p-8 text-center max-w-sm animate-scale-in">
