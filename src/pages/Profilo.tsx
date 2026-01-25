@@ -8,6 +8,7 @@ import { TagSelector, TagBadges } from "@/components/tags/TagSelector";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { WorkerJobHistory } from "@/components/profile/WorkerJobHistory";
+import { supabase } from "@/integrations/supabase/client";
 
 const Profilo = () => {
   const { user, signOut } = useAuth();
@@ -18,6 +19,26 @@ const Profilo = () => {
   const [hasChanges, setHasChanges] = useState(false);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
   const [editMode, setEditMode] = useState(false);
+  const [reviewStats, setReviewStats] = useState<{ avg: number; count: number } | null>(null);
+
+  // Fetch review stats for employers
+  useEffect(() => {
+    const fetchReviewStats = async () => {
+      if (!profile?.id || !isEmployer) return;
+
+      const { data, error } = await supabase
+        .from("reviews")
+        .select("rating")
+        .eq("employer_id", profile.id);
+
+      if (!error && data && data.length > 0) {
+        const avg = data.reduce((sum, r) => sum + r.rating, 0) / data.length;
+        setReviewStats({ avg: Math.round(avg * 10) / 10, count: data.length });
+      }
+    };
+
+    fetchReviewStats();
+  }, [profile?.id, isEmployer]);
 
   useEffect(() => {
     if (profile?.tags) {
@@ -144,12 +165,17 @@ const Profilo = () => {
                 <span className={`font-medium text-sm ${primaryTextClasses}`}>
                   {isEmployer ? "Employer" : "Worker"}
                 </span>
-                <span className="text-muted-foreground text-sm">•</span>
-                <div className={`flex items-center gap-1 ${primaryTextClasses}`}>
-                  <Star className="w-4 h-4" fill="currentColor" />
-                  <span className="font-semibold text-sm">4.8</span>
-                  <span className="text-muted-foreground text-sm">(12)</span>
-                </div>
+                {/* Show reviews only for Employers */}
+                {isEmployer && reviewStats && (
+                  <>
+                    <span className="text-muted-foreground text-sm">•</span>
+                    <div className={`flex items-center gap-1 ${primaryTextClasses}`}>
+                      <Star className="w-4 h-4" fill="currentColor" />
+                      <span className="font-semibold text-sm">{reviewStats.avg}</span>
+                      <span className="text-muted-foreground text-sm">({reviewStats.count})</span>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </div>

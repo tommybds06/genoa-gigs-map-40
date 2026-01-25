@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { UserProvider } from "@/contexts/UserContext";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import { ReviewPrompt } from "@/components/reviews/ReviewPrompt";
 import Index from "./pages/Index";
 import Lista from "./pages/Lista";
 import Annunci from "./pages/Annunci";
@@ -26,6 +27,7 @@ const App = () => (
         <TooltipProvider>
           <Toaster />
           <Sonner />
+          <ReviewPrompt />
           <BrowserRouter>
             <Routes>
               <Route path="/auth" element={<Auth />} />

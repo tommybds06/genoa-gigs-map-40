@@ -1,5 +1,6 @@
-import { ROLE_TAGS, TYPE_TAGS, isRoleTag } from "@/constants/tags";
+import { ROLE_TAGS, TYPE_TAGS } from "@/constants/tags";
 import { cn } from "@/lib/utils";
+import { getTagClasses, getTagSelectedClasses, isBlueTag } from "@/lib/tagColors";
 
 interface TagSelectorProps {
   selectedTags: string[];
@@ -31,9 +32,7 @@ export function TagSelector({ selectedTags, onChange, className }: TagSelectorPr
                 onClick={() => toggleTag(tag)}
                 className={cn(
                   "px-3 py-1.5 rounded-full text-sm font-medium transition-all",
-                  isSelected
-                    ? "bg-orange-500 text-white shadow-md"
-                    : "bg-orange-100 text-orange-700 hover:bg-orange-200"
+                  getTagSelectedClasses(tag, isSelected)
                 )}
               >
                 {tag}
@@ -56,9 +55,7 @@ export function TagSelector({ selectedTags, onChange, className }: TagSelectorPr
                 onClick={() => toggleTag(tag)}
                 className={cn(
                   "px-3 py-1.5 rounded-full text-sm font-medium transition-all",
-                  isSelected
-                    ? "bg-blue-500 text-white shadow-md"
-                    : "bg-blue-100 text-blue-700 hover:bg-blue-200"
+                  getTagSelectedClasses(tag, isSelected)
                 )}
               >
                 {tag}
@@ -72,6 +69,7 @@ export function TagSelector({ selectedTags, onChange, className }: TagSelectorPr
 }
 
 // Display-only version for showing tags
+// Uses the corrected logic: TYPE_TAGS = Blue, everything else (including custom) = Orange
 export function TagBadges({ tags, className }: { tags: string[]; className?: string }) {
   if (!tags || tags.length === 0) return null;
 
@@ -82,9 +80,7 @@ export function TagBadges({ tags, className }: { tags: string[]; className?: str
           key={tag}
           className={cn(
             "px-2 py-0.5 rounded-full text-xs font-medium",
-            isRoleTag(tag)
-              ? "bg-orange-100 text-orange-700"
-              : "bg-blue-100 text-blue-700"
+            getTagClasses(tag)
           )}
         >
           {tag}

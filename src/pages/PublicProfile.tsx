@@ -13,13 +13,11 @@ import {
   Briefcase, 
   Clock, 
   Euro,
-  GraduationCap,
-  Truck,
-  PartyPopper,
   MessageCircle
 } from "lucide-react";
 import { useAppTheme } from "@/hooks/useAppTheme";
 import { useUser } from "@/contexts/UserContext";
+import { getJobIconFromTags } from "@/lib/jobIcons";
 
 interface Profile {
   id: string;
@@ -43,19 +41,13 @@ interface Job {
   tags: string[];
 }
 
-const categoryIcons: Record<string, typeof GraduationCap> = {
-  tutoring: GraduationCap,
-  delivery: Truck,
-  event: PartyPopper,
-  general: Briefcase,
-};
-
-const categoryLabels: Record<string, string> = {
-  tutoring: "Ripetizioni",
-  delivery: "Consegne",
-  event: "Eventi",
-  general: "Generale",
-};
+interface Review {
+  id: string;
+  rating: number;
+  comment: string | null;
+  created_at: string;
+  worker_name: string | null;
+}
 
 function getTimeAgo(dateString: string): string {
   const date = new Date(dateString);
@@ -76,6 +68,8 @@ const PublicProfile = () => {
   
   const [profile, setProfile] = useState<Profile | null>(null);
   const [jobs, setJobs] = useState<Job[]>([]);
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [reviewStats, setReviewStats] = useState<{ avg: number; count: number } | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
 
@@ -100,6 +94,41 @@ const PublicProfile = () => {
             ...profileData,
             photos: profileData.photos || [],
           });
+
+          // If employer, fetch reviews
+          if (profileData.role === "employer") {
+            const { data: reviewsData, error: reviewsError } = await supabase
+              .from("reviews")
+              .select(`
+                id,
+                rating,
+                comment,
+                created_at,
+                worker_id,
+                profiles!reviews_worker_id_fkey (
+                  full_name
+                )
+              `)
+              .eq("employer_id", userId)
+              .order("created_at", { ascending: false })
+              .limit(10);
+
+            if (!reviewsError && reviewsData) {
+              const formattedReviews = reviewsData.map(r => ({
+                id: r.id,
+                rating: r.rating,
+                comment: r.comment,
+                created_at: r.created_at,
+                worker_name: (r.profiles as unknown as { full_name: string | null })?.full_name || "Utente",
+              }));
+              setReviews(formattedReviews);
+
+              if (reviewsData.length > 0) {
+                const avg = reviewsData.reduce((sum, r) => sum + r.rating, 0) / reviewsData.length;
+                setReviewStats({ avg: Math.round(avg * 10) / 10, count: reviewsData.length });
+              }
+            }
+          }
         }
         
         // Fetch active jobs (last 48 hours)
@@ -258,19 +287,27 @@ const PublicProfile = () => {
             </Badge>
           </div>
 
-          {/* Placeholder Rating */}
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <div className="flex items-center gap-1">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <Star 
-                  key={star} 
-                  className={`w-5 h-5 ${star <= 4 ? `${theme.primaryText} fill-current` : 'text-muted-foreground/30'}`}
-                />
-              ))}
+          {/* Rating Display (Employers only with reviews) */}
+          {profile.role === "employer" && reviewStats && (
+            <div className="flex items-center justify-center gap-2 mb-4">
+              <div className="flex items-center gap-1">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <Star 
+                    key={star} 
+                    className={`w-5 h-5 ${
+                      star <= reviewStats.avg 
+                        ? "text-yellow-400 fill-yellow-400" 
+                        : reviewStats.avg >= star - 0.5
+                        ? "text-yellow-400 fill-yellow-400/50"
+                        : "text-muted-foreground/30"
+                    }`}
+                  />
+                ))}
+              </div>
+              <span className="font-semibold">{reviewStats.avg}</span>
+              <span className="text-muted-foreground text-sm">({reviewStats.count} recensioni)</span>
             </div>
-            <span className="font-semibold">4.0</span>
-            <span className="text-muted-foreground text-sm">(0 recensioni)</span>
-          </div>
+          )}
         </div>
 
         {/* Bio Section */}
@@ -293,16 +330,50 @@ const PublicProfile = () => {
           </div>
         )}
 
-        {/* Reviews Placeholder */}
-        <div className="px-4 pb-6">
-          <div className="material-card p-4">
-            <h3 className="font-semibold text-sm text-muted-foreground mb-2">RECENSIONI</h3>
-            <div className="flex flex-col items-center justify-center py-8 text-center">
-              <MessageCircle className="w-10 h-10 text-muted-foreground/30 mb-2" />
-              <p className="text-muted-foreground text-sm">Nessuna recensione ancora</p>
+        {/* Reviews Section (Employers only) */}
+        {profile.role === "employer" && (
+          <div className="px-4 pb-6">
+            <div className="material-card p-4">
+              <h3 className="font-semibold text-sm text-muted-foreground mb-2">RECENSIONI</h3>
+              {reviews.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-8 text-center">
+                  <MessageCircle className="w-10 h-10 text-muted-foreground/30 mb-2" />
+                  <p className="text-muted-foreground text-sm">Nessuna recensione ancora</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {reviews.map((review) => (
+                    <div key={review.id} className="border-b border-border pb-4 last:border-0 last:pb-0">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-medium text-sm">{review.worker_name}</span>
+                        <div className="flex items-center gap-1">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <Star
+                              key={star}
+                              className={`w-3.5 h-3.5 ${
+                                star <= review.rating
+                                  ? "text-yellow-400 fill-yellow-400"
+                                  : review.rating >= star - 0.5
+                                  ? "text-yellow-400 fill-yellow-400/50"
+                                  : "text-muted-foreground/30"
+                              }`}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                      {review.comment && (
+                        <p className="text-sm text-muted-foreground">{review.comment}</p>
+                      )}
+                      <p className="text-xs text-muted-foreground/60 mt-1">
+                        {getTimeAgo(review.created_at)}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
-        </div>
+        )}
 
         {/* Active Jobs Section */}
         {profile.role === "employer" && (
@@ -317,8 +388,8 @@ const PublicProfile = () => {
             ) : (
               <div className="space-y-3">
                 {jobs.map((job) => {
-                  const Icon = categoryIcons[job.category || "general"] || Briefcase;
-                  const categoryLabel = categoryLabels[job.category || "general"] || "Generale";
+                  const Icon = getJobIconFromTags(job.tags);
+                  const roleTag = job.tags?.find(t => !['Occasionale', 'A Chiamata', 'Mensile', 'Settimanale', 'Weekend'].includes(t));
                   
                   return (
                     <div key={job.id} className="material-card p-4">
@@ -328,7 +399,7 @@ const PublicProfile = () => {
                         </div>
                         <div className="flex-1 min-w-0">
                           <h4 className="font-semibold truncate">{job.title}</h4>
-                          <p className="text-sm text-muted-foreground">{categoryLabel}</p>
+                          <p className="text-sm text-muted-foreground">{roleTag || "Generale"}</p>
                           
                           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-sm">
                             {job.schedule && (
