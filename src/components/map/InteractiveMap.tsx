@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useUser } from "@/contexts/UserContext";
 import { useAppTheme } from "@/hooks/useAppTheme";
 import { getJobIconFromTags } from "@/lib/jobIcons";
+import { getTagClasses } from "@/lib/tagColors";
 import "mapbox-gl/dist/mapbox-gl.css";
 
 // Profile type from join
@@ -232,17 +233,14 @@ export function InteractiveMap() {
               {/* ROW 3: Colored Tags */}
               {selectedJob.tags && selectedJob.tags.filter(tag => tag.toLowerCase() !== 'altro').length > 0 && (
                 <div className="flex flex-wrap gap-1">
-                  {selectedJob.tags.filter(tag => tag.toLowerCase() !== 'altro').map((tag) => {
-                    const { getTagClasses } = require('@/lib/tagColors');
-                    return (
-                      <span
-                        key={tag}
-                        className={`px-2 py-0.5 rounded-full text-xs font-medium ${getTagClasses(tag)}`}
-                      >
-                        {tag}
-                      </span>
-                    );
-                  })}
+                  {selectedJob.tags.filter(tag => tag.toLowerCase() !== 'altro').map((tag) => (
+                    <span
+                      key={tag}
+                      className={`px-2 py-0.5 rounded-full text-xs font-medium ${getTagClasses(tag)}`}
+                    >
+                      {tag}
+                    </span>
+                  ))}
                 </div>
               )}
             </div>
