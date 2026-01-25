@@ -1,8 +1,7 @@
 import { Header } from "@/components/layout/Header";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { MapPin, Clock, Euro, SearchX, Tag, Briefcase } from "lucide-react";
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { TagBadges } from "@/components/tags/TagSelector";
@@ -10,27 +9,8 @@ import { Link } from "react-router-dom";
 import { JobDetailsSheet } from "@/components/map/JobDetailsSheet";
 import { getJobIconFromTags } from "@/lib/jobIcons";
 import { isRoleTag } from "@/constants/tags";
-
-interface JobProfile {
-  full_name: string | null;
-  avatar_url: string | null;
-  address_text: string | null;
-}
-
-interface Job {
-  id: string;
-  title: string;
-  category: string | null;
-  description: string | null;
-  price: string | null;
-  schedule: string | null;
-  lat: number | null;
-  lng: number | null;
-  created_at: string;
-  tags: string[];
-  owner_id: string;
-  profiles?: JobProfile | null;
-}
+import { useOpenJobs, useEmployerJobs, Job } from "@/hooks/useJobs";
+import { JobCardSkeletonList } from "@/components/skeletons/JobCardSkeleton";
 
 function getTimeAgo(dateString: string): string {
   const date = new Date(dateString);
@@ -48,62 +28,21 @@ function getTimeAgo(dateString: string): string {
 const Lista = () => {
   const { user } = useAuth();
   const { profile, loading: profileLoading } = useProfile();
-  const [jobs, setJobs] = useState<Job[]>([]);
-  const [loading, setLoading] = useState(true);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
 
-  useEffect(() => {
-    const fetchJobs = async () => {
-      if (!user || profileLoading) return;
-      
-      setLoading(true);
-      
-      // Calculate 48 hours ago
-      const fortyEightHoursAgo = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
-      
-      try {
-        // If employer, show only their own jobs
-        if (profile?.role === "employer") {
-          const { data, error } = await supabase
-            .from("jobs")
-            .select("*, profiles(full_name, avatar_url, address_text)")
-            .eq("owner_id", user.id)
-            .gte("created_at", fortyEightHoursAgo)
-            .order("created_at", { ascending: false });
-          
-          if (error) throw error;
-          setJobs((data || []).map(j => ({ ...j, tags: j.tags || [] })));
-        } else {
-          // Worker: show jobs matching their tags
-          const userTags = profile?.tags || [];
-          
-          if (userTags.length === 0) {
-            // No tags selected, show empty state
-            setJobs([]);
-          } else {
-            // Fetch jobs with overlapping tags
-            const { data, error } = await supabase
-              .from("jobs")
-              .select("*, profiles(full_name, avatar_url, address_text)")
-              .eq("status", "open")
-              .gte("created_at", fortyEightHoursAgo)
-              .overlaps("tags", userTags)
-              .order("created_at", { ascending: false });
-            
-            if (error) throw error;
-            setJobs((data || []).map(j => ({ ...j, tags: j.tags || [] })));
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching jobs:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const isEmployer = profile?.role === "employer";
+  const userTags = profile?.tags || [];
 
-    fetchJobs();
-  }, [user, profile, profileLoading]);
+  // Use React Query for caching - conditionally based on role
+  const employerJobsQuery = useEmployerJobs(isEmployer ? user?.id : undefined);
+  const workerJobsQuery = useOpenJobs(!isEmployer && userTags.length > 0 ? userTags : undefined);
+
+  // Select the right query based on role
+  const { data: jobs = [], isLoading } = isEmployer ? employerJobsQuery : workerJobsQuery;
+
+  // Show loading while profile is loading
+  const loading = profileLoading || isLoading;
 
   const handleJobClick = (job: Job) => {
     setSelectedJob(job);
@@ -113,8 +52,6 @@ const Lista = () => {
   const handleCloseDetails = () => {
     setIsDetailsOpen(false);
   };
-
-  const isEmployer = profile?.role === "employer";
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
@@ -126,22 +63,9 @@ const Lista = () => {
         </h2>
         
         {loading ? (
-          <div className="space-y-3">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="material-card p-4 animate-pulse">
-                <div className="flex items-start gap-3">
-                  <div className="w-12 h-12 bg-muted rounded-2xl"></div>
-                  <div className="flex-1 space-y-2">
-                    <div className="h-4 bg-muted rounded w-3/4"></div>
-                    <div className="h-3 bg-muted rounded w-1/2"></div>
-                    <div className="h-3 bg-muted rounded w-1/3"></div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+          <JobCardSkeletonList count={5} />
         ) : jobs.length === 0 ? (
-          <EmptyState isEmployer={isEmployer} hasTags={(profile?.tags?.length || 0) > 0} />
+          <EmptyState isEmployer={isEmployer} hasTags={userTags.length > 0} />
         ) : (
           <div className="space-y-3">
             {jobs.map((job, index) => {
