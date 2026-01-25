@@ -19,6 +19,7 @@ export type Database = {
           applicant_id: string
           created_at: string
           id: string
+          is_reviewed: boolean
           job_id: string
           status: string
           updated_at: string
@@ -27,6 +28,7 @@ export type Database = {
           applicant_id: string
           created_at?: string
           id?: string
+          is_reviewed?: boolean
           job_id: string
           status?: string
           updated_at?: string
@@ -35,6 +37,7 @@ export type Database = {
           applicant_id?: string
           created_at?: string
           id?: string
+          is_reviewed?: boolean
           job_id?: string
           status?: string
           updated_at?: string
@@ -281,6 +284,58 @@ export type Database = {
           xp_points?: number
         }
         Relationships: []
+      }
+      reviews: {
+        Row: {
+          comment: string | null
+          created_at: string
+          employer_id: string
+          id: string
+          job_id: string
+          rating: number
+          worker_id: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          employer_id: string
+          id?: string
+          job_id: string
+          rating: number
+          worker_id: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          employer_id?: string
+          id?: string
+          job_id?: string
+          rating?: number
+          worker_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_employer_id_fkey"
+            columns: ["employer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_worker_id_fkey"
+            columns: ["worker_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

@@ -219,18 +219,12 @@ export function JobDetailsSheet({ job, isOpen, onClose }: JobDetailsSheetProps) 
               {job.tags && job.tags.filter(tag => tag.toLowerCase() !== 'altro').length > 0 && (
                 <div className="flex flex-wrap gap-2 mt-3">
                   {job.tags.filter(tag => tag.toLowerCase() !== 'altro').map((tag) => {
-                    // Role tags (Cameriere, Rider, etc.) = Orange, Type tags (Occasionale, Weekend) = Blue
-                    const isRole = ['cameriere', 'rider', 'ripetizioni', 'barista', 'cassiere', 'pulizie', 'grafico', 'social media', 'staff eventi'].some(
-                      role => tag.toLowerCase().includes(role)
-                    );
+                    // Use centralized tag color logic: TYPE_TAGS = Blue, everything else = Orange
+                    const { getTagClasses } = require('@/lib/tagColors');
                     return (
                       <span
                         key={tag}
-                        className={`px-3 py-1 rounded-full text-sm font-medium ${
-                          isRole
-                            ? 'bg-orange-100 text-orange-700'
-                            : 'bg-blue-100 text-blue-700'
-                        }`}
+                        className={`px-3 py-1 rounded-full text-sm font-medium ${getTagClasses(tag)}`}
                       >
                         {tag}
                       </span>

@@ -6,7 +6,6 @@ import { JobDetailsSheet } from "./JobDetailsSheet";
 import { supabase } from "@/integrations/supabase/client";
 import { useUser } from "@/contexts/UserContext";
 import { useAppTheme } from "@/hooks/useAppTheme";
-import { isRoleTag } from "@/constants/tags";
 import { getJobIconFromTags } from "@/lib/jobIcons";
 import "mapbox-gl/dist/mapbox-gl.css";
 
@@ -233,18 +232,17 @@ export function InteractiveMap() {
               {/* ROW 3: Colored Tags */}
               {selectedJob.tags && selectedJob.tags.filter(tag => tag.toLowerCase() !== 'altro').length > 0 && (
                 <div className="flex flex-wrap gap-1">
-                  {selectedJob.tags.filter(tag => tag.toLowerCase() !== 'altro').map((tag) => (
-                    <span
-                      key={tag}
-                      className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                        isRoleTag(tag)
-                          ? 'bg-orange-100 text-orange-700'
-                          : 'bg-blue-100 text-blue-700'
-                      }`}
-                    >
-                      {tag}
-                    </span>
-                  ))}
+                  {selectedJob.tags.filter(tag => tag.toLowerCase() !== 'altro').map((tag) => {
+                    const { getTagClasses } = require('@/lib/tagColors');
+                    return (
+                      <span
+                        key={tag}
+                        className={`px-2 py-0.5 rounded-full text-xs font-medium ${getTagClasses(tag)}`}
+                      >
+                        {tag}
+                      </span>
+                    );
+                  })}
                 </div>
               )}
             </div>
