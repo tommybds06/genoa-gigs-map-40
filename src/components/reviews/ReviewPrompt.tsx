@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useUser } from "@/contexts/UserContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,6 +23,9 @@ interface PendingReview {
   jobTitle: string;
 }
 
+// Session-level tracking to prevent re-showing after skip/close
+const skippedApplications = new Set<string>();
+
 export function ReviewPrompt() {
   const { user } = useAuth();
   const { isWorker, hasLoaded } = useUser();
@@ -32,13 +35,16 @@ export function ReviewPrompt() {
   const [hoverRating, setHoverRating] = useState(0);
   const [comment, setComment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSkipping, setIsSkipping] = useState(false);
+  const hasChecked = useRef(false);
 
   useEffect(() => {
     const checkPendingReviews = async () => {
-      if (!user || !hasLoaded || !isWorker) return;
+      if (!user || !hasLoaded || !isWorker || hasChecked.current) return;
+      
+      hasChecked.current = true;
 
       try {
-        // Find completed applications that haven't been reviewed
         const { data, error } = await supabase
           .from("applications")
           .select(`
@@ -66,6 +72,11 @@ export function ReviewPrompt() {
         }
 
         if (data && data.jobs) {
+          // Skip if already dismissed this session
+          if (skippedApplications.has(data.id)) {
+            return;
+          }
+
           const jobData = data.jobs as unknown as {
             id: string;
             title: string;
@@ -82,7 +93,6 @@ export function ReviewPrompt() {
           });
           setIsOpen(true);
 
-          // Fire confetti!
           setTimeout(() => {
             confetti({
               particleCount: 100,
@@ -100,6 +110,43 @@ export function ReviewPrompt() {
     checkPendingReviews();
   }, [user, hasLoaded, isWorker]);
 
+  const markAsReviewed = async () => {
+    if (!pendingReview) return;
+
+    try {
+      const { error } = await supabase
+        .from("applications")
+        .update({ is_reviewed: true })
+        .eq("id", pendingReview.applicationId);
+
+      if (error) throw error;
+      
+      // Track in session to prevent re-showing
+      skippedApplications.add(pendingReview.applicationId);
+    } catch (error) {
+      console.error("Error marking as reviewed:", error);
+    }
+  };
+
+  const handleSkip = async () => {
+    if (!pendingReview) return;
+    
+    setIsSkipping(true);
+    await markAsReviewed();
+    setIsSkipping(false);
+    setIsOpen(false);
+    setPendingReview(null);
+  };
+
+  const handleOpenChange = async (open: boolean) => {
+    if (!open && pendingReview) {
+      // User closed the modal (clicked X or outside)
+      await markAsReviewed();
+      setPendingReview(null);
+    }
+    setIsOpen(open);
+  };
+
   const handleStarClick = (starIndex: number, isHalf: boolean) => {
     const newRating = isHalf ? starIndex + 0.5 : starIndex + 1;
     setRating(newRating);
@@ -115,7 +162,6 @@ export function ReviewPrompt() {
 
     setIsSubmitting(true);
     try {
-      // Insert review
       const { error: reviewError } = await supabase.from("reviews").insert({
         job_id: pendingReview.jobId,
         worker_id: user.id,
@@ -126,7 +172,6 @@ export function ReviewPrompt() {
 
       if (reviewError) throw reviewError;
 
-      // Mark application as reviewed
       const { error: updateError } = await supabase
         .from("applications")
         .update({ is_reviewed: true })
@@ -134,6 +179,7 @@ export function ReviewPrompt() {
 
       if (updateError) throw updateError;
 
+      skippedApplications.add(pendingReview.applicationId);
       toast.success("Grazie per il feedback!", { duration: 2000 });
       setIsOpen(false);
       setPendingReview(null);
@@ -150,7 +196,7 @@ export function ReviewPrompt() {
   if (!pendingReview) return null;
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader className="text-center">
           <DialogTitle className="text-2xl">Complimenti! 🎉</DialogTitle>
@@ -177,25 +223,20 @@ export function ReviewPrompt() {
                   className="relative w-10 h-10 cursor-pointer"
                   onMouseLeave={() => setHoverRating(0)}
                 >
-                  {/* Left half (for 0.5 increments) */}
                   <div
                     className="absolute inset-y-0 left-0 w-1/2 z-10"
                     onMouseEnter={() => handleStarHover(starIndex, true)}
                     onClick={() => handleStarClick(starIndex, true)}
                   />
-                  {/* Right half */}
                   <div
                     className="absolute inset-y-0 right-0 w-1/2 z-10"
                     onMouseEnter={() => handleStarHover(starIndex, false)}
                     onClick={() => handleStarClick(starIndex, false)}
                   />
                   
-                  {/* Star display */}
                   <div className="relative w-full h-full">
-                    {/* Empty star background */}
                     <Star className="absolute inset-0 w-full h-full text-muted-foreground/30" />
                     
-                    {/* Filled portion */}
                     {(filled || halfFilled) && (
                       <div
                         className="absolute inset-0 overflow-hidden"
@@ -224,21 +265,35 @@ export function ReviewPrompt() {
             />
           </div>
 
-          {/* Submit Button */}
-          <Button
-            onClick={handleSubmit}
-            disabled={rating === 0 || isSubmitting}
-            className="w-full bg-primary hover:bg-primary/90"
-          >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Invio...
-              </>
-            ) : (
-              "Invia Recensione"
-            )}
-          </Button>
+          {/* Buttons */}
+          <div className="flex gap-3">
+            <Button
+              variant="outline"
+              onClick={handleSkip}
+              disabled={isSkipping || isSubmitting}
+              className="flex-1"
+            >
+              {isSkipping ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                "Salta"
+              )}
+            </Button>
+            <Button
+              onClick={handleSubmit}
+              disabled={rating === 0 || isSubmitting || isSkipping}
+              className="flex-1 bg-primary hover:bg-primary/90"
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Invio...
+                </>
+              ) : (
+                "Invia Recensione"
+              )}
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
