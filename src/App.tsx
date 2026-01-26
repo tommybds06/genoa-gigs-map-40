@@ -14,6 +14,7 @@ import CreateJob from "./pages/CreateJob";
 import Messaggi from "./pages/Messaggi";
 import Profilo from "./pages/Profilo";
 import PublicProfile from "./pages/PublicProfile";
+import Settings from "./pages/Settings";
 import Auth from "./pages/Auth";
 import Onboarding from "./pages/Onboarding";
 import NotFound from "./pages/NotFound";
@@ -38,6 +39,7 @@ const App = () => (
               <Route path="/create-job" element={<ProtectedRoute><CreateJob /></ProtectedRoute>} />
               <Route path="/messaggi" element={<ProtectedRoute><Messaggi /></ProtectedRoute>} />
               <Route path="/profilo" element={<ProtectedRoute><Profilo /></ProtectedRoute>} />
+              <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
               <Route path="/profile/:userId" element={<ProtectedRoute><PublicProfile /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
