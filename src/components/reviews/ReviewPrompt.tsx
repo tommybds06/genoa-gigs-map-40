@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useUser } from "@/contexts/UserContext";
 import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   Dialog,
   DialogContent,
@@ -29,6 +30,7 @@ const skippedApplications = new Set<string>();
 export function ReviewPrompt() {
   const { user } = useAuth();
   const { isWorker, hasLoaded } = useUser();
+  const queryClient = useQueryClient();
   const [pendingReview, setPendingReview] = useState<PendingReview | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [rating, setRating] = useState(0);
@@ -37,6 +39,7 @@ export function ReviewPrompt() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSkipping, setIsSkipping] = useState(false);
   const hasChecked = useRef(false);
+  const isMarkingReviewed = useRef(false);
 
   useEffect(() => {
     const checkPendingReviews = async () => {
@@ -111,7 +114,9 @@ export function ReviewPrompt() {
   }, [user, hasLoaded, isWorker]);
 
   const markAsReviewed = async () => {
-    if (!pendingReview) return;
+    if (!pendingReview || isMarkingReviewed.current) return;
+    
+    isMarkingReviewed.current = true;
 
     try {
       const { error } = await supabase
@@ -119,12 +124,20 @@ export function ReviewPrompt() {
         .update({ is_reviewed: true })
         .eq("id", pendingReview.applicationId);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error marking as reviewed:", error);
+        return;
+      }
       
       // Track in session to prevent re-showing
       skippedApplications.add(pendingReview.applicationId);
+      
+      // Invalidate cache to ensure fresh data
+      await queryClient.invalidateQueries({ queryKey: ["applications"] });
     } catch (error) {
       console.error("Error marking as reviewed:", error);
+    } finally {
+      isMarkingReviewed.current = false;
     }
   };
 
@@ -180,6 +193,10 @@ export function ReviewPrompt() {
       if (updateError) throw updateError;
 
       skippedApplications.add(pendingReview.applicationId);
+      
+      // Invalidate cache
+      await queryClient.invalidateQueries({ queryKey: ["applications"] });
+      
       toast.success("Grazie per il feedback!", { duration: 2000 });
       setIsOpen(false);
       setPendingReview(null);
