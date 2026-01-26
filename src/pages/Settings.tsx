@@ -106,7 +106,7 @@ const Settings = () => {
           <div className="material-card overflow-hidden">
             {/* Edit Profile */}
             <button 
-              onClick={() => navigate("/profilo")}
+              onClick={() => navigate("/settings/edit-profile")}
               className="w-full flex items-center justify-between p-4 hover:bg-muted/50 transition-colors border-b border-border"
             >
               <div className="flex items-center gap-3">
