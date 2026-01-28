@@ -1,10 +1,53 @@
+import { useState, useMemo } from "react";
 import { Header } from "@/components/layout/Header";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { InteractiveMap } from "@/components/map/InteractiveMap";
+import { SearchBar } from "@/components/map/SearchBar";
 import { useUser } from "@/contexts/UserContext";
+import { useMapJobs } from "@/hooks/useJobs";
 
 const Index = () => {
   const { isEmployer } = useUser();
+  const { data: allJobs = [] } = useMapJobs();
+  
+  // Search and filter state (only used for Workers)
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+
+  // Filter jobs based on search query and selected tags
+  const filteredJobs = useMemo(() => {
+    if (isEmployer) return allJobs; // Employers see all jobs
+    
+    let filtered = allJobs;
+    
+    // Filter by search query (title or employer name)
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      filtered = filtered.filter((job) => {
+        const titleMatch = job.title.toLowerCase().includes(query);
+        const employerMatch = job.profiles?.full_name?.toLowerCase().includes(query) || false;
+        return titleMatch || employerMatch;
+      });
+    }
+    
+    // Filter by selected tags
+    if (selectedTags.length > 0) {
+      filtered = filtered.filter((job) => {
+        if (!job.tags || job.tags.length === 0) return false;
+        return selectedTags.some((tag) => job.tags.includes(tag));
+      });
+    }
+    
+    return filtered;
+  }, [allJobs, searchQuery, selectedTags, isEmployer]);
+
+  // Check if search is active (for highlighting markers)
+  const isSearchActive = searchQuery.trim().length > 0 || selectedTags.length > 0;
+
+  // Get IDs of filtered jobs for highlighting
+  const filteredJobIds = useMemo(() => {
+    return new Set(filteredJobs.map((job) => job.id));
+  }, [filteredJobs]);
 
   return (
     <div className="flex flex-col h-screen bg-background">
@@ -14,10 +57,27 @@ const Index = () => {
         titleColor={isEmployer ? "text-blue-600" : "text-primary"}
       />
 
+      {/* Search Bar - Only for Workers */}
+      {!isEmployer && (
+        <div className="px-4 pb-3 z-30">
+          <SearchBar
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            selectedTags={selectedTags}
+            onTagsChange={setSelectedTags}
+          />
+        </div>
+      )}
+
       {/* Map Container - Takes remaining space */}
       <main className="flex-1 px-4 pb-20 overflow-hidden">
         <div className="map-container w-full h-full rounded-3xl overflow-hidden">
-          <InteractiveMap />
+          <InteractiveMap 
+            jobs={filteredJobs}
+            allJobs={allJobs}
+            isSearchActive={isSearchActive}
+            filteredJobIds={filteredJobIds}
+          />
         </div>
       </main>
 

@@ -9,20 +9,33 @@ import { useAppTheme } from "@/hooks/useAppTheme";
 import { getJobIconFromTags } from "@/lib/jobIcons";
 import { getTagClasses } from "@/lib/tagColors";
 import { useMapJobs, Job } from "@/hooks/useJobs";
+import { cn } from "@/lib/utils";
 import "mapbox-gl/dist/mapbox-gl.css";
 
-export function InteractiveMap() {
-  const { data: jobs = [], isLoading: jobsLoading } = useMapJobs();
+interface InteractiveMapProps {
+  jobs?: Job[];
+  allJobs?: Job[];
+  isSearchActive?: boolean;
+  filteredJobIds?: Set<string>;
+}
+
+export function InteractiveMap({ 
+  jobs: externalJobs, 
+  allJobs: externalAllJobs,
+  isSearchActive = false,
+  filteredJobIds = new Set()
+}: InteractiveMapProps) {
+  // Use external jobs if provided, otherwise fetch internally
+  const { data: internalJobs = [], isLoading: jobsLoading } = useMapJobs();
+  const jobs = externalJobs ?? internalJobs;
+  const allJobs = externalAllJobs ?? internalJobs;
+  
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [mapboxToken, setMapboxToken] = useState<string | null>(null);
   const [lastSelectedJob, setLastSelectedJob] = useState<Job | null>(null);
   const { isEmployer } = useUser();
   const { theme } = useAppTheme();
-
-  // Dynamic marker colors based on role
-  const markerBgClass = isEmployer ? "bg-blue-600" : "bg-primary";
-  const markerPointerClass = isEmployer ? "border-t-blue-600" : "border-t-primary";
 
   // Fetch Mapbox token
   useEffect(() => {
@@ -69,9 +82,15 @@ export function InteractiveMap() {
   }, []);
 
   // Memoize markers to prevent recalculation on every render
+  // Show all jobs but highlight filtered ones when search is active
   const markers = useMemo(() => {
-    return jobs.map((job) => {
+    const jobsToRender = isSearchActive ? allJobs : jobs;
+    
+    return jobsToRender.map((job) => {
       const Icon = getJobIconFromTags(job.tags);
+      const isHighlighted = isSearchActive && filteredJobIds.has(job.id);
+      const isDimmed = isSearchActive && !filteredJobIds.has(job.id);
+      
       return (
         <Marker
           key={job.id}
@@ -83,29 +102,56 @@ export function InteractiveMap() {
             handleMarkerClick(job);
           }}
         >
-          <button className="group flex flex-col items-center hover:scale-110 transition-transform cursor-pointer">
+          <button 
+            className={cn(
+              "group flex flex-col items-center cursor-pointer transition-all duration-300 ease-out",
+              isHighlighted && "scale-125 z-10",
+              isDimmed && "opacity-30 scale-90",
+              !isSearchActive && "hover:scale-110"
+            )}
+          >
             {/* Pin body */}
             <div
-              className={`w-10 h-10 ${markerBgClass} rounded-full flex items-center justify-center shadow-material-md relative`}
+              className={cn(
+                "w-10 h-10 rounded-full flex items-center justify-center shadow-material-md relative transition-all duration-300",
+                isHighlighted 
+                  ? "bg-white border-3 border-primary" 
+                  : isEmployer 
+                    ? "bg-blue-600" 
+                    : "bg-primary"
+              )}
+              style={isHighlighted ? { borderWidth: '3px' } : undefined}
             >
-              <Icon className="w-5 h-5 text-white" />
+              <Icon 
+                className={cn(
+                  "w-5 h-5 transition-colors duration-300",
+                  isHighlighted ? "text-primary" : "text-white"
+                )} 
+              />
             </div>
             {/* Pin pointer */}
             <div
-              className={`w-0 h-0 border-l-[8px] border-r-[8px] border-t-[10px] border-l-transparent border-r-transparent ${markerPointerClass} -mt-1`}
+              className={cn(
+                "w-0 h-0 border-l-[8px] border-r-[8px] border-t-[10px] border-l-transparent border-r-transparent -mt-1 transition-all duration-300",
+                isHighlighted 
+                  ? "border-t-primary" 
+                  : isEmployer 
+                    ? "border-t-blue-600" 
+                    : "border-t-primary"
+              )}
             />
           </button>
         </Marker>
       );
     });
-  }, [jobs, markerBgClass, markerPointerClass, handleMarkerClick]);
+  }, [jobs, allJobs, isSearchActive, filteredJobIds, isEmployer, handleMarkerClick]);
 
   // Dynamic loading colors
   const loadingBgClass = isEmployer ? "bg-blue-600/20" : "bg-primary/20";
   const loadingIconClass = isEmployer ? "text-blue-600" : "text-primary";
 
-  // Show loading state while fetching token or jobs
-  if (mapboxToken === null || jobsLoading) {
+  // Show loading state while fetching token or jobs (only if not using external jobs)
+  if (mapboxToken === null || (!externalJobs && jobsLoading)) {
     return (
       <div className="relative w-full h-full bg-muted overflow-hidden rounded-3xl flex items-center justify-center">
         <div className="text-center p-6">
@@ -125,8 +171,10 @@ export function InteractiveMap() {
     return (
       <MapFallback
         jobs={jobs}
-        markerBgClass={markerBgClass}
-        markerPointerClass={markerPointerClass}
+        allJobs={allJobs}
+        isSearchActive={isSearchActive}
+        filteredJobIds={filteredJobIds}
+        isEmployer={isEmployer}
         onJobSelect={(job) => {
           setSelectedJob(job);
           setIsDetailsOpen(true);
@@ -213,7 +261,12 @@ export function InteractiveMap() {
         {/* Location Label Card */}
         <div className="absolute bottom-4 left-4 material-card px-4 py-3">
           <p className="text-sm font-semibold">📍 Genova Centro</p>
-          <p className="text-xs text-muted-foreground">{jobs.length} impieghi disponibili</p>
+          <p className="text-xs text-muted-foreground">
+            {isSearchActive 
+              ? `${jobs.length} risultati trovati` 
+              : `${jobs.length} impieghi disponibili`
+            }
+          </p>
         </div>
       </Map>
 
@@ -225,15 +278,21 @@ export function InteractiveMap() {
 // Fallback component when Mapbox token is not available
 function MapFallback({
   jobs,
-  markerBgClass,
-  markerPointerClass,
+  allJobs,
+  isSearchActive,
+  filteredJobIds,
+  isEmployer,
   onJobSelect,
 }: {
   jobs: Job[];
-  markerBgClass: string;
-  markerPointerClass: string;
+  allJobs: Job[];
+  isSearchActive: boolean;
+  filteredJobIds: Set<string>;
+  isEmployer: boolean;
   onJobSelect: (job: Job) => void;
 }) {
+  const jobsToRender = isSearchActive ? allJobs : jobs;
+  
   return (
     <div className="relative w-full h-full bg-muted overflow-hidden rounded-3xl">
       {/* Stylized map background */}
@@ -292,8 +351,11 @@ function MapFallback({
       </div>
 
       {/* Job Markers */}
-      {jobs.map((job, index) => {
+      {jobsToRender.map((job, index) => {
         const Icon = getJobIconFromTags(job.tags);
+        const isHighlighted = isSearchActive && filteredJobIds.has(job.id);
+        const isDimmed = isSearchActive && !filteredJobIds.has(job.id);
+        
         const positions = [
           { top: "25%", left: "30%" },
           { top: "45%", left: "60%" },
@@ -307,19 +369,44 @@ function MapFallback({
         return (
           <button
             key={job.id}
-            className="absolute transform -translate-x-1/2 -translate-y-full flex flex-col items-center hover:scale-110 transition-transform cursor-pointer"
+            className={cn(
+              "absolute transform -translate-x-1/2 -translate-y-full flex flex-col items-center cursor-pointer transition-all duration-300 ease-out",
+              isHighlighted && "scale-125 z-10",
+              isDimmed && "opacity-30 scale-90",
+              !isSearchActive && "hover:scale-110"
+            )}
             style={{ top: pos.top, left: pos.left }}
             onClick={() => onJobSelect(job)}
           >
             {/* Pin body */}
             <div
-              className={`w-10 h-10 ${markerBgClass} rounded-full flex items-center justify-center shadow-material-md`}
+              className={cn(
+                "w-10 h-10 rounded-full flex items-center justify-center shadow-material-md transition-all duration-300",
+                isHighlighted 
+                  ? "bg-white border-3 border-primary" 
+                  : isEmployer 
+                    ? "bg-blue-600" 
+                    : "bg-primary"
+              )}
+              style={isHighlighted ? { borderWidth: '3px' } : undefined}
             >
-              <Icon className="w-5 h-5 text-white" />
+              <Icon 
+                className={cn(
+                  "w-5 h-5 transition-colors duration-300",
+                  isHighlighted ? "text-primary" : "text-white"
+                )} 
+              />
             </div>
             {/* Pin pointer */}
             <div
-              className={`w-0 h-0 border-l-[8px] border-r-[8px] border-t-[10px] border-l-transparent border-r-transparent ${markerPointerClass} -mt-1`}
+              className={cn(
+                "w-0 h-0 border-l-[8px] border-r-[8px] border-t-[10px] border-l-transparent border-r-transparent -mt-1 transition-all duration-300",
+                isHighlighted 
+                  ? "border-t-primary" 
+                  : isEmployer 
+                    ? "border-t-blue-600" 
+                    : "border-t-primary"
+              )}
             />
           </button>
         );
@@ -336,7 +423,12 @@ function MapFallback({
       {/* Location Label Card */}
       <div className="absolute bottom-4 left-4 material-card px-4 py-3">
         <p className="text-sm font-semibold">📍 Genova Centro</p>
-        <p className="text-xs text-muted-foreground">{jobs.length} impieghi disponibili</p>
+        <p className="text-xs text-muted-foreground">
+          {isSearchActive 
+            ? `${jobs.length} risultati trovati` 
+            : `${jobs.length} impieghi disponibili`
+          }
+        </p>
       </div>
 
       {/* Zoom Controls */}
