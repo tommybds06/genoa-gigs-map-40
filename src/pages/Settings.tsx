@@ -78,7 +78,7 @@ const Settings = () => {
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
-          <h1 className="text-xl font-bold text-foreground">Impostazioni</h1>
+          <h1 className={`text-xl font-bold ${isEmployer ? "text-blue-600" : "text-primary"}`}>Impostazioni</h1>
         </div>
       </header>
 

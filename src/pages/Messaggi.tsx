@@ -550,7 +550,7 @@ const Messaggi = () => {
     <div className="flex flex-col min-h-screen bg-background">
       {/* Simple Header with safe area */}
       <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-md px-4 pt-8 pb-3">
-        <h1 className="text-2xl font-bold text-foreground">Messaggi</h1>
+        <h1 className={`text-2xl font-bold ${isEmployer ? "text-blue-600" : "text-primary"}`}>Messaggi</h1>
       </header>
 
       <main className="flex-1 px-4 pb-20 overflow-y-auto">

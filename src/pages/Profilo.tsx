@@ -91,7 +91,7 @@ const Profilo = () => {
       {/* Header */}
       <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-md px-4 pt-4 pb-3 safe-top">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-foreground">Profilo</h1>
+          <h1 className={`text-2xl font-bold ${isEmployer ? "text-blue-600" : "text-primary"}`}>Profilo</h1>
           <button 
             onClick={() => navigate("/settings")}
             className={`p-2 rounded-full transition-colors ${isEmployer ? "hover:bg-blue-50" : "hover:bg-accent"}`}
