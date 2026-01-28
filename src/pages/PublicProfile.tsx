@@ -6,6 +6,7 @@ import { BottomNav } from "@/components/layout/BottomNav";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { 
   ArrowLeft, 
   MapPin, 
@@ -13,7 +14,10 @@ import {
   Briefcase, 
   Clock, 
   Euro,
-  MessageCircle
+  MessageCircle,
+  CheckCircle2,
+  FileText,
+  Calendar
 } from "lucide-react";
 import { useAppTheme } from "@/hooks/useAppTheme";
 import { useUser } from "@/contexts/UserContext";
@@ -28,6 +32,16 @@ interface Profile {
   role: "worker" | "employer";
   photos: string[];
   looking_for: string | null;
+  experience: string | null;
+}
+
+interface CompletedJob {
+  id: string;
+  applicationId: string;
+  title: string;
+  employerName: string;
+  completedAt: string;
+  tags: string[];
 }
 
 interface Job {
@@ -60,6 +74,14 @@ function getTimeAgo(dateString: string): string {
   return `${diffDays} giorni fa`;
 }
 
+function formatDate(dateString: string): string {
+  return new Date(dateString).toLocaleDateString('it-IT', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric'
+  });
+}
+
 const PublicProfile = () => {
   const { userId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
@@ -68,6 +90,7 @@ const PublicProfile = () => {
   
   const [profile, setProfile] = useState<Profile | null>(null);
   const [jobs, setJobs] = useState<Job[]>([]);
+  const [completedJobs, setCompletedJobs] = useState<CompletedJob[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [reviewStats, setReviewStats] = useState<{ avg: number; count: number } | null>(null);
   const [loading, setLoading] = useState(true);
@@ -95,7 +118,7 @@ const PublicProfile = () => {
             photos: profileData.photos || [],
           });
 
-          // If employer, fetch reviews
+          // If employer profile, fetch reviews
           if (profileData.role === "employer") {
             const { data: reviewsData, error: reviewsError } = await supabase
               .from("reviews")
@@ -128,23 +151,58 @@ const PublicProfile = () => {
                 setReviewStats({ avg: Math.round(avg * 10) / 10, count: reviewsData.length });
               }
             }
+
+            // Fetch active jobs (last 48 hours) for employers
+            const fortyEightHoursAgo = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
+            
+            const { data: jobsData, error: jobsError } = await supabase
+              .from("jobs")
+              .select("*")
+              .eq("owner_id", userId)
+              .eq("status", "open")
+              .gte("created_at", fortyEightHoursAgo)
+              .order("created_at", { ascending: false });
+            
+            if (!jobsError) {
+              setJobs((jobsData || []).map(j => ({ ...j, tags: j.tags || [] })));
+            }
+          }
+
+          // If worker profile, fetch completed jobs
+          if (profileData.role === "worker") {
+            const { data: applicationsData, error: applicationsError } = await supabase
+              .from("applications")
+              .select(`
+                id,
+                updated_at,
+                job_id,
+                jobs (
+                  id,
+                  title,
+                  tags,
+                  owner_id,
+                  profiles!jobs_owner_id_fkey (
+                    full_name
+                  )
+                )
+              `)
+              .eq("applicant_id", userId)
+              .eq("status", "completed")
+              .order("updated_at", { ascending: false });
+
+            if (!applicationsError && applicationsData) {
+              const formattedJobs: CompletedJob[] = applicationsData.map((app: any) => ({
+                id: app.jobs?.id || app.job_id,
+                applicationId: app.id,
+                title: app.jobs?.title || "Lavoro",
+                employerName: app.jobs?.profiles?.full_name || "Attività",
+                completedAt: app.updated_at,
+                tags: app.jobs?.tags || [],
+              }));
+              setCompletedJobs(formattedJobs);
+            }
           }
         }
-        
-        // Fetch active jobs (last 48 hours)
-        const fortyEightHoursAgo = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
-        
-        const { data: jobsData, error: jobsError } = await supabase
-          .from("jobs")
-          .select("*")
-          .eq("owner_id", userId)
-          .eq("status", "open")
-          .gte("created_at", fortyEightHoursAgo)
-          .order("created_at", { ascending: false });
-        
-        if (jobsError) throw jobsError;
-        
-        setJobs((jobsData || []).map(j => ({ ...j, tags: j.tags || [] })));
       } catch (error) {
         console.error("Error fetching public profile:", error);
       } finally {
@@ -170,9 +228,20 @@ const PublicProfile = () => {
   if (loading) {
     return (
       <div className="flex flex-col min-h-screen bg-background">
-        <Header />
-        <main className="flex-1 flex items-center justify-center">
-          <div className="animate-pulse text-muted-foreground">Caricamento...</div>
+        <Header showSearch={false} />
+        <main className="flex-1 pb-20 px-4">
+          <div className="py-4 space-y-6">
+            {/* Loading skeleton */}
+            <div className="flex justify-center">
+              <Skeleton className="w-32 h-32 rounded-full" />
+            </div>
+            <div className="text-center space-y-2">
+              <Skeleton className="h-8 w-48 mx-auto" />
+              <Skeleton className="h-4 w-32 mx-auto" />
+            </div>
+            <Skeleton className="h-32 w-full rounded-2xl" />
+            <Skeleton className="h-48 w-full rounded-2xl" />
+          </div>
         </main>
         <BottomNav />
       </div>
@@ -182,7 +251,7 @@ const PublicProfile = () => {
   if (!profile) {
     return (
       <div className="flex flex-col min-h-screen bg-background">
-        <Header />
+        <Header showSearch={false} />
         <main className="flex-1 flex items-center justify-center px-4">
           <div className="text-center">
             <h2 className="text-xl font-semibold mb-2">Profilo non trovato</h2>
@@ -201,11 +270,14 @@ const PublicProfile = () => {
   const displayName = profile.full_name || "Utente";
   const initials = displayName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
   const hasPhotos = profile.photos && profile.photos.length > 0;
-  const currentPhoto = hasPhotos ? profile.photos[currentPhotoIndex] : null;
+  const avatarUrl = hasPhotos ? profile.photos[0] : profile.avatar_url;
+
+  // Determine if viewing a worker or employer profile
+  const isWorkerProfile = profile.role === "worker";
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
-      <Header />
+      <Header showSearch={false} />
 
       <main className="flex-1 pb-20 overflow-y-auto">
         {/* Back Button */}
@@ -221,74 +293,41 @@ const PublicProfile = () => {
           </Button>
         </div>
 
-        {/* Profile Header */}
+        {/* Profile Header - CV Style */}
         <div className="px-4 pb-6">
-          {/* Photo Carousel or Avatar */}
-          {hasPhotos ? (
-            <div className="relative aspect-[4/3] rounded-3xl overflow-hidden mb-4">
-              <img 
-                src={currentPhoto!} 
-                alt={displayName}
-                className="w-full h-full object-cover"
-              />
-              
-              {profile.photos.length > 1 && (
-                <>
-                  <button 
-                    onClick={prevPhoto}
-                    className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-background/80 backdrop-blur-sm rounded-full flex items-center justify-center"
-                  >
-                    ←
-                  </button>
-                  <button 
-                    onClick={nextPhoto}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-background/80 backdrop-blur-sm rounded-full flex items-center justify-center"
-                  >
-                    →
-                  </button>
-                  
-                  <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
-                    {profile.photos.map((_, idx) => (
-                      <div 
-                        key={idx}
-                        className={`w-2 h-2 rounded-full transition-colors ${
-                          idx === currentPhotoIndex ? 'bg-white' : 'bg-white/40'
-                        }`}
-                      />
-                    ))}
-                  </div>
-                </>
-              )}
-            </div>
-          ) : (
-            <div className="flex justify-center mb-4">
-              <Avatar className={`w-32 h-32 border-4 ${theme.accentBg}`}>
-                <AvatarImage src={profile.avatar_url || undefined} alt={displayName} />
-                <AvatarFallback className={`${theme.accentBg} ${theme.accentText} text-4xl font-bold`}>
-                  {initials}
-                </AvatarFallback>
-              </Avatar>
-            </div>
-          )}
+          {/* Avatar - Large, Circular, Centered */}
+          <div className="flex justify-center mb-4">
+            <Avatar className="w-32 h-32 border-4 border-background shadow-lg">
+              <AvatarImage src={avatarUrl || undefined} alt={displayName} className="object-cover" />
+              <AvatarFallback className={`${isWorkerProfile ? 'bg-accent text-primary' : 'bg-blue-50 text-blue-600'} text-4xl font-bold`}>
+                {initials}
+              </AvatarFallback>
+            </Avatar>
+          </div>
 
           {/* Name and Role */}
           <div className="text-center mb-4">
-            <h1 className="text-2xl font-bold mb-1">{displayName}</h1>
+            <h1 className="text-2xl font-bold mb-2">{displayName}</h1>
             
+            {/* Role Badge */}
+            <Badge 
+              variant="outline" 
+              className={`mb-2 ${isWorkerProfile ? 'bg-accent text-primary border-primary/30' : 'bg-blue-50 text-blue-600 border-blue-200'}`}
+            >
+              {isWorkerProfile ? "Worker" : "Attività"}
+            </Badge>
+            
+            {/* Address */}
             {profile.address_text && (
-              <p className="text-muted-foreground flex items-center justify-center gap-1 mb-2">
+              <p className="text-muted-foreground flex items-center justify-center gap-1 mt-2">
                 <MapPin className="w-4 h-4" />
                 {profile.address_text}
               </p>
             )}
-            
-            <Badge variant="outline" className={`${theme.accentBg} ${theme.accentText} font-medium`}>
-              {profile.role === "employer" ? "Attività" : "Worker"}
-            </Badge>
           </div>
 
           {/* Rating Display (Employers only with reviews) */}
-          {profile.role === "employer" && reviewStats && (
+          {!isWorkerProfile && reviewStats && (
             <div className="flex items-center justify-center gap-2 mb-4">
               <div className="flex items-center gap-1">
                 {[1, 2, 3, 4, 5].map((star) => (
@@ -310,122 +349,218 @@ const PublicProfile = () => {
           )}
         </div>
 
-        {/* Bio Section */}
-        {profile.bio && (
-          <div className="px-4 pb-6">
-            <div className="material-card p-4">
-              <h3 className="font-semibold text-sm text-muted-foreground mb-2">CHI SIAMO</h3>
-              <p className="text-foreground leading-relaxed">{profile.bio}</p>
-            </div>
-          </div>
-        )}
-
-        {/* Looking For Section (Employers) */}
-        {profile.role === "employer" && profile.looking_for && (
-          <div className="px-4 pb-6">
-            <div className="material-card p-4">
-              <h3 className="font-semibold text-sm text-muted-foreground mb-2">CHI CERCHIAMO</h3>
-              <p className="text-foreground leading-relaxed">{profile.looking_for}</p>
-            </div>
-          </div>
-        )}
-
-        {/* Reviews Section (Employers only) */}
-        {profile.role === "employer" && (
-          <div className="px-4 pb-6">
-            <div className="material-card p-4">
-              <h3 className="font-semibold text-sm text-muted-foreground mb-2">RECENSIONI</h3>
-              {reviews.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-8 text-center">
-                  <MessageCircle className="w-10 h-10 text-muted-foreground/30 mb-2" />
-                  <p className="text-muted-foreground text-sm">Nessuna recensione ancora</p>
+        {/* WORKER PROFILE SECTIONS */}
+        {isWorkerProfile && (
+          <>
+            {/* Sezione 1: Presentazione (Bio) */}
+            <div className="px-4 pb-6">
+              <div className="bg-card rounded-2xl p-5 shadow-sm border border-border">
+                <div className="flex items-center gap-2 mb-3">
+                  <FileText className="w-5 h-5 text-primary" />
+                  <h3 className="font-bold text-lg">Presentazione</h3>
                 </div>
-              ) : (
-                <div className="space-y-4">
-                  {reviews.map((review) => (
-                    <div key={review.id} className="border-b border-border pb-4 last:border-0 last:pb-0">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="font-medium text-sm">{review.worker_name}</span>
-                        <div className="flex items-center gap-1">
-                          {[1, 2, 3, 4, 5].map((star) => (
-                            <Star
-                              key={star}
-                              className={`w-3.5 h-3.5 ${
-                                star <= review.rating
-                                  ? "text-yellow-400 fill-yellow-400"
-                                  : review.rating >= star - 0.5
-                                  ? "text-yellow-400 fill-yellow-400/50"
-                                  : "text-muted-foreground/30"
-                              }`}
-                            />
-                          ))}
-                        </div>
-                      </div>
-                      {review.comment && (
-                        <p className="text-sm text-muted-foreground">{review.comment}</p>
-                      )}
-                      <p className="text-xs text-muted-foreground/60 mt-1">
-                        {getTimeAgo(review.created_at)}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Active Jobs Section */}
-        {profile.role === "employer" && (
-          <div className="px-4 pb-6">
-            <h3 className="font-semibold text-lg mb-3">Annunci Attivi</h3>
-            
-            {jobs.length === 0 ? (
-              <div className="material-card p-6 text-center">
-                <Briefcase className="w-10 h-10 text-muted-foreground/30 mx-auto mb-2" />
-                <p className="text-muted-foreground text-sm">Nessun annuncio attivo</p>
+                <p className="text-foreground leading-relaxed">
+                  {profile.bio || "Nessuna presentazione inserita."}
+                </p>
               </div>
-            ) : (
-              <div className="space-y-3">
-                {jobs.map((job) => {
-                  const Icon = getJobIconFromTags(job.tags);
-                  const roleTag = job.tags?.find(t => !['Occasionale', 'A Chiamata', 'Mensile', 'Settimanale', 'Weekend'].includes(t));
-                  
-                  return (
-                    <div key={job.id} className="material-card p-4">
-                      <div className="flex items-start gap-3">
-                        <div className="w-10 h-10 bg-accent text-accent-foreground rounded-xl flex items-center justify-center shrink-0">
-                          <Icon className="w-5 h-5" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-semibold truncate">{job.title}</h4>
-                          <p className="text-sm text-muted-foreground">{roleTag || "Generale"}</p>
-                          
-                          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-sm">
-                            {job.schedule && (
-                              <span className="inline-flex items-center gap-1 text-muted-foreground">
-                                <Clock className="w-3.5 h-3.5" />
-                                {job.schedule}
-                              </span>
-                            )}
-                            {job.price && (
-                              <span className={`inline-flex items-center gap-1 ${theme.primaryText} font-semibold`}>
-                                <Euro className="w-3.5 h-3.5" />
-                                {job.price}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                        <span className="text-xs text-muted-foreground shrink-0">
-                          {getTimeAgo(job.created_at)}
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })}
+            </div>
+
+            {/* Sezione 2: Esperienze (if available) */}
+            {profile.experience && (
+              <div className="px-4 pb-6">
+                <div className="bg-card rounded-2xl p-5 shadow-sm border border-border">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Briefcase className="w-5 h-5 text-primary" />
+                    <h3 className="font-bold text-lg">Esperienze</h3>
+                  </div>
+                  <p className="text-foreground leading-relaxed">{profile.experience}</p>
+                </div>
               </div>
             )}
-          </div>
+
+            {/* Sezione 3: Storico Lavori Completati */}
+            <div className="px-4 pb-6">
+              <div className="bg-card rounded-2xl p-5 shadow-sm border border-border">
+                <div className="flex items-center gap-2 mb-4">
+                  <CheckCircle2 className="w-5 h-5 text-green-600" />
+                  <h3 className="font-bold text-lg">Storico Lavori</h3>
+                </div>
+                
+                {completedJobs.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-8 text-center">
+                    <Briefcase className="w-10 h-10 text-muted-foreground/30 mb-2" />
+                    <p className="text-muted-foreground text-sm">Nessun lavoro completato ancora</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {completedJobs.map((job) => {
+                      const Icon = getJobIconFromTags(job.tags);
+                      
+                      return (
+                        <div 
+                          key={job.applicationId} 
+                          className="flex items-start gap-3 p-3 rounded-xl bg-muted/50 border border-border"
+                        >
+                          <div className="w-10 h-10 bg-green-100 text-green-600 rounded-xl flex items-center justify-center shrink-0">
+                            <Icon className="w-5 h-5" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-semibold text-sm truncate">{job.title}</h4>
+                            <p className="text-xs text-muted-foreground">{job.employerName}</p>
+                            <div className="flex items-center gap-2 mt-1">
+                              <Calendar className="w-3 h-3 text-muted-foreground" />
+                              <span className="text-xs text-muted-foreground">
+                                {formatDate(job.completedAt)}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="shrink-0">
+                            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-xs">
+                              <CheckCircle2 className="w-3 h-3 mr-1" />
+                              Concluso
+                            </Badge>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* EMPLOYER PROFILE SECTIONS */}
+        {!isWorkerProfile && (
+          <>
+            {/* Bio Section */}
+            {profile.bio && (
+              <div className="px-4 pb-6">
+                <div className="bg-card rounded-2xl p-5 shadow-sm border border-border">
+                  <div className="flex items-center gap-2 mb-3">
+                    <FileText className="w-5 h-5 text-blue-600" />
+                    <h3 className="font-bold text-lg">Chi siamo</h3>
+                  </div>
+                  <p className="text-foreground leading-relaxed">{profile.bio}</p>
+                </div>
+              </div>
+            )}
+
+            {/* Looking For Section */}
+            {profile.looking_for && (
+              <div className="px-4 pb-6">
+                <div className="bg-card rounded-2xl p-5 shadow-sm border border-border">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Briefcase className="w-5 h-5 text-blue-600" />
+                    <h3 className="font-bold text-lg">Chi cerchiamo</h3>
+                  </div>
+                  <p className="text-foreground leading-relaxed">{profile.looking_for}</p>
+                </div>
+              </div>
+            )}
+
+            {/* Reviews Section */}
+            <div className="px-4 pb-6">
+              <div className="bg-card rounded-2xl p-5 shadow-sm border border-border">
+                <div className="flex items-center gap-2 mb-3">
+                  <Star className="w-5 h-5 text-yellow-500" />
+                  <h3 className="font-bold text-lg">Recensioni</h3>
+                </div>
+                {reviews.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-8 text-center">
+                    <MessageCircle className="w-10 h-10 text-muted-foreground/30 mb-2" />
+                    <p className="text-muted-foreground text-sm">Nessuna recensione ancora</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {reviews.map((review) => (
+                      <div key={review.id} className="border-b border-border pb-4 last:border-0 last:pb-0">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="font-medium text-sm">{review.worker_name}</span>
+                          <div className="flex items-center gap-1">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <Star
+                                key={star}
+                                className={`w-3.5 h-3.5 ${
+                                  star <= review.rating
+                                    ? "text-yellow-400 fill-yellow-400"
+                                    : review.rating >= star - 0.5
+                                    ? "text-yellow-400 fill-yellow-400/50"
+                                    : "text-muted-foreground/30"
+                                }`}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                        {review.comment && (
+                          <p className="text-sm text-muted-foreground">{review.comment}</p>
+                        )}
+                        <p className="text-xs text-muted-foreground/60 mt-1">
+                          {getTimeAgo(review.created_at)}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Active Jobs Section */}
+            <div className="px-4 pb-6">
+              <div className="bg-card rounded-2xl p-5 shadow-sm border border-border">
+                <div className="flex items-center gap-2 mb-4">
+                  <Briefcase className="w-5 h-5 text-blue-600" />
+                  <h3 className="font-bold text-lg">Annunci Attivi</h3>
+                </div>
+                
+                {jobs.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-8 text-center">
+                    <Briefcase className="w-10 h-10 text-muted-foreground/30 mb-2" />
+                    <p className="text-muted-foreground text-sm">Nessun annuncio attivo</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {jobs.map((job) => {
+                      const Icon = getJobIconFromTags(job.tags);
+                      const roleTag = job.tags?.find(t => !['Occasionale', 'A Chiamata', 'Mensile', 'Settimanale', 'Weekend'].includes(t));
+                      
+                      return (
+                        <div key={job.id} className="p-3 rounded-xl bg-muted/50 border border-border">
+                          <div className="flex items-start gap-3">
+                            <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center shrink-0">
+                              <Icon className="w-5 h-5" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-semibold truncate">{job.title}</h4>
+                              <p className="text-sm text-muted-foreground">{roleTag || "Generale"}</p>
+                              
+                              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-sm">
+                                {job.schedule && (
+                                  <span className="inline-flex items-center gap-1 text-muted-foreground">
+                                    <Clock className="w-3.5 h-3.5" />
+                                    {job.schedule}
+                                  </span>
+                                )}
+                                {job.price && (
+                                  <span className="inline-flex items-center gap-1 text-blue-600 font-semibold">
+                                    <Euro className="w-3.5 h-3.5" />
+                                    {job.price}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            <span className="text-xs text-muted-foreground shrink-0">
+                              {getTimeAgo(job.created_at)}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+          </>
         )}
       </main>
 
