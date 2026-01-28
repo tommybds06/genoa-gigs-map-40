@@ -8,11 +8,14 @@ const Index = () => {
 
   return (
     <div className="flex flex-col h-screen bg-background">
-      {/* Header - hide search for employers */}
-      <Header showSearch={!isEmployer} />
+      {/* Header with dynamic title and color */}
+      <Header 
+        title="Mappa" 
+        titleColor={isEmployer ? "text-blue-600" : "text-primary"}
+      />
 
-      {/* Map Container - Takes remaining space, more space for employers */}
-      <main className={`flex-1 px-4 pb-20 overflow-hidden ${isEmployer ? 'pt-0' : ''}`}>
+      {/* Map Container - Takes remaining space */}
+      <main className="flex-1 px-4 pb-20 overflow-hidden">
         <div className="map-container w-full h-full rounded-3xl overflow-hidden">
           <InteractiveMap />
         </div>

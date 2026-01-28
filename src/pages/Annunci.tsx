@@ -406,11 +406,13 @@ const Annunci = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
-      <Header />
+      {/* Header with "Annunci" title in blue for employers */}
+      <Header title="Annunci" titleColor="text-blue-600" />
 
       <main className="flex-1 px-4 pb-20 overflow-y-auto">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-semibold text-blue-600">I Tuoi Annunci Pubblicati</h2>
+          {/* Subtitle in black */}
+          <h2 className="text-lg font-semibold text-foreground">I Tuoi Annunci Pubblicati</h2>
           <Button
             onClick={() => navigate('/create-job')}
             className="bg-blue-600 hover:bg-blue-700 text-white rounded-full px-4"
