@@ -4,6 +4,7 @@ import { MapPin, Clock, Euro, SearchX, Tag, Briefcase } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
+import { useAppTheme } from "@/hooks/useAppTheme";
 import { TagBadges } from "@/components/tags/TagSelector";
 import { Link } from "react-router-dom";
 import { JobDetailsSheet } from "@/components/map/JobDetailsSheet";
@@ -28,10 +29,10 @@ function getTimeAgo(dateString: string): string {
 const Lista = () => {
   const { user } = useAuth();
   const { profile, loading: profileLoading } = useProfile();
+  const { isEmployer } = useAppTheme();
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
 
-  const isEmployer = profile?.role === "employer";
   const userTags = profile?.tags || [];
 
   // Use React Query for caching - conditionally based on role
@@ -58,7 +59,7 @@ const Lista = () => {
       <Header />
 
       <main className="flex-1 px-4 pb-20 overflow-y-auto">
-        <h2 className="text-lg font-semibold mb-3">
+        <h2 className={`text-lg font-semibold mb-3 ${isEmployer ? "text-blue-600" : "text-primary"}`}>
           {isEmployer ? "I Tuoi Annunci" : "Impieghi per Te"}
         </h2>
         
