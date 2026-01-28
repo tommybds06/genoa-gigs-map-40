@@ -56,11 +56,13 @@ const Lista = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
-      <Header />
+      {/* Header with "Lista" title in orange for workers */}
+      <Header title="Lista" titleColor="text-primary" />
 
       <main className="flex-1 px-4 pb-20 overflow-y-auto">
-        <h2 className={`text-lg font-semibold mb-3 ${isEmployer ? "text-blue-600" : "text-primary"}`}>
-          {isEmployer ? "I Tuoi Annunci" : "Impieghi per Te"}
+        {/* Subtitle in black */}
+        <h2 className="text-lg font-semibold mb-3 text-foreground">
+          Impieghi per Te
         </h2>
         
         {loading ? (
