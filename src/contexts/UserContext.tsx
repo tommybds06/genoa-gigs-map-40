@@ -25,6 +25,7 @@ export interface UserProfile {
   is_onboarded: boolean;
   looking_for: string | null;
   address_text: string | null;
+  neighborhood: string | null;
   lat: number | null;
   lng: number | null;
 }
@@ -111,6 +112,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
           is_onboarded: data.is_onboarded || false,
           looking_for: data.looking_for || null,
           address_text: data.address_text || null,
+          neighborhood: data.neighborhood || null,
           lat: data.lat || null,
           lng: data.lng || null,
         };

@@ -69,7 +69,7 @@ const Index = () => {
 
       {/* Search Bar - Only for Workers */}
       {!isEmployer && (
-        <div className="px-4 pb-3 z-30">
+        <div className="px-4 pt-2 pb-3 z-30">
           <SearchBar
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
