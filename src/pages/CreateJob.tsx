@@ -8,7 +8,6 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { NeighborhoodSelect } from '@/components/ui/NeighborhoodSelect';
 import { toast } from 'sonner';
 import { 
   ArrowLeft, 
@@ -18,8 +17,7 @@ import {
   FileText, 
   Loader2,
   Send,
-  Pencil,
-  MapPin
+  Pencil
 } from 'lucide-react';
 import { ROLE_TAGS, TYPE_TAGS } from '@/constants/tags';
 import { getJobIcon } from '@/lib/jobIcons';
@@ -31,12 +29,11 @@ const CreateJob = () => {
   const { profile } = useUser();
   const [loading, setLoading] = useState(false);
   
-  // Form fields
+  // Form fields (neighborhood removed - inherited from profile)
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [schedule, setSchedule] = useState('');
   const [price, setPrice] = useState('');
-  const [neighborhood, setNeighborhood] = useState('');
   
   // Single selection tags
   const [selectedTypeTag, setSelectedTypeTag] = useState<string>('');
@@ -49,7 +46,6 @@ const CreateJob = () => {
     description?: string; 
     typeTag?: string;
     roleTag?: string;
-    neighborhood?: string;
   }>({});
 
   const handleRoleSelect = (role: string) => {
@@ -82,11 +78,6 @@ const CreateJob = () => {
     const finalRole = isCustomRole ? customRoleTag.trim() : selectedRoleTag;
     if (!finalRole) {
       newErrors.roleTag = 'Seleziona o inserisci un ruolo';
-    }
-
-    // Neighborhood is required
-    if (!neighborhood) {
-      newErrors.neighborhood = 'Seleziona un quartiere';
     }
     
     setErrors(newErrors);
@@ -125,6 +116,9 @@ const CreateJob = () => {
       // Combine tags: one type + one role
       const allTags = [selectedTypeTag, finalRole];
 
+      // Inherit neighborhood from employer's profile
+      const inheritedNeighborhood = profile.neighborhood || null;
+
       const { error } = await supabase
         .from('jobs')
         .insert({
@@ -137,7 +131,7 @@ const CreateJob = () => {
           tags: allTags,
           lat: profile.lat,
           lng: profile.lng,
-          neighborhood: neighborhood,
+          neighborhood: inheritedNeighborhood,
           status: 'open',
         });
 
@@ -232,21 +226,6 @@ const CreateJob = () => {
           />
         </div>
 
-        {/* Neighborhood - Required */}
-        <div className="space-y-2">
-          <Label className="text-base font-medium flex items-center gap-2">
-            <MapPin className="h-4 w-4 text-blue-600" />
-            Quartiere <span className="text-destructive">*</span>
-          </Label>
-          <NeighborhoodSelect
-            value={neighborhood}
-            onValueChange={setNeighborhood}
-            placeholder="Seleziona il quartiere"
-            variant="employer"
-            error={!!errors.neighborhood}
-          />
-          {errors.neighborhood && <p className="text-sm text-destructive">{errors.neighborhood}</p>}
-        </div>
 
         {/* Type Tag (Modalità) - Single Selection Required */}
         <div className="space-y-3">
