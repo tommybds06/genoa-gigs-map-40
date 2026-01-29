@@ -13,8 +13,9 @@ const Index = () => {
   // Search and filter state (only used for Workers)
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [selectedNeighborhoods, setSelectedNeighborhoods] = useState<string[]>([]);
 
-  // Filter jobs based on search query and selected tags
+  // Filter jobs based on search query, selected tags, and neighborhoods
   const filteredJobs = useMemo(() => {
     if (isEmployer) return allJobs; // Employers see all jobs
     
@@ -37,12 +38,21 @@ const Index = () => {
         return selectedTags.some((tag) => job.tags.includes(tag));
       });
     }
+
+    // Filter by selected neighborhoods
+    if (selectedNeighborhoods.length > 0) {
+      filtered = filtered.filter((job) => {
+        const jobNeighborhood = (job as { neighborhood?: string }).neighborhood;
+        if (!jobNeighborhood) return false;
+        return selectedNeighborhoods.includes(jobNeighborhood);
+      });
+    }
     
     return filtered;
-  }, [allJobs, searchQuery, selectedTags, isEmployer]);
+  }, [allJobs, searchQuery, selectedTags, selectedNeighborhoods, isEmployer]);
 
   // Check if search is active (for highlighting markers)
-  const isSearchActive = searchQuery.trim().length > 0 || selectedTags.length > 0;
+  const isSearchActive = searchQuery.trim().length > 0 || selectedTags.length > 0 || selectedNeighborhoods.length > 0;
 
   // Get IDs of filtered jobs for highlighting
   const filteredJobIds = useMemo(() => {
@@ -65,6 +75,8 @@ const Index = () => {
             onSearchChange={setSearchQuery}
             selectedTags={selectedTags}
             onTagsChange={setSelectedTags}
+            selectedNeighborhoods={selectedNeighborhoods}
+            onNeighborhoodsChange={setSelectedNeighborhoods}
           />
         </div>
       )}

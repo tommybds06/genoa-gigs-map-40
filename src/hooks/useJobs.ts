@@ -21,6 +21,7 @@ export interface Job {
   tags: string[];
   owner_id: string;
   status: string;
+  neighborhood: string | null;
   profiles?: JobProfile | null;
 }
 

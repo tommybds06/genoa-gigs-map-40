@@ -24,6 +24,7 @@ export interface Profile {
   is_onboarded: boolean;
   looking_for: string | null;
   address_text: string | null;
+  neighborhood: string | null;
   lat: number | null;
   lng: number | null;
 }
@@ -57,6 +58,7 @@ export function useProfile() {
         is_onboarded: data.is_onboarded || false,
         looking_for: data.looking_for || null,
         address_text: data.address_text || null,
+        neighborhood: (data as { neighborhood?: string | null }).neighborhood || null,
         lat: data.lat || null,
         lng: data.lng || null
       } : null);
