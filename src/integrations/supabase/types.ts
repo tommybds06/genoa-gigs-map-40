@@ -116,6 +116,7 @@ export type Database = {
           id: string
           lat: number | null
           lng: number | null
+          neighborhood: string | null
           owner_id: string
           price: string | null
           schedule: string | null
@@ -131,6 +132,7 @@ export type Database = {
           id?: string
           lat?: number | null
           lng?: number | null
+          neighborhood?: string | null
           owner_id: string
           price?: string | null
           schedule?: string | null
@@ -146,6 +148,7 @@ export type Database = {
           id?: string
           lat?: number | null
           lng?: number | null
+          neighborhood?: string | null
           owner_id?: string
           price?: string | null
           schedule?: string | null
@@ -233,6 +236,7 @@ export type Database = {
           level: number
           lng: number | null
           looking_for: string | null
+          neighborhood: string | null
           photos: string[] | null
           role: Database["public"]["Enums"]["user_role"]
           social_links: Json | null
@@ -254,6 +258,7 @@ export type Database = {
           level?: number
           lng?: number | null
           looking_for?: string | null
+          neighborhood?: string | null
           photos?: string[] | null
           role?: Database["public"]["Enums"]["user_role"]
           social_links?: Json | null
@@ -275,6 +280,7 @@ export type Database = {
           level?: number
           lng?: number | null
           looking_for?: string | null
+          neighborhood?: string | null
           photos?: string[] | null
           role?: Database["public"]["Enums"]["user_role"]
           social_links?: Json | null

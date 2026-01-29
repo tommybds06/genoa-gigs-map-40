@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { NeighborhoodSelect } from "@/components/ui/NeighborhoodSelect";
 import { toast } from "sonner";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -23,6 +24,7 @@ const EditProfile = () => {
   const [fullName, setFullName] = useState("");
   const [bio, setBio] = useState("");
   const [addressText, setAddressText] = useState("");
+  const [neighborhood, setNeighborhood] = useState("");
   const [lookingFor, setLookingFor] = useState("");
   const [experience, setExperience] = useState("");
   const [isUploading, setIsUploading] = useState(false);
@@ -54,6 +56,7 @@ const EditProfile = () => {
       setFullName(profileData.full_name || "");
       setBio(profileData.bio || "");
       setAddressText(profileData.address_text || "");
+      setNeighborhood((profileData as { neighborhood?: string }).neighborhood || "");
       setLookingFor(profileData.looking_for || "");
       setExperience(profileData.experience || "");
       setPhotos(profileData.photos || []);
@@ -123,6 +126,7 @@ const EditProfile = () => {
         full_name: fullName.trim(),
         bio: bio.trim(),
         address_text: addressText.trim(),
+        neighborhood: neighborhood || null,
         photos: photos,
       };
 
@@ -254,16 +258,29 @@ const EditProfile = () => {
             />
           </div>
 
+          {/* Neighborhood Field */}
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">
+              Quartiere / Zona
+            </Label>
+            <NeighborhoodSelect
+              value={neighborhood}
+              onValueChange={setNeighborhood}
+              placeholder="Seleziona il tuo quartiere"
+              variant={isEmployer ? "employer" : "worker"}
+            />
+          </div>
+
           {/* Address Field */}
           <div className="space-y-2">
             <Label htmlFor="address" className="text-sm font-medium">
-              Indirizzo / Zona
+              Indirizzo (opzionale)
             </Label>
             <Input
               id="address"
               value={addressText}
               onChange={(e) => setAddressText(e.target.value)}
-              placeholder="Es. Genova, Centro Storico"
+              placeholder="Es. Via Roma 1"
               className={`${inputBorderClasses}`}
             />
           </div>
