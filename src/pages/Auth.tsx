@@ -147,6 +147,7 @@ const Auth = () => {
           return;
         }
 
+        // Step 1: Create auth user
         const { error, data } = await supabase.auth.signUp({
           email,
           password,
@@ -166,32 +167,44 @@ const Auth = () => {
             toast.error(error.message, { duration: 2000 });
           }
         } else if (data.user) {
-          // Wait for profile to be created by trigger
-          const profileReady = await waitForProfile(data.user.id);
-          
-          if (!profileReady) {
+          // Step 2: FORCE WRITE profile with upsert (bypass trigger race condition)
+          const profileData: {
+            id: string;
+            role: 'worker' | 'employer';
+            full_name: string | null;
+            neighborhood: string | null;
+            is_onboarded: boolean;
+          } = {
+            id: data.user.id,
+            role: selectedRole,
+            full_name: fullName || null,
+            neighborhood: selectedRole === 'employer' ? neighborhood : null,
+            is_onboarded: false,
+          };
+
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .upsert(profileData, { onConflict: 'id' });
+
+          if (profileError) {
+            console.error('Error creating profile:', profileError);
             toast.error('Errore nella creazione del profilo. Riprova.', { duration: 3000 });
             setLoading(false);
             return;
           }
-          
-          // If employer, save neighborhood after profile exists
-          if (selectedRole === 'employer') {
-            await supabase
-              .from('profiles')
-              .update({ neighborhood })
-              .eq('id', data.user.id);
-            
-            // Refetch to get updated neighborhood
-            await refetchProfile();
-          }
+
+          // Step 3: Force cache refresh
+          await queryClient.invalidateQueries({ queryKey: ['profile'] });
+          await refetchProfile();
           
           toast.success('Benvenuto!', { duration: 2000 });
-          // Navigate directly to onboarding for new users
+          
+          // Step 4: Navigate to onboarding
           navigate('/onboarding');
         }
       }
     } catch (err) {
+      console.error('Signup error:', err);
       toast.error('Si è verificato un errore. Riprova.');
     } finally {
       setLoading(false);
