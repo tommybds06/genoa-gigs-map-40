@@ -193,14 +193,14 @@ const Auth = () => {
             return;
           }
 
-          // Step 3: Force cache refresh
-          await queryClient.invalidateQueries({ queryKey: ['profile'] });
-          await refetchProfile();
+          // Step 3: Show success and HARD RELOAD
+          toast.success('Benvenuto! Reindirizzamento...', { duration: 1500 });
           
-          toast.success('Benvenuto!', { duration: 2000 });
-          
-          // Step 4: Navigate to onboarding
-          navigate('/onboarding');
+          // Step 4: Force hard reload to bypass all cache issues
+          setTimeout(() => {
+            window.location.href = '/onboarding';
+          }, 500);
+          return; // Don't set loading to false, page will reload
         }
       }
     } catch (err) {
