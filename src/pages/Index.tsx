@@ -5,9 +5,11 @@ import { InteractiveMap } from "@/components/map/InteractiveMap";
 import { SearchBar } from "@/components/map/SearchBar";
 import { useUser } from "@/contexts/UserContext";
 import { useMapJobs } from "@/hooks/useJobs";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Loader2 } from "lucide-react";
 
 const Index = () => {
-  const { isEmployer } = useUser();
+  const { isEmployer, loading: profileLoading, profile } = useUser();
   const { data: allJobs = [] } = useMapJobs();
   
   // Search and filter state (only used for Workers)
@@ -58,6 +60,22 @@ const Index = () => {
   const filteredJobIds = useMemo(() => {
     return new Set(filteredJobs.map((job) => job.id));
   }, [filteredJobs]);
+
+  // Show loading state while profile is being fetched
+  if (profileLoading || !profile) {
+    return (
+      <div className="flex flex-col h-screen bg-background">
+        <Header title="Mappa" />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center space-y-4">
+            <Loader2 className="w-10 h-10 animate-spin text-primary mx-auto" />
+            <p className="text-muted-foreground">Caricamento profilo...</p>
+          </div>
+        </div>
+        <BottomNav />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-screen bg-background">
