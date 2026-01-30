@@ -61,18 +61,12 @@ const Index = () => {
     return new Set(filteredJobs.map((job) => job.id));
   }, [filteredJobs]);
 
-  // Show loading state while profile is being fetched
+  // BLOCKING: Show full-screen loading until profile is ready
   if (profileLoading || !profile) {
     return (
-      <div className="flex flex-col h-screen bg-background">
-        <Header title="Mappa" />
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-center space-y-4">
-            <Loader2 className="w-10 h-10 animate-spin text-primary mx-auto" />
-            <p className="text-muted-foreground">Caricamento profilo...</p>
-          </div>
-        </div>
-        <BottomNav />
+      <div className="flex flex-col items-center justify-center h-screen bg-background">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        <p className="mt-4 text-muted-foreground font-medium">Stiamo preparando il tuo profilo...</p>
       </div>
     );
   }
