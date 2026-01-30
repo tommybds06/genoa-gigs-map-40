@@ -105,8 +105,12 @@ const Onboarding = () => {
 
       if (error) throw error;
 
-      toast.success('Profilo completato!');
-      navigate('/');
+      toast.success('Profilo completato!', { duration: 1000 });
+      
+      // HARD RELOAD to ensure fresh data is loaded from DB
+      setTimeout(() => {
+        window.location.replace('/');
+      }, 800);
     } catch (error) {
       console.error('Error completing onboarding:', error);
       toast.error('Errore nel salvataggio del profilo');

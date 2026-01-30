@@ -31,27 +31,7 @@ const Auth = () => {
   const { user, loading: authLoading, signUp, signIn } = useAuth();
   const { refetch: refetchProfile } = useUser();
 
-  // Polling function to wait for profile creation
-  const waitForProfile = async (userId: string, maxAttempts = 10): Promise<boolean> => {
-    for (let i = 0; i < maxAttempts; i++) {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, role, is_onboarded')
-        .eq('id', userId)
-        .maybeSingle();
-      
-      if (data && data.id) {
-        // Profile exists, pre-populate cache
-        await queryClient.invalidateQueries({ queryKey: ['profile'] });
-        await refetchProfile();
-        return true;
-      }
-      
-      // Wait 300ms before next attempt
-      await new Promise(resolve => setTimeout(resolve, 300));
-    }
-    return false;
-  };
+  // Removed unused waitForProfile function - using direct upsert + hard reload strategy
   
   const [isLogin, setIsLogin] = useState(true);
   const [selectedRole, setSelectedRole] = useState<UserRole | null>(null);
@@ -193,14 +173,18 @@ const Auth = () => {
             return;
           }
 
-          // Step 3: Show success and HARD RELOAD
-          toast.success('Benvenuto! Reindirizzamento...', { duration: 1500 });
+          // Step 3: Show success toast
+          toast.success('Benvenuto! Reindirizzamento...', { duration: 1000 });
           
-          // Step 4: Force hard reload to bypass all cache issues
+          // Step 4: HARD RELOAD - Wait a bit for toast to show, then force full page reload
+          // This bypasses ALL React state/cache issues
           setTimeout(() => {
-            window.location.href = '/onboarding';
-          }, 500);
-          return; // Don't set loading to false, page will reload
+            // Force complete browser reload to /onboarding
+            window.location.replace('/onboarding');
+          }, 800);
+          
+          // Keep loading spinner active - don't proceed to finally block
+          return;
         }
       }
     } catch (err) {
