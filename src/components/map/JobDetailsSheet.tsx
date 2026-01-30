@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -66,6 +67,7 @@ export function JobDetailsSheet({ job, isOpen, onClose }: JobDetailsSheetProps) 
   const { theme } = useAppTheme();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   
   const [hasApplied, setHasApplied] = useState(false);
   const [isApplying, setIsApplying] = useState(false);
@@ -146,6 +148,8 @@ export function JobDetailsSheet({ job, isOpen, onClose }: JobDetailsSheetProps) 
         }
       } else {
         setHasApplied(true);
+        // Invalidate applications cache for instant UI refresh
+        await queryClient.invalidateQueries({ queryKey: ['applications'] });
         toast.success('Candidatura inviata!', { duration: 2000 });
       }
     } catch (error) {

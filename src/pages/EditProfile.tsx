@@ -32,7 +32,7 @@ const EditProfile = () => {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [photos, setPhotos] = useState<string[]>([]);
 
-  // Fetch current profile data
+  // Fetch current profile data with reduced stale time
   const { data: profileData, isLoading } = useQuery({
     queryKey: ["profile", user?.id],
     queryFn: async () => {
@@ -47,7 +47,8 @@ const EditProfile = () => {
       return data;
     },
     enabled: !!user?.id,
-    staleTime: 1000 * 60 * 5,
+    staleTime: 1000 * 30, // 30 seconds for faster profile updates
+    refetchOnMount: true,
   });
 
   // Initialize form with profile data

@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -76,6 +77,7 @@ function clearCachedRole() {
 
 export const UserProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [hasLoaded, setHasLoaded] = useState(false);
@@ -138,6 +140,24 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     fetchProfile();
   }, [fetchProfile]);
+
+  // Listen for auth state changes and invalidate profile cache on sign in
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event) => {
+        if (event === 'SIGNED_IN') {
+          // Force immediate profile fetch on sign in
+          await queryClient.invalidateQueries({ queryKey: ['profile'] });
+          await fetchProfile();
+        } else if (event === 'SIGNED_OUT') {
+          clearCachedRole();
+          await queryClient.invalidateQueries({ queryKey: ['profile'] });
+        }
+      }
+    );
+
+    return () => subscription.unsubscribe();
+  }, [queryClient, fetchProfile]);
 
   // Clear cache on logout
   useEffect(() => {

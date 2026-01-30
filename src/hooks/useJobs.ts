@@ -25,7 +25,7 @@ export interface Job {
   profiles?: JobProfile | null;
 }
 
-const STALE_TIME = 1000 * 60 * 5; // 5 minutes cache
+const STALE_TIME = 1000 * 60 * 2; // 2 minutes cache (reduced for faster updates)
 
 // Fetch open jobs for workers (with tag filtering) or all jobs for map
 export function useOpenJobs(userTags?: string[]) {
