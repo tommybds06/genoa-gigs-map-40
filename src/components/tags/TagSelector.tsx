@@ -70,12 +70,26 @@ export function TagSelector({ selectedTags, onChange, className }: TagSelectorPr
 
 // Display-only version for showing tags
 // Uses the corrected logic: TYPE_TAGS = Blue, everything else (including custom) = Orange
+// Tags are sorted: Role tags (Orange) first, then Type tags (Blue)
 export function TagBadges({ tags, className }: { tags: string[]; className?: string }) {
   if (!tags || tags.length === 0) return null;
 
+  // Sort tags: Role tags (non-blue) first, then Type tags (blue)
+  const sortedTags = [...tags].sort((a, b) => {
+    const aIsBlue = isBlueTag(a);
+    const bIsBlue = isBlueTag(b);
+    
+    // If one is blue and one is not, non-blue (role) comes first
+    if (aIsBlue && !bIsBlue) return 1;
+    if (!aIsBlue && bIsBlue) return -1;
+    
+    // Keep original order within each group
+    return 0;
+  });
+
   return (
     <div className={cn("flex flex-wrap gap-1.5", className)}>
-      {tags.map((tag) => (
+      {sortedTags.map((tag) => (
         <span
           key={tag}
           className={cn(

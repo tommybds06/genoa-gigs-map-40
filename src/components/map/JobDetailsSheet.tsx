@@ -28,6 +28,7 @@ interface Job {
   category: string | null;
   schedule?: string | null;
   tags?: string[] | null;
+  neighborhood?: string | null;
   lat: number;
   lng: number;
   owner_id?: string;
@@ -211,11 +212,11 @@ export function JobDetailsSheet({ job, isOpen, onClose }: JobDetailsSheetProps) 
                 )}
               </div>
 
-              {/* Schedule Display */}
+              {/* Schedule Display - Larger for better readability */}
               {job.schedule && (
-                <div className="flex items-center gap-2 mt-2 text-muted-foreground">
-                  <Clock className="w-4 h-4" />
-                  <span className="text-sm font-medium">{job.schedule}</span>
+                <div className="flex items-center gap-2 mt-3 text-foreground">
+                  <Clock className={`w-5 h-5 ${isEmployer ? 'text-blue-600' : 'text-primary'}`} />
+                  <span className="text-lg font-semibold">{job.schedule}</span>
                 </div>
               )}
 
@@ -246,31 +247,24 @@ export function JobDetailsSheet({ job, isOpen, onClose }: JobDetailsSheetProps) 
               </div>
             )}
 
-            {/* Static Map Preview */}
+            {/* Location Section - Neighborhood Display */}
             <div className="py-4 border-t border-border">
               <h3 className={`text-sm font-bold mb-3 ${isEmployer ? 'text-blue-600' : 'text-primary'}`}>
                 POSIZIONE
               </h3>
-              <div className="relative h-32 bg-muted rounded-2xl overflow-hidden">
-                {/* Stylized mini map */}
-                <div className="absolute inset-0">
-                  <div className="absolute bottom-0 left-0 right-0 h-1/3 bg-blue-100/40" />
-                  <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-                    <path d="M0 60 Q30 50 60 55 T100 45" fill="none" stroke="hsl(var(--muted-foreground))" strokeWidth="0.3" opacity="0.3" />
-                    <path d="M20 80 L50 40 L80 30" fill="none" stroke="hsl(var(--foreground))" strokeWidth="0.4" opacity="0.2" />
-                  </svg>
+              <div className={`flex items-center gap-3 p-4 rounded-2xl ${isEmployer ? 'bg-blue-50' : 'bg-accent'}`}>
+                <div className={`w-12 h-12 ${theme.primary} rounded-xl flex items-center justify-center shadow-md`}>
+                  <MapPin className="w-6 h-6 text-white" />
                 </div>
-                
-                {/* Center marker */}
-                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                  <div className={`w-6 h-6 ${theme.primary} rounded-full flex items-center justify-center shadow-md`}>
-                    <MapPin className="w-4 h-4 text-white" />
-                  </div>
-                </div>
-
-                {/* Location label */}
-                <div className="absolute bottom-2 left-2 bg-background/90 backdrop-blur-sm rounded-lg px-2 py-1">
-                  <p className="text-xs font-medium">{employerAddress || "Genova Centro"}</p>
+                <div className="flex-1">
+                  <p className={`text-lg font-bold ${isEmployer ? 'text-blue-600' : 'text-primary'}`}>
+                    {job.neighborhood || "Genova"}
+                  </p>
+                  {employerAddress && (
+                    <p className="text-sm text-muted-foreground mt-0.5">
+                      {employerAddress}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
