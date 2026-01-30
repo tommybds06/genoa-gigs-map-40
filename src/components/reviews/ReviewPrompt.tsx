@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useUser } from "@/contexts/UserContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -41,78 +41,108 @@ export function ReviewPrompt() {
   const hasChecked = useRef(false);
   const isMarkingReviewed = useRef(false);
 
-  useEffect(() => {
-    const checkPendingReviews = async () => {
-      if (!user || !hasLoaded || !isWorker || hasChecked.current) return;
-      
-      hasChecked.current = true;
+  const checkPendingReviews = useCallback(async () => {
+    if (!user || !hasLoaded || !isWorker) return;
 
-      try {
-        // Force fresh data - no cache, always check server
-        const { data, error } = await supabase
-          .from("applications")
-          .select(`
+    try {
+      // Force fresh data - no cache, always check server
+      const { data, error } = await supabase
+        .from("applications")
+        .select(`
+          id,
+          job_id,
+          jobs!inner (
             id,
-            job_id,
-            jobs!inner (
+            title,
+            owner_id,
+            profiles!inner (
               id,
-              title,
-              owner_id,
-              profiles!inner (
-                id,
-                full_name
-              )
+              full_name
             )
-          `)
-          .eq("applicant_id", user.id)
-          .eq("status", "completed")
-          .eq("is_reviewed", false)
-          .limit(1)
-          .maybeSingle();
+          )
+        `)
+        .eq("applicant_id", user.id)
+        .eq("status", "completed")
+        .eq("is_reviewed", false)
+        .limit(1)
+        .maybeSingle();
 
-        if (error) {
-          console.error("Error checking pending reviews:", error);
+      if (error) {
+        console.error("Error checking pending reviews:", error);
+        return;
+      }
+
+      if (data && data.jobs) {
+        // Skip if already dismissed this session
+        if (skippedApplications.has(data.id)) {
           return;
         }
 
-        if (data && data.jobs) {
-          // Skip if already dismissed this session
-          if (skippedApplications.has(data.id)) {
-            return;
-          }
+        const jobData = data.jobs as unknown as {
+          id: string;
+          title: string;
+          owner_id: string;
+          profiles: { id: string; full_name: string | null };
+        };
 
-          const jobData = data.jobs as unknown as {
-            id: string;
-            title: string;
-            owner_id: string;
-            profiles: { id: string; full_name: string | null };
-          };
+        setPendingReview({
+          applicationId: data.id,
+          jobId: jobData.id,
+          employerId: jobData.owner_id,
+          employerName: jobData.profiles?.full_name || "l'attività",
+          jobTitle: jobData.title,
+        });
+        setIsOpen(true);
 
-          setPendingReview({
-            applicationId: data.id,
-            jobId: jobData.id,
-            employerId: jobData.owner_id,
-            employerName: jobData.profiles?.full_name || "l'attività",
-            jobTitle: jobData.title,
+        setTimeout(() => {
+          confetti({
+            particleCount: 100,
+            spread: 70,
+            origin: { y: 0.6 },
+            colors: ["#f97316", "#3b82f6", "#22c55e", "#eab308"],
           });
-          setIsOpen(true);
-
-          setTimeout(() => {
-            confetti({
-              particleCount: 100,
-              spread: 70,
-              origin: { y: 0.6 },
-              colors: ["#f97316", "#3b82f6", "#22c55e", "#eab308"],
-            });
-          }, 300);
-        }
-      } catch (error) {
-        console.error("Error checking pending reviews:", error);
+        }, 300);
       }
-    };
-
-    checkPendingReviews();
+    } catch (error) {
+      console.error("Error checking pending reviews:", error);
+    }
   }, [user, hasLoaded, isWorker]);
+
+  // Initial check on mount
+  useEffect(() => {
+    if (!hasChecked.current) {
+      hasChecked.current = true;
+      checkPendingReviews();
+    }
+  }, [checkPendingReviews]);
+
+  // Subscribe to realtime changes on applications table
+  useEffect(() => {
+    if (!user || !isWorker) return;
+
+    const channel = supabase
+      .channel('applications-review-trigger')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'applications',
+          filter: `applicant_id=eq.${user.id}`,
+        },
+        (payload) => {
+          // If an application was just marked as completed, check for pending reviews
+          if (payload.new && (payload.new as { status: string }).status === 'completed') {
+            checkPendingReviews();
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, isWorker, checkPendingReviews]);
 
   const markAsReviewed = async () => {
     if (!pendingReview || isMarkingReviewed.current) return;
