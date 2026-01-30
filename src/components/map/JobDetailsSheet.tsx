@@ -247,7 +247,7 @@ export function JobDetailsSheet({ job, isOpen, onClose }: JobDetailsSheetProps) 
               </div>
             )}
 
-            {/* Location Section - Neighborhood Display */}
+            {/* Location Section - Neighborhood + Address Display */}
             <div className="py-4 border-t border-border">
               <h3 className={`text-sm font-bold mb-3 ${isEmployer ? 'text-blue-600' : 'text-primary'}`}>
                 POSIZIONE
@@ -257,8 +257,8 @@ export function JobDetailsSheet({ job, isOpen, onClose }: JobDetailsSheetProps) 
                   <MapPin className="w-6 h-6 text-white" />
                 </div>
                 <div className="flex-1">
-                  <p className={`text-lg font-bold ${isEmployer ? 'text-blue-600' : 'text-primary'}`}>
-                    {job.neighborhood || "Genova"}
+                  <p className={`text-xl font-bold ${isEmployer ? 'text-blue-600' : 'text-primary'}`}>
+                    {job.neighborhood || "Zona non specificata"}
                   </p>
                   {employerAddress && (
                     <p className="text-sm text-muted-foreground mt-0.5">

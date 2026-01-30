@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { NeighborhoodSelect } from '@/components/ui/NeighborhoodSelect';
 import { 
   GraduationCap, 
   Store, 
@@ -31,8 +32,9 @@ const Auth = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
+  const [neighborhood, setNeighborhood] = useState('');
   const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState<{ email?: string; password?: string; name?: string; role?: string }>({});
+  const [errors, setErrors] = useState<{ email?: string; password?: string; name?: string; role?: string; neighborhood?: string }>({});
 
   useEffect(() => {
     const checkOnboarding = async () => {
@@ -79,6 +81,11 @@ const Auth = () => {
           newErrors.name = nameResult.error.errors[0].message;
         }
       }
+
+      // Neighborhood is required for employers
+      if (selectedRole === 'employer' && !neighborhood) {
+        newErrors.neighborhood = 'Seleziona il quartiere della tua attività';
+      }
     }
 
     setErrors(newErrors);
@@ -114,7 +121,18 @@ const Auth = () => {
           return;
         }
 
-        const { error } = await signUp(email, password, selectedRole, fullName || undefined);
+        const { error, data } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/`,
+            data: {
+              role: selectedRole,
+              full_name: fullName,
+            }
+          }
+        });
+        
         if (error) {
           if (error.message.includes('already registered')) {
             toast.error('Email già registrata.', { duration: 2000 });
@@ -122,6 +140,13 @@ const Auth = () => {
             toast.error(error.message, { duration: 2000 });
           }
         } else {
+          // If employer, save neighborhood immediately after signup
+          if (selectedRole === 'employer' && data.user) {
+            await supabase
+              .from('profiles')
+              .update({ neighborhood })
+              .eq('id', data.user.id);
+          }
           toast.success('Benvenuto!', { duration: 2000 });
           // Redirect will be handled by useEffect - new users go to onboarding
         }
@@ -230,6 +255,23 @@ const Auth = () => {
               </div>
             )}
 
+            {/* Neighborhood (only for employer signup) */}
+            {!isLogin && selectedRole === 'employer' && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground">
+                  In che zona si trova la tua attività? <span className="text-destructive">*</span>
+                </label>
+                <NeighborhoodSelect
+                  value={neighborhood}
+                  onValueChange={setNeighborhood}
+                  placeholder="Seleziona quartiere"
+                  variant="employer"
+                  error={!!errors.neighborhood}
+                />
+                {errors.neighborhood && <p className="text-xs text-destructive">{errors.neighborhood}</p>}
+              </div>
+            )}
+
             {/* Email */}
             <div className="space-y-2">
               <label className="text-sm font-medium text-foreground">Email</label>
@@ -287,6 +329,7 @@ const Auth = () => {
                 setIsLogin(!isLogin);
                 setErrors({});
                 setSelectedRole(null);
+                setNeighborhood('');
               }}
               className="text-sm text-muted-foreground hover:text-foreground transition-colors"
             >

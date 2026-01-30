@@ -293,10 +293,17 @@ const Profilo = () => {
         <div className="material-card p-4 mb-4 animate-fade-in" style={{ animationDelay: "0.35s" }}>
           <h3 className="font-semibold mb-3">Informazioni</h3>
           <div className="space-y-3">
-            <div className="flex items-center gap-3 text-sm">
-              <MapPin className="w-4 h-4 text-muted-foreground" />
-              <span>Genova, Centro Storico</span>
-            </div>
+            {profile?.neighborhood ? (
+              <div className="flex items-center gap-3 text-sm">
+                <MapPin className="w-4 h-4 text-muted-foreground" />
+                <span>Genova, {profile.neighborhood}</span>
+              </div>
+            ) : profile?.address_text ? (
+              <div className="flex items-center gap-3 text-sm">
+                <MapPin className="w-4 h-4 text-muted-foreground" />
+                <span>{profile.address_text}</span>
+              </div>
+            ) : null}
             <div className="flex items-center gap-3 text-sm">
               <Briefcase className="w-4 h-4 text-muted-foreground" />
               <span>Ruolo: <span className={`font-medium ${primaryTextClasses}`}>{isEmployer ? "Employer" : "Worker"}</span></span>
