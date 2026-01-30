@@ -19,7 +19,7 @@ export interface Chat {
   application_status?: string;
 }
 
-const STALE_TIME = 1000 * 60 * 5; // 5 minutes cache
+const STALE_TIME = 1000 * 60 * 2; // 2 minutes cache (reduced for faster updates)
 
 export function useChats(userId: string | undefined) {
   return useQuery({

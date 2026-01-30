@@ -48,6 +48,7 @@ export function ReviewPrompt() {
       hasChecked.current = true;
 
       try {
+        // Force fresh data - no cache, always check server
         const { data, error } = await supabase
           .from("applications")
           .select(`

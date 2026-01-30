@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/useAuth';
 import { useUser } from '@/contexts/UserContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -25,6 +26,7 @@ import { isWithinGenovaBounds, GEOFENCING_ERROR_MESSAGE } from '@/constants/geof
 
 const CreateJob = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { user } = useAuth();
   const { profile } = useUser();
   const [loading, setLoading] = useState(false);
@@ -136,6 +138,12 @@ const CreateJob = () => {
         });
 
       if (error) throw error;
+
+      // Invalidate cache for instant UI refresh
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['jobs'] }),
+        queryClient.invalidateQueries({ queryKey: ['my-jobs'] }),
+      ]);
 
       toast.success('Annuncio pubblicato!', { duration: 2000 });
       navigate('/annunci');

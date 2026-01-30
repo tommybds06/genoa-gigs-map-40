@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Header } from '@/components/layout/Header';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { useAuth } from '@/hooks/useAuth';
@@ -59,6 +60,7 @@ const Annunci = () => {
   const { user } = useAuth();
   const { theme } = useAppTheme();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [jobs, setJobs] = useState<JobWithCount[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
@@ -193,6 +195,10 @@ const Annunci = () => {
       setApplications(prev => 
         prev.map(a => a.id === app.id ? { ...a, status: 'rejected' } : a)
       );
+      
+      // Invalidate cache
+      await queryClient.invalidateQueries({ queryKey: ['applications'] });
+      
       toast.success('Candidatura rifiutata', { duration: 2000 });
     } catch (error) {
       console.error('Error rejecting application:', error);
@@ -241,9 +247,15 @@ const Annunci = () => {
         chatId = newChat.id;
       }
 
+      // Invalidate caches for instant UI refresh
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['applications'] }),
+        queryClient.invalidateQueries({ queryKey: ['chats'] }),
+      ]);
+
       toast.success('Candidatura accettata! Apri la chat...', { duration: 2000 });
       
-      // 3. Navigate to messages with chat id
+      // Navigate AFTER cache invalidation (in onSuccess equivalent)
       navigate(`/messaggi?chat=${chatId}`);
     } catch (error) {
       console.error('Error accepting application:', error);
