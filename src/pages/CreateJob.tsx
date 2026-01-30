@@ -28,7 +28,7 @@ const CreateJob = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { user } = useAuth();
-  const { profile } = useUser();
+  const { profile, loading: profileLoading } = useUser();
   const [loading, setLoading] = useState(false);
   
   // Form fields (neighborhood removed - inherited from profile)
@@ -154,6 +154,15 @@ const CreateJob = () => {
       setLoading(false);
     }
   };
+
+  // Show loading state while profile is being fetched
+  if (profileLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">

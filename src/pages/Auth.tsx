@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { z } from 'zod';
 import { useAuth } from '@/hooks/useAuth';
+import { useUser } from '@/contexts/UserContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,7 +27,9 @@ const nameSchema = z.string().trim().max(100, 'Nome troppo lungo').optional();
 
 const Auth = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { user, loading: authLoading, signUp, signIn } = useAuth();
+  const { refetch: refetchProfile } = useUser();
   
   const [isLogin, setIsLogin] = useState(true);
   const [selectedRole, setSelectedRole] = useState<UserRole | null>(null);
@@ -147,6 +151,11 @@ const Auth = () => {
               .update({ neighborhood })
               .eq('id', data.user.id);
           }
+          
+          // Force profile cache invalidation and refetch BEFORE redirect
+          await queryClient.invalidateQueries({ queryKey: ['profile'] });
+          await refetchProfile();
+          
           toast.success('Benvenuto!', { duration: 2000 });
           // Redirect will be handled by useEffect - new users go to onboarding
         }
