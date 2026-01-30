@@ -30,6 +30,28 @@ const Auth = () => {
   const queryClient = useQueryClient();
   const { user, loading: authLoading, signUp, signIn } = useAuth();
   const { refetch: refetchProfile } = useUser();
+
+  // Polling function to wait for profile creation
+  const waitForProfile = async (userId: string, maxAttempts = 10): Promise<boolean> => {
+    for (let i = 0; i < maxAttempts; i++) {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, role, is_onboarded')
+        .eq('id', userId)
+        .maybeSingle();
+      
+      if (data && data.id) {
+        // Profile exists, pre-populate cache
+        await queryClient.invalidateQueries({ queryKey: ['profile'] });
+        await refetchProfile();
+        return true;
+      }
+      
+      // Wait 300ms before next attempt
+      await new Promise(resolve => setTimeout(resolve, 300));
+    }
+    return false;
+  };
   
   const [isLogin, setIsLogin] = useState(true);
   const [selectedRole, setSelectedRole] = useState<UserRole | null>(null);
@@ -143,21 +165,30 @@ const Auth = () => {
           } else {
             toast.error(error.message, { duration: 2000 });
           }
-        } else {
-          // If employer, save neighborhood immediately after signup
-          if (selectedRole === 'employer' && data.user) {
+        } else if (data.user) {
+          // Wait for profile to be created by trigger
+          const profileReady = await waitForProfile(data.user.id);
+          
+          if (!profileReady) {
+            toast.error('Errore nella creazione del profilo. Riprova.', { duration: 3000 });
+            setLoading(false);
+            return;
+          }
+          
+          // If employer, save neighborhood after profile exists
+          if (selectedRole === 'employer') {
             await supabase
               .from('profiles')
               .update({ neighborhood })
               .eq('id', data.user.id);
+            
+            // Refetch to get updated neighborhood
+            await refetchProfile();
           }
           
-          // Force profile cache invalidation and refetch BEFORE redirect
-          await queryClient.invalidateQueries({ queryKey: ['profile'] });
-          await refetchProfile();
-          
           toast.success('Benvenuto!', { duration: 2000 });
-          // Redirect will be handled by useEffect - new users go to onboarding
+          // Navigate directly to onboarding for new users
+          navigate('/onboarding');
         }
       }
     } catch (err) {
