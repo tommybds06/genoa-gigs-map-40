@@ -30,10 +30,17 @@ export function PageTransition({ children, variant = "fade" }: PageTransitionPro
       exit="exit"
       variants={variants}
       transition={{ 
-        duration: variant === "fade" ? 0.15 : 0.25,
-        ease: "easeOut"
+        duration: variant === "fade" ? 0.1 : 0.2,
+        ease: [0.25, 0.1, 0.25, 1]
       }}
-      className="absolute inset-0 w-full h-full bg-background"
+      style={{ 
+        position: variant === "slide" ? "absolute" : "relative",
+        top: 0,
+        left: 0,
+        width: "100%",
+        minHeight: "100%",
+        backgroundColor: "hsl(var(--background))"
+      }}
     >
       {children}
     </motion.div>
