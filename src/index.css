@@ -99,13 +99,25 @@
     @apply border-border;
   }
 
+  /* Lock viewport - prevent iOS bounce/overscroll */
+  html, body {
+    overscroll-behavior-y: none;
+    overflow: hidden;
+    height: 100%;
+    width: 100%;
+  }
+
+  #root {
+    height: 100%;
+    width: 100%;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
   /* Global text selection disabled for native app feel */
   body {
     @apply bg-background text-foreground antialiased select-none;
     font-family: 'Outfit', sans-serif;
-    /* Full viewport height with dynamic viewport support */
-    min-height: 100vh;
-    min-height: 100dvh;
   }
 
   /* Re-enable text selection for inputs and editable content */
