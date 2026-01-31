@@ -72,7 +72,7 @@ const Index = () => {
   }
 
   return (
-    <div className="flex flex-col h-[100dvh] w-screen bg-background overflow-hidden">
+    <div className="fixed inset-0 flex flex-col bg-background overflow-hidden">
       {/* Header with dynamic title and color */}
       <Header 
         title="Mappa" 
