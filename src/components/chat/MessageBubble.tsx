@@ -129,7 +129,7 @@ export const MessageBubble = ({
           )}
           
           {message.content && message.content !== "📷 Foto" && (
-            <p className="text-sm">{message.content}</p>
+            <p className="text-sm message-content">{message.content}</p>
           )}
           
           {/* Timestamp and read receipts */}
