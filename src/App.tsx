@@ -105,7 +105,7 @@ const App = () => (
     <AuthProvider>
       <UserProvider>
         <TooltipProvider>
-          <div className="safe-area-wrapper">
+          <div className="safe-area-wrapper relative h-full overflow-hidden">
             <Toaster />
             <Sonner />
             <ReviewPrompt />

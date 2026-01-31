@@ -72,7 +72,7 @@ const Index = () => {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-background">
+    <div className="flex flex-col h-[100dvh] w-screen bg-background overflow-hidden">
       {/* Header with dynamic title and color */}
       <Header 
         title="Mappa" 
@@ -81,7 +81,7 @@ const Index = () => {
 
       {/* Search Bar - Only for Workers */}
       {!isEmployer && (
-        <div className="px-4 pt-2 pb-3 z-30">
+        <div className="px-4 pt-2 pb-3 z-30 shrink-0">
           <SearchBar
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
@@ -93,8 +93,8 @@ const Index = () => {
         </div>
       )}
 
-      {/* Map Container - Takes remaining space */}
-      <main className="flex-1 px-4 pb-20 overflow-hidden">
+      {/* Map Container - Takes remaining space, no scroll */}
+      <main className="flex-1 px-4 pb-20 overflow-hidden min-h-0">
         <div className="map-container w-full h-full rounded-3xl overflow-hidden">
           <InteractiveMap 
             jobs={filteredJobs}

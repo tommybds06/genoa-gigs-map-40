@@ -1,6 +1,11 @@
 import { useState, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -74,7 +79,7 @@ export function JobDetailsSheet({ job, isOpen, onClose }: JobDetailsSheetProps) 
   const [isApplying, setIsApplying] = useState(false);
   const [checkingStatus, setCheckingStatus] = useState(false);
   
-  // Check if worker has already applied when sheet opens
+  // Check if worker has already applied when drawer opens
   useEffect(() => {
     const checkApplicationStatus = async () => {
       if (!job || !user || isEmployer) return;
@@ -162,26 +167,17 @@ export function JobDetailsSheet({ job, isOpen, onClose }: JobDetailsSheetProps) 
   };
 
   return (
-    <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <SheetContent 
-        side="bottom" 
-        className="h-[85vh] rounded-t-3xl p-0 overflow-hidden"
-        hideCloseButton
-      >
-        {/* Handle */}
-        <div className="flex justify-center pt-3 pb-2">
-          <div className="w-12 h-1.5 bg-muted-foreground/30 rounded-full" />
-        </div>
-
+    <Drawer open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DrawerContent className="h-[90vh] max-h-[90vh]">
         <div className="flex flex-col h-full overflow-hidden">
           {/* Scrollable Content */}
           <div className="flex-1 overflow-y-auto px-6 pb-24">
             {/* Header with Employer Profile */}
-            <SheetHeader className="text-left pb-4">
+            <DrawerHeader className="text-left pb-4 px-0">
               {/* Clickable Employer Section */}
               <button
                 onClick={handleEmployerClick}
-                className="flex items-center gap-3 mb-4 p-3 -mx-3 rounded-2xl hover:bg-muted/50 transition-colors text-left"
+                className="flex items-center gap-3 mb-4 p-3 -mx-3 rounded-2xl hover:bg-muted/50 active:scale-[0.98] transition-all text-left"
               >
                 <Avatar className={`w-14 h-14 border-2 ${isEmployer ? "border-blue-600/20" : "border-primary/20"}`}>
                   <AvatarImage src={employerAvatar || undefined} alt={employerName} />
@@ -202,9 +198,9 @@ export function JobDetailsSheet({ job, isOpen, onClose }: JobDetailsSheetProps) 
               </button>
               
               <div className="flex items-start justify-between gap-3">
-                <SheetTitle className="text-2xl font-bold text-foreground leading-tight">
+                <DrawerTitle className="text-2xl font-bold text-foreground leading-tight">
                   {job.title}
-                </SheetTitle>
+                </DrawerTitle>
                 {job.price && (
                   <Badge className={`${theme.btnFilled} font-bold text-base px-3 py-1.5 rounded-full shrink-0`}>
                     {job.price}
@@ -233,7 +229,7 @@ export function JobDetailsSheet({ job, isOpen, onClose }: JobDetailsSheetProps) 
                   ))}
                 </div>
               )}
-            </SheetHeader>
+            </DrawerHeader>
 
             {/* Description */}
             {job.description && (
@@ -271,7 +267,7 @@ export function JobDetailsSheet({ job, isOpen, onClose }: JobDetailsSheetProps) 
           </div>
 
           {/* Sticky Footer */}
-          <div className="absolute bottom-0 left-0 right-0 p-4 bg-background border-t border-border">
+          <div className="absolute bottom-0 left-0 right-0 p-4 bg-background border-t border-border safe-bottom">
             {isEmployer ? (
               <div className="flex items-center justify-center gap-2 text-muted-foreground py-4">
                 <Eye className="w-5 h-5" />
@@ -311,7 +307,7 @@ export function JobDetailsSheet({ job, isOpen, onClose }: JobDetailsSheetProps) 
             )}
           </div>
         </div>
-      </SheetContent>
-    </Sheet>
+      </DrawerContent>
+    </Drawer>
   );
 }

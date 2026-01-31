@@ -17,7 +17,7 @@ const fadeVariants = {
 const slideVariants = {
   initial: { x: "100%", opacity: 0 },
   animate: { x: 0, opacity: 1 },
-  exit: { x: "-20%", opacity: 0 },
+  exit: { x: "100%", opacity: 0 },
 };
 
 export function PageTransition({ children, variant = "fade" }: PageTransitionProps) {
@@ -33,7 +33,7 @@ export function PageTransition({ children, variant = "fade" }: PageTransitionPro
         duration: variant === "fade" ? 0.15 : 0.25,
         ease: "easeOut"
       }}
-      className="w-full h-full"
+      className="absolute inset-0 w-full h-full bg-background"
     >
       {children}
     </motion.div>
