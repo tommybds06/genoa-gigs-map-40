@@ -130,40 +130,47 @@ const Messaggi = () => {
 
   // Load messages for selected chat and mark as read
   useEffect(() => {
-    if (!selectedChat || !user) {
+    const chatId = selectedChat?.id;
+    const workerId = selectedChat?.worker_id;
+    const jobId = selectedChat?.job_id;
+    const userId = user?.id;
+    
+    if (!chatId || !userId) {
       setMessages([]);
       setApplicationStatus(null);
       return;
     }
 
+    let isMounted = true;
+
     const fetchMessages = async () => {
       const { data, error } = await supabase
         .from('messages')
         .select('*')
-        .eq('chat_id', selectedChat.id)
+        .eq('chat_id', chatId)
         .order('created_at', { ascending: true });
 
-      if (error) {
-        console.error('Error fetching messages:', error);
+      if (error || !isMounted) {
+        if (error) console.error('Error fetching messages:', error);
         return;
       }
 
       // Fetch reply_to messages
-      const messagesWithReplies = await Promise.all(
-        (data || []).map(async (msg) => {
-          if (msg.reply_to_id) {
-            const replyMsg = data?.find(m => m.id === msg.reply_to_id);
-            return { ...msg, reply_to: replyMsg || null };
-          }
-          return { ...msg, reply_to: null };
-        })
-      );
+      const messagesWithReplies = (data || []).map((msg) => {
+        if (msg.reply_to_id) {
+          const replyMsg = data?.find(m => m.id === msg.reply_to_id);
+          return { ...msg, reply_to: replyMsg || null };
+        }
+        return { ...msg, reply_to: null };
+      });
 
-      setMessages(messagesWithReplies);
+      if (isMounted) {
+        setMessages(messagesWithReplies);
+      }
 
       // Mark received messages as read
       const unreadMessageIds = data
-        ?.filter(msg => !msg.is_read && msg.sender_id !== user.id)
+        ?.filter(msg => !msg.is_read && msg.sender_id !== userId)
         .map(msg => msg.id) || [];
 
       if (unreadMessageIds.length > 0) {
@@ -179,23 +186,24 @@ const Messaggi = () => {
 
     // Fetch application status for this chat
     const fetchApplicationStatus = async () => {
+      if (!jobId || !workerId) return;
+      
       const { data: applicationData } = await supabase
         .from('applications')
         .select('status')
-        .eq('job_id', selectedChat.job_id)
-        .eq('applicant_id', selectedChat.worker_id)
+        .eq('job_id', jobId)
+        .eq('applicant_id', workerId)
         .single();
       
-      setApplicationStatus(applicationData?.status || null);
+      if (isMounted) {
+        setApplicationStatus(applicationData?.status || null);
+      }
     };
 
     fetchMessages();
     fetchApplicationStatus();
 
-    // Subscribe to new messages and updates
-    const chatId = selectedChat.id;
-    const userId = user.id;
-    
+    // Subscribe to new messages and updates - use primitive chatId
     const channel = supabase
       .channel(`messages-${chatId}`)
       .on(
@@ -207,6 +215,8 @@ const Messaggi = () => {
           filter: `chat_id=eq.${chatId}`,
         },
         async (payload) => {
+          if (!isMounted) return;
+          
           if (payload.eventType === 'INSERT') {
             const newMsg = payload.new as Message;
             // Use functional update to avoid stale closure
@@ -234,9 +244,10 @@ const Messaggi = () => {
       .subscribe();
 
     return () => {
+      isMounted = false;
       supabase.removeChannel(channel);
     };
-  }, [selectedChat?.id, user?.id, queryClient]);
+  }, [selectedChat?.id, selectedChat?.job_id, selectedChat?.worker_id, user?.id, queryClient]);
 
   // Scroll to bottom when messages change
   useEffect(() => {
