@@ -84,12 +84,16 @@ const Messaggi = () => {
     }
   }, [searchParams, chats]);
 
-  // Subscribe to new messages for notifications
+  // Ref to track current selected chat without re-subscribing
+  const selectedChatRef = useRef<Chat | null>(null);
+  selectedChatRef.current = selectedChat;
+
+  // Subscribe to new messages for notifications - STABLE subscription
   useEffect(() => {
-    if (!user) return;
+    if (!user?.id) return;
 
     const channel = supabase
-      .channel('global-messages')
+      .channel(`global-messages-${user.id}`)
       .on(
         'postgres_changes',
         {
@@ -99,8 +103,8 @@ const Messaggi = () => {
         },
         async (payload) => {
           const newMsg = payload.new as Message;
-          // If message is not from current user and not in current chat
-          if (newMsg.sender_id !== user.id && (!selectedChat || newMsg.chat_id !== selectedChat.id)) {
+          // If message is not from current user and not in current chat (use ref for stable reference)
+          if (newMsg.sender_id !== user.id && (!selectedChatRef.current || newMsg.chat_id !== selectedChatRef.current.id)) {
             // Find sender name
             const { data: sender } = await supabase
               .from('profiles')
@@ -120,7 +124,7 @@ const Messaggi = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user, selectedChat, queryClient]);
+  }, [user?.id, queryClient]);
 
   // Load messages for selected chat and mark as read
   useEffect(() => {
@@ -187,29 +191,32 @@ const Messaggi = () => {
     fetchApplicationStatus();
 
     // Subscribe to new messages and updates
+    const chatId = selectedChat.id;
+    const userId = user.id;
+    
     const channel = supabase
-      .channel(`messages-${selectedChat.id}`)
+      .channel(`messages-${chatId}`)
       .on(
         'postgres_changes',
         {
           event: '*',
           schema: 'public',
           table: 'messages',
-          filter: `chat_id=eq.${selectedChat.id}`,
+          filter: `chat_id=eq.${chatId}`,
         },
         async (payload) => {
           if (payload.eventType === 'INSERT') {
             const newMsg = payload.new as Message;
-            // Fetch reply if exists
-            if (newMsg.reply_to_id) {
-              const existingReply = messages.find(m => m.id === newMsg.reply_to_id);
-              setMessages(prev => [...prev, { ...newMsg, reply_to: existingReply || null }]);
-            } else {
-              setMessages(prev => [...prev, { ...newMsg, reply_to: null }]);
-            }
+            // Use functional update to avoid stale closure
+            setMessages(prev => {
+              const existingReply = newMsg.reply_to_id 
+                ? prev.find(m => m.id === newMsg.reply_to_id) 
+                : null;
+              return [...prev, { ...newMsg, reply_to: existingReply || null }];
+            });
             
             // Mark as read if not from current user
-            if (newMsg.sender_id !== user.id) {
+            if (newMsg.sender_id !== userId) {
               await supabase
                 .from('messages')
                 .update({ is_read: true })
@@ -227,7 +234,7 @@ const Messaggi = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [selectedChat, user, queryClient]);
+  }, [selectedChat?.id, user?.id, queryClient]);
 
   // Scroll to bottom when messages change
   useEffect(() => {
