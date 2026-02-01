@@ -289,10 +289,14 @@ const Annunci = () => {
 
   const getStatusBadge = (status: string) => {
     switch (status) {
+      case 'hired':
+        return <Badge className="bg-green-600 text-white">Assunto</Badge>;
       case 'accepted':
-        return <Badge className="bg-green-500 text-white">Accettato</Badge>;
+        return <Badge className="bg-blue-500 text-white">In Colloquio</Badge>;
       case 'rejected':
         return <Badge className="bg-red-500 text-white">Rifiutato</Badge>;
+      case 'completed':
+        return <Badge className="bg-gray-500 text-white">Concluso</Badge>;
       default:
         return <Badge className="bg-yellow-500 text-white">In attesa</Badge>;
     }

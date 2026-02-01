@@ -70,6 +70,8 @@ const Messaggi = () => {
   const [pendingAttachment, setPendingAttachment] = useState<string | null>(null);
   const [applicationStatus, setApplicationStatus] = useState<string | null>(null);
   const [completingJob, setCompletingJob] = useState(false);
+  const [hiringWorker, setHiringWorker] = useState(false);
+  const [showRemoveJobDialog, setShowRemoveJobDialog] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -323,7 +325,70 @@ const Messaggi = () => {
     setReplyingTo(msg);
   };
 
-  // Handle job completion
+  // Handle hiring worker (accepted -> hired)
+  const handleHireWorker = async () => {
+    if (!selectedChat || !user) return;
+    
+    setHiringWorker(true);
+    try {
+      const { error } = await supabase
+        .from('applications')
+        .update({ status: 'hired' })
+        .eq('job_id', selectedChat.job_id)
+        .eq('applicant_id', selectedChat.worker_id);
+
+      if (error) throw error;
+      
+      setApplicationStatus('hired');
+      
+      // Send automatic message
+      await supabase.from('messages').insert({
+        chat_id: selectedChat.id,
+        sender_id: user.id,
+        content: '🎉 Complimenti! Sei stato assunto per questo incarico.',
+      });
+      
+      // Invalidate caches
+      queryClient.invalidateQueries({ queryKey: ['chats'] });
+      queryClient.invalidateQueries({ queryKey: ['jobs'] });
+      
+      toast.success('Candidato assunto con successo!', { duration: 2000 });
+      
+      // Ask if they want to remove job from map
+      setShowRemoveJobDialog(true);
+    } catch (error) {
+      console.error('Error hiring worker:', error);
+      toast.error('Errore nell\'assunzione', { duration: 2000 });
+    } finally {
+      setHiringWorker(false);
+    }
+  };
+
+  // Handle closing job visibility on map
+  const handleCloseJobVisibility = async (removeFromMap: boolean) => {
+    setShowRemoveJobDialog(false);
+    
+    if (!removeFromMap || !selectedChat) return;
+    
+    try {
+      const { error } = await supabase
+        .from('jobs')
+        .update({ status: 'closed' })
+        .eq('id', selectedChat.job_id);
+
+      if (error) throw error;
+      
+      // Invalidate jobs cache to update map
+      queryClient.invalidateQueries({ queryKey: ['jobs'] });
+      
+      toast.success('Annuncio rimosso dalla mappa', { duration: 2000 });
+    } catch (error) {
+      console.error('Error closing job:', error);
+      toast.error('Errore nella chiusura dell\'annuncio', { duration: 2000 });
+    }
+  };
+
+  // Handle job completion (hired -> completed)
   const handleCompleteJob = async () => {
     if (!selectedChat) return;
     
@@ -392,22 +457,62 @@ const Messaggi = () => {
               </div>
             </div>
             
-            {/* Complete job button / badge for Employer */}
+            {/* HIRE button for Employer when status is 'accepted' (in colloquio) */}
             {isEmployer && applicationStatus === 'accepted' && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    size="sm"
+                    className="shrink-0 bg-blue-600 hover:bg-blue-700 text-white"
+                    disabled={hiringWorker}
+                  >
+                    {hiringWorker ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <>
+                        <CheckCircle className="h-4 w-4 mr-1" />
+                        <span>Assumi</span>
+                      </>
+                    )}
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Assumere Candidato</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Confermi di voler assumere questo candidato per l'incarico?
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Annulla</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={handleHireWorker}
+                      className="bg-blue-600 hover:bg-blue-700"
+                    >
+                      Conferma Assunzione
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
+            
+            {/* COMPLETE JOB button for Employer when status is 'hired' */}
+            {isEmployer && applicationStatus === 'hired' && (
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button
                     variant="outline"
                     size="sm"
-                    className="shrink-0 text-blue-600 border-blue-600 hover:bg-blue-50"
+                    className="shrink-0 text-green-600 border-green-600 hover:bg-green-50"
                     disabled={completingJob}
                   >
                     {completingJob ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
                       <>
-                        <CheckCircle className="h-4 w-4 mr-1" />
-                        <span className="hidden sm:inline">Concludi</span>
+                        <Check className="h-4 w-4 mr-1" />
+                        <span className="hidden sm:inline">Concludi Lavoro</span>
+                        <span className="sm:hidden">Concludi</span>
                       </>
                     )}
                   </Button>
@@ -423,13 +528,21 @@ const Messaggi = () => {
                     <AlertDialogCancel>Annulla</AlertDialogCancel>
                     <AlertDialogAction
                       onClick={handleCompleteJob}
-                      className="bg-blue-600 hover:bg-blue-700"
+                      className="bg-green-600 hover:bg-green-700"
                     >
                       Conferma
                     </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
+            )}
+            
+            {/* Hired badge for Worker */}
+            {!isEmployer && applicationStatus === 'hired' && (
+              <Badge className="shrink-0 bg-green-600 text-white">
+                <CheckCircle className="h-3 w-3 mr-1" />
+                Assunto
+              </Badge>
             )}
             
             {/* Completed badge */}
@@ -548,6 +661,29 @@ const Messaggi = () => {
             </Button>
           </div>
         </div>
+        
+        {/* Dialog to ask about removing job from map after hiring */}
+        <AlertDialog open={showRemoveJobDialog} onOpenChange={setShowRemoveJobDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Rimuovere annuncio dalla mappa?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Hai trovato il candidato giusto. Vuoi rimuovere l'annuncio dalla mappa in modo che altri non possano più vederlo?
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => handleCloseJobVisibility(false)}>
+                No, tieni visibile
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => handleCloseJobVisibility(true)}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                Sì, rimuovi
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     );
   }
@@ -579,6 +715,7 @@ const Messaggi = () => {
           <div className="space-y-2">
             {chats.map((chat) => {
               const isCompleted = chat.application_status === 'completed';
+              const isHired = chat.application_status === 'hired';
               
               return (
                 <div
@@ -605,6 +742,12 @@ const Messaggi = () => {
                       <h3 className="font-semibold truncate">
                         {chat.other_user?.full_name || 'Utente'}
                       </h3>
+                      {isHired && (
+                        <Badge className="bg-green-600 text-white text-xs shrink-0">
+                          <CheckCircle className="h-3 w-3 mr-0.5" />
+                          Assunto
+                        </Badge>
+                      )}
                       {isCompleted && (
                         <Badge variant="outline" className="text-green-600 border-green-600 text-xs shrink-0">
                           <Check className="h-3 w-3 mr-0.5" />
