@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -83,8 +83,10 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [hasLoaded, setHasLoaded] = useState(false);
   
   // Use cached role for initial render to prevent flash
-  const cachedRole = getCachedRole();
-  const [role, setRole] = useState<UserRole>(cachedRole || "worker");
+  const [role, setRole] = useState<UserRole>(() => getCachedRole() || "worker");
+  
+  // Track if initial fetch is done to prevent re-fetching
+  const hasFetched = useRef(false);
 
   const fetchProfile = useCallback(async () => {
     if (!user) {
@@ -124,10 +126,6 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         setCachedRole(userProfile.role);
       } else {
         setProfile(null);
-        // Keep cached role if we have it to prevent flash
-        if (!cachedRole) {
-          setRole("worker");
-        }
       }
     } catch (error) {
       console.error("Error fetching profile:", error);
@@ -135,11 +133,14 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       setLoading(false);
       setHasLoaded(true);
     }
-  }, [user, cachedRole]);
+  }, [user]);
 
+  // Initial fetch - only once per user change
   useEffect(() => {
+    if (hasFetched.current && user) return;
+    hasFetched.current = !!user;
     fetchProfile();
-  }, [fetchProfile]);
+  }, [user, fetchProfile]);
 
   // Listen for auth state changes and invalidate profile cache on sign in
   useEffect(() => {

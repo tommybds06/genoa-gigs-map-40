@@ -56,10 +56,11 @@ const Index = () => {
   // Check if search is active (for highlighting markers)
   const isSearchActive = searchQuery.trim().length > 0 || selectedTags.length > 0 || selectedNeighborhoods.length > 0;
 
-  // Get IDs of filtered jobs for highlighting
+  // Get IDs of filtered jobs for highlighting - stable reference
   const filteredJobIds = useMemo(() => {
-    return new Set(filteredJobs.map((job) => job.id));
-  }, [filteredJobs]);
+    const ids = filteredJobs.map((job) => job.id);
+    return new Set(ids);
+  }, [filteredJobs.map(j => j.id).join(',')]);
 
   // BLOCKING: Show full-screen loading until profile is ready
   if (profileLoading || !profile) {

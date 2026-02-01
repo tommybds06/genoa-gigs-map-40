@@ -81,6 +81,11 @@ export function InteractiveMap({
     setIsDetailsOpen(false);
   }, []);
 
+  // Memoize job IDs for stable comparison
+  const jobIds = useMemo(() => jobs.map(j => j.id).join(','), [jobs]);
+  const allJobIds = useMemo(() => allJobs.map(j => j.id).join(','), [allJobs]);
+  const filteredIdsString = useMemo(() => Array.from(filteredJobIds).sort().join(','), [filteredJobIds]);
+
   // Memoize markers to prevent recalculation on every render
   // Show all jobs but highlight filtered ones when search is active
   const markers = useMemo(() => {
@@ -144,7 +149,8 @@ export function InteractiveMap({
         </Marker>
       );
     });
-  }, [jobs, allJobs, isSearchActive, filteredJobIds, isEmployer, handleMarkerClick]);
+    // Use stable string IDs for dependency comparison
+  }, [jobIds, allJobIds, isSearchActive, filteredIdsString, isEmployer, handleMarkerClick]);
 
   // Dynamic loading colors
   const loadingBgClass = isEmployer ? "bg-blue-600/20" : "bg-primary/20";

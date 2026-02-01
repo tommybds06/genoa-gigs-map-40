@@ -42,10 +42,10 @@ export function ReviewPrompt() {
   const isMarkingReviewed = useRef(false);
 
   const checkPendingReviews = useCallback(async () => {
-    if (!user || !hasLoaded || !isWorker) return;
+    const userId = user?.id;
+    if (!userId || !hasLoaded || !isWorker) return;
 
     try {
-      // Force fresh data - no cache, always check server
       const { data, error } = await supabase
         .from("applications")
         .select(`
@@ -61,7 +61,7 @@ export function ReviewPrompt() {
             )
           )
         `)
-        .eq("applicant_id", user.id)
+        .eq("applicant_id", userId)
         .eq("status", "completed")
         .eq("is_reviewed", false)
         .limit(1)
@@ -73,7 +73,6 @@ export function ReviewPrompt() {
       }
 
       if (data && data.jobs) {
-        // Skip if already dismissed this session
         if (skippedApplications.has(data.id)) {
           return;
         }
@@ -106,7 +105,7 @@ export function ReviewPrompt() {
     } catch (error) {
       console.error("Error checking pending reviews:", error);
     }
-  }, [user, hasLoaded, isWorker]);
+  }, [user?.id, hasLoaded, isWorker]);
 
   // Initial check on mount
   useEffect(() => {
@@ -116,22 +115,23 @@ export function ReviewPrompt() {
     }
   }, [checkPendingReviews]);
 
-  // Subscribe to realtime changes on applications table
+  // Subscribe to realtime changes on applications table - stable subscription
   useEffect(() => {
-    if (!user || !isWorker) return;
+    const userId = user?.id;
+    if (!userId || !isWorker) return;
 
+    const channelName = `applications-review-${userId}`;
     const channel = supabase
-      .channel('applications-review-trigger')
+      .channel(channelName)
       .on(
         'postgres_changes',
         {
           event: 'UPDATE',
           schema: 'public',
           table: 'applications',
-          filter: `applicant_id=eq.${user.id}`,
+          filter: `applicant_id=eq.${userId}`,
         },
         (payload) => {
-          // If an application was just marked as completed, check for pending reviews
           if (payload.new && (payload.new as { status: string }).status === 'completed') {
             checkPendingReviews();
           }
@@ -142,7 +142,7 @@ export function ReviewPrompt() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user, isWorker, checkPendingReviews]);
+  }, [user?.id, isWorker, checkPendingReviews]);
 
   const markAsReviewed = async () => {
     if (!pendingReview || isMarkingReviewed.current) return;
