@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Search, SlidersHorizontal, X, MapPin, Check } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { DiamondButton } from "@/components/ui/DiamondButton";
 import {
   Sheet,
   SheetContent,
@@ -97,25 +98,14 @@ export function SearchBar({
           )}
         </div>
 
-        {/* Filter Button */}
-        <Button
-          variant="outline"
-          size="icon"
+        {/* Diamond Filter Button */}
+        <DiamondButton
           onClick={openFilters}
-          className={cn(
-            "relative rounded-full h-10 w-10 shadow-md border-0",
-            activeFiltersCount > 0
-              ? "bg-primary text-white hover:bg-primary/90"
-              : "bg-background hover:bg-accent"
-          )}
+          variant={activeFiltersCount > 0 ? "primary" : "default"}
+          badge={activeFiltersCount > 0 ? activeFiltersCount : undefined}
         >
           <SlidersHorizontal className="w-4 h-4" />
-          {activeFiltersCount > 0 && (
-            <span className="absolute -top-1 -right-1 w-5 h-5 bg-orange-600 text-white text-xs rounded-full flex items-center justify-center font-medium">
-              {activeFiltersCount}
-            </span>
-          )}
-        </Button>
+        </DiamondButton>
       </div>
 
       {/* Full Screen Filter Sheet */}
