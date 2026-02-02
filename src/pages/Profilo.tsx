@@ -90,7 +90,7 @@ const Profilo = () => {
   return (
     <div className="flex flex-col min-h-screen bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-md px-4 pt-16 pb-3 safe-top">
+      <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-md px-4 pt-12 pb-3 safe-top">
         <div className="flex items-center justify-between">
           <h1 className={`text-2xl font-bold ${isEmployer ? "text-blue-600" : "text-primary"}`}>Profilo</h1>
           <DiamondButton 

@@ -218,64 +218,54 @@ const Auth = () => {
         {/* Main Card */}
         <div className="material-card-elevated p-8 rounded-3xl animate-scale-in">
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Role Selection (only for signup) - Diamond Cards */}
+            {/* Role Selection (only for signup) */}
             {!isLogin && (
-              <div className="space-y-4">
-                <label className="text-sm font-medium text-foreground text-center block">Chi sei?</label>
-                {errors.role && <p className="text-xs text-destructive text-center">{errors.role}</p>}
-                <div className="flex justify-center items-center gap-10 py-4">
-                  {/* Worker Diamond Card */}
+              <div className="space-y-3">
+                <label className="text-sm font-medium text-foreground">Chi sei?</label>
+                {errors.role && <p className="text-xs text-destructive">{errors.role}</p>}
+                <div className="grid grid-cols-2 gap-3">
+                  {/* Worker Card */}
                   <button
                     type="button"
                     onClick={() => setSelectedRole('worker')}
-                    className="flex flex-col items-center gap-3 group"
+                    className={`relative p-4 rounded-2xl transition-all duration-300 text-left ${
+                      selectedRole === 'worker'
+                        ? 'bg-primary/20 ring-2 ring-secondary shadow-md'
+                        : 'bg-muted hover:bg-muted/80'
+                    }`}
                   >
-                    <div 
-                      className={`w-24 h-24 rotate-45 rounded-xl shadow-lg flex items-center justify-center transition-all duration-300 ease-out ${
-                        selectedRole === 'worker'
-                          ? 'bg-primary border-2 border-primary scale-105 shadow-xl'
-                          : 'bg-background border-2 border-slate-200 group-hover:border-slate-300 group-hover:scale-105'
-                      }`}
-                    >
-                      <div className="-rotate-45 flex flex-col items-center justify-center">
-                        <GraduationCap className={`w-8 h-8 transition-colors duration-300 ${
-                          selectedRole === 'worker' ? 'text-white' : 'text-slate-400'
-                        }`} />
-                      </div>
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-3 ${
+                      selectedRole === 'worker' ? 'bg-secondary text-white' : 'bg-background'
+                    }`}>
+                      <GraduationCap className="w-6 h-6" />
                     </div>
-                    <div className="text-center">
-                      <h3 className={`font-semibold text-sm transition-colors duration-300 ${
-                        selectedRole === 'worker' ? 'text-primary' : 'text-foreground'
-                      }`}>Cerco Impiego</h3>
-                      <p className="text-xs text-muted-foreground">Studente</p>
-                    </div>
+                    <h3 className="font-semibold text-sm text-foreground">Cerco Impiego</h3>
+                    <p className="text-xs text-muted-foreground mt-1">Sono uno Studente</p>
+                    {selectedRole === 'worker' && (
+                      <div className="absolute top-2 right-2 w-3 h-3 bg-secondary rounded-full" />
+                    )}
                   </button>
 
-                  {/* Employer Diamond Card */}
+                  {/* Employer Card */}
                   <button
                     type="button"
                     onClick={() => setSelectedRole('employer')}
-                    className="flex flex-col items-center gap-3 group"
+                    className={`relative p-4 rounded-2xl transition-all duration-300 text-left ${
+                      selectedRole === 'employer'
+                        ? 'bg-blue-600/20 ring-2 ring-blue-600 shadow-md'
+                        : 'bg-muted hover:bg-muted/80'
+                    }`}
                   >
-                    <div 
-                      className={`w-24 h-24 rotate-45 rounded-xl shadow-lg flex items-center justify-center transition-all duration-300 ease-out ${
-                        selectedRole === 'employer'
-                          ? 'bg-blue-600 border-2 border-blue-600 scale-105 shadow-xl'
-                          : 'bg-background border-2 border-slate-200 group-hover:border-slate-300 group-hover:scale-105'
-                      }`}
-                    >
-                      <div className="-rotate-45 flex flex-col items-center justify-center">
-                        <Store className={`w-8 h-8 transition-colors duration-300 ${
-                          selectedRole === 'employer' ? 'text-white' : 'text-slate-400'
-                        }`} />
-                      </div>
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-3 ${
+                      selectedRole === 'employer' ? 'bg-blue-600 text-white' : 'bg-background'
+                    }`}>
+                      <Store className="w-6 h-6" />
                     </div>
-                    <div className="text-center">
-                      <h3 className={`font-semibold text-sm transition-colors duration-300 ${
-                        selectedRole === 'employer' ? 'text-blue-600' : 'text-foreground'
-                      }`}>Offro Impiego</h3>
-                      <p className="text-xs text-muted-foreground">Attività</p>
-                    </div>
+                    <h3 className="font-semibold text-sm text-foreground">Offro Impiego</h3>
+                    <p className="text-xs text-muted-foreground mt-1">Privato o Attività</p>
+                    {selectedRole === 'employer' && (
+                      <div className="absolute top-2 right-2 w-3 h-3 bg-blue-600 rounded-full" />
+                    )}
                   </button>
                 </div>
               </div>
