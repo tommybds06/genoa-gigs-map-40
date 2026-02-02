@@ -36,20 +36,20 @@ export function BottomNav() {
               to={item.path}
               className="relative flex flex-col items-center justify-center gap-0.5 px-6 py-2 transition-all duration-100 active:scale-95 z-10"
             >
-              {/* Diamond background indicator - only on active */}
+              {/* Diamond background indicator - only on active with rotation animation */}
               {isActive && (
                 <motion.div
-                  layoutId="activeTabDiamond"
+                  key={item.path}
                   className="absolute inset-0 flex items-center justify-center pointer-events-none"
-                  initial={false}
+                  initial={{ opacity: 0, rotate: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, rotate: 45, scale: 1 }}
                   transition={{
-                    type: "spring",
-                    stiffness: 500,
-                    damping: 35,
+                    duration: 0.2,
+                    ease: "easeOut",
                   }}
                 >
                   <div 
-                    className={`w-11 h-11 rotate-45 rounded-lg ${
+                    className={`w-11 h-11 rounded-lg ${
                       loading && !hasLoaded 
                         ? "bg-muted" 
                         : isEmployer 

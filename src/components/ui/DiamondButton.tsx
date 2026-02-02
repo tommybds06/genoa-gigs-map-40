@@ -17,9 +17,9 @@ export const DiamondButton = forwardRef<HTMLButtonElement, DiamondButtonProps>(
     };
 
     const variantClasses = {
-      default: "bg-background border border-border hover:bg-muted shadow-md",
-      primary: "bg-primary text-primary-foreground border-0 shadow-lg",
-      muted: "bg-muted border-0 hover:bg-accent",
+      default: "bg-background border-2 border-primary hover:bg-muted shadow-md",
+      primary: "bg-primary text-primary-foreground border-2 border-primary shadow-lg",
+      muted: "bg-muted border-2 border-primary hover:bg-accent",
     };
 
     return (
