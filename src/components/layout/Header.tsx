@@ -17,9 +17,9 @@ export function Header({
   const colorClass = titleColor || (isEmployer ? "text-blue-600" : "text-primary");
 
   return (
-    <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-md px-4 pt-12 pb-3 safe-top">
+    <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-md px-4 pt-16 pb-3 safe-top">
       {/* Title */}
-      <h1 className={`text-2xl font-bold ${colorClass} mb-3`}>{title}</h1>
+      <h1 className={`text-2xl font-bold ${colorClass}`}>{title}</h1>
 
       {/* Search Bar - placeholder for future use */}
       {showSearch && (
