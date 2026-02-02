@@ -5,7 +5,6 @@ import { useUser } from "@/contexts/UserContext";
 import { useAppTheme } from "@/hooks/useAppTheme";
 import { useNavigate } from "react-router-dom";
 import { TagSelector, TagBadges } from "@/components/tags/TagSelector";
-import { DiamondButton } from "@/components/ui/DiamondButton";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { WorkerJobHistory } from "@/components/profile/WorkerJobHistory";
@@ -90,16 +89,15 @@ const Profilo = () => {
   return (
     <div className="flex flex-col min-h-screen bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-md px-4 pt-12 pb-3 safe-top">
+      <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-md px-4 pt-4 pb-3 safe-top">
         <div className="flex items-center justify-between">
           <h1 className={`text-2xl font-bold ${isEmployer ? "text-blue-600" : "text-primary"}`}>Profilo</h1>
-          <DiamondButton 
+          <button 
             onClick={() => navigate("/settings")}
-            variant="default"
-            size="sm"
+            className={`p-2 rounded-full transition-colors ${isEmployer ? "hover:bg-blue-50" : "hover:bg-accent"}`}
           >
-            <Settings className="w-4 h-4" />
-          </DiamondButton>
+            <Settings className={`w-5 h-5 ${isEmployer ? "text-blue-600" : "text-primary"}`} />
+          </button>
         </div>
       </header>
 

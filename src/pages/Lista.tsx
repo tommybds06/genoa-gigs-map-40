@@ -56,7 +56,7 @@ const Lista = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
-      {/* Header with "Lista" title in orange for workers - extra pt handled by Header */}
+      {/* Header with "Lista" title in orange for workers */}
       <Header title="Lista" titleColor="text-primary" />
 
       <main className="flex-1 px-4 pb-20 overflow-y-auto">

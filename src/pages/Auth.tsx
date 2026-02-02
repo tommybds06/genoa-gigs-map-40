@@ -8,7 +8,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { NeighborhoodSelect } from '@/components/ui/NeighborhoodSelect';
-import { AppLogo } from '@/components/ui/AppLogo';
 import { 
   GraduationCap, 
   Store, 
@@ -208,9 +207,11 @@ const Auth = () => {
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Logo & Title */}
-        <div className="text-center mb-8 animate-fade-in flex flex-col items-center">
-          <AppLogo size="lg" />
-          <p className="text-muted-foreground mt-4">
+        <div className="text-center mb-8 animate-fade-in">
+          <h1 className="text-4xl font-bold text-foreground mb-2">
+            Genoa<span className="text-secondary">Gigs</span>
+          </h1>
+          <p className="text-muted-foreground">
             {isLogin ? 'Bentornato!' : 'Unisciti alla community'}
           </p>
         </div>
@@ -380,7 +381,7 @@ const Auth = () => {
 
         {/* Footer */}
         <p className="text-center text-xs text-muted-foreground mt-6">
-          La gig economy studentesca di Genova 🏗️
+          La gig economy studentesca di Genova 🌊
         </p>
       </div>
     </div>

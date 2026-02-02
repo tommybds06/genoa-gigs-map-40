@@ -14,7 +14,6 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useAppTheme } from "@/hooks/useAppTheme";
-import { DiamondButton } from "@/components/ui/DiamondButton";
 import { Switch } from "@/components/ui/switch";
 import {
   AlertDialog,
@@ -60,22 +59,25 @@ const Settings = () => {
   };
 
   const handleSupport = () => {
-    window.location.href = "mailto:support@stakkgenova.com";
+    window.location.href = "mailto:support@genoagigs.com";
   };
 
+  // Dynamic classes based on role
+  const backButtonClasses = isEmployer 
+    ? "text-blue-600 hover:bg-blue-50" 
+    : "text-primary hover:bg-accent";
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
       {/* Header */}
       <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-md px-4 pt-4 pb-3 safe-top border-b border-border">
         <div className="flex items-center gap-3">
-          <DiamondButton 
+          <button 
             onClick={handleBack}
-            variant="default"
-            size="sm"
+            className={`p-2 rounded-full transition-colors ${backButtonClasses}`}
           >
-            <ChevronLeft className="w-4 h-4" />
-          </DiamondButton>
+            <ChevronLeft className="w-5 h-5" />
+          </button>
           <h1 className={`text-xl font-bold ${isEmployer ? "text-blue-600" : "text-primary"}`}>Impostazioni</h1>
         </div>
       </header>
@@ -197,7 +199,7 @@ const Settings = () => {
 
         {/* App Version */}
         <p className="text-center text-xs text-muted-foreground mt-8 mb-4">
-          STAKK GENOVA v1.0.0
+          GenoaGigs v1.0.0
         </p>
       </main>
 
