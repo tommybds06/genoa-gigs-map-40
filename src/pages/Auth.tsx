@@ -235,11 +235,11 @@ const Auth = () => {
   return (
     <div 
       className={cn(
-        "min-h-screen flex items-center justify-center p-4 transition-colors duration-700 ease-in-out",
+        "min-h-screen min-h-[100dvh] overflow-y-auto py-8 px-4 transition-colors duration-700 ease-in-out",
         !isLogin && selectedRole ? currentTheme.bg : 'bg-background'
       )}
     >
-      <div className="w-full max-w-md">
+      <div className="w-full max-w-md mx-auto flex flex-col justify-center min-h-full">
         {/* Logo & Title */}
         <div className="text-center mb-8 animate-fade-in">
           <h1 className="text-4xl font-bold text-foreground mb-2">
