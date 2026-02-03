@@ -235,9 +235,10 @@ const Auth = () => {
   return (
     <div 
       className={cn(
-        "min-h-screen min-h-[100dvh] overflow-y-auto py-8 px-4 transition-colors duration-700 ease-in-out",
+        "min-h-screen min-h-[100dvh] overflow-y-auto overscroll-behavior-auto py-8 px-4 transition-colors duration-700 ease-in-out",
         !isLogin && selectedRole ? currentTheme.bg : 'bg-background'
       )}
+      style={{ touchAction: 'pan-y' }}
     >
       <div className="w-full max-w-md mx-auto flex flex-col justify-center min-h-full">
         {/* Logo & Title */}
