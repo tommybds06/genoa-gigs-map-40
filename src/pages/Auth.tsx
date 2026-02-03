@@ -18,6 +18,7 @@ import {
   ArrowRight
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 
 type UserRole = 'worker' | 'employer';
 
@@ -25,13 +26,48 @@ const emailSchema = z.string().trim().email('Email non valida').max(255, 'Email 
 const passwordSchema = z.string().min(6, 'Password deve essere almeno 6 caratteri').max(72, 'Password troppo lunga');
 const nameSchema = z.string().trim().max(100, 'Nome troppo lungo').optional();
 
+// Theme configuration for each role
+const roleThemes = {
+  worker: {
+    bg: 'bg-orange-50',
+    primary: 'bg-primary',
+    primaryHover: 'hover:bg-primary/90',
+    text: 'text-primary',
+    border: 'border-primary',
+    ring: 'ring-primary',
+    cardSelected: 'bg-primary/10 ring-2 ring-primary',
+    iconBg: 'bg-primary text-primary-foreground',
+    inputFocus: 'focus:ring-primary focus:border-primary',
+  },
+  employer: {
+    bg: 'bg-blue-50',
+    primary: 'bg-blue-600',
+    primaryHover: 'hover:bg-blue-700',
+    text: 'text-blue-600',
+    border: 'border-blue-600',
+    ring: 'ring-blue-600',
+    cardSelected: 'bg-blue-600/10 ring-2 ring-blue-600',
+    iconBg: 'bg-blue-600 text-white',
+    inputFocus: 'focus:ring-blue-600 focus:border-blue-600',
+  },
+  neutral: {
+    bg: 'bg-background',
+    primary: 'bg-gradient-to-r from-primary to-secondary',
+    primaryHover: 'hover:opacity-90',
+    text: 'text-foreground',
+    border: 'border-muted',
+    ring: 'ring-muted',
+    cardSelected: '',
+    iconBg: 'bg-muted',
+    inputFocus: 'focus:ring-ring',
+  }
+};
+
 const Auth = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { user, loading: authLoading, signUp, signIn } = useAuth();
   const { refetch: refetchProfile } = useUser();
-
-  // Removed unused waitForProfile function - using direct upsert + hard reload strategy
   
   const [isLogin, setIsLogin] = useState(true);
   const [selectedRole, setSelectedRole] = useState<UserRole | null>(null);
@@ -42,10 +78,12 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string; name?: string; role?: string; neighborhood?: string }>({});
 
+  // Get current theme based on selected role
+  const currentTheme = selectedRole ? roleThemes[selectedRole] : roleThemes.neutral;
+
   useEffect(() => {
     const checkOnboarding = async () => {
       if (user && !authLoading) {
-        // Check if user has completed onboarding
         const { data: profile } = await supabase
           .from('profiles')
           .select('is_onboarded')
@@ -88,7 +126,6 @@ const Auth = () => {
         }
       }
 
-      // Neighborhood is required for employers
       if (selectedRole === 'employer' && !neighborhood) {
         newErrors.neighborhood = 'Seleziona il quartiere della tua attività';
       }
@@ -118,7 +155,6 @@ const Auth = () => {
           }
         } else {
           toast.success('Bentornato!', { duration: 2000 });
-          // Redirect will be handled by useEffect after checking onboarding status
         }
       } else {
         if (!selectedRole) {
@@ -127,7 +163,6 @@ const Auth = () => {
           return;
         }
 
-        // Step 1: Create auth user
         const { error, data } = await supabase.auth.signUp({
           email,
           password,
@@ -147,7 +182,6 @@ const Auth = () => {
             toast.error(error.message, { duration: 2000 });
           }
         } else if (data.user) {
-          // Step 2: FORCE WRITE profile with upsert (bypass trigger race condition)
           const profileData: {
             id: string;
             role: 'worker' | 'employer';
@@ -173,17 +207,12 @@ const Auth = () => {
             return;
           }
 
-          // Step 3: Show success toast
           toast.success('Benvenuto! Reindirizzamento...', { duration: 1000 });
           
-          // Step 4: HARD RELOAD - Wait a bit for toast to show, then force full page reload
-          // This bypasses ALL React state/cache issues
           setTimeout(() => {
-            // Force complete browser reload to /onboarding
             window.location.replace('/onboarding');
           }, 800);
           
-          // Keep loading spinner active - don't proceed to finally block
           return;
         }
       }
@@ -204,12 +233,20 @@ const Auth = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+    <div 
+      className={cn(
+        "min-h-screen flex items-center justify-center p-4 transition-colors duration-700 ease-in-out",
+        !isLogin && selectedRole ? currentTheme.bg : 'bg-background'
+      )}
+    >
       <div className="w-full max-w-md">
         {/* Logo & Title */}
         <div className="text-center mb-8 animate-fade-in">
           <h1 className="text-4xl font-bold text-foreground mb-2">
-            Genoa<span className="text-secondary">Gigs</span>
+            Genoa<span className={cn(
+              "transition-colors duration-500",
+              selectedRole === 'employer' ? 'text-blue-600' : 'text-secondary'
+            )}>Gigs</span>
           </h1>
           <p className="text-muted-foreground">
             {isLogin ? 'Bentornato!' : 'Unisciti alla community'}
@@ -217,7 +254,7 @@ const Auth = () => {
         </div>
 
         {/* Main Card */}
-        <div className="material-card-elevated p-8 rounded-3xl animate-scale-in">
+        <div className="bg-card material-card-elevated p-8 rounded-3xl animate-scale-in transition-shadow duration-500">
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Role Selection (only for signup) */}
             {!isLogin && (
@@ -229,21 +266,25 @@ const Auth = () => {
                   <button
                     type="button"
                     onClick={() => setSelectedRole('worker')}
-                    className={`relative p-4 rounded-2xl transition-all duration-300 text-left ${
+                    className={cn(
+                      "relative p-4 rounded-2xl transition-all duration-500 text-left touch-feedback",
                       selectedRole === 'worker'
-                        ? 'bg-primary/20 ring-2 ring-secondary shadow-md'
-                        : 'bg-muted hover:bg-muted/80'
-                    }`}
+                        ? 'bg-primary/10 ring-2 ring-primary shadow-md'
+                        : selectedRole === 'employer'
+                          ? 'bg-muted opacity-60 hover:opacity-80'
+                          : 'bg-muted hover:bg-muted/80'
+                    )}
                   >
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-3 ${
-                      selectedRole === 'worker' ? 'bg-secondary text-white' : 'bg-background'
-                    }`}>
+                    <div className={cn(
+                      "w-12 h-12 rounded-xl flex items-center justify-center mb-3 transition-colors duration-500",
+                      selectedRole === 'worker' ? 'bg-primary text-primary-foreground' : 'bg-background'
+                    )}>
                       <GraduationCap className="w-6 h-6" />
                     </div>
                     <h3 className="font-semibold text-sm text-foreground">Cerco Impiego</h3>
                     <p className="text-xs text-muted-foreground mt-1">Sono uno Studente</p>
                     {selectedRole === 'worker' && (
-                      <div className="absolute top-2 right-2 w-3 h-3 bg-secondary rounded-full" />
+                      <div className="absolute top-2 right-2 w-3 h-3 bg-primary rounded-full animate-scale-in" />
                     )}
                   </button>
 
@@ -251,21 +292,25 @@ const Auth = () => {
                   <button
                     type="button"
                     onClick={() => setSelectedRole('employer')}
-                    className={`relative p-4 rounded-2xl transition-all duration-300 text-left ${
+                    className={cn(
+                      "relative p-4 rounded-2xl transition-all duration-500 text-left touch-feedback",
                       selectedRole === 'employer'
-                        ? 'bg-blue-600/20 ring-2 ring-blue-600 shadow-md'
-                        : 'bg-muted hover:bg-muted/80'
-                    }`}
+                        ? 'bg-blue-600/10 ring-2 ring-blue-600 shadow-md'
+                        : selectedRole === 'worker'
+                          ? 'bg-muted opacity-60 hover:opacity-80'
+                          : 'bg-muted hover:bg-muted/80'
+                    )}
                   >
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-3 ${
+                    <div className={cn(
+                      "w-12 h-12 rounded-xl flex items-center justify-center mb-3 transition-colors duration-500",
                       selectedRole === 'employer' ? 'bg-blue-600 text-white' : 'bg-background'
-                    }`}>
+                    )}>
                       <Store className="w-6 h-6" />
                     </div>
                     <h3 className="font-semibold text-sm text-foreground">Offro Impiego</h3>
                     <p className="text-xs text-muted-foreground mt-1">Privato o Attività</p>
                     {selectedRole === 'employer' && (
-                      <div className="absolute top-2 right-2 w-3 h-3 bg-blue-600 rounded-full" />
+                      <div className="absolute top-2 right-2 w-3 h-3 bg-blue-600 rounded-full animate-scale-in" />
                     )}
                   </button>
                 </div>
@@ -285,7 +330,12 @@ const Auth = () => {
                     placeholder={selectedRole === 'employer' ? 'Trattoria Da Luigi' : 'Mario Rossi'}
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    className="material-input pl-12 h-12 rounded-xl bg-muted border-none focus:ring-2 focus:ring-primary"
+                    className={cn(
+                      "pl-12 h-12 rounded-xl bg-muted border-none transition-all duration-500",
+                      selectedRole === 'worker' && "focus:ring-2 focus:ring-primary",
+                      selectedRole === 'employer' && "focus:ring-2 focus:ring-blue-600",
+                      !selectedRole && "focus:ring-2 focus:ring-ring"
+                    )}
                   />
                 </div>
                 {errors.name && <p className="text-xs text-destructive">{errors.name}</p>}
@@ -294,7 +344,7 @@ const Auth = () => {
 
             {/* Neighborhood (only for employer signup) */}
             {!isLogin && selectedRole === 'employer' && (
-              <div className="space-y-2">
+              <div className="space-y-2 animate-fade-in">
                 <label className="text-sm font-medium text-foreground">
                   In che zona si trova la tua attività? <span className="text-destructive">*</span>
                 </label>
@@ -319,7 +369,12 @@ const Auth = () => {
                   placeholder="mario.rossi@email.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="material-input pl-12 h-12 rounded-xl bg-muted border-none focus:ring-2 focus:ring-primary"
+                  className={cn(
+                    "pl-12 h-12 rounded-xl bg-muted border-none transition-all duration-500",
+                    !isLogin && selectedRole === 'worker' && "focus:ring-2 focus:ring-primary",
+                    !isLogin && selectedRole === 'employer' && "focus:ring-2 focus:ring-blue-600",
+                    (isLogin || !selectedRole) && "focus:ring-2 focus:ring-ring"
+                  )}
                 />
               </div>
               {errors.email && <p className="text-xs text-destructive">{errors.email}</p>}
@@ -335,7 +390,12 @@ const Auth = () => {
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="material-input pl-12 h-12 rounded-xl bg-muted border-none focus:ring-2 focus:ring-primary"
+                  className={cn(
+                    "pl-12 h-12 rounded-xl bg-muted border-none transition-all duration-500",
+                    !isLogin && selectedRole === 'worker' && "focus:ring-2 focus:ring-primary",
+                    !isLogin && selectedRole === 'employer' && "focus:ring-2 focus:ring-blue-600",
+                    (isLogin || !selectedRole) && "focus:ring-2 focus:ring-ring"
+                  )}
                 />
               </div>
               {errors.password && <p className="text-xs text-destructive">{errors.password}</p>}
@@ -345,7 +405,12 @@ const Auth = () => {
             <Button
               type="submit"
               disabled={loading}
-              className="w-full h-14 rounded-xl bg-gradient-to-r from-primary to-secondary text-foreground font-semibold text-lg shadow-md hover:shadow-lg transition-all duration-300"
+              className={cn(
+                "w-full h-14 rounded-xl font-semibold text-lg shadow-md hover:shadow-lg transition-all duration-500 touch-feedback",
+                !isLogin && selectedRole === 'worker' && "bg-primary hover:bg-primary/90 text-primary-foreground",
+                !isLogin && selectedRole === 'employer' && "bg-blue-600 hover:bg-blue-700 text-white",
+                (isLogin || !selectedRole) && "bg-gradient-to-r from-primary to-secondary text-foreground"
+              )}
             >
               {loading ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
@@ -373,7 +438,10 @@ const Auth = () => {
               {isLogin ? (
                 <>Non hai un account? <span className="text-secondary font-medium">Registrati</span></>
               ) : (
-                <>Hai già un account? <span className="text-secondary font-medium">Accedi</span></>
+                <>Hai già un account? <span className={cn(
+                  "font-medium transition-colors duration-500",
+                  selectedRole === 'employer' ? 'text-blue-600' : 'text-secondary'
+                )}>Accedi</span></>
               )}
             </button>
           </div>
