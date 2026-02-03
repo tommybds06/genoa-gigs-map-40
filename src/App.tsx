@@ -8,6 +8,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { UserProvider } from "@/contexts/UserContext";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import { ReviewPrompt } from "@/components/reviews/ReviewPrompt";
+import { MainLayout } from "@/components/layout/MainLayout";
 import { PageTransition } from "@/components/layout/PageTransition";
 import Index from "./pages/Index";
 import Lista from "./pages/Lista";
@@ -24,79 +25,88 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-// Wrapper component that provides location for AnimatePresence
+// Tab routes that show the persistent bottom nav
+const TAB_ROUTES = ['/', '/lista', '/annunci', '/messaggi', '/profilo'];
+
 function AnimatedRoutes() {
   const location = useLocation();
-  
-  // Determine if this is a tab route (fade) or detail route (slide)
-  const tabRoutes = ['/', '/lista', '/annunci', '/messaggi', '/profilo'];
-  const isTabRoute = tabRoutes.includes(location.pathname);
+  const isTabRoute = TAB_ROUTES.includes(location.pathname);
+  const isDetailRoute = !isTabRoute && !['/auth', '/onboarding'].includes(location.pathname);
   
   return (
-    <AnimatePresence mode="wait" initial={false}>
-      <Routes location={location} key={location.pathname}>
-        <Route path="/auth" element={
-          <PageTransition variant="fade">
-            <Auth />
-          </PageTransition>
-        } />
-        <Route path="/onboarding" element={
-          <PageTransition variant="fade">
-            <ProtectedRoute><Onboarding /></ProtectedRoute>
-          </PageTransition>
-        } />
-        <Route path="/" element={
-          <PageTransition variant="fade">
-            <ProtectedRoute><Index /></ProtectedRoute>
-          </PageTransition>
-        } />
-        <Route path="/lista" element={
-          <PageTransition variant="fade">
-            <ProtectedRoute><Lista /></ProtectedRoute>
-          </PageTransition>
-        } />
-        <Route path="/annunci" element={
-          <PageTransition variant="fade">
-            <ProtectedRoute><Annunci /></ProtectedRoute>
-          </PageTransition>
-        } />
-        <Route path="/create-job" element={
-          <PageTransition variant="slide">
-            <ProtectedRoute><CreateJob /></ProtectedRoute>
-          </PageTransition>
-        } />
-        <Route path="/messaggi" element={
-          <PageTransition variant="fade">
-            <ProtectedRoute><Messaggi /></ProtectedRoute>
-          </PageTransition>
-        } />
-        <Route path="/profilo" element={
-          <PageTransition variant="fade">
-            <ProtectedRoute><Profilo /></ProtectedRoute>
-          </PageTransition>
-        } />
-        <Route path="/settings" element={
-          <PageTransition variant="slide">
-            <ProtectedRoute><Settings /></ProtectedRoute>
-          </PageTransition>
-        } />
-        <Route path="/settings/edit-profile" element={
-          <PageTransition variant="slide">
-            <ProtectedRoute><EditProfile /></ProtectedRoute>
-          </PageTransition>
-        } />
-        <Route path="/profile/:userId" element={
-          <PageTransition variant="slide">
-            <ProtectedRoute><PublicProfile /></ProtectedRoute>
-          </PageTransition>
-        } />
-        <Route path="*" element={
-          <PageTransition variant="fade">
-            <NotFound />
-          </PageTransition>
-        } />
-      </Routes>
-    </AnimatePresence>
+    <MainLayout hideBottomNav={!isTabRoute}>
+      <AnimatePresence mode="wait" initial={false}>
+        <Routes location={location} key={location.pathname}>
+          {/* Auth routes - no layout */}
+          <Route path="/auth" element={
+            <PageTransition variant="fade">
+              <Auth />
+            </PageTransition>
+          } />
+          <Route path="/onboarding" element={
+            <PageTransition variant="fade">
+              <ProtectedRoute><Onboarding /></ProtectedRoute>
+            </PageTransition>
+          } />
+          
+          {/* Tab routes - fade transition */}
+          <Route path="/" element={
+            <PageTransition variant="fade">
+              <ProtectedRoute><Index /></ProtectedRoute>
+            </PageTransition>
+          } />
+          <Route path="/lista" element={
+            <PageTransition variant="fade">
+              <ProtectedRoute><Lista /></ProtectedRoute>
+            </PageTransition>
+          } />
+          <Route path="/annunci" element={
+            <PageTransition variant="fade">
+              <ProtectedRoute><Annunci /></ProtectedRoute>
+            </PageTransition>
+          } />
+          <Route path="/messaggi" element={
+            <PageTransition variant="fade">
+              <ProtectedRoute><Messaggi /></ProtectedRoute>
+            </PageTransition>
+          } />
+          <Route path="/profilo" element={
+            <PageTransition variant="fade">
+              <ProtectedRoute><Profilo /></ProtectedRoute>
+            </PageTransition>
+          } />
+          
+          {/* Detail routes - slide transition */}
+          <Route path="/create-job" element={
+            <PageTransition variant="slide">
+              <ProtectedRoute><CreateJob /></ProtectedRoute>
+            </PageTransition>
+          } />
+          <Route path="/settings" element={
+            <PageTransition variant="slide">
+              <ProtectedRoute><Settings /></ProtectedRoute>
+            </PageTransition>
+          } />
+          <Route path="/settings/edit-profile" element={
+            <PageTransition variant="slide">
+              <ProtectedRoute><EditProfile /></ProtectedRoute>
+            </PageTransition>
+          } />
+          <Route path="/profile/:userId" element={
+            <PageTransition variant="slide">
+              <ProtectedRoute><PublicProfile /></ProtectedRoute>
+            </PageTransition>
+          } />
+          
+          {/* 404 */}
+          <Route path="*" element={
+            <PageTransition variant="fade">
+              <NotFound />
+            </PageTransition>
+          } />
+        </Routes>
+      </AnimatePresence>
+    </MainLayout>
   );
 }
 

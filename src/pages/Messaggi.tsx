@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from 'react';
-import { BottomNav } from "@/components/layout/BottomNav";
 import { MessageCircle, ArrowLeft, Send, Loader2, ImagePlus, X, CheckCircle, Check } from "lucide-react";
 import { useAppTheme } from "@/hooks/useAppTheme";
 import { useAuth } from "@/hooks/useAuth";
@@ -701,13 +700,13 @@ const Messaggi = () => {
 
   // Chats list view
   return (
-    <div className="flex flex-col min-h-screen bg-background">
+    <div className="flex flex-col h-full bg-background">
       {/* Simple Header with safe area */}
       <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-md px-4 pt-8 pb-3">
         <h1 className={`text-2xl font-bold ${isEmployer ? "text-blue-600" : "text-primary"}`}>Messaggi</h1>
       </header>
 
-      <main className="flex-1 px-4 pb-20 overflow-y-auto">
+      <main className="flex-1 px-4 pb-4 overflow-y-auto">
         {loading ? (
           <ChatListSkeleton count={5} />
         ) : chats.length === 0 ? (
@@ -732,7 +731,7 @@ const Messaggi = () => {
                 <div
                   key={chat.id}
                   onClick={() => setSelectedChat(chat)}
-                  className={`material-card p-4 flex items-center gap-3 cursor-pointer hover:shadow-md transition-shadow ${
+                  className={`material-card p-4 flex items-center gap-3 cursor-pointer touch-feedback ${
                     isCompleted ? 'bg-muted/50 opacity-80' : ''
                   }`}
                 >
@@ -770,7 +769,6 @@ const Messaggi = () => {
                       {chat.job?.title}
                     </p>
                   </div>
-                  {/* Unread badge with dynamic color */}
                   {chat.unread_count && chat.unread_count > 0 && (
                     <div className={`shrink-0 w-6 h-6 rounded-full flex items-center justify-center ${isEmployer ? 'bg-blue-600' : 'bg-primary'}`}>
                       <span className="text-xs text-white font-bold">
@@ -784,8 +782,6 @@ const Messaggi = () => {
           </div>
         )}
       </main>
-
-      <BottomNav />
     </div>
   );
 };

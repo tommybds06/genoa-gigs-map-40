@@ -1,5 +1,4 @@
 import { Header } from "@/components/layout/Header";
-import { BottomNav } from "@/components/layout/BottomNav";
 import { MapPin, Clock, Euro, SearchX, Tag, Briefcase } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
@@ -34,15 +33,9 @@ const Lista = () => {
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
 
   const userTags = profile?.tags || [];
-
-  // Use React Query for caching - conditionally based on role
   const employerJobsQuery = useEmployerJobs(isEmployer ? user?.id : undefined);
   const workerJobsQuery = useOpenJobs(!isEmployer && userTags.length > 0 ? userTags : undefined);
-
-  // Select the right query based on role
   const { data: jobs = [], isLoading } = isEmployer ? employerJobsQuery : workerJobsQuery;
-
-  // Show loading while profile is loading
   const loading = profileLoading || isLoading;
 
   const handleJobClick = (job: Job) => {
@@ -50,17 +43,11 @@ const Lista = () => {
     setIsDetailsOpen(true);
   };
 
-  const handleCloseDetails = () => {
-    setIsDetailsOpen(false);
-  };
-
   return (
-    <div className="flex flex-col min-h-screen bg-background">
-      {/* Header with "Lista" title in orange for workers */}
+    <div className="flex flex-col h-full bg-background">
       <Header title="Lista" titleColor="text-primary" />
 
-      <main className="flex-1 px-4 pb-20 overflow-y-auto">
-        {/* Subtitle in black */}
+      <main className="flex-1 px-4 pb-4 overflow-y-auto">
         <h2 className="text-lg font-semibold mb-3 text-foreground">
           Impieghi per Te
         </h2>
@@ -72,7 +59,6 @@ const Lista = () => {
         ) : (
           <div className="space-y-3">
             {jobs.map((job, index) => {
-              // Get dynamic icon based on role tags
               const roleTag = job.tags?.find(t => isRoleTag(t));
               const Icon = getJobIconFromTags(job.tags);
               const roleLabel = roleTag || "Generale";
@@ -80,7 +66,7 @@ const Lista = () => {
               return (
                 <div 
                   key={job.id} 
-                  className="material-card p-4 animate-fade-in cursor-pointer hover:shadow-md transition-shadow"
+                  className="material-card p-4 animate-fade-in cursor-pointer touch-feedback"
                   style={{ animationDelay: `${index * 0.05}s` }}
                   onClick={() => handleJobClick(job)}
                 >
@@ -129,9 +115,6 @@ const Lista = () => {
         )}
       </main>
 
-      <BottomNav />
-
-      {/* Job Details Sheet */}
       <JobDetailsSheet
         job={selectedJob ? {
           ...selectedJob,
@@ -142,7 +125,7 @@ const Lista = () => {
           profiles: selectedJob.profiles || undefined,
         } : null}
         isOpen={isDetailsOpen}
-        onClose={handleCloseDetails}
+        onClose={() => setIsDetailsOpen(false)}
       />
     </div>
   );
@@ -183,7 +166,7 @@ function EmptyState({ isEmployer, hasTags }: { isEmployer: boolean; hasTags: boo
       </p>
       <Link 
         to="/profilo" 
-        className="px-4 py-2 bg-primary text-primary-foreground rounded-full text-sm font-medium hover:bg-primary/90 transition-colors"
+        className="px-4 py-2 bg-primary text-primary-foreground rounded-full text-sm font-medium touch-feedback"
       >
         {hasTags ? "Modifica Tag" : "Vai al Profilo"}
       </Link>
