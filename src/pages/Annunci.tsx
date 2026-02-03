@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Header } from '@/components/layout/Header';
-import { BottomNav } from '@/components/layout/BottomNav';
 import { useAuth } from '@/hooks/useAuth';
 import { useAppTheme } from '@/hooks/useAppTheme';
 import { supabase } from '@/integrations/supabase/client';
@@ -304,17 +303,17 @@ const Annunci = () => {
 
   if (selectedJob) {
     return (
-      <div className="flex flex-col min-h-screen bg-background">
+      <div className="flex flex-col h-full bg-background">
         <Header />
         
-        <main className="flex-1 px-4 pb-20 overflow-y-auto">
+        <main className="flex-1 px-4 pb-4 overflow-y-auto">
           {/* Back button and job title */}
           <div className="flex items-center gap-3 mb-4">
             <Button
               variant="ghost"
               size="icon"
               onClick={handleBack}
-              className="rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100"
+              className="rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 touch-feedback"
             >
               <ArrowLeft className="h-5 w-5" />
             </Button>
@@ -339,14 +338,11 @@ const Annunci = () => {
           ) : (
             <div className="space-y-3">
               {applications.map((app) => (
-                <div
-                  key={app.id}
-                  className="material-card p-4"
-                >
-                <div 
-                  className="flex items-center gap-4 cursor-pointer"
-                  onClick={() => navigate(`/profile/${app.applicant.id}`)}
-                >
+                <div key={app.id} className="material-card p-4">
+                  <div 
+                    className="flex items-center gap-4 cursor-pointer touch-feedback"
+                    onClick={() => navigate(`/profile/${app.applicant.id}`)}
+                  >
                     <Avatar className="h-14 w-14 border-2 border-blue-600/20">
                       <AvatarImage src={app.applicant.avatar_url || undefined} />
                       <AvatarFallback className={`${theme.accentBg} ${theme.primaryText} font-semibold`}>
@@ -377,7 +373,7 @@ const Annunci = () => {
                           onClick={() => handleReject(app)}
                           disabled={processingAppId === app.id}
                           variant="outline"
-                          className="flex-1 border-red-300 text-red-600 hover:bg-red-50"
+                          className="flex-1 border-red-300 text-red-600 hover:bg-red-50 touch-feedback"
                         >
                           {processingAppId === app.id ? (
                             <Loader2 className="h-4 w-4 animate-spin" />
@@ -391,7 +387,7 @@ const Annunci = () => {
                         <Button
                           onClick={() => handleAccept(app)}
                           disabled={processingAppId === app.id}
-                          className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                          className="flex-1 bg-green-600 hover:bg-green-700 text-white touch-feedback"
                         >
                           {processingAppId === app.id ? (
                             <Loader2 className="h-4 w-4 animate-spin" />
@@ -414,24 +410,21 @@ const Annunci = () => {
             </div>
           )}
         </main>
-
-        <BottomNav />
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
+    <div className="flex flex-col h-full bg-background">
       {/* Header with "Annunci" title in blue for employers */}
       <Header title="Annunci" titleColor="text-blue-600" />
 
-      <main className="flex-1 px-4 pb-20 overflow-y-auto">
+      <main className="flex-1 px-4 pb-4 overflow-y-auto">
         <div className="flex items-center justify-between mb-3">
-          {/* Subtitle in black */}
           <h2 className="text-lg font-semibold text-foreground">I Tuoi Annunci Pubblicati</h2>
           <Button
             onClick={() => navigate('/create-job')}
-            className="bg-blue-600 hover:bg-blue-700 text-white rounded-full px-4"
+            className="bg-blue-600 hover:bg-blue-700 text-white rounded-full px-4 touch-feedback"
             size="sm"
           >
             <Plus className="h-4 w-4 mr-1" />
@@ -467,10 +460,9 @@ const Annunci = () => {
               <div
                 key={job.id}
                 onClick={() => handleJobClick(job)}
-                className="material-card p-4 cursor-pointer hover:shadow-md transition-shadow"
+                className="material-card p-4 cursor-pointer touch-feedback"
               >
                 <div className="flex items-start justify-between gap-3">
-                  {/* Left: Title + Candidature */}
                   <div className="flex-1 min-w-0">
                     <h3 className="font-bold text-base truncate">{job.title}</h3>
                     <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1">
@@ -479,13 +471,12 @@ const Annunci = () => {
                     </p>
                   </div>
 
-                  {/* Right: Edit/Delete + Chevron */}
                   <div className="flex items-center gap-1 shrink-0">
                     <Button
                       variant="ghost"
                       size="icon"
                       onClick={(e) => handleEditClick(e, job)}
-                      className="h-8 w-8 rounded-full hover:bg-blue-100"
+                      className="h-8 w-8 rounded-full hover:bg-blue-100 touch-feedback"
                     >
                       <Pencil className="h-4 w-4 text-blue-600" />
                     </Button>
@@ -493,7 +484,7 @@ const Annunci = () => {
                       variant="ghost"
                       size="icon"
                       onClick={(e) => handleDeleteClick(e, job)}
-                      className="h-8 w-8 rounded-full hover:bg-red-100"
+                      className="h-8 w-8 rounded-full hover:bg-red-100 touch-feedback"
                     >
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
@@ -505,8 +496,6 @@ const Annunci = () => {
           </div>
         )}
       </main>
-
-      <BottomNav />
 
       {/* Edit Dialog */}
       <EditJobDialog

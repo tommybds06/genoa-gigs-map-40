@@ -6,22 +6,23 @@ interface PageTransitionProps {
   variant?: "fade" | "slide";
 }
 
-// Fade variant for tab navigation (Mappa <-> Lista <-> Profilo)
+// Ultra-fast fade for tab navigation - imperceptible but smooth
 const fadeVariants = {
   initial: { opacity: 0 },
   animate: { opacity: 1 },
   exit: { opacity: 0 },
 };
 
-// Slide variant for detail navigation (List -> Detail)
+// Slide from right for detail pages
 const slideVariants = {
-  initial: { x: "100%", opacity: 0 },
+  initial: { x: "100%", opacity: 1 },
   animate: { x: 0, opacity: 1 },
-  exit: { x: "100%", opacity: 0 },
+  exit: { x: "100%", opacity: 1 },
 };
 
 export function PageTransition({ children, variant = "fade" }: PageTransitionProps) {
-  const variants = variant === "slide" ? slideVariants : fadeVariants;
+  const isSlide = variant === "slide";
+  const variants = isSlide ? slideVariants : fadeVariants;
   
   return (
     <motion.div
@@ -30,17 +31,10 @@ export function PageTransition({ children, variant = "fade" }: PageTransitionPro
       exit="exit"
       variants={variants}
       transition={{ 
-        duration: variant === "fade" ? 0.1 : 0.2,
-        ease: [0.25, 0.1, 0.25, 1]
+        duration: isSlide ? 0.25 : 0.1,
+        ease: isSlide ? [0.32, 0.72, 0, 1] : "easeOut", // iOS-like spring for slide
       }}
-      style={{ 
-        position: variant === "slide" ? "absolute" : "relative",
-        top: 0,
-        left: 0,
-        width: "100%",
-        minHeight: "100%",
-        backgroundColor: "hsl(var(--background))"
-      }}
+      className={isSlide ? "absolute inset-0 z-50 bg-background" : "relative w-full min-h-full"}
     >
       {children}
     </motion.div>

@@ -42,7 +42,7 @@ export function BottomNav() {
             <Link
               key={item.path}
               to={item.path}
-              className={`flex flex-col items-center justify-center gap-0.5 px-6 py-2 rounded-2xl transition-all duration-100 active:scale-95 ${
+              className={`flex flex-col items-center justify-center gap-0.5 px-6 py-2 rounded-2xl transition-all duration-100 touch-feedback ${
                 isActive 
                   ? getActiveClasses() 
                   : "text-muted-foreground hover:bg-muted"
