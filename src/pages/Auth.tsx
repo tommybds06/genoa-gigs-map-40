@@ -235,12 +235,16 @@ const Auth = () => {
   return (
     <div 
       className={cn(
-        "min-h-screen min-h-[100dvh] overflow-y-auto overscroll-behavior-auto py-8 px-4 transition-colors duration-700 ease-in-out",
+        "fixed inset-0 overflow-y-auto py-8 px-4 transition-colors duration-700 ease-in-out",
         !isLogin && selectedRole ? currentTheme.bg : 'bg-background'
       )}
-      style={{ touchAction: 'pan-y' }}
+      style={{ 
+        touchAction: 'pan-y',
+        WebkitOverflowScrolling: 'touch',
+        overscrollBehavior: 'auto'
+      }}
     >
-      <div className="w-full max-w-md mx-auto flex flex-col justify-center min-h-full">
+      <div className="w-full max-w-md mx-auto pb-8">
         {/* Logo & Title */}
         <div className="text-center mb-8 animate-fade-in">
           <h1 className="text-4xl font-bold text-foreground mb-2">
