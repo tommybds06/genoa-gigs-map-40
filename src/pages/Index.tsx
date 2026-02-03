@@ -62,7 +62,7 @@ const Index = () => {
   }
 
   return (
-    <div className="flex flex-col h-full bg-background overflow-hidden">
+    <div className="flex flex-col h-full overflow-hidden">
       <Header 
         title="Mappa" 
         titleColor={isEmployer ? "text-blue-600" : "text-primary"}
@@ -81,8 +81,8 @@ const Index = () => {
         </div>
       )}
 
-      <main className="flex-1 px-4 pb-4 overflow-hidden min-h-0">
-        <div className="map-container w-full h-full rounded-3xl overflow-hidden">
+      <main className="flex-1 px-4 pb-4 min-h-0">
+        <div className="w-full h-full rounded-3xl overflow-hidden shadow-material-lg">
           <InteractiveMap 
             jobs={filteredJobs}
             allJobs={allJobs}
