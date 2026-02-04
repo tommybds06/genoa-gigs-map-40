@@ -430,8 +430,9 @@ const Messaggi = () => {
   if (selectedChat) {
     return (
       // Fullscreen chat container - covers entire viewport including navbar
+      // z-[60] to be ABOVE the BottomNav which is z-50
       <div 
-        className="fixed inset-0 flex flex-col bg-background z-50"
+        className="fixed inset-0 flex flex-col bg-background z-[60]"
         style={{ height: '100dvh' }}
       >
         {/* Chat header - shrink-0 so it doesn't compress */}
