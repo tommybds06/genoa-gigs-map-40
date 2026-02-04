@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { motion, useMotionValue, useTransform, PanInfo } from "framer-motion";
+import { motion, useMotionValue, useTransform, useAnimation, PanInfo } from "framer-motion";
 import { CheckCheck, Reply } from "lucide-react";
 
 interface Message {
@@ -22,6 +22,8 @@ interface MessageBubbleProps {
   formatTime: (dateString: string) => string;
 }
 
+const SWIPE_THRESHOLD = 50; // px needed to trigger reply
+
 export const MessageBubble = ({ 
   message, 
   isOwn, 
@@ -31,8 +33,11 @@ export const MessageBubble = ({
 }: MessageBubbleProps) => {
   const [showReplyIcon, setShowReplyIcon] = useState(false);
   const x = useMotionValue(0);
-  const replyIconOpacity = useTransform(x, [0, 50, 80], [0, 0.5, 1]);
-  const replyIconScale = useTransform(x, [0, 50, 80], [0.5, 0.8, 1]);
+  const controls = useAnimation();
+  
+  // Reply icon transforms based on swipe distance
+  const replyIconOpacity = useTransform(x, [0, 30, SWIPE_THRESHOLD], [0, 0.5, 1]);
+  const replyIconScale = useTransform(x, [0, 30, SWIPE_THRESHOLD], [0.5, 0.8, 1]);
 
   // Dynamic colors based on role
   const getBubbleColors = () => {
@@ -71,10 +76,26 @@ export const MessageBubble = ({
     return "bg-muted/80 border-muted-foreground/50 text-muted-foreground";
   };
 
-  const handleDragEnd = (_: any, info: PanInfo) => {
-    if (info.offset.x > 80) {
+  const handleDragEnd = async (_: any, info: PanInfo) => {
+    // Check if swipe exceeded threshold
+    if (info.offset.x > SWIPE_THRESHOLD) {
+      // Trigger haptic feedback if available
+      if (navigator.vibrate) {
+        navigator.vibrate(10);
+      }
       onReply(message);
     }
+    
+    // ALWAYS spring back to origin - this is the key fix
+    await controls.start({
+      x: 0,
+      transition: {
+        type: "spring",
+        stiffness: 400,
+        damping: 25,
+      }
+    });
+    
     setShowReplyIcon(false);
   };
 
@@ -84,24 +105,28 @@ export const MessageBubble = ({
 
   return (
     <div className={`flex ${isOwn ? "justify-end" : "justify-start"} group relative`}>
-      {/* Reply icon that appears during swipe */}
-      <motion.div
-        className={`absolute left-0 top-1/2 -translate-y-1/2 p-2 rounded-full bg-muted ${isOwn ? "hidden" : ""}`}
-        style={{ 
-          opacity: replyIconOpacity, 
-          scale: replyIconScale,
-        }}
-      >
-        <Reply className="w-4 h-4 text-muted-foreground" />
-      </motion.div>
+      {/* Reply icon that appears during swipe - only for received messages */}
+      {!isOwn && (
+        <motion.div
+          className="absolute left-0 top-1/2 -translate-y-1/2 p-2 rounded-full bg-muted"
+          style={{ 
+            opacity: replyIconOpacity, 
+            scale: replyIconScale,
+          }}
+        >
+          <Reply className="w-4 h-4 text-muted-foreground" />
+        </motion.div>
+      )}
 
       <motion.div
         className="flex flex-col max-w-[75%]"
         drag={!isOwn ? "x" : false}
-        dragConstraints={{ left: 0, right: 100 }}
-        dragElastic={0.1}
+        // Key fix: constraints at 0 create elastic resistance
+        dragConstraints={{ left: 0, right: 0 }}
+        dragElastic={0.5}
         onDrag={handleDrag}
         onDragEnd={handleDragEnd}
+        animate={controls}
         style={{ x }}
       >
         {/* Reply preview */}
@@ -129,7 +154,7 @@ export const MessageBubble = ({
           )}
           
           {message.content && message.content !== "📷 Foto" && (
-            <p className="text-sm message-content">{message.content}</p>
+            <p className="text-sm message-content select-text">{message.content}</p>
           )}
           
           {/* Timestamp and read receipts */}

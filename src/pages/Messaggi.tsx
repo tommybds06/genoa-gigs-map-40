@@ -429,7 +429,7 @@ const Messaggi = () => {
   // Chat detail view
   if (selectedChat) {
     return (
-      <div className="flex flex-col h-screen bg-background">
+      <div className="fixed inset-0 flex flex-col bg-background z-50">
         {/* Chat header with safe area padding */}
         <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-md px-4 pt-8 pb-3 border-b">
           <div className="flex items-center gap-2">
@@ -565,8 +565,14 @@ const Messaggi = () => {
           </div>
         </header>
 
-        {/* Messages area with calculated height */}
-        <main className="flex-1 overflow-y-auto px-4 py-4" style={{ height: 'calc(100vh - 160px)' }}>
+        {/* Messages area - flex-1 takes remaining space, proper bottom padding */}
+        <main 
+          className="flex-1 overflow-y-auto px-4 py-4 pb-24"
+          style={{ 
+            WebkitOverflowScrolling: 'touch',
+            overscrollBehavior: 'contain'
+          }}
+        >
           {messages.length === 0 ? (
             <div className="flex items-center justify-center h-full">
               <p className="text-muted-foreground text-sm">
@@ -585,7 +591,7 @@ const Messaggi = () => {
                   formatTime={formatMessageTime}
                 />
               ))}
-              <div ref={messagesEndRef} />
+              <div ref={messagesEndRef} className="h-4" />
             </div>
           )}
         </main>
@@ -624,8 +630,11 @@ const Messaggi = () => {
           </div>
         )}
 
-        {/* Message input with safe area padding */}
-        <div className="sticky bottom-0 bg-background border-t px-4 py-3 pb-8">
+        {/* Message input - fixed at bottom with safe area */}
+        <div 
+          className="shrink-0 bg-background border-t px-4 py-3 safe-bottom"
+          style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 12px)' }}
+        >
           <div className="flex items-center gap-2">
             {/* Image upload button */}
             <input
