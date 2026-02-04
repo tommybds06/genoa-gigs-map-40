@@ -429,9 +429,13 @@ const Messaggi = () => {
   // Chat detail view
   if (selectedChat) {
     return (
-      <div className="fixed inset-0 flex flex-col bg-background z-50">
-        {/* Chat header with safe area padding */}
-        <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-md px-4 pt-8 pb-3 border-b">
+      // Fullscreen chat container - covers entire viewport including navbar
+      <div 
+        className="fixed inset-0 flex flex-col bg-background z-50"
+        style={{ height: '100dvh' }}
+      >
+        {/* Chat header - shrink-0 so it doesn't compress */}
+        <header className="shrink-0 z-40 bg-background/95 backdrop-blur-md px-4 pt-8 pb-3 border-b safe-top">
           <div className="flex items-center gap-2">
             <Button
               variant="ghost"
@@ -565,12 +569,11 @@ const Messaggi = () => {
           </div>
         </header>
 
-        {/* Messages area - flex-1 takes remaining space, proper bottom padding */}
+        {/* Messages area - flex-1 takes ALL remaining space between header and input */}
         <main 
-          className="flex-1 overflow-y-auto px-4 py-4 pb-24"
+          className="flex-1 overflow-y-auto overscroll-contain px-4 pt-4"
           style={{ 
-            WebkitOverflowScrolling: 'touch',
-            overscrollBehavior: 'contain'
+            WebkitOverflowScrolling: 'touch'
           }}
         >
           {messages.length === 0 ? (
@@ -580,7 +583,7 @@ const Messaggi = () => {
               </p>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-3 pb-4">
               {messages.map((msg) => (
                 <MessageBubble
                   key={msg.id}
@@ -591,7 +594,8 @@ const Messaggi = () => {
                   formatTime={formatMessageTime}
                 />
               ))}
-              <div ref={messagesEndRef} className="h-4" />
+              {/* Scroll anchor */}
+              <div ref={messagesEndRef} />
             </div>
           )}
         </main>
@@ -630,10 +634,10 @@ const Messaggi = () => {
           </div>
         )}
 
-        {/* Message input - fixed at bottom with safe area */}
+        {/* Message input - shrink-0 stays at bottom, never compressed */}
         <div 
-          className="shrink-0 bg-background border-t px-4 py-3 safe-bottom"
-          style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 12px)' }}
+          className="shrink-0 bg-background border-t px-4 pt-3"
+          style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 16px)' }}
         >
           <div className="flex items-center gap-2">
             {/* Image upload button */}
@@ -670,7 +674,7 @@ const Messaggi = () => {
               onClick={handleSendMessage}
               disabled={(!newMessage.trim() && !pendingAttachment) || sending}
               size="icon"
-              className={`rounded-full ${isEmployer ? 'bg-blue-600 hover:bg-blue-700' : 'bg-primary hover:bg-primary/90'}`}
+              className={`shrink-0 rounded-full ${isEmployer ? 'bg-blue-600 hover:bg-blue-700' : 'bg-primary hover:bg-primary/90'}`}
             >
               {sending ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
