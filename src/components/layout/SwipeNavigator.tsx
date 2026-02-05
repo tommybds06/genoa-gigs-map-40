@@ -1,6 +1,7 @@
  import { useSwipeable, SwipeEventData } from "react-swipeable";
  import { useNavigate, useLocation } from "react-router-dom";
  import { ReactNode, useCallback, useRef } from "react";
+ import { setSwipeDirection } from "@/lib/swipeState";
  
  // Tab order for swipe navigation
  const TAB_ORDER = ["/", "/lista", "/messaggi", "/profilo"];
@@ -30,23 +31,21 @@
      if (currentIndex === -1) return;
  
      let nextIndex: number;
-     let swipeDirection: "left" | "right";
      
      if (direction === "LEFT") {
        // Swipe left = go to next tab
        nextIndex = currentIndex + 1;
        if (nextIndex >= TAB_ORDER.length) return; // Already at last tab
-       swipeDirection = "left";
+       setSwipeDirection("left");
      } else {
        // Swipe right = go to previous tab
        nextIndex = currentIndex - 1;
        if (nextIndex < 0) return; // Already at first tab
-       swipeDirection = "right";
+       setSwipeDirection("right");
      }
  
      isNavigating.current = true;
-     // Pass direction via navigation state
-     navigate(TAB_ORDER[nextIndex], { state: { swipeDirection } });
+     navigate(TAB_ORDER[nextIndex]);
      
      // Reset navigation lock after animation completes
      setTimeout(() => {
@@ -86,20 +85,19 @@
      if (currentIndex === -1) return;
  
      let nextIndex: number;
-     let swipeDirection: "left" | "right";
      
      if (direction === "LEFT") {
        nextIndex = currentIndex + 1;
        if (nextIndex >= TAB_ORDER.length) return;
-       swipeDirection = "left";
+       setSwipeDirection("left");
      } else {
        nextIndex = currentIndex - 1;
        if (nextIndex < 0) return;
-       swipeDirection = "right";
+       setSwipeDirection("right");
      }
  
      isNavigating.current = true;
-     navigate(TAB_ORDER[nextIndex], { state: { swipeDirection } });
+     navigate(TAB_ORDER[nextIndex]);
      
      setTimeout(() => {
        isNavigating.current = false;

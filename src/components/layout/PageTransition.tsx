@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
   import { ReactNode } from "react";
- import { useLocation } from "react-router-dom";
+ import { getSwipeDirection } from "@/lib/swipeState";
 
 interface PageTransitionProps {
   children: ReactNode;
@@ -40,8 +40,8 @@ const slideVariants = {
  const iosEase: EasingType = [0.32, 0.72, 0, 1];
  
 export function PageTransition({ children, variant = "fade" }: PageTransitionProps) {
-   const location = useLocation();
-   const direction = (location.state as { swipeDirection?: "left" | "right" } | null)?.swipeDirection;
+   // Read from global state - both entering and exiting pages see the same value
+   const direction = getSwipeDirection();
   const isSlide = variant === "slide";
    
    // Determine animation based on context
