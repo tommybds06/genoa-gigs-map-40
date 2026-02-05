@@ -53,6 +53,8 @@ export function PageTransition({ children, variant = "fade" }: PageTransitionPro
   
   const isSlide = variant === "slide";
   
+  console.log("[PageTransition] render, direction:", direction, "variant:", variant);
+  
   // Determine animation based on context
   let variants = fadeVariants;
   let duration = 0.1;
@@ -67,12 +69,14 @@ export function PageTransition({ children, variant = "fade" }: PageTransitionPro
     className = "absolute inset-0 z-50 bg-background";
   } else if (direction === "left") {
     // Swipe navigation left (next tab)
+    console.log("[PageTransition] using swipeLeftVariants");
     variants = swipeLeftVariants;
     duration = 0.3;
     ease = iosEase;
     className = "absolute inset-0 bg-background";
   } else if (direction === "right") {
     // Swipe navigation right (previous tab)
+    console.log("[PageTransition] using swipeRightVariants");
     variants = swipeRightVariants;
     duration = 0.3;
     ease = iosEase;
