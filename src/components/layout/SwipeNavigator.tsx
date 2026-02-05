@@ -52,7 +52,7 @@
      setTimeout(() => {
        isNavigating.current = false;
        setDirection(null);
-     }, 300);
+     }, 400); // Slightly longer to ensure animation completes
    }, [currentIndex, navigate, setDirection]);
  
    const swipeHandlers = useSwipeable({
@@ -105,7 +105,7 @@
      setTimeout(() => {
        isNavigating.current = false;
        setDirection(null);
-     }, 300);
+     }, 400);
    }, [currentIndex, navigate, setDirection]);
  
    return useSwipeable({
