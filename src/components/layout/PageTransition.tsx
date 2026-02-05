@@ -59,29 +59,26 @@ export function PageTransition({ children, variant = "fade" }: PageTransitionPro
   let variants = fadeVariants;
   let duration = 0.1;
   let ease: EasingType = "easeOut";
-  // ALWAYS use absolute inset-0 h-full to ensure proper sizing during and after animation
-  let className = "absolute inset-0 h-full overflow-hidden bg-background";
   
   if (isSlide) {
     // Detail page slide
     variants = slideVariants;
     duration = 0.3;
     ease = iosEase;
-    className = "absolute inset-0 h-full z-50 bg-background overflow-hidden";
   } else if (direction === "left") {
     // Swipe navigation left (next tab)
-    console.log("[PageTransition] using swipeLeftVariants");
     variants = swipeLeftVariants;
     duration = 0.3;
     ease = iosEase;
   } else if (direction === "right") {
     // Swipe navigation right (previous tab)
-    console.log("[PageTransition] using swipeRightVariants");
     variants = swipeRightVariants;
     duration = 0.3;
     ease = iosEase;
   }
   
+  // Use fixed positioning with explicit dimensions to ensure children get proper height
+  // top/bottom/left/right: 0 with width/height: 100% guarantees the container fills the parent
   return (
     <motion.div
       initial="initial"
@@ -89,7 +86,12 @@ export function PageTransition({ children, variant = "fade" }: PageTransitionPro
       exit="exit"
       variants={variants}
       transition={{ duration, ease }}
-      className={className}
+      className="absolute top-0 left-0 right-0 bottom-0 bg-background flex flex-col"
+      style={{ 
+        width: '100%', 
+        height: '100%',
+        zIndex: isSlide ? 50 : undefined 
+      }}
     >
       {children}
     </motion.div>

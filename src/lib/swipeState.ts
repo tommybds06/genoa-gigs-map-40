@@ -7,19 +7,16 @@ let currentSwipeDirection: SwipeDirection = null;
 let listeners: Set<() => void> = new Set();
 
 function emitChange() {
-  console.log("[SwipeState] emitChange, direction:", currentSwipeDirection);
   listeners.forEach((listener) => listener());
 }
 
 export function setSwipeDirection(direction: SwipeDirection) {
-  console.log("[SwipeState] setSwipeDirection called with:", direction);
   currentSwipeDirection = direction;
   emitChange();
   
   // Auto-reset after animation completes
   if (direction !== null) {
     setTimeout(() => {
-      console.log("[SwipeState] timeout fired, current:", currentSwipeDirection, "original:", direction);
       if (currentSwipeDirection === direction) {
         currentSwipeDirection = null;
         emitChange();
@@ -29,7 +26,6 @@ export function setSwipeDirection(direction: SwipeDirection) {
 }
 
 export function getSwipeDirectionSnapshot(): SwipeDirection {
-  console.log("[SwipeState] getSnapshot returning:", currentSwipeDirection);
   return currentSwipeDirection;
 }
 
