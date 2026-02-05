@@ -6,7 +6,6 @@ import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import { AuthProvider } from "@/hooks/useAuth";
 import { UserProvider } from "@/contexts/UserContext";
- import { SwipeDirectionProvider } from "@/contexts/SwipeDirectionContext";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import { ReviewPrompt } from "@/components/reviews/ReviewPrompt";
 import { MainLayout } from "@/components/layout/MainLayout";
@@ -115,18 +114,16 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <UserProvider>
-         <SwipeDirectionProvider>
-           <TooltipProvider>
-             <div className="safe-area-wrapper min-h-screen min-h-[100dvh]">
-               <Toaster />
-               <Sonner />
-               <ReviewPrompt />
-               <BrowserRouter>
-                 <AnimatedRoutes />
-               </BrowserRouter>
-             </div>
-           </TooltipProvider>
-         </SwipeDirectionProvider>
+         <TooltipProvider>
+           <div className="safe-area-wrapper min-h-screen min-h-[100dvh]">
+             <Toaster />
+             <Sonner />
+             <ReviewPrompt />
+             <BrowserRouter>
+               <AnimatedRoutes />
+             </BrowserRouter>
+           </div>
+         </TooltipProvider>
       </UserProvider>
     </AuthProvider>
   </QueryClientProvider>
