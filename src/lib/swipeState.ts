@@ -14,14 +14,16 @@ export function setSwipeDirection(direction: SwipeDirection) {
   currentSwipeDirection = direction;
   emitChange();
   
-  // Auto-reset after animation completes
+  // Auto-reset after FULL transition completes (exit + enter animations)
+  // With AnimatePresence mode="wait": exit(300ms) + enter(300ms) = 600ms
+  // Adding buffer for safety
   if (direction !== null) {
     setTimeout(() => {
       if (currentSwipeDirection === direction) {
         currentSwipeDirection = null;
         emitChange();
       }
-    }, 500);
+    }, 800);
   }
 }
 
