@@ -4,6 +4,7 @@ import { InteractiveMap } from "@/components/map/InteractiveMap";
 import { SearchBar } from "@/components/map/SearchBar";
 import { useUser } from "@/contexts/UserContext";
 import { useMapJobs } from "@/hooks/useJobs";
+ import { SwipeNavigator } from "@/components/layout/SwipeNavigator";
 
 const Index = () => {
   const { isEmployer, loading: profileLoading, profile } = useUser();
@@ -63,24 +64,28 @@ const Index = () => {
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
-      <Header 
-        title="Mappa" 
-        titleColor={isEmployer ? "text-blue-600" : "text-primary"}
-      />
+       {/* Swipe zone - only header/search area triggers navigation */}
+       <SwipeNavigator zoneRestricted>
+         <Header 
+           title="Mappa" 
+           titleColor={isEmployer ? "text-blue-600" : "text-primary"}
+         />
+ 
+         {!isEmployer && (
+           <div className="px-4 pt-2 pb-3 z-30 shrink-0">
+             <SearchBar
+               searchQuery={searchQuery}
+               onSearchChange={setSearchQuery}
+               selectedTags={selectedTags}
+               onTagsChange={setSelectedTags}
+               selectedNeighborhoods={selectedNeighborhoods}
+               onNeighborhoodsChange={setSelectedNeighborhoods}
+             />
+           </div>
+         )}
+       </SwipeNavigator>
 
-      {!isEmployer && (
-        <div className="px-4 pt-2 pb-3 z-30 shrink-0">
-          <SearchBar
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-            selectedTags={selectedTags}
-            onTagsChange={setSelectedTags}
-            selectedNeighborhoods={selectedNeighborhoods}
-            onNeighborhoodsChange={setSelectedNeighborhoods}
-          />
-        </div>
-      )}
-
+       {/* Map area - no swipe navigation here to allow panning */}
       <main className="flex-1 px-4 pb-4 min-h-0">
         <div className="w-full h-full rounded-3xl overflow-hidden shadow-material-lg">
           <InteractiveMap 

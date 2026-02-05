@@ -8,6 +8,7 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { WorkerJobHistory } from "@/components/profile/WorkerJobHistory";
 import { supabase } from "@/integrations/supabase/client";
+ import { SwipeNavigator } from "@/components/layout/SwipeNavigator";
 
 const Profilo = () => {
   const { user, signOut } = useAuth();
@@ -79,21 +80,22 @@ const Profilo = () => {
   const primaryTextClasses = theme.primaryText;
 
   return (
-    <div className="flex flex-col h-full bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-md px-4 pt-8 pb-3">
-        <div className="flex items-center justify-between">
-          <h1 className={`text-2xl font-bold ${isEmployer ? "text-blue-600" : "text-primary"}`}>Profilo</h1>
-          <button 
-            onClick={() => navigate("/settings")}
-            className={`p-2 rounded-full transition-colors touch-feedback ${isEmployer ? "hover:bg-blue-50" : "hover:bg-accent"}`}
-          >
-            <Settings className={`w-5 h-5 ${isEmployer ? "text-blue-600" : "text-primary"}`} />
-          </button>
-        </div>
-      </header>
+     <SwipeNavigator>
+       <div className="flex flex-col h-full bg-background">
+         {/* Header */}
+         <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-md px-4 pt-8 pb-3">
+           <div className="flex items-center justify-between">
+             <h1 className={`text-2xl font-bold ${isEmployer ? "text-blue-600" : "text-primary"}`}>Profilo</h1>
+             <button 
+               onClick={() => navigate("/settings")}
+               className={`p-2 rounded-full transition-colors touch-feedback ${isEmployer ? "hover:bg-blue-50" : "hover:bg-accent"}`}
+             >
+               <Settings className={`w-5 h-5 ${isEmployer ? "text-blue-600" : "text-primary"}`} />
+             </button>
+           </div>
+         </header>
 
-      <main className="flex-1 px-4 py-4 pb-4 overflow-y-auto">
+         <main className="flex-1 px-4 py-4 pb-4 overflow-y-auto">
         {/* Photo Carousel */}
         {profile?.photos && profile.photos.length > 0 && (
           <div className="relative mb-4 animate-fade-in">
@@ -235,11 +237,12 @@ const Profilo = () => {
           </div>
         </div>
 
-        <button onClick={handleLogout} className="material-btn-outlined w-full p-4 flex items-center justify-center gap-2 text-destructive border-destructive/30 animate-fade-in touch-feedback" style={{ animationDelay: "0.4s" }}>
-          <LogOut className="w-5 h-5" /><span className="font-medium">Esci</span>
-        </button>
-      </main>
-    </div>
+           <button onClick={handleLogout} className="material-btn-outlined w-full p-4 flex items-center justify-center gap-2 text-destructive border-destructive/30 animate-fade-in touch-feedback" style={{ animationDelay: "0.4s" }}>
+             <LogOut className="w-5 h-5" /><span className="font-medium">Esci</span>
+           </button>
+         </main>
+       </div>
+     </SwipeNavigator>
   );
 };
 

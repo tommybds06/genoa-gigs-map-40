@@ -24,6 +24,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
+ import { SwipeNavigator } from "@/components/layout/SwipeNavigator";
 
 interface Message {
   id: string;
@@ -714,89 +715,91 @@ const Messaggi = () => {
 
   // Chats list view
   return (
-    <div className="flex flex-col h-full bg-background">
-      {/* Simple Header with safe area */}
-      <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-md px-4 pt-8 pb-3">
-        <h1 className={`text-2xl font-bold ${isEmployer ? "text-blue-600" : "text-primary"}`}>Messaggi</h1>
-      </header>
-
-      <main className="flex-1 px-4 pb-4 overflow-y-auto">
-        {loading ? (
-          <ChatListSkeleton count={5} />
-        ) : chats.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12">
-            <div className="material-card-elevated p-8 text-center max-w-sm animate-scale-in">
-              <div className={`w-16 h-16 ${theme.accentBg} ${theme.accentText} rounded-full flex items-center justify-center mx-auto mb-4`}>
-                <MessageCircle className="w-8 h-8" />
+     <SwipeNavigator>
+       <div className="flex flex-col h-full bg-background">
+         {/* Simple Header with safe area */}
+         <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-md px-4 pt-8 pb-3">
+           <h1 className={`text-2xl font-bold ${isEmployer ? "text-blue-600" : "text-primary"}`}>Messaggi</h1>
+         </header>
+ 
+         <main className="flex-1 px-4 pb-4 overflow-y-auto">
+           {loading ? (
+             <ChatListSkeleton count={5} />
+           ) : chats.length === 0 ? (
+             <div className="flex flex-col items-center justify-center py-12">
+               <div className="material-card-elevated p-8 text-center max-w-sm animate-scale-in">
+                 <div className={`w-16 h-16 ${theme.accentBg} ${theme.accentText} rounded-full flex items-center justify-center mx-auto mb-4`}>
+                   <MessageCircle className="w-8 h-8" />
+                 </div>
+                 <h2 className="text-xl font-semibold mb-2">Nessun Messaggio</h2>
+                 <p className="text-muted-foreground text-sm">
+                   Quando contatterai un employer o riceverai messaggi, appariranno qui.
+                 </p>
               </div>
-              <h2 className="text-xl font-semibold mb-2">Nessun Messaggio</h2>
-              <p className="text-muted-foreground text-sm">
-                Quando contatterai un employer o riceverai messaggi, appariranno qui.
-              </p>
             </div>
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {chats.map((chat) => {
-              const isCompleted = chat.application_status === 'completed';
-              const isHired = chat.application_status === 'hired';
-              
-              return (
-                <div
-                  key={chat.id}
-                  onClick={() => setSelectedChat(chat)}
-                  className={`material-card p-4 flex items-center gap-3 cursor-pointer touch-feedback ${
-                    isCompleted ? 'bg-muted/50 opacity-80' : ''
-                  }`}
-                >
-                  <Avatar 
-                    className="h-12 w-12 cursor-pointer"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      navigate(`/profile/${chat.other_user?.id}`);
-                    }}
+           ) : (
+             <div className="space-y-2">
+               {chats.map((chat) => {
+                 const isCompleted = chat.application_status === 'completed';
+                 const isHired = chat.application_status === 'hired';
+                 
+                 return (
+                   <div
+                     key={chat.id}
+                     onClick={() => setSelectedChat(chat)}
+                     className={`material-card p-4 flex items-center gap-3 cursor-pointer touch-feedback ${
+                       isCompleted ? 'bg-muted/50 opacity-80' : ''
+                     }`}
                   >
-                    <AvatarImage src={chat.other_user?.avatar_url || undefined} />
-                    <AvatarFallback className={`${theme.accentBg} ${theme.primaryText}`}>
-                      {(chat.other_user?.full_name || 'U')[0].toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-semibold truncate">
-                        {chat.other_user?.full_name || 'Utente'}
-                      </h3>
-                      {isHired && (
-                        <Badge className="bg-green-600 text-white text-xs shrink-0">
-                          <CheckCircle className="h-3 w-3 mr-0.5" />
-                          Assunto
-                        </Badge>
-                      )}
-                      {isCompleted && (
-                        <Badge variant="outline" className="text-green-600 border-green-600 text-xs shrink-0">
-                          <Check className="h-3 w-3 mr-0.5" />
-                          Concluso
-                        </Badge>
-                      )}
+                     <Avatar 
+                       className="h-12 w-12 cursor-pointer"
+                       onClick={(e) => {
+                         e.stopPropagation();
+                         navigate(`/profile/${chat.other_user?.id}`);
+                       }}
+                     >
+                       <AvatarImage src={chat.other_user?.avatar_url || undefined} />
+                       <AvatarFallback className={`${theme.accentBg} ${theme.primaryText}`}>
+                         {(chat.other_user?.full_name || 'U')[0].toUpperCase()}
+                       </AvatarFallback>
+                     </Avatar>
+                     <div className="flex-1 min-w-0">
+                       <div className="flex items-center gap-2">
+                         <h3 className="font-semibold truncate">
+                           {chat.other_user?.full_name || 'Utente'}
+                         </h3>
+                         {isHired && (
+                           <Badge className="bg-green-600 text-white text-xs shrink-0">
+                             <CheckCircle className="h-3 w-3 mr-0.5" />
+                             Assunto
+                           </Badge>
+                         )}
+                         {isCompleted && (
+                           <Badge variant="outline" className="text-green-600 border-green-600 text-xs shrink-0">
+                             <Check className="h-3 w-3 mr-0.5" />
+                             Concluso
+                           </Badge>
+                         )}
+                       </div>
+                       <p className="text-sm text-muted-foreground truncate">
+                         {chat.job?.title}
+                       </p>
                     </div>
-                    <p className="text-sm text-muted-foreground truncate">
-                      {chat.job?.title}
-                    </p>
+                     {chat.unread_count && chat.unread_count > 0 && (
+                       <div className={`shrink-0 w-6 h-6 rounded-full flex items-center justify-center ${isEmployer ? 'bg-blue-600' : 'bg-primary'}`}>
+                         <span className="text-xs text-white font-bold">
+                           {chat.unread_count > 9 ? '9+' : chat.unread_count}
+                         </span>
+                       </div>
+                     )}
                   </div>
-                  {chat.unread_count && chat.unread_count > 0 && (
-                    <div className={`shrink-0 w-6 h-6 rounded-full flex items-center justify-center ${isEmployer ? 'bg-blue-600' : 'bg-primary'}`}>
-                      <span className="text-xs text-white font-bold">
-                        {chat.unread_count > 9 ? '9+' : chat.unread_count}
-                      </span>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </main>
-    </div>
+                 );
+               })}
+             </div>
+           )}
+         </main>
+       </div>
+     </SwipeNavigator>
   );
 };
 

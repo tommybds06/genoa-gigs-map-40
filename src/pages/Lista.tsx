@@ -11,6 +11,7 @@ import { getJobIconFromTags } from "@/lib/jobIcons";
 import { isRoleTag } from "@/constants/tags";
 import { useOpenJobs, useEmployerJobs, Job } from "@/hooks/useJobs";
 import { JobCardSkeletonList } from "@/components/skeletons/JobCardSkeleton";
+ import { SwipeNavigator } from "@/components/layout/SwipeNavigator";
 
 function getTimeAgo(dateString: string): string {
   const date = new Date(dateString);
@@ -44,90 +45,92 @@ const Lista = () => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-background">
-      <Header title="Lista" titleColor="text-primary" />
-
-      <main className="flex-1 px-4 pb-4 overflow-y-auto">
-        <h2 className="text-lg font-semibold mb-3 text-foreground">
-          Impieghi per Te
-        </h2>
-        
-        {loading ? (
-          <JobCardSkeletonList count={5} />
-        ) : jobs.length === 0 ? (
-          <EmptyState isEmployer={isEmployer} hasTags={userTags.length > 0} />
-        ) : (
-          <div className="space-y-3">
-            {jobs.map((job, index) => {
-              const roleTag = job.tags?.find(t => isRoleTag(t));
-              const Icon = getJobIconFromTags(job.tags);
-              const roleLabel = roleTag || "Generale";
-              
-              return (
-                <div 
-                  key={job.id} 
-                  className="material-card p-4 animate-fade-in cursor-pointer touch-feedback"
-                  style={{ animationDelay: `${index * 0.05}s` }}
-                  onClick={() => handleJobClick(job)}
-                >
-                  <div className="flex items-start gap-3">
-                    <div className="w-12 h-12 bg-accent text-accent-foreground rounded-2xl flex items-center justify-center shrink-0">
-                      <Icon className="w-5 h-5" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-base truncate">{job.title}</h3>
-                      <p className="text-sm text-muted-foreground mb-2">{roleLabel}</p>
-                      
-                      {job.tags && job.tags.length > 0 && (
-                        <TagBadges tags={job.tags} className="mb-2" />
-                      )}
-                      
-                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
-                        {job.schedule && (
-                          <span className="inline-flex items-center gap-1 text-muted-foreground">
-                            <Clock className="w-3.5 h-3.5" />
-                            {job.schedule}
-                          </span>
-                        )}
-                        {job.lat && job.lng && (
-                          <span className="inline-flex items-center gap-1 text-muted-foreground">
-                            <MapPin className="w-3.5 h-3.5" />
-                            Genova
-                          </span>
-                        )}
-                        {job.price && (
-                          <span className="inline-flex items-center gap-1 text-primary font-semibold">
-                            <Euro className="w-3.5 h-3.5" />
-                            {job.price}
-                          </span>
-                        )}
+     <SwipeNavigator>
+       <div className="flex flex-col h-full bg-background">
+         <Header title="Lista" titleColor="text-primary" />
+ 
+         <main className="flex-1 px-4 pb-4 overflow-y-auto">
+           <h2 className="text-lg font-semibold mb-3 text-foreground">
+             Impieghi per Te
+           </h2>
+           
+           {loading ? (
+             <JobCardSkeletonList count={5} />
+           ) : jobs.length === 0 ? (
+             <EmptyState isEmployer={isEmployer} hasTags={userTags.length > 0} />
+           ) : (
+             <div className="space-y-3">
+               {jobs.map((job, index) => {
+                 const roleTag = job.tags?.find(t => isRoleTag(t));
+                 const Icon = getJobIconFromTags(job.tags);
+                 const roleLabel = roleTag || "Generale";
+                 
+                 return (
+                   <div 
+                     key={job.id} 
+                     className="material-card p-4 animate-fade-in cursor-pointer touch-feedback"
+                     style={{ animationDelay: `${index * 0.05}s` }}
+                     onClick={() => handleJobClick(job)}
+                   >
+                     <div className="flex items-start gap-3">
+                       <div className="w-12 h-12 bg-accent text-accent-foreground rounded-2xl flex items-center justify-center shrink-0">
+                         <Icon className="w-5 h-5" />
                       </div>
+                       <div className="flex-1 min-w-0">
+                         <h3 className="font-semibold text-base truncate">{job.title}</h3>
+                         <p className="text-sm text-muted-foreground mb-2">{roleLabel}</p>
+                         
+                         {job.tags && job.tags.length > 0 && (
+                           <TagBadges tags={job.tags} className="mb-2" />
+                         )}
+                         
+                         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+                           {job.schedule && (
+                             <span className="inline-flex items-center gap-1 text-muted-foreground">
+                               <Clock className="w-3.5 h-3.5" />
+                               {job.schedule}
+                             </span>
+                           )}
+                           {job.lat && job.lng && (
+                             <span className="inline-flex items-center gap-1 text-muted-foreground">
+                               <MapPin className="w-3.5 h-3.5" />
+                               Genova
+                             </span>
+                           )}
+                           {job.price && (
+                             <span className="inline-flex items-center gap-1 text-primary font-semibold">
+                               <Euro className="w-3.5 h-3.5" />
+                               {job.price}
+                             </span>
+                           )}
+                         </div>
+                       </div>
+                       <span className="text-xs text-muted-foreground flex items-center gap-1 shrink-0">
+                         <Clock className="w-3 h-3" />
+                         {getTimeAgo(job.created_at)}
+                       </span>
                     </div>
-                    <span className="text-xs text-muted-foreground flex items-center gap-1 shrink-0">
-                      <Clock className="w-3 h-3" />
-                      {getTimeAgo(job.created_at)}
-                    </span>
                   </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </main>
-
-      <JobDetailsSheet
-        job={selectedJob ? {
-          ...selectedJob,
-          lat: selectedJob.lat || 0,
-          lng: selectedJob.lng || 0,
-          schedule: selectedJob.schedule || undefined,
-          tags: selectedJob.tags || undefined,
-          profiles: selectedJob.profiles || undefined,
-        } : null}
-        isOpen={isDetailsOpen}
-        onClose={() => setIsDetailsOpen(false)}
-      />
-    </div>
+                 );
+               })}
+             </div>
+           )}
+         </main>
+ 
+         <JobDetailsSheet
+           job={selectedJob ? {
+             ...selectedJob,
+             lat: selectedJob.lat || 0,
+             lng: selectedJob.lng || 0,
+             schedule: selectedJob.schedule || undefined,
+             tags: selectedJob.tags || undefined,
+             profiles: selectedJob.profiles || undefined,
+           } : null}
+           isOpen={isDetailsOpen}
+           onClose={() => setIsDetailsOpen(false)}
+         />
+       </div>
+     </SwipeNavigator>
   );
 };
 
