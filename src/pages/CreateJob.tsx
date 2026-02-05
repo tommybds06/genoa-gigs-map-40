@@ -165,7 +165,10 @@ const CreateJob = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div 
+      className="fixed inset-0 bg-background overflow-y-auto"
+      style={{ touchAction: 'pan-y', WebkitOverflowScrolling: 'touch' }}
+    >
       {/* Header */}
       <div className="bg-blue-600 text-white px-6 py-6">
         <div className="flex items-center gap-3 mb-2">
