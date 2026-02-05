@@ -86,7 +86,7 @@ const Index = () => {
        </SwipeNavigator>
 
        {/* Map area - no swipe navigation here to allow panning */}
-      <main className="flex-1 px-4 pb-4 min-h-0">
+      <main className="flex-1 px-4 pb-2 min-h-0">
         <div className="w-full h-full rounded-3xl overflow-hidden shadow-material-lg">
           <InteractiveMap 
             jobs={filteredJobs}

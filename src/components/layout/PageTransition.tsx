@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { ReactNode, useSyncExternalStore } from "react";
+import { ReactNode, useSyncExternalStore, useRef } from "react";
 import { 
   getSwipeDirectionSnapshot, 
   subscribeToSwipeDirection,
@@ -12,30 +12,32 @@ interface PageTransitionProps {
 }
 
 type EasingType = [number, number, number, number] | "easeOut" | "easeIn" | "easeInOut" | "linear";
+type VariantValue = { x: number | string; opacity: number };
+type AnimVariants = { initial: VariantValue; animate: VariantValue; exit: VariantValue };
 
-// Ultra-fast fade for tab navigation
-const fadeVariants = {
-  initial: { opacity: 0 },
-  animate: { opacity: 1 },
-  exit: { opacity: 0 },
+// Ultra-fast fade for tab navigation - explicit x:0 to prevent drift
+const fadeVariants: AnimVariants = {
+  initial: { opacity: 0, x: 0 },
+  animate: { opacity: 1, x: 0 },
+  exit: { opacity: 0, x: 0 },
 };
 
 // Slide from right for detail pages
-const slideVariants = {
+const slideVariants: AnimVariants = {
   initial: { x: "100%", opacity: 1 },
   animate: { x: 0, opacity: 1 },
   exit: { x: "100%", opacity: 1 },
 };
 
 // Swipe left = new page enters from right, old exits to left
-const swipeLeftVariants = {
+const swipeLeftVariants: AnimVariants = {
   initial: { x: "100%", opacity: 1 },
   animate: { x: 0, opacity: 1 },
   exit: { x: "-100%", opacity: 1 },
 };
 
 // Swipe right = new page enters from left, old exits to right
-const swipeRightVariants = {
+const swipeRightVariants: AnimVariants = {
   initial: { x: "-100%", opacity: 1 },
   animate: { x: 0, opacity: 1 },
   exit: { x: "100%", opacity: 1 },
@@ -51,11 +53,16 @@ export function PageTransition({ children, variant = "fade" }: PageTransitionPro
     getServerSnapshot
   );
   
+  // FREEZE the direction at mount time - don't let it change during animation
+  const frozenDirection = useRef<"left" | "right" | null>(null);
+  if (frozenDirection.current === null && direction !== null) {
+    frozenDirection.current = direction;
+  }
+  
   const isSlide = variant === "slide";
+  const effectiveDirection = frozenDirection.current;
   
-  console.log("[PageTransition] render, direction:", direction, "variant:", variant);
-  
-  // Determine animation based on context
+  // Determine animation based on frozen direction
   let variants = fadeVariants;
   let duration = 0.1;
   let ease: EasingType = "easeOut";
@@ -65,20 +72,18 @@ export function PageTransition({ children, variant = "fade" }: PageTransitionPro
     variants = slideVariants;
     duration = 0.3;
     ease = iosEase;
-  } else if (direction === "left") {
+  } else if (effectiveDirection === "left") {
     // Swipe navigation left (next tab)
     variants = swipeLeftVariants;
     duration = 0.3;
     ease = iosEase;
-  } else if (direction === "right") {
+  } else if (effectiveDirection === "right") {
     // Swipe navigation right (previous tab)
     variants = swipeRightVariants;
     duration = 0.3;
     ease = iosEase;
   }
   
-  // Use fixed positioning with explicit dimensions to ensure children get proper height
-  // top/bottom/left/right: 0 with width/height: 100% guarantees the container fills the parent
   return (
     <motion.div
       initial="initial"
@@ -86,12 +91,8 @@ export function PageTransition({ children, variant = "fade" }: PageTransitionPro
       exit="exit"
       variants={variants}
       transition={{ duration, ease }}
-      className="absolute top-0 left-0 right-0 bottom-0 bg-background flex flex-col"
-      style={{ 
-        width: '100%', 
-        height: '100%',
-        zIndex: isSlide ? 50 : undefined 
-      }}
+      // Use inset-0 for absolute positioning, pb-16 for bottom nav space on tab pages
+      className={`absolute inset-0 bg-background flex flex-col ${isSlide ? 'z-50' : 'pb-16'}`}
     >
       {children}
     </motion.div>

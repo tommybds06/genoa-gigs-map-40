@@ -14,12 +14,13 @@ interface MainLayoutProps {
 export function MainLayout({ children, hideBottomNav = false }: MainLayoutProps) {
   return (
     <div className="flex flex-col h-screen h-[100dvh] bg-background overflow-hidden">
-       {/* Main content area - takes remaining space with bottom nav padding and relative for animations */}
-       <div className={`flex-1 flex flex-col overflow-hidden relative ${!hideBottomNav ? 'pb-16' : ''}`}>
+      {/* Main content area - relative container for absolute positioned pages */}
+      {/* Bottom nav padding is applied via the BottomNav's fixed positioning */}
+      <div className="flex-1 relative overflow-hidden">
         {children}
       </div>
       
-      {/* Bottom Navigation - fixed at bottom */}
+      {/* Bottom Navigation - fixed at bottom, pages must account for its height */}
       {!hideBottomNav && <BottomNav />}
     </div>
   );
