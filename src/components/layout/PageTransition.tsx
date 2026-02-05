@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
   import { ReactNode } from "react";
- import { useSwipeDirection } from "@/contexts/SwipeDirectionContext";
+ import { useLocation } from "react-router-dom";
 
 interface PageTransitionProps {
   children: ReactNode;
@@ -40,7 +40,8 @@ const slideVariants = {
  const iosEase: EasingType = [0.32, 0.72, 0, 1];
  
 export function PageTransition({ children, variant = "fade" }: PageTransitionProps) {
-   const { direction } = useSwipeDirection();
+   const location = useLocation();
+   const direction = (location.state as { swipeDirection?: "left" | "right" } | null)?.swipeDirection;
   const isSlide = variant === "slide";
    
    // Determine animation based on context
@@ -52,19 +53,19 @@ export function PageTransition({ children, variant = "fade" }: PageTransitionPro
    if (isSlide) {
      // Detail page slide
      variants = slideVariants;
-     duration = 0.25;
+     duration = 0.3;
      ease = iosEase;
      className = "absolute inset-0 z-50 bg-background";
    } else if (direction === "left") {
      // Swipe navigation left (next tab)
      variants = swipeLeftVariants;
-     duration = 0.25;
+     duration = 0.3;
      ease = iosEase;
      className = "absolute inset-0 bg-background";
    } else if (direction === "right") {
      // Swipe navigation right (previous tab)
      variants = swipeRightVariants;
-     duration = 0.25;
+     duration = 0.3;
      ease = iosEase;
      className = "absolute inset-0 bg-background";
    }
