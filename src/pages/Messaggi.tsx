@@ -436,7 +436,7 @@ const Messaggi = () => {
         style={{ height: '100dvh' }}
       >
         {/* Chat header - shrink-0 so it doesn't compress */}
-        <header className="shrink-0 z-40 bg-background/95 backdrop-blur-md px-4 pt-12 pb-3 border-b">
+        <header className="shrink-0 z-40 bg-background/95 backdrop-blur-md px-4 pt-8 pb-3 border-b">
           <div className="flex items-center gap-2">
             <Button
               variant="ghost"
@@ -716,7 +716,7 @@ const Messaggi = () => {
   return (
     <div className="flex flex-col h-full bg-background">
       {/* Simple Header with safe area */}
-      <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-md px-4 pt-12 pb-3">
+      <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-md px-4 pt-8 pb-3">
         <h1 className={`text-2xl font-bold ${isEmployer ? "text-blue-600" : "text-primary"}`}>Messaggi</h1>
       </header>
 
