@@ -1,6 +1,7 @@
  import { useSwipeable, SwipeEventData } from "react-swipeable";
  import { useNavigate, useLocation } from "react-router-dom";
  import { ReactNode, useCallback, useRef } from "react";
+ import { useSwipeDirection } from "@/contexts/SwipeDirectionContext";
  
  // Tab order for swipe navigation
  const TAB_ORDER = ["/", "/lista", "/messaggi", "/profilo"];
@@ -21,6 +22,7 @@
    const navigate = useNavigate();
    const location = useLocation();
    const isNavigating = useRef(false);
+   const { setDirection } = useSwipeDirection();
  
    const currentIndex = TAB_ORDER.indexOf(location.pathname);
  
@@ -35,10 +37,12 @@
        // Swipe left = go to next tab
        nextIndex = currentIndex + 1;
        if (nextIndex >= TAB_ORDER.length) return; // Already at last tab
+       setDirection("left");
      } else {
        // Swipe right = go to previous tab
        nextIndex = currentIndex - 1;
        if (nextIndex < 0) return; // Already at first tab
+       setDirection("right");
      }
  
      isNavigating.current = true;
@@ -47,8 +51,9 @@
      // Reset after navigation completes
      setTimeout(() => {
        isNavigating.current = false;
+       setDirection(null);
      }, 300);
-   }, [currentIndex, navigate]);
+   }, [currentIndex, navigate, setDirection]);
  
    const swipeHandlers = useSwipeable({
      onSwipedLeft: () => handleSwipe("LEFT"),
@@ -74,6 +79,7 @@
    const navigate = useNavigate();
    const location = useLocation();
    const isNavigating = useRef(false);
+   const { setDirection } = useSwipeDirection();
  
    const currentIndex = TAB_ORDER.indexOf(location.pathname);
  
@@ -86,9 +92,11 @@
      if (direction === "LEFT") {
        nextIndex = currentIndex + 1;
        if (nextIndex >= TAB_ORDER.length) return;
+       setDirection("left");
      } else {
        nextIndex = currentIndex - 1;
        if (nextIndex < 0) return;
+       setDirection("right");
      }
  
      isNavigating.current = true;
@@ -96,8 +104,9 @@
      
      setTimeout(() => {
        isNavigating.current = false;
+       setDirection(null);
      }, 300);
-   }, [currentIndex, navigate]);
+   }, [currentIndex, navigate, setDirection]);
  
    return useSwipeable({
      onSwipedLeft: () => handleSwipe("LEFT"),
