@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+
 import { toast } from 'sonner';
 import { 
   ArrowLeft, 
@@ -243,7 +243,6 @@ const CreateJob = () => {
           />
         </div>
 
-
         {/* Type Tag (Modalità) - Single Selection Required */}
         <div className="space-y-3">
           <Label className="text-base font-medium flex items-center gap-2">
@@ -253,31 +252,22 @@ const CreateJob = () => {
           <p className="text-sm text-muted-foreground">
             Seleziona il tipo di impiego
           </p>
-          <RadioGroup
-            value={selectedTypeTag}
-            onValueChange={setSelectedTypeTag}
-            className="grid grid-cols-2 gap-2"
-          >
+          <div className="grid grid-cols-2 gap-2">
             {TYPE_TAGS.map((tag) => (
-              <div key={tag} className="relative">
-                <RadioGroupItem
-                  value={tag}
-                  id={`type-${tag}`}
-                  className="peer sr-only"
-                />
-                <Label
-                  htmlFor={`type-${tag}`}
-                  className={`flex items-center justify-center px-3 py-2.5 rounded-full text-sm font-medium cursor-pointer transition-all border-2 ${
-                    selectedTypeTag === tag
-                      ? 'bg-blue-600 text-white border-blue-600'
-                      : 'bg-blue-50 text-blue-700 border-transparent hover:bg-blue-100'
-                  }`}
-                >
-                  {tag}
-                </Label>
-              </div>
+              <button
+                key={tag}
+                type="button"
+                onClick={() => setSelectedTypeTag(tag)}
+                className={`flex items-center justify-center px-3 py-2.5 rounded-full text-sm font-medium transition-all border-2 ${
+                  selectedTypeTag === tag
+                    ? 'bg-blue-600 text-white border-blue-600'
+                    : 'bg-blue-50 text-blue-700 border-transparent hover:bg-blue-100'
+                }`}
+              >
+                {tag}
+              </button>
             ))}
-          </RadioGroup>
+          </div>
           {errors.typeTag && <p className="text-sm text-destructive">{errors.typeTag}</p>}
         </div>
 
