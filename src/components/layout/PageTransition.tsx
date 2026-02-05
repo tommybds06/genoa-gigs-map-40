@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
- import { ReactNode, useMemo } from "react";
+  import { ReactNode } from "react";
  import { useSwipeDirection } from "@/contexts/SwipeDirectionContext";
 
 interface PageTransitionProps {
@@ -43,41 +43,31 @@ export function PageTransition({ children, variant = "fade" }: PageTransitionPro
    const { direction } = useSwipeDirection();
   const isSlide = variant === "slide";
    
-   // Determine which variants to use based on slide type or swipe direction
-   const { variants, duration, ease, className } = useMemo(() => {
-     if (isSlide) {
-       // Detail page slide
-       return {
-         variants: slideVariants,
-         duration: 0.25,
-         ease: iosEase,
-         className: "absolute inset-0 z-50 bg-background"
-       };
-     } else if (direction === "left") {
-       // Swipe navigation left (next tab)
-       return {
-         variants: swipeLeftVariants,
-         duration: 0.25,
-         ease: iosEase,
-         className: "absolute inset-0 bg-background"
-       };
-     } else if (direction === "right") {
-       // Swipe navigation right (previous tab)
-       return {
-         variants: swipeRightVariants,
-         duration: 0.25,
-         ease: iosEase,
-         className: "absolute inset-0 bg-background"
-       };
-     }
-     // Default fade
-     return {
-       variants: fadeVariants,
-       duration: 0.1,
-       ease: "easeOut" as EasingType,
-       className: "relative w-full min-h-full"
-     };
-   }, [isSlide, direction]);
+   // Determine animation based on context
+   let variants = fadeVariants;
+   let duration = 0.1;
+   let ease: EasingType = "easeOut";
+   let className = "relative w-full min-h-full";
+   
+   if (isSlide) {
+     // Detail page slide
+     variants = slideVariants;
+     duration = 0.25;
+     ease = iosEase;
+     className = "absolute inset-0 z-50 bg-background";
+   } else if (direction === "left") {
+     // Swipe navigation left (next tab)
+     variants = swipeLeftVariants;
+     duration = 0.25;
+     ease = iosEase;
+     className = "absolute inset-0 bg-background";
+   } else if (direction === "right") {
+     // Swipe navigation right (previous tab)
+     variants = swipeRightVariants;
+     duration = 0.25;
+     ease = iosEase;
+     className = "absolute inset-0 bg-background";
+   }
   
   return (
     <motion.div

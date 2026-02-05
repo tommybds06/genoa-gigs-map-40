@@ -14,8 +14,8 @@ interface MainLayoutProps {
 export function MainLayout({ children, hideBottomNav = false }: MainLayoutProps) {
   return (
     <div className="flex flex-col h-screen h-[100dvh] bg-background overflow-hidden">
-      {/* Main content area - takes remaining space with bottom nav padding */}
-      <div className={`flex-1 flex flex-col overflow-hidden ${!hideBottomNav ? 'pb-16' : ''}`}>
+       {/* Main content area - takes remaining space with bottom nav padding and relative for animations */}
+       <div className={`flex-1 flex flex-col overflow-hidden relative ${!hideBottomNav ? 'pb-16' : ''}`}>
         {children}
       </div>
       
