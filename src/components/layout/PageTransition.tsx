@@ -46,21 +46,24 @@ const swipeRightVariants: AnimVariants = {
 const iosEase: EasingType = [0.32, 0.72, 0, 1];
 
 export function PageTransition({ children, variant = "fade" }: PageTransitionProps) {
-  // Use sync external store for guaranteed synchronization with global state
-  const direction = useSyncExternalStore(
+  // Capture the CURRENT direction at mount time only (not on updates)
+  // This ensures the entering page uses the direction that was set when navigation started
+  const mountedDirection = useRef<"left" | "right" | null | undefined>(undefined);
+  
+  // Read current direction synchronously
+  const currentDirection = useSyncExternalStore(
     subscribeToSwipeDirection,
     getSwipeDirectionSnapshot,
     getServerSnapshot
   );
   
-  // FREEZE the direction at mount time - don't let it change during animation
-  const frozenDirection = useRef<"left" | "right" | null>(null);
-  if (frozenDirection.current === null && direction !== null) {
-    frozenDirection.current = direction;
+  // Only capture on first render (undefined means not yet captured)
+  if (mountedDirection.current === undefined) {
+    mountedDirection.current = currentDirection;
   }
   
   const isSlide = variant === "slide";
-  const effectiveDirection = frozenDirection.current;
+  const effectiveDirection = mountedDirection.current;
   
   // Determine animation based on frozen direction
   let variants = fadeVariants;
