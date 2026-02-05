@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { ReactNode, useSyncExternalStore, useRef } from "react";
+import { ReactNode, useSyncExternalStore } from "react";
 import { 
   getSwipeDirectionSnapshot, 
   subscribeToSwipeDirection,
@@ -46,24 +46,15 @@ const swipeRightVariants: AnimVariants = {
 const iosEase: EasingType = [0.32, 0.72, 0, 1];
 
 export function PageTransition({ children, variant = "fade" }: PageTransitionProps) {
-  // Capture the CURRENT direction at mount time only (not on updates)
-  // This ensures the entering page uses the direction that was set when navigation started
-  const mountedDirection = useRef<"left" | "right" | null | undefined>(undefined);
-  
-  // Read current direction synchronously
-  const currentDirection = useSyncExternalStore(
+  // Read current direction synchronously - both entering and exiting pages use the SAME direction
+  // This ensures coordinated animations (old exits one way, new enters from opposite)
+  const direction = useSyncExternalStore(
     subscribeToSwipeDirection,
     getSwipeDirectionSnapshot,
     getServerSnapshot
   );
   
-  // Only capture on first render (undefined means not yet captured)
-  if (mountedDirection.current === undefined) {
-    mountedDirection.current = currentDirection;
-  }
-  
   const isSlide = variant === "slide";
-  const effectiveDirection = mountedDirection.current;
   
   // Determine animation based on frozen direction
   let variants = fadeVariants;
@@ -75,12 +66,12 @@ export function PageTransition({ children, variant = "fade" }: PageTransitionPro
     variants = slideVariants;
     duration = 0.3;
     ease = iosEase;
-  } else if (effectiveDirection === "left") {
+  } else if (direction === "left") {
     // Swipe navigation left (next tab)
     variants = swipeLeftVariants;
     duration = 0.3;
     ease = iosEase;
-  } else if (effectiveDirection === "right") {
+  } else if (direction === "right") {
     // Swipe navigation right (previous tab)
     variants = swipeRightVariants;
     duration = 0.3;
