@@ -59,28 +59,27 @@ export function PageTransition({ children, variant = "fade" }: PageTransitionPro
   let variants = fadeVariants;
   let duration = 0.1;
   let ease: EasingType = "easeOut";
-  let className = "relative w-full min-h-full";
+  // ALWAYS use absolute inset-0 h-full to ensure proper sizing during and after animation
+  let className = "absolute inset-0 h-full overflow-hidden bg-background";
   
   if (isSlide) {
     // Detail page slide
     variants = slideVariants;
     duration = 0.3;
     ease = iosEase;
-    className = "absolute inset-0 z-50 bg-background";
+    className = "absolute inset-0 h-full z-50 bg-background overflow-hidden";
   } else if (direction === "left") {
     // Swipe navigation left (next tab)
     console.log("[PageTransition] using swipeLeftVariants");
     variants = swipeLeftVariants;
     duration = 0.3;
     ease = iosEase;
-    className = "absolute inset-0 bg-background";
   } else if (direction === "right") {
     // Swipe navigation right (previous tab)
     console.log("[PageTransition] using swipeRightVariants");
     variants = swipeRightVariants;
     duration = 0.3;
     ease = iosEase;
-    className = "absolute inset-0 bg-background";
   }
   
   return (
