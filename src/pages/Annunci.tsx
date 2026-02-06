@@ -373,7 +373,7 @@ const Annunci = () => {
                           onClick={() => handleReject(app)}
                           disabled={processingAppId === app.id}
                           variant="outline"
-                          className="flex-1 border-red-300 text-red-600 hover:bg-red-50 touch-feedback"
+                          className="flex-1 border-slate-300 text-slate-500 hover:bg-slate-50 touch-feedback"
                         >
                           {processingAppId === app.id ? (
                             <Loader2 className="h-4 w-4 animate-spin" />
@@ -387,7 +387,7 @@ const Annunci = () => {
                         <Button
                           onClick={() => handleAccept(app)}
                           disabled={processingAppId === app.id}
-                          className="flex-1 bg-green-600 hover:bg-green-700 text-white touch-feedback"
+                          className="flex-1 bg-blue-600 hover:bg-blue-700 text-white touch-feedback"
                         >
                           {processingAppId === app.id ? (
                             <Loader2 className="h-4 w-4 animate-spin" />

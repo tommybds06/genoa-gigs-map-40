@@ -335,9 +335,9 @@ const PublicProfile = () => {
                     key={star} 
                     className={`w-5 h-5 ${
                       star <= reviewStats.avg 
-                        ? "text-yellow-400 fill-yellow-400" 
+                        ? "text-blue-500 fill-blue-500" 
                         : reviewStats.avg >= star - 0.5
-                        ? "text-yellow-400 fill-yellow-400/50"
+                        ? "text-blue-500 fill-blue-500/50"
                         : "text-muted-foreground/30"
                     }`}
                   />
@@ -463,7 +463,7 @@ const PublicProfile = () => {
             <div className="px-4 pb-6">
               <div className="bg-card rounded-2xl p-5 shadow-sm border border-border">
                 <div className="flex items-center gap-2 mb-3">
-                  <Star className="w-5 h-5 text-yellow-500" />
+                  <Star className="w-5 h-5 text-blue-500" />
                   <h3 className="font-bold text-lg">Recensioni</h3>
                 </div>
                 {reviews.length === 0 ? (
@@ -483,9 +483,9 @@ const PublicProfile = () => {
                                 key={star}
                                 className={`w-3.5 h-3.5 ${
                                   star <= review.rating
-                                    ? "text-yellow-400 fill-yellow-400"
+                                    ? "text-blue-500 fill-blue-500"
                                     : review.rating >= star - 0.5
-                                    ? "text-yellow-400 fill-yellow-400/50"
+                                    ? "text-blue-500 fill-blue-500/50"
                                     : "text-muted-foreground/30"
                                 }`}
                               />

@@ -91,12 +91,12 @@ const Lista = () => {
                                {job.schedule}
                              </span>
                            )}
-                           {job.lat && job.lng && (
-                             <span className="inline-flex items-center gap-1 text-muted-foreground">
-                               <MapPin className="w-3.5 h-3.5" />
-                               Genova
-                             </span>
-                           )}
+                            {(job.lat && job.lng) || job.neighborhood ? (
+                              <span className="inline-flex items-center gap-1 text-muted-foreground">
+                                <MapPin className="w-3.5 h-3.5" />
+                                {job.neighborhood || "Genova"}
+                              </span>
+                            ) : null}
                            {job.price && (
                              <span className="inline-flex items-center gap-1 text-primary font-semibold">
                                <Euro className="w-3.5 h-3.5" />
