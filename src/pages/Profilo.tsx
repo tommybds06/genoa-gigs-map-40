@@ -169,8 +169,6 @@ const Profilo = () => {
           )}
         </div>
 
-        {!isEmployer && <WorkerJobHistory primaryTextClasses={primaryTextClasses} />}
-
         {profile?.bio && (
           <div className="material-card p-4 mb-4 animate-fade-in" style={{ animationDelay: "0.2s" }}>
             <h3 className="font-semibold mb-2">{isEmployer ? "Descrizione Attività" : "Presentazione"}</h3>
@@ -221,6 +219,8 @@ const Profilo = () => {
             )}
           </div>
         )}
+
+        {!isEmployer && <WorkerJobHistory primaryTextClasses={primaryTextClasses} />}
 
         <div className="material-card p-4 mb-4 animate-fade-in" style={{ animationDelay: "0.35s" }}>
           <h3 className="font-semibold mb-3">Informazioni</h3>
