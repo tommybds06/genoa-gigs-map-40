@@ -145,7 +145,7 @@ export function SearchBar({
           </DrawerHeader>
 
           {/* Scrollable Body */}
-          <div className="flex-1 overflow-y-auto py-6 space-y-8">
+          <div className="flex-1 overflow-y-auto py-6 px-4 space-y-8">
             {/* Role Tags */}
             <div>
               <h4 className="text-base font-semibold text-foreground mb-3 flex items-center gap-2">
@@ -231,7 +231,7 @@ export function SearchBar({
               onClick={applyFilters}
               className="w-full bg-primary hover:bg-primary/90 text-white font-semibold py-6 rounded-xl"
             >
-              Applica Filtri
+              Applica
               {tempFiltersCount > 0 && (
                 <span className="ml-2 bg-white/20 px-2 py-0.5 rounded-full text-sm">
                   {tempFiltersCount}
