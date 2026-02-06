@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { AvatarPreview } from "@/components/profile/AvatarPreview";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from 'sonner';
@@ -753,25 +754,20 @@ const Messaggi = () => {
                  const isHired = chat.application_status === 'hired';
                  
                  return (
-                   <div
-                     key={chat.id}
-                     onClick={() => setSelectedChat(chat)}
-                     className={`material-card p-4 flex items-center gap-3 cursor-pointer touch-feedback ${
-                       isCompleted ? 'bg-muted/50 opacity-80' : ''
-                     }`}
-                  >
-                     <Avatar 
-                       className="h-12 w-12 cursor-pointer"
-                       onClick={(e) => {
-                         e.stopPropagation();
-                         navigate(`/profile/${chat.other_user?.id}`);
-                       }}
-                     >
-                       <AvatarImage src={chat.other_user?.avatar_url || undefined} />
-                       <AvatarFallback className={`${theme.accentBg} ${theme.primaryText}`}>
-                         {(chat.other_user?.full_name || 'U')[0].toUpperCase()}
-                       </AvatarFallback>
-                     </Avatar>
+                    <div
+                      key={chat.id}
+                      onClick={() => setSelectedChat(chat)}
+                      className={`material-card p-4 flex items-center gap-3 cursor-pointer touch-feedback ${
+                        isCompleted ? 'bg-muted/50 opacity-80' : ''
+                      }`}
+                   >
+                      <AvatarPreview
+                        imageUrl={chat.other_user?.avatar_url}
+                        userName={chat.other_user?.full_name}
+                        userId={chat.other_user?.id || ""}
+                        onMessageClick={() => setSelectedChat(chat)}
+                        chatId={chat.id}
+                      />
                      <div className="flex-1 min-w-0">
                        <div className="flex items-center gap-2">
                          <h3 className="font-semibold truncate">
