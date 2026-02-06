@@ -250,8 +250,17 @@ const Messaggi = () => {
   }, [selectedChat?.id, selectedChat?.job_id, selectedChat?.worker_id, user?.id, queryClient]);
 
   // Scroll to bottom when messages change
+  const isFirstLoadRef = useRef(true);
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (messages.length === 0) {
+      isFirstLoadRef.current = true;
+      return;
+    }
+    // Use instant scroll on first load, smooth on new messages
+    messagesEndRef.current?.scrollIntoView({ 
+      behavior: isFirstLoadRef.current ? 'instant' : 'smooth' 
+    });
+    isFirstLoadRef.current = false;
   }, [messages]);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
