@@ -3,12 +3,12 @@ import { Search, SlidersHorizontal, X, MapPin, Check } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetFooter,
-} from "@/components/ui/sheet";
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerFooter,
+} from "@/components/ui/drawer";
 import { ROLE_TAGS, TYPE_TAGS } from "@/constants/tags";
 import { GENOA_NEIGHBORHOODS } from "@/constants/geofencing";
 import { cn } from "@/lib/utils";
@@ -118,17 +118,13 @@ export function SearchBar({
         </Button>
       </div>
 
-      {/* Full Screen Filter Sheet */}
-      <Sheet open={isFilterOpen} onOpenChange={setIsFilterOpen}>
-        <SheetContent 
-          side="bottom" 
-          className="h-[85vh] flex flex-col rounded-t-3xl"
-          hideCloseButton
-        >
+      {/* Full Screen Filter Drawer - Native swipe to close */}
+      <Drawer open={isFilterOpen} onOpenChange={setIsFilterOpen}>
+        <DrawerContent className="h-[85vh] flex flex-col">
           {/* Header */}
-          <SheetHeader className="flex-shrink-0 border-b pb-4">
+          <DrawerHeader className="flex-shrink-0 border-b pb-4">
             <div className="flex items-center justify-between">
-              <SheetTitle className="text-xl font-bold">Filtri</SheetTitle>
+              <DrawerTitle className="text-xl font-bold">Filtri</DrawerTitle>
               <div className="flex items-center gap-2">
                 {tempFiltersCount > 0 && (
                   <button
@@ -146,7 +142,7 @@ export function SearchBar({
                 </button>
               </div>
             </div>
-          </SheetHeader>
+          </DrawerHeader>
 
           {/* Scrollable Body */}
           <div className="flex-1 overflow-y-auto py-6 space-y-8">
@@ -230,7 +226,7 @@ export function SearchBar({
           </div>
 
           {/* Sticky Footer */}
-          <SheetFooter className="flex-shrink-0 border-t pt-4">
+          <DrawerFooter className="flex-shrink-0 border-t pt-4">
             <Button
               onClick={applyFilters}
               className="w-full bg-primary hover:bg-primary/90 text-white font-semibold py-6 rounded-xl"
@@ -242,9 +238,9 @@ export function SearchBar({
                 </span>
               )}
             </Button>
-          </SheetFooter>
-        </SheetContent>
-      </Sheet>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
     </>
   );
 }
