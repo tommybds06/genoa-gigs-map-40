@@ -33,6 +33,7 @@ interface Profile {
   avatar_url: string | null;
   bio: string | null;
   address_text: string | null;
+  neighborhood: string | null;
   role: "worker" | "employer";
   photos: string[];
   looking_for: string | null;
@@ -55,6 +56,7 @@ interface Job {
   price: string | null;
   category: string | null;
   schedule: string | null;
+  neighborhood: string | null;
   created_at: string;
   tags: string[];
 }
@@ -635,7 +637,7 @@ const PublicProfile = () => {
             lng: 0,
             owner_id: userId || "",
             status: "open",
-            neighborhood: null,
+            neighborhood: selectedJob.neighborhood || profile?.neighborhood || null,
             profiles: profile ? {
               full_name: profile.full_name,
               avatar_url: profile.avatar_url,
