@@ -165,8 +165,7 @@ function JobsList({ jobs, loading, isEmployer, hasTags, onJobClick }: JobsListPr
         return (
           <div 
             key={job.id} 
-            className="material-card p-4 animate-fade-in cursor-pointer touch-feedback"
-            style={{ animationDelay: `${index * 0.05}s` }}
+            className="material-card p-4 cursor-pointer touch-feedback"
             onClick={() => onJobClick(job)}
           >
             <div className="flex items-start gap-3">
@@ -246,8 +245,8 @@ function ApplicationsList({ applications, loading, userId }: ApplicationsListPro
 
   return (
     <div className="space-y-3">
-      {applications.map((application, index) => (
-        <div key={application.id} style={{ animationDelay: `${index * 0.05}s` }}>
+      {applications.map((application) => (
+        <div key={application.id}>
           <ApplicationCard application={application} userId={userId} />
         </div>
       ))}
