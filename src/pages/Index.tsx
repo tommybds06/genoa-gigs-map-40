@@ -1,18 +1,83 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Header } from "@/components/layout/Header";
 import { InteractiveMap } from "@/components/map/InteractiveMap";
 import { SearchBar } from "@/components/map/SearchBar";
 import { useUser } from "@/contexts/UserContext";
 import { useMapJobs } from "@/hooks/useJobs";
- import { SwipeNavigator } from "@/components/layout/SwipeNavigator";
+import { SwipeNavigator } from "@/components/layout/SwipeNavigator";
+
+// Default center: Genova
+const DEFAULT_CENTER = { lat: 44.4056, lng: 8.9463 };
+const DEFAULT_ZOOM = 13;
+const USER_LOCATION_ZOOM = 14;
 
 const Index = () => {
-  const { isEmployer, loading: profileLoading, profile } = useUser();
+  const { isEmployer, isWorker, loading: profileLoading, profile } = useUser();
   const { data: allJobs = [] } = useMapJobs();
   
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [selectedNeighborhoods, setSelectedNeighborhoods] = useState<string[]>([]);
+  
+  // User location state (only for Workers)
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [locationRequested, setLocationRequested] = useState(false);
+  
+  // Geolocation effect - ONLY for Workers
+  useEffect(() => {
+    // Skip if not a worker or already requested
+    if (!isWorker || locationRequested || profileLoading) return;
+    
+    setLocationRequested(true);
+    
+    // Check if geolocation is available
+    if (!navigator.geolocation) {
+      console.log("Geolocation not supported");
+      return;
+    }
+    
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setUserLocation({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        });
+      },
+      (error) => {
+        // Silently handle errors - fallback to default Genova view
+        console.log("Geolocation error (silent):", error.code);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 60000,
+      }
+    );
+  }, [isWorker, locationRequested, profileLoading]);
+  
+  // Calculate initial map center based on role
+  const mapCenter = useMemo(() => {
+    if (isWorker && userLocation) {
+      // Worker with location: center on user
+      return userLocation;
+    }
+    
+    if (isEmployer && profile?.lat && profile?.lng) {
+      // Employer with business location: center on their activity
+      return { lat: profile.lat, lng: profile.lng };
+    }
+    
+    // Default: Genova center
+    return DEFAULT_CENTER;
+  }, [isWorker, isEmployer, userLocation, profile?.lat, profile?.lng]);
+  
+  // Calculate zoom level
+  const mapZoom = useMemo(() => {
+    if (isWorker && userLocation) {
+      return USER_LOCATION_ZOOM;
+    }
+    return DEFAULT_ZOOM;
+  }, [isWorker, userLocation]);
 
   const filteredJobs = useMemo(() => {
     if (isEmployer) return allJobs;
@@ -93,6 +158,9 @@ const Index = () => {
             allJobs={allJobs}
             isSearchActive={isSearchActive}
             filteredJobIds={filteredJobIds}
+            initialCenter={mapCenter}
+            initialZoom={mapZoom}
+            userLocation={isWorker ? userLocation : null}
           />
         </div>
       </main>
