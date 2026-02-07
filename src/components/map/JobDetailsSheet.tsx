@@ -17,6 +17,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { getTagClasses } from "@/lib/tagColors";
+import { LocationMiniMap } from "./LocationMiniMap";
 
 interface JobProfile {
   full_name: string | null;
@@ -243,26 +244,34 @@ export function JobDetailsSheet({ job, isOpen, onClose }: JobDetailsSheetProps) 
               </div>
             )}
 
-            {/* Location Section - Neighborhood + Address Display */}
+            {/* Location Section - Mini Map or Address Display */}
             <div className="py-4 border-t border-border">
               <h3 className={`text-sm font-bold mb-3 ${isEmployer ? 'text-blue-600' : 'text-primary'}`}>
                 POSIZIONE
               </h3>
-              <div className={`flex items-center gap-3 p-4 rounded-2xl ${isEmployer ? 'bg-blue-50' : 'bg-accent'}`}>
-                <div className={`w-12 h-12 ${theme.primary} rounded-xl flex items-center justify-center shadow-md`}>
-                  <MapPin className="w-6 h-6 text-white" />
-                </div>
-                <div className="flex-1">
-                  <p className={`text-xl font-bold ${isEmployer ? 'text-blue-600' : 'text-primary'}`}>
-                    {job.neighborhood || "Zona non specificata"}
-                  </p>
-                  {employerAddress && (
-                    <p className="text-sm text-muted-foreground mt-0.5">
-                      {employerAddress}
+              {job.lat && job.lng && job.lat !== 0 && job.lng !== 0 ? (
+                <LocationMiniMap 
+                  lat={job.lat} 
+                  lng={job.lng} 
+                  neighborhood={job.neighborhood}
+                />
+              ) : (
+                <div className={`flex items-center gap-3 p-4 rounded-2xl ${isEmployer ? 'bg-blue-50' : 'bg-accent'}`}>
+                  <div className={`w-12 h-12 ${theme.primary} rounded-xl flex items-center justify-center shadow-md`}>
+                    <MapPin className="w-6 h-6 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <p className={`text-xl font-bold ${isEmployer ? 'text-blue-600' : 'text-primary'}`}>
+                      {job.neighborhood || "Zona non specificata"}
                     </p>
-                  )}
+                    {employerAddress && (
+                      <p className="text-sm text-muted-foreground mt-0.5">
+                        {employerAddress}
+                      </p>
+                    )}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
 
