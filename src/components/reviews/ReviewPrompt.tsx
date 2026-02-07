@@ -107,42 +107,13 @@ export function ReviewPrompt() {
     }
   }, [user?.id, hasLoaded, isWorker]);
 
-  // Initial check on mount
+  // Check for pending reviews only on initial app load
   useEffect(() => {
-    if (!hasChecked.current) {
+    if (!hasChecked.current && user?.id && hasLoaded && isWorker) {
       hasChecked.current = true;
       checkPendingReviews();
     }
-  }, [checkPendingReviews]);
-
-  // Subscribe to realtime changes on applications table - stable subscription
-  useEffect(() => {
-    const userId = user?.id;
-    if (!userId || !isWorker) return;
-
-    const channelName = `applications-review-${userId}`;
-    const channel = supabase
-      .channel(channelName)
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'applications',
-          filter: `applicant_id=eq.${userId}`,
-        },
-        (payload) => {
-          if (payload.new && (payload.new as { status: string }).status === 'completed') {
-            checkPendingReviews();
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user?.id, isWorker, checkPendingReviews]);
+  }, [user?.id, hasLoaded, isWorker, checkPendingReviews]);
 
   const markAsReviewed = async () => {
     if (!pendingReview || isMarkingReviewed.current) return;
