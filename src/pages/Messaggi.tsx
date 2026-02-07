@@ -250,18 +250,22 @@ const Messaggi = () => {
     };
   }, [selectedChat?.id, selectedChat?.job_id, selectedChat?.worker_id, user?.id, queryClient]);
 
-  // Scroll to bottom when messages change
+  // Scroll to bottom when messages change - use RAF to ensure DOM is ready
   const isFirstLoadRef = useRef(true);
   useEffect(() => {
     if (messages.length === 0) {
       isFirstLoadRef.current = true;
       return;
     }
-    // Use instant scroll on first load, smooth on new messages
-    messagesEndRef.current?.scrollIntoView({ 
-      behavior: isFirstLoadRef.current ? 'instant' : 'smooth' 
+    // Use requestAnimationFrame to ensure DOM is painted before scrolling
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        messagesEndRef.current?.scrollIntoView({ 
+          behavior: isFirstLoadRef.current ? 'instant' : 'smooth' 
+        });
+        isFirstLoadRef.current = false;
+      });
     });
-    isFirstLoadRef.current = false;
   }, [messages]);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -662,7 +666,7 @@ const Messaggi = () => {
           </div>
         </div>
         
-        {/* Controlled Dialog: Hire confirmation */}
+        {/* Controlled Dialog: Hire confirmation - using Button instead of AlertDialogAction to prevent conflict */}
         <AlertDialog open={showHireDialog} onOpenChange={setShowHireDialog}>
           <AlertDialogContent>
             <AlertDialogHeader>
@@ -673,17 +677,17 @@ const Messaggi = () => {
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Annulla</AlertDialogCancel>
-              <AlertDialogAction
+              <Button
                 onClick={handleHireWorker}
-                className="bg-blue-600 hover:bg-blue-700"
+                className="bg-blue-600 hover:bg-blue-700 text-white"
               >
                 Conferma Assunzione
-              </AlertDialogAction>
+              </Button>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
         
-        {/* Controlled Dialog: Complete job confirmation */}
+        {/* Controlled Dialog: Complete job confirmation - using Button instead of AlertDialogAction */}
         <AlertDialog open={showCompleteDialog} onOpenChange={setShowCompleteDialog}>
           <AlertDialogContent>
             <AlertDialogHeader>
@@ -694,17 +698,17 @@ const Messaggi = () => {
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Annulla</AlertDialogCancel>
-              <AlertDialogAction
+              <Button
                 onClick={handleCompleteJob}
-                className="bg-green-600 hover:bg-green-700"
+                className="bg-green-600 hover:bg-green-700 text-white"
               >
                 Conferma
-              </AlertDialogAction>
+              </Button>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
 
-        {/* Controlled Dialog: Remove job from map after hiring */}
+        {/* Controlled Dialog: Remove job from map after hiring - using Button */}
         <AlertDialog open={showRemoveJobDialog} onOpenChange={setShowRemoveJobDialog}>
           <AlertDialogContent>
             <AlertDialogHeader>
@@ -717,12 +721,12 @@ const Messaggi = () => {
               <AlertDialogCancel>
                 No, tieni visibile
               </AlertDialogCancel>
-              <AlertDialogAction
+              <Button
                 onClick={() => handleCloseJobVisibility(true)}
-                className="bg-blue-600 hover:bg-blue-700"
+                className="bg-blue-600 hover:bg-blue-700 text-white"
               >
                 Sì, rimuovi
-              </AlertDialogAction>
+              </Button>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
