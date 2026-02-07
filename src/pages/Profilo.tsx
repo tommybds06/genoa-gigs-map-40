@@ -171,7 +171,7 @@ const Profilo = () => {
 
         {profile?.bio && (
           <div className="material-card p-4 mb-4">
-            <h3 className="font-semibold mb-2">{isEmployer ? "Descrizione Attività" : "Presentazione"}</h3>
+            <h3 className="font-semibold mb-2">{isEmployer ? "Descrizione" : "Presentazione"}</h3>
             <p className="text-sm text-muted-foreground leading-relaxed">{profile.bio}</p>
           </div>
         )}
