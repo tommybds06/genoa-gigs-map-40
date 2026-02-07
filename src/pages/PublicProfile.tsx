@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { GalleryDialog } from "@/components/profile/GalleryDialog";
+import { JobDetailsSheet } from "@/components/map/JobDetailsSheet";
 import { 
   ArrowLeft, 
   MapPin, 
@@ -19,7 +20,8 @@ import {
   CheckCircle2,
   FileText,
   Calendar,
-  Camera
+  Camera,
+  ChevronRight
 } from "lucide-react";
 import { useAppTheme } from "@/hooks/useAppTheme";
 import { useUser } from "@/contexts/UserContext";
@@ -99,6 +101,8 @@ const PublicProfile = () => {
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
   const [galleryIndex, setGalleryIndex] = useState(0);
+  const [selectedJob, setSelectedJob] = useState<Job | null>(null);
+  const [isJobDetailsOpen, setIsJobDetailsOpen] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -569,7 +573,14 @@ const PublicProfile = () => {
                       const roleTag = job.tags?.find(t => !['Occasionale', 'A Chiamata', 'Mensile', 'Settimanale', 'Weekend'].includes(t));
                       
                       return (
-                        <div key={job.id} className="p-3 rounded-xl bg-muted/50 border border-border">
+                        <button 
+                          key={job.id} 
+                          onClick={() => {
+                            setSelectedJob(job);
+                            setIsJobDetailsOpen(true);
+                          }}
+                          className="w-full p-3 rounded-xl bg-muted/50 border border-border hover:border-blue-300 hover:shadow-md active:scale-[0.98] transition-all text-left"
+                        >
                           <div className="flex items-start gap-3">
                             <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center shrink-0">
                               <Icon className="w-5 h-5" />
@@ -593,11 +604,14 @@ const PublicProfile = () => {
                                 )}
                               </div>
                             </div>
-                            <span className="text-xs text-muted-foreground shrink-0">
-                              {getTimeAgo(job.created_at)}
-                            </span>
+                            <div className="flex flex-col items-end gap-2 shrink-0">
+                              <span className="text-xs text-muted-foreground">
+                                {getTimeAgo(job.created_at)}
+                              </span>
+                              <ChevronRight className="w-5 h-5 text-muted-foreground" />
+                            </div>
                           </div>
-                        </div>
+                        </button>
                       );
                     })}
                   </div>
@@ -606,6 +620,32 @@ const PublicProfile = () => {
             </div>
           </>
         )}
+
+        {/* Job Details Sheet */}
+        <JobDetailsSheet 
+          job={selectedJob ? {
+            id: selectedJob.id,
+            title: selectedJob.title,
+            description: selectedJob.description,
+            price: selectedJob.price,
+            category: selectedJob.category,
+            schedule: selectedJob.schedule,
+            tags: selectedJob.tags,
+            lat: 0,
+            lng: 0,
+            owner_id: userId || "",
+            status: "open",
+            neighborhood: null,
+            profiles: profile ? {
+              full_name: profile.full_name,
+              avatar_url: profile.avatar_url,
+              photos: profile.photos,
+              address_text: profile.address_text
+            } : undefined
+          } : null} 
+          isOpen={isJobDetailsOpen} 
+          onClose={() => setIsJobDetailsOpen(false)} 
+        />
       </main>
 
       <BottomNav />
