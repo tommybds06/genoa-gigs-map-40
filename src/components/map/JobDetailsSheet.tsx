@@ -254,6 +254,7 @@ export function JobDetailsSheet({ job, isOpen, onClose }: JobDetailsSheetProps) 
                   lat={job.lat} 
                   lng={job.lng} 
                   neighborhood={job.neighborhood}
+                  address={employerAddress}
                 />
               ) : (
                 <div className={`flex items-center gap-3 p-4 rounded-2xl ${isEmployer ? 'bg-blue-50' : 'bg-accent'}`}>
