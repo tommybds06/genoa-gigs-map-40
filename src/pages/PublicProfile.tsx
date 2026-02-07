@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { 
   ArrowLeft, 
   MapPin, 
@@ -17,7 +18,11 @@ import {
   MessageCircle,
   CheckCircle2,
   FileText,
-  Calendar
+  Calendar,
+  Camera,
+  ChevronLeft,
+  ChevronRight,
+  X
 } from "lucide-react";
 import { useAppTheme } from "@/hooks/useAppTheme";
 import { useUser } from "@/contexts/UserContext";
@@ -95,6 +100,8 @@ const PublicProfile = () => {
   const [reviewStats, setReviewStats] = useState<{ avg: number; count: number } | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
+  const [isGalleryOpen, setIsGalleryOpen] = useState(false);
+  const [galleryIndex, setGalleryIndex] = useState(0);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -349,7 +356,91 @@ const PublicProfile = () => {
           )}
         </div>
 
-        {/* WORKER PROFILE SECTIONS */}
+        {/* Photo Gallery */}
+        {profile.photos && profile.photos.length > 1 && (
+          <div className="px-4 pb-6">
+            <div className="bg-card rounded-2xl p-5 shadow-sm border border-border">
+              <div className="flex items-center gap-2 mb-4">
+                <Camera className={`w-5 h-5 ${isWorkerProfile ? 'text-primary' : 'text-blue-600'}`} />
+                <h3 className="font-bold text-lg">Foto</h3>
+                <span className="text-muted-foreground text-sm">({profile.photos.length})</span>
+              </div>
+              
+              <div className="grid grid-cols-3 gap-2">
+                {profile.photos.map((photo, index) => (
+                  <button
+                    key={index}
+                    onClick={() => {
+                      setGalleryIndex(index);
+                      setIsGalleryOpen(true);
+                    }}
+                    className="aspect-square rounded-xl overflow-hidden border border-border hover:border-primary/50 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  >
+                    <img 
+                      src={photo} 
+                      alt={`Foto ${index + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Photo Gallery Dialog */}
+        <Dialog open={isGalleryOpen} onOpenChange={setIsGalleryOpen}>
+          <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 bg-black/95 border-none">
+            <div className="relative w-full h-full flex items-center justify-center min-h-[60vh]">
+              {/* Close button */}
+              <Button 
+                variant="ghost" 
+                size="icon"
+                onClick={() => setIsGalleryOpen(false)}
+                className="absolute top-2 right-2 z-10 text-white hover:bg-white/20 rounded-full"
+              >
+                <X className="w-6 h-6" />
+              </Button>
+
+              {/* Previous button */}
+              {profile.photos && profile.photos.length > 1 && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setGalleryIndex((prev) => (prev - 1 + profile.photos.length) % profile.photos.length)}
+                  className="absolute left-2 z-10 text-white hover:bg-white/20 rounded-full"
+                >
+                  <ChevronLeft className="w-8 h-8" />
+                </Button>
+              )}
+
+              {/* Image */}
+              <img 
+                src={profile.photos?.[galleryIndex]} 
+                alt={`Foto ${galleryIndex + 1}`}
+                className="max-w-full max-h-[85vh] object-contain"
+              />
+
+              {/* Next button */}
+              {profile.photos && profile.photos.length > 1 && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setGalleryIndex((prev) => (prev + 1) % profile.photos.length)}
+                  className="absolute right-2 z-10 text-white hover:bg-white/20 rounded-full"
+                >
+                  <ChevronRight className="w-8 h-8" />
+                </Button>
+              )}
+
+              {/* Counter */}
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white text-sm bg-black/50 px-3 py-1 rounded-full">
+                {galleryIndex + 1} / {profile.photos?.length}
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
         {isWorkerProfile && (
           <>
             {/* Sezione 1: Presentazione (Bio) */}
