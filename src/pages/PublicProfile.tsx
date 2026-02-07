@@ -327,11 +327,14 @@ const PublicProfile = () => {
               {isWorkerProfile ? "Worker" : "Attività"}
             </Badge>
             
-            {/* Address */}
-            {profile.address_text && (
+            {/* Location - Workers show only neighborhood, Employers show full address */}
+            {(isWorkerProfile ? profile.neighborhood : profile.address_text) && (
               <p className="text-muted-foreground flex items-center justify-center gap-1 mt-2">
                 <MapPin className="w-4 h-4" />
-                {profile.address_text}
+                {isWorkerProfile 
+                  ? profile.neighborhood 
+                  : profile.address_text
+                }
               </p>
             )}
           </div>
