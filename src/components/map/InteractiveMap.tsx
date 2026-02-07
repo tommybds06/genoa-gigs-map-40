@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { JobDetailsSheet } from "./JobDetailsSheet";
 import { EmployerGroupMarker } from "./EmployerGroupMarker";
 import { EmployerJobsDrawer } from "./EmployerJobsDrawer";
+import { UserLocationMarker } from "./UserLocationMarker";
 import { supabase } from "@/integrations/supabase/client";
 import { useUser } from "@/contexts/UserContext";
 import { useAppTheme } from "@/hooks/useAppTheme";
@@ -20,6 +21,9 @@ interface InteractiveMapProps {
   allJobs?: Job[];
   isSearchActive?: boolean;
   filteredJobIds?: Set<string>;
+  initialCenter?: { lat: number; lng: number };
+  initialZoom?: number;
+  userLocation?: { lat: number; lng: number } | null;
 }
 
 // Memoized single job marker component
@@ -96,7 +100,10 @@ function InteractiveMapInner({
   jobs: externalJobs = [], 
   allJobs: externalAllJobs = [],
   isSearchActive = false,
-  filteredJobIds = new Set()
+  filteredJobIds = new Set(),
+  initialCenter = { lat: 44.4056, lng: 8.9463 },
+  initialZoom = 13,
+  userLocation = null
 }: InteractiveMapProps) {
   const jobs = externalJobs;
   const allJobs = externalAllJobs.length > 0 ? externalAllJobs : externalJobs;
@@ -254,9 +261,9 @@ function InteractiveMapInner({
     <>
       <Map
         initialViewState={{
-          longitude: 8.9463,
-          latitude: 44.4056,
-          zoom: 13,
+          longitude: initialCenter.lng,
+          latitude: initialCenter.lat,
+          zoom: initialZoom,
         }}
         style={{ width: "100%", height: "100%" }}
         mapStyle="mapbox://styles/mapbox/streets-v12"
@@ -265,6 +272,15 @@ function InteractiveMapInner({
         reuseMaps
       >
         <NavigationControl position="top-right" showCompass={false} />
+        
+        {/* User location marker (Worker only) */}
+        {userLocation && (
+          <UserLocationMarker
+            latitude={userLocation.lat}
+            longitude={userLocation.lng}
+          />
+        )}
+        
         {markers}
 
         {selectedJob && (
