@@ -131,6 +131,7 @@ const Lista = () => {
           } : null}
           isOpen={isDetailsOpen}
           onClose={() => setIsDetailsOpen(false)}
+          showMiniMap={true}
         />
       </div>
     </SwipeNavigator>

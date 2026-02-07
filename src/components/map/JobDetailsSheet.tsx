@@ -46,6 +46,7 @@ interface JobDetailsSheetProps {
   job: Job | null;
   isOpen: boolean;
   onClose: () => void;
+  showMiniMap?: boolean;
 }
 
 const categoryIcons: Record<string, typeof GraduationCap> = {
@@ -69,7 +70,7 @@ const categoryColors: Record<string, string> = {
   general: "bg-secondary/20 text-secondary",
 };
 
-export function JobDetailsSheet({ job, isOpen, onClose }: JobDetailsSheetProps) {
+export function JobDetailsSheet({ job, isOpen, onClose, showMiniMap = false }: JobDetailsSheetProps) {
   const { isEmployer } = useUser();
   const { theme } = useAppTheme();
   const { user } = useAuth();
@@ -249,7 +250,7 @@ export function JobDetailsSheet({ job, isOpen, onClose }: JobDetailsSheetProps) 
               <h3 className={`text-sm font-bold mb-3 ${isEmployer ? 'text-blue-600' : 'text-primary'}`}>
                 POSIZIONE
               </h3>
-              {job.lat && job.lng && job.lat !== 0 && job.lng !== 0 ? (
+              {showMiniMap && job.lat && job.lng && job.lat !== 0 && job.lng !== 0 ? (
                 <LocationMiniMap 
                   lat={job.lat} 
                   lng={job.lng} 
