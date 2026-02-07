@@ -375,8 +375,10 @@ const Messaggi = () => {
       
       toast.success('Candidato assunto con successo!', { duration: 2000 });
       
-      // Ask if they want to remove job from map
-      setShowRemoveJobDialog(true);
+      // Delay showing the second dialog to avoid race condition with first dialog closing
+      setTimeout(() => {
+        setShowRemoveJobDialog(true);
+      }, 300);
     } catch (error) {
       console.error('Error hiring worker:', error);
       toast.error('Errore nell\'assunzione', { duration: 2000 });
@@ -707,7 +709,7 @@ const Messaggi = () => {
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel onClick={() => handleCloseJobVisibility(false)}>
+              <AlertDialogCancel>
                 No, tieni visibile
               </AlertDialogCancel>
               <AlertDialogAction
