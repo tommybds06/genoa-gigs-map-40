@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, Camera, Loader2, Save } from "lucide-react";
+import { ChevronLeft, Loader2, Save } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useUser } from "@/contexts/UserContext";
 import { useAppTheme } from "@/hooks/useAppTheme";
@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { NeighborhoodSelect } from "@/components/ui/NeighborhoodSelect";
+import { PhotoGalleryManager } from "@/components/profile/PhotoGalleryManager";
 import { toast } from "sonner";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -19,7 +20,6 @@ const EditProfile = () => {
   const { profile, refetch } = useUser();
   const { theme, isEmployer } = useAppTheme();
   const queryClient = useQueryClient();
-  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [fullName, setFullName] = useState("");
   const [bio, setBio] = useState("");
@@ -27,9 +27,7 @@ const EditProfile = () => {
   const [neighborhood, setNeighborhood] = useState("");
   const [lookingFor, setLookingFor] = useState("");
   const [experience, setExperience] = useState("");
-  const [isUploading, setIsUploading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [photos, setPhotos] = useState<string[]>([]);
 
   // Fetch current profile data with reduced stale time
@@ -61,60 +59,11 @@ const EditProfile = () => {
       setLookingFor(profileData.looking_for || "");
       setExperience(profileData.experience || "");
       setPhotos(profileData.photos || []);
-      setAvatarUrl(profileData.photos?.[0] || profileData.avatar_url || null);
     }
   }, [profileData]);
 
   const handleBack = () => {
     navigate(-1);
-  };
-
-  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !user?.id) return;
-
-    // Validate file type
-    if (!file.type.startsWith("image/")) {
-      toast.error("Seleziona un file immagine valido");
-      return;
-    }
-
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("L'immagine deve essere inferiore a 5MB");
-      return;
-    }
-
-    setIsUploading(true);
-    
-    try {
-      const fileExt = file.name.split(".").pop();
-      const fileName = `${user.id}/${Date.now()}.${fileExt}`;
-      
-      const { error: uploadError } = await supabase.storage
-        .from("profile-photos")
-        .upload(fileName, file);
-
-      if (uploadError) throw uploadError;
-
-      const { data: urlData } = supabase.storage
-        .from("profile-photos")
-        .getPublicUrl(fileName);
-
-      const newPhotoUrl = urlData.publicUrl;
-      
-      // Add new photo as first in the array
-      const updatedPhotos = [newPhotoUrl, ...photos.filter(p => p !== newPhotoUrl)];
-      setPhotos(updatedPhotos);
-      setAvatarUrl(newPhotoUrl);
-      
-      toast.success("Foto caricata!");
-    } catch (error) {
-      console.error("Upload error:", error);
-      toast.error("Errore durante il caricamento");
-    } finally {
-      setIsUploading(false);
-    }
   };
 
   const handleSave = async () => {
@@ -196,55 +145,21 @@ const EditProfile = () => {
       </header>
 
       <main className="flex-1 px-4 py-6 pb-24 overflow-y-auto">
-        {/* Photo Section */}
-        <div className="flex flex-col items-center mb-8 animate-fade-in">
-          <div className="relative">
-            <div className={`w-28 h-28 rounded-full overflow-hidden ${theme.primary} flex items-center justify-center shadow-lg`}>
-              {avatarUrl ? (
-                <img 
-                  src={avatarUrl} 
-                  alt="Avatar" 
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <span className="text-4xl text-white font-bold">
-                  {fullName?.charAt(0)?.toUpperCase() || "?"}
-                </span>
-              )}
-            </div>
-            
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              disabled={isUploading}
-              className={`absolute -bottom-1 -right-1 p-2.5 rounded-full shadow-md transition-colors ${buttonClasses} disabled:opacity-50`}
-            >
-              {isUploading ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Camera className="w-4 h-4" />
-              )}
-            </button>
-            
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handlePhotoUpload}
-              className="hidden"
+        {/* Photo Gallery Section */}
+        <div className="mb-6">
+          {user?.id && (
+            <PhotoGalleryManager
+              photos={photos}
+              onPhotosChange={setPhotos}
+              userId={user.id}
+              isEmployer={isEmployer}
+              maxPhotos={10}
             />
-          </div>
-          
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            disabled={isUploading}
-            className={`mt-3 text-sm font-medium ${isEmployer ? "text-blue-600" : "text-primary"}`}
-          >
-            {isUploading ? "Caricamento..." : "Cambia Foto"}
-          </button>
+          )}
         </div>
 
         {/* Form Fields */}
-        <div className="space-y-5 animate-fade-in" style={{ animationDelay: "0.1s" }}>
+        <div className="space-y-5">
           {/* Name Field */}
           <div className="space-y-2">
             <Label htmlFor="fullName" className="text-sm font-medium">
