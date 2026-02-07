@@ -163,7 +163,7 @@ const EditProfile = () => {
           {/* Name Field */}
           <div className="space-y-2">
             <Label htmlFor="fullName" className="text-sm font-medium">
-              {isEmployer ? "Nome Attività" : "Nome e Cognome"}
+              {isEmployer ? "Nome" : "Nome e Cognome"}
             </Label>
             <Input
               id="fullName"
@@ -191,7 +191,7 @@ const EditProfile = () => {
           {isEmployer && (
             <div className="space-y-2">
               <Label htmlFor="address" className="text-sm font-medium">
-                Indirizzo attività
+                Indirizzo
               </Label>
               <Input
                 id="address"
@@ -206,7 +206,7 @@ const EditProfile = () => {
           {/* Bio Field */}
           <div className="space-y-2">
             <Label htmlFor="bio" className="text-sm font-medium">
-              {isEmployer ? "Descrizione Attività" : "Presentazione"}
+              {isEmployer ? "Descrizione" : "Presentazione"}
             </Label>
             <Textarea
               id="bio"

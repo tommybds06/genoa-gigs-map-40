@@ -324,7 +324,7 @@ const PublicProfile = () => {
               variant="outline" 
               className={`mb-2 ${isWorkerProfile ? 'bg-accent text-primary border-primary/30' : 'bg-blue-50 text-blue-600 border-blue-200'}`}
             >
-              {isWorkerProfile ? "Worker" : "Attività"}
+              {isWorkerProfile ? "Worker" : "Employer"}
             </Badge>
             
             {/* Location - Workers show only neighborhood, Employers show full address */}
