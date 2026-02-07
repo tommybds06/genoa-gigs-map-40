@@ -382,7 +382,7 @@ const PublicProfile = () => {
             <div className="px-4 pb-6">
               <div className="bg-card rounded-2xl p-5 shadow-sm border border-border">
                 <div className="flex items-center gap-2 mb-4">
-                  <CheckCircle2 className="w-5 h-5 text-green-600" />
+                  <CheckCircle2 className="w-5 h-5 text-primary" />
                   <h3 className="font-bold text-lg">Storico Lavori</h3>
                 </div>
                 
@@ -401,7 +401,7 @@ const PublicProfile = () => {
                           key={job.applicationId} 
                           className="flex items-start gap-3 p-3 rounded-xl bg-muted/50 border border-border"
                         >
-                          <div className="w-10 h-10 bg-green-100 text-green-600 rounded-xl flex items-center justify-center shrink-0">
+                          <div className="w-10 h-10 bg-accent text-primary rounded-xl flex items-center justify-center shrink-0">
                             <Icon className="w-5 h-5" />
                           </div>
                           <div className="flex-1 min-w-0">
@@ -415,7 +415,7 @@ const PublicProfile = () => {
                             </div>
                           </div>
                           <div className="shrink-0">
-                            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-xs">
+                            <Badge variant="outline" className="bg-accent text-primary border-primary/30 text-xs">
                               <CheckCircle2 className="w-3 h-3 mr-1" />
                               Concluso
                             </Badge>
