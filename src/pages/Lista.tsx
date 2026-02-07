@@ -173,8 +173,7 @@ function JobsList({ jobs, loading, isEmployer, hasTags, onJobClick }: JobsListPr
                 <Icon className="w-5 h-5" />
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-base truncate">{job.title}</h3>
-                <p className="text-sm text-muted-foreground mb-2">{roleLabel}</p>
+                <h3 className="font-semibold text-base truncate mb-2">{job.title}</h3>
                 
                 {job.tags && job.tags.length > 0 && (
                   <TagBadges tags={job.tags} className="mb-2" />
