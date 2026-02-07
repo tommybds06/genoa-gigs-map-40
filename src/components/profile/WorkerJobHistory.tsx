@@ -117,7 +117,7 @@ export const WorkerJobHistory = ({ primaryTextClasses }: WorkerJobHistoryProps) 
   }
 
   return (
-    <div className="material-card p-4 mb-4 animate-fade-in" style={{ animationDelay: "0.1s" }}>
+    <div className="material-card p-4 mb-4">
       <Accordion type="single" collapsible className="w-full">
         <AccordionItem value="job-history" className="border-none">
           <AccordionTrigger className="py-0 hover:no-underline">
