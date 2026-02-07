@@ -70,8 +70,8 @@ const Messaggi = () => {
   const [uploadingImage, setUploadingImage] = useState(false);
   const [pendingAttachment, setPendingAttachment] = useState<string | null>(null);
   const [applicationStatus, setApplicationStatus] = useState<string | null>(null);
-  const [completingJob, setCompletingJob] = useState(false);
-  const [hiringWorker, setHiringWorker] = useState(false);
+  const [showHireDialog, setShowHireDialog] = useState(false);
+  const [showCompleteDialog, setShowCompleteDialog] = useState(false);
   const [showRemoveJobDialog, setShowRemoveJobDialog] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -346,27 +346,29 @@ const Messaggi = () => {
     setReplyingTo(msg);
   };
 
-  // Handle hiring worker (accepted -> hired) - OPTIMISTIC UPDATE with deferred DB calls
+  // Handle hiring worker (accepted -> hired) - CONTROLLED DIALOG with OPTIMISTIC UPDATE
   const handleHireWorker = () => {
     if (!selectedChat || !user) return;
     
-    // 1. Optimistic UI update - instant feedback
+    // 1. Close dialog first - this is critical to prevent freeze
+    setShowHireDialog(false);
+    
+    // 2. Optimistic UI update - instant feedback
     setApplicationStatus('hired');
     toast.success('Candidato assunto!', { duration: 2000 });
     
-    // 2. Show second dialog after dialog closes
+    // 3. Show second dialog after a small delay
     setTimeout(() => {
       setShowRemoveJobDialog(true);
-    }, 100);
+    }, 200);
     
-    // 3. Defer ALL async operations to next event loop tick to not block UI
+    // 4. Defer ALL async operations
     const chatId = selectedChat.id;
     const jobId = selectedChat.job_id;
     const workerId = selectedChat.worker_id;
     const userId = user.id;
     
     setTimeout(() => {
-      // Background DB operations - completely non-blocking
       supabase
         .from('applications')
         .update({ status: 'hired' })
@@ -386,12 +388,11 @@ const Messaggi = () => {
         content: '🎉 Complimenti! Sei stato assunto per questo incarico.',
       });
       
-      // Delayed cache invalidation
       setTimeout(() => {
         queryClient.invalidateQueries({ queryKey: ['chats'] });
         queryClient.invalidateQueries({ queryKey: ['jobs'] });
       }, 500);
-    }, 0);
+    }, 50);
   };
 
   // Handle closing job visibility on map
@@ -420,18 +421,21 @@ const Messaggi = () => {
     }, 0);
   };
 
-  // Handle job completion (hired -> completed) - OPTIMISTIC UPDATE with deferred DB calls
+  // Handle job completion (hired -> completed) - CONTROLLED DIALOG with OPTIMISTIC UPDATE
   const handleCompleteJob = () => {
     if (!selectedChat) return;
     
-    // 1. Optimistic UI update - instant feedback
+    // 1. Close dialog first - this is critical to prevent freeze
+    setShowCompleteDialog(false);
+    
+    // 2. Optimistic UI update - instant feedback
     setApplicationStatus('completed');
     toast.success('Lavoro concluso!', { duration: 2000 });
     
     const jobId = selectedChat.job_id;
     const workerId = selectedChat.worker_id;
     
-    // 2. Defer ALL async operations to next event loop tick
+    // 3. Defer ALL async operations
     setTimeout(() => {
       supabase
         .from('applications')
@@ -449,7 +453,7 @@ const Messaggi = () => {
       setTimeout(() => {
         queryClient.invalidateQueries({ queryKey: ['chats'] });
       }, 300);
-    }, 0);
+    }, 50);
   };
 
   // Chat detail view
@@ -500,82 +504,28 @@ const Messaggi = () => {
             
             {/* HIRE button for Employer when status is 'accepted' (in colloquio) */}
             {isEmployer && applicationStatus === 'accepted' && (
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button
-                    size="sm"
-                    className="shrink-0 bg-blue-600 hover:bg-blue-700 text-white"
-                    disabled={hiringWorker}
-                  >
-                    {hiringWorker ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <>
-                        <CheckCircle className="h-4 w-4 mr-1" />
-                        <span>Assumi</span>
-                      </>
-                    )}
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Assumere Candidato</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Confermi di voler assumere questo candidato per l'incarico?
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Annulla</AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={handleHireWorker}
-                      className="bg-blue-600 hover:bg-blue-700"
-                    >
-                      Conferma Assunzione
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+              <Button
+                size="sm"
+                className="shrink-0 bg-blue-600 hover:bg-blue-700 text-white"
+                onClick={() => setShowHireDialog(true)}
+              >
+                <CheckCircle className="h-4 w-4 mr-1" />
+                <span>Assumi</span>
+              </Button>
             )}
             
             {/* COMPLETE JOB button for Employer when status is 'hired' */}
             {isEmployer && applicationStatus === 'hired' && (
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="shrink-0 text-green-600 border-green-600 hover:bg-green-50"
-                    disabled={completingJob}
-                  >
-                    {completingJob ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <>
-                        <Check className="h-4 w-4 mr-1" />
-                        <span className="hidden sm:inline">Concludi Lavoro</span>
-                        <span className="sm:hidden">Concludi</span>
-                      </>
-                    )}
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Concludi Lavoro</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Confermi che il lavoro è stato svolto? Questo aggiornerà lo storico del lavoratore.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Annulla</AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={handleCompleteJob}
-                      className="bg-green-600 hover:bg-green-700"
-                    >
-                      Conferma
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+              <Button
+                variant="outline"
+                size="sm"
+                className="shrink-0 text-green-600 border-green-600 hover:bg-green-50"
+                onClick={() => setShowCompleteDialog(true)}
+              >
+                <Check className="h-4 w-4 mr-1" />
+                <span className="hidden sm:inline">Concludi Lavoro</span>
+                <span className="sm:hidden">Concludi</span>
+              </Button>
             )}
             
             {/* Hired badge for Worker */}
@@ -712,7 +662,49 @@ const Messaggi = () => {
           </div>
         </div>
         
-        {/* Dialog to ask about removing job from map after hiring */}
+        {/* Controlled Dialog: Hire confirmation */}
+        <AlertDialog open={showHireDialog} onOpenChange={setShowHireDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Assumere Candidato</AlertDialogTitle>
+              <AlertDialogDescription>
+                Confermi di voler assumere questo candidato per l'incarico?
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Annulla</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleHireWorker}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                Conferma Assunzione
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+        
+        {/* Controlled Dialog: Complete job confirmation */}
+        <AlertDialog open={showCompleteDialog} onOpenChange={setShowCompleteDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Concludi Lavoro</AlertDialogTitle>
+              <AlertDialogDescription>
+                Confermi che il lavoro è stato svolto? Questo aggiornerà lo storico del lavoratore.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Annulla</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleCompleteJob}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                Conferma
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Controlled Dialog: Remove job from map after hiring */}
         <AlertDialog open={showRemoveJobDialog} onOpenChange={setShowRemoveJobDialog}>
           <AlertDialogContent>
             <AlertDialogHeader>
