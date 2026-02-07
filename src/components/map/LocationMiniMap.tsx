@@ -57,28 +57,25 @@ export function LocationMiniMap({ lat, lng, neighborhood, address }: LocationMin
       }
     });
 
-    // Create custom pin marker matching the main map style (briefcase pin)
+    // Create custom pin marker matching the main map style exactly
     const markerEl = document.createElement("div");
     markerEl.innerHTML = `
       <div style="
-        width: 44px;
-        height: 56px;
         display: flex;
         flex-direction: column;
         align-items: center;
-        filter: drop-shadow(0 4px 8px rgba(0,0,0,0.25));
+        filter: drop-shadow(0 4px 6px rgba(0,0,0,0.15));
       ">
         <div style="
-          width: 44px;
-          height: 44px;
-          background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+          width: 40px;
+          height: 40px;
+          background-color: hsl(24.6, 95%, 53.1%);
           border-radius: 50%;
           display: flex;
           align-items: center;
           justify-content: center;
-          border: 3px solid white;
         ">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
             <rect width="20" height="14" x="2" y="6" rx="2"/>
           </svg>
@@ -86,10 +83,10 @@ export function LocationMiniMap({ lat, lng, neighborhood, address }: LocationMin
         <div style="
           width: 0;
           height: 0;
-          border-left: 10px solid transparent;
-          border-right: 10px solid transparent;
-          border-top: 12px solid #ea580c;
-          margin-top: -3px;
+          border-left: 8px solid transparent;
+          border-right: 8px solid transparent;
+          border-top: 10px solid hsl(24.6, 95%, 53.1%);
+          margin-top: -1px;
         "></div>
       </div>
     `;
