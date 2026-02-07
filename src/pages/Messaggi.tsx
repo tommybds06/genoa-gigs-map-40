@@ -346,45 +346,46 @@ const Messaggi = () => {
     setReplyingTo(msg);
   };
 
-  // Handle hiring worker (accepted -> hired)
+  // Handle hiring worker (accepted -> hired) - OPTIMISTIC UPDATE
   const handleHireWorker = async () => {
     if (!selectedChat || !user) return;
     
-    setHiringWorker(true);
-    try {
-      const { error } = await supabase
+    // Optimistic UI update - instant feedback
+    setApplicationStatus('hired');
+    setHiringWorker(false);
+    toast.success('Candidato assunto!', { duration: 2000 });
+    
+    // Show second dialog after small delay for animation
+    setTimeout(() => {
+      setShowRemoveJobDialog(true);
+    }, 150);
+    
+    // Background operations - don't block UI
+    Promise.all([
+      supabase
         .from('applications')
         .update({ status: 'hired' })
         .eq('job_id', selectedChat.job_id)
-        .eq('applicant_id', selectedChat.worker_id);
-
-      if (error) throw error;
-      
-      setApplicationStatus('hired');
-      
-      // Send automatic message
-      await supabase.from('messages').insert({
+        .eq('applicant_id', selectedChat.worker_id),
+      supabase.from('messages').insert({
         chat_id: selectedChat.id,
         sender_id: user.id,
         content: '🎉 Complimenti! Sei stato assunto per questo incarico.',
-      });
-      
-      // Invalidate caches
+      }),
+    ]).then(([updateResult]) => {
+      if (updateResult.error) {
+        // Rollback on error
+        setApplicationStatus('accepted');
+        toast.error('Errore nell\'assunzione', { duration: 2000 });
+      }
+      // Background cache invalidation (no await)
       queryClient.invalidateQueries({ queryKey: ['chats'] });
       queryClient.invalidateQueries({ queryKey: ['jobs'] });
-      
-      toast.success('Candidato assunto con successo!', { duration: 2000 });
-      
-      // Delay showing the second dialog to avoid race condition with first dialog closing
-      setTimeout(() => {
-        setShowRemoveJobDialog(true);
-      }, 300);
-    } catch (error) {
+    }).catch((error) => {
       console.error('Error hiring worker:', error);
+      setApplicationStatus('accepted');
       toast.error('Errore nell\'assunzione', { duration: 2000 });
-    } finally {
-      setHiringWorker(false);
-    }
+    });
   };
 
   // Handle closing job visibility on map
@@ -393,50 +394,46 @@ const Messaggi = () => {
     
     if (!removeFromMap || !selectedChat) return;
     
-    try {
-      const { error } = await supabase
-        .from('jobs')
-        .update({ status: 'closed' })
-        .eq('id', selectedChat.job_id);
-
-      if (error) throw error;
-      
-      // Invalidate jobs cache to update map
-      queryClient.invalidateQueries({ queryKey: ['jobs'] });
-      
-      toast.success('Annuncio rimosso dalla mappa', { duration: 2000 });
-    } catch (error) {
-      console.error('Error closing job:', error);
-      toast.error('Errore nella chiusura dell\'annuncio', { duration: 2000 });
-    }
+    toast.success('Annuncio rimosso dalla mappa', { duration: 2000 });
+    
+    // Background operation
+    supabase
+      .from('jobs')
+      .update({ status: 'closed' })
+      .eq('id', selectedChat.job_id)
+      .then(({ error }) => {
+        if (error) {
+          console.error('Error closing job:', error);
+          toast.error('Errore nella chiusura dell\'annuncio', { duration: 2000 });
+        }
+        queryClient.invalidateQueries({ queryKey: ['jobs'] });
+      });
   };
 
-  // Handle job completion (hired -> completed)
+  // Handle job completion (hired -> completed) - OPTIMISTIC UPDATE
   const handleCompleteJob = async () => {
     if (!selectedChat) return;
     
-    setCompletingJob(true);
-    try {
-      const { error } = await supabase
-        .from('applications')
-        .update({ status: 'completed' })
-        .eq('job_id', selectedChat.job_id)
-        .eq('applicant_id', selectedChat.worker_id);
-
-      if (error) throw error;
-      
-      setApplicationStatus('completed');
-      
-      // Invalidate chats cache to update status
-      queryClient.invalidateQueries({ queryKey: ['chats'] });
-      
-      toast.success('Lavoro concluso con successo!', { duration: 2000 });
-    } catch (error) {
-      console.error('Error completing job:', error);
-      toast.error('Errore nella chiusura del lavoro', { duration: 2000 });
-    } finally {
-      setCompletingJob(false);
-    }
+    // Optimistic UI update - instant feedback
+    setApplicationStatus('completed');
+    setCompletingJob(false);
+    toast.success('Lavoro concluso!', { duration: 2000 });
+    
+    // Background operation
+    supabase
+      .from('applications')
+      .update({ status: 'completed' })
+      .eq('job_id', selectedChat.job_id)
+      .eq('applicant_id', selectedChat.worker_id)
+      .then(({ error }) => {
+        if (error) {
+          // Rollback on error
+          console.error('Error completing job:', error);
+          setApplicationStatus('hired');
+          toast.error('Errore nella chiusura del lavoro', { duration: 2000 });
+        }
+        queryClient.invalidateQueries({ queryKey: ['chats'] });
+      });
   };
 
   // Chat detail view
