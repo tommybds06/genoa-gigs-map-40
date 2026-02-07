@@ -3,11 +3,14 @@ import Map, { Marker, Popup, NavigationControl } from "react-map-gl";
 import { Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { JobDetailsSheet } from "./JobDetailsSheet";
+import { EmployerGroupMarker } from "./EmployerGroupMarker";
+import { EmployerJobsDrawer } from "./EmployerJobsDrawer";
 import { supabase } from "@/integrations/supabase/client";
 import { useUser } from "@/contexts/UserContext";
 import { useAppTheme } from "@/hooks/useAppTheme";
 import { getJobIconFromTags } from "@/lib/jobIcons";
 import { getTagClasses } from "@/lib/tagColors";
+import { groupJobsByEmployer, EmployerGroup } from "@/lib/groupJobsByEmployer";
 import { Job } from "@/hooks/useJobs";
 import { cn } from "@/lib/utils";
 import "mapbox-gl/dist/mapbox-gl.css";
@@ -19,8 +22,8 @@ interface InteractiveMapProps {
   filteredJobIds?: Set<string>;
 }
 
-// Memoized marker component to prevent re-renders
-const JobMarker = memo(function JobMarker({ 
+// Memoized single job marker component
+const SingleJobMarker = memo(function SingleJobMarker({ 
   job, 
   isHighlighted, 
   isDimmed, 
@@ -102,6 +105,11 @@ function InteractiveMapInner({
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [mapboxToken, setMapboxToken] = useState<string | null>(null);
   const [lastSelectedJob, setLastSelectedJob] = useState<Job | null>(null);
+  
+  // Employer group drawer state
+  const [selectedEmployerJobs, setSelectedEmployerJobs] = useState<Job[]>([]);
+  const [isEmployerDrawerOpen, setIsEmployerDrawerOpen] = useState(false);
+  
   const { isEmployer } = useUser();
   const { theme } = useAppTheme();
 
@@ -131,8 +139,33 @@ function InteractiveMapInner({
     }
   }, [selectedJob]);
 
-  const handleMarkerClick = useCallback((job: Job) => {
+  // Group jobs by employer
+  const employerGroups = useMemo(() => {
+    const jobsToGroup = isSearchActive ? allJobs : jobs;
+    return groupJobsByEmployer(jobsToGroup);
+  }, [jobs, allJobs, isSearchActive]);
+
+  // For search filtering, we need to know which groups have filtered jobs
+  const filteredIdsString = useMemo(() => Array.from(filteredJobIds).sort().join(','), [filteredJobIds]);
+
+  const handleSingleJobClick = useCallback((job: Job) => {
     setSelectedJob(job);
+  }, []);
+
+  const handleGroupMarkerClick = useCallback((employerId: string, employerJobs: Job[]) => {
+    if (employerJobs.length === 1) {
+      // Single job - open popup then details
+      setSelectedJob(employerJobs[0]);
+    } else {
+      // Multiple jobs - open employer drawer
+      setSelectedEmployerJobs(employerJobs);
+      setIsEmployerDrawerOpen(true);
+    }
+  }, []);
+
+  const handleJobSelectFromDrawer = useCallback((job: Job) => {
+    setLastSelectedJob(job);
+    setIsDetailsOpen(true);
   }, []);
 
   const handlePopupClick = useCallback(() => {
@@ -148,25 +181,51 @@ function InteractiveMapInner({
     setIsDetailsOpen(false);
   }, []);
 
-  // Memoize stable IDs for dependency comparison
-  const filteredIdsString = useMemo(() => Array.from(filteredJobIds).sort().join(','), [filteredJobIds]);
+  const handleCloseEmployerDrawer = useCallback(() => {
+    setIsEmployerDrawerOpen(false);
+    setSelectedEmployerJobs([]);
+  }, []);
 
-  // Memoize markers
+  // Render markers based on employer groups
   const markers = useMemo(() => {
-    const jobsToRender = isSearchActive ? allJobs : jobs;
-    
-    return jobsToRender.map((job) => (
-      <JobMarker
-        key={job.id}
-        job={job}
-        isHighlighted={isSearchActive && filteredJobIds.has(job.id)}
-        isDimmed={isSearchActive && !filteredJobIds.has(job.id)}
-        isEmployer={isEmployer}
-        isSearchActive={isSearchActive}
-        onMarkerClick={handleMarkerClick}
-      />
-    ));
-  }, [jobs, allJobs, isSearchActive, filteredIdsString, isEmployer, handleMarkerClick]);
+    return employerGroups.map((group) => {
+      const hasFilteredJobs = isSearchActive 
+        ? group.jobs.some(job => filteredJobIds.has(job.id))
+        : true;
+      
+      const isDimmed = isSearchActive && !hasFilteredJobs;
+      const isHighlighted = isSearchActive && hasFilteredJobs;
+
+      if (group.jobs.length === 1) {
+        // Single job - use standard marker
+        const job = group.jobs[0];
+        return (
+          <SingleJobMarker
+            key={job.id}
+            job={job}
+            isHighlighted={isHighlighted}
+            isDimmed={isDimmed}
+            isEmployer={isEmployer}
+            isSearchActive={isSearchActive}
+            onMarkerClick={handleSingleJobClick}
+          />
+        );
+      } else {
+        // Multiple jobs - use employer group marker
+        return (
+          <EmployerGroupMarker
+            key={group.employerId}
+            employerId={group.employerId}
+            jobs={group.jobs}
+            lat={group.lat}
+            lng={group.lng}
+            isEmployer={isEmployer}
+            onMarkerClick={handleGroupMarkerClick}
+          />
+        );
+      }
+    });
+  }, [employerGroups, isSearchActive, filteredIdsString, isEmployer, handleSingleJobClick, handleGroupMarkerClick]);
 
   const loadingBgClass = isEmployer ? "bg-blue-600/20" : "bg-primary/20";
   const loadingIconClass = isEmployer ? "text-blue-600" : "text-primary";
@@ -257,7 +316,16 @@ function InteractiveMapInner({
         </div>
       </Map>
 
+      {/* Single Job Details Sheet */}
       <JobDetailsSheet job={lastSelectedJob} isOpen={isDetailsOpen} onClose={handleCloseDetails} />
+      
+      {/* Employer Jobs Selection Drawer */}
+      <EmployerJobsDrawer
+        isOpen={isEmployerDrawerOpen}
+        onClose={handleCloseEmployerDrawer}
+        jobs={selectedEmployerJobs}
+        onJobSelect={handleJobSelectFromDrawer}
+      />
     </>
   );
 }
