@@ -73,7 +73,6 @@ const Messaggi = () => {
   const [showHireDialog, setShowHireDialog] = useState(false);
   const [showCompleteDialog, setShowCompleteDialog] = useState(false);
   const [showRemoveJobDialog, setShowRemoveJobDialog] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Handle URL param for direct chat open
@@ -250,23 +249,21 @@ const Messaggi = () => {
     };
   }, [selectedChat?.id, selectedChat?.job_id, selectedChat?.worker_id, user?.id, queryClient]);
 
-  // Scroll to bottom when messages change - use RAF to ensure DOM is ready
-  const isFirstLoadRef = useRef(true);
+  // Scroll to bottom only for NEW messages (not on first load - CSS handles that with flex-col-reverse)
+  const prevMessagesCountRef = useRef(0);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (messages.length === 0) {
-      isFirstLoadRef.current = true;
+      prevMessagesCountRef.current = 0;
       return;
     }
-    // Use requestAnimationFrame to ensure DOM is painted before scrolling
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        messagesEndRef.current?.scrollIntoView({ 
-          behavior: isFirstLoadRef.current ? 'instant' : 'smooth' 
-        });
-        isFirstLoadRef.current = false;
-      });
-    });
-  }, [messages]);
+    // Only smooth scroll for NEW messages (not initial load)
+    if (prevMessagesCountRef.current > 0 && messages.length > prevMessagesCountRef.current) {
+      // With flex-col-reverse, scrollTop 0 is at the bottom
+      messagesContainerRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    prevMessagesCountRef.current = messages.length;
+  }, [messages.length]);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -550,9 +547,10 @@ const Messaggi = () => {
           </div>
         </header>
 
-        {/* Messages area - flex-1 takes ALL remaining space between header and input */}
+        {/* Messages area - use flex column-reverse to auto-scroll to bottom without JS jank */}
         <main 
-          className="flex-1 overflow-y-auto overscroll-contain px-4 pt-4"
+          ref={messagesContainerRef}
+          className="flex-1 overflow-y-auto overscroll-contain px-4 flex flex-col-reverse"
           style={{ 
             WebkitOverflowScrolling: 'touch'
           }}
@@ -564,7 +562,7 @@ const Messaggi = () => {
               </p>
             </div>
           ) : (
-            <div className="space-y-3 pb-4">
+            <div className="space-y-3 py-4">
               {messages.map((msg) => (
                 <MessageBubble
                   key={msg.id}
@@ -575,8 +573,6 @@ const Messaggi = () => {
                   formatTime={formatMessageTime}
                 />
               ))}
-              {/* Scroll anchor */}
-              <div ref={messagesEndRef} />
             </div>
           )}
         </main>
