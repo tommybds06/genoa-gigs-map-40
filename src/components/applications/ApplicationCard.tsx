@@ -59,19 +59,20 @@ export function ApplicationCard({ application, userId }: ApplicationCardProps) {
   const status = statusConfig[application.status] || statusConfig.pending;
   const isActiveStatus = application.status === "accepted" || application.status === "hired";
 
+  const employerId = job?.owner_id;
+
   const handleClick = () => {
     if (isActiveStatus && chatId) {
-      navigate(`/messaggi/${chatId}`);
+      // Use query param format that Messaggi.tsx expects
+      navigate(`/messaggi?chat=${chatId}`);
     } else if (isActiveStatus) {
       toast({
         title: "Chat non disponibile",
         description: "La chat sarà presto disponibile.",
       });
-    } else if (application.status === "pending") {
-      toast({
-        title: "In attesa di risposta",
-        description: "L'employer sta valutando la tua candidatura.",
-      });
+    } else if (application.status === "pending" && employerId) {
+      // Navigate to employer's profile for pending applications
+      navigate(`/profile/${employerId}`);
     }
   };
 
