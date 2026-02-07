@@ -211,7 +211,7 @@ function InteractiveMapInner({
           />
         );
       } else {
-        // Multiple jobs - use employer group marker
+        // Multiple jobs - use employer group marker with search/filter support
         return (
           <EmployerGroupMarker
             key={group.employerId}
@@ -220,6 +220,9 @@ function InteractiveMapInner({
             lat={group.lat}
             lng={group.lng}
             isEmployer={isEmployer}
+            isHighlighted={isHighlighted}
+            isDimmed={isDimmed}
+            isSearchActive={isSearchActive}
             onMarkerClick={handleGroupMarkerClick}
           />
         );

@@ -1,7 +1,6 @@
 import { memo } from "react";
 import { Marker } from "react-map-gl";
-import { Building2 } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Briefcase } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Job } from "@/hooks/useJobs";
 
@@ -11,6 +10,9 @@ interface EmployerGroupMarkerProps {
   lat: number;
   lng: number;
   isEmployer: boolean;
+  isHighlighted?: boolean;
+  isDimmed?: boolean;
+  isSearchActive?: boolean;
   onMarkerClick: (employerId: string, jobs: Job[]) => void;
 }
 
@@ -20,18 +22,12 @@ export const EmployerGroupMarker = memo(function EmployerGroupMarker({
   lat,
   lng,
   isEmployer,
+  isHighlighted = false,
+  isDimmed = false,
+  isSearchActive = false,
   onMarkerClick,
 }: EmployerGroupMarkerProps) {
-  const firstJob = jobs[0];
   const count = jobs.length;
-  
-  // Get employer avatar from first job's profile
-  const photos = firstJob.profiles?.photos;
-  const avatarUrl = photos && photos.length > 0 
-    ? photos[0] 
-    : firstJob.profiles?.avatar_url || null;
-  const employerName = firstJob.profiles?.full_name || "Employer";
-  const initials = employerName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
 
   return (
     <Marker
@@ -43,48 +39,53 @@ export const EmployerGroupMarker = memo(function EmployerGroupMarker({
         onMarkerClick(employerId, jobs);
       }}
     >
-      <button className="group flex flex-col items-center cursor-pointer transition-all duration-300 ease-out hover:scale-110 touch-feedback relative">
-        {/* Badge counter */}
-        <div className="absolute -top-1 -right-1 z-10 min-w-[22px] h-[22px] bg-red-500 rounded-full flex items-center justify-center shadow-md border-2 border-white">
+      <button 
+        className={cn(
+          "group flex flex-col items-center cursor-pointer transition-all duration-300 ease-out touch-feedback relative",
+          isHighlighted && "scale-125 z-10",
+          isDimmed && "opacity-30 scale-90",
+          !isSearchActive && "hover:scale-110"
+        )}
+      >
+        {/* Badge counter - uses primary color */}
+        <div 
+          className={cn(
+            "absolute -top-1 -right-1 z-10 min-w-[20px] h-[20px] rounded-full flex items-center justify-center shadow-md border-2 border-white",
+            isEmployer ? "bg-blue-600" : "bg-primary"
+          )}
+        >
           <span className="text-white text-xs font-bold px-1">{count}</span>
         </div>
         
-        {/* Main marker with avatar */}
+        {/* Main marker - same size as single markers (w-10 h-10) */}
         <div
           className={cn(
-            "w-12 h-12 rounded-full flex items-center justify-center shadow-material-md relative overflow-hidden border-3",
-            isEmployer 
-              ? "border-blue-600 bg-blue-50" 
-              : "border-primary bg-accent"
+            "w-10 h-10 rounded-full flex items-center justify-center shadow-material-md relative transition-all duration-300",
+            isHighlighted 
+              ? "bg-white border-3 border-primary" 
+              : isEmployer 
+                ? "bg-blue-600" 
+                : "bg-primary"
           )}
+          style={isHighlighted ? { borderWidth: '3px' } : undefined}
         >
-          {avatarUrl ? (
-            <Avatar className="w-full h-full">
-              <AvatarImage src={avatarUrl} alt={employerName} className="object-cover" />
-              <AvatarFallback className={cn(
-                "font-bold text-sm",
-                isEmployer ? "bg-blue-100 text-blue-700" : "bg-accent text-primary"
-              )}>
-                {initials}
-              </AvatarFallback>
-            </Avatar>
-          ) : (
-            <Building2 
-              className={cn(
-                "w-6 h-6",
-                isEmployer ? "text-blue-600" : "text-primary"
-              )} 
-            />
-          )}
+          <Briefcase 
+            className={cn(
+              "w-5 h-5 transition-colors duration-300",
+              isHighlighted ? "text-primary" : "text-white"
+            )} 
+          />
         </div>
         
         {/* Pointer triangle */}
         <div
           className={cn(
-            "w-0 h-0 border-l-[10px] border-r-[10px] border-t-[12px] border-l-transparent border-r-transparent -mt-1",
-            isEmployer 
-              ? "border-t-blue-600" 
-              : "border-t-primary"
+            "w-0 h-0 border-l-[8px] border-r-[8px] border-t-[10px] border-l-transparent border-r-transparent -mt-1 transition-all duration-300",
+            isHighlighted 
+              ? "border-t-primary" 
+              : isEmployer 
+                ? "border-t-blue-600" 
+                : "border-t-primary"
           )}
         />
       </button>
