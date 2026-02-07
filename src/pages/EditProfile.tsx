@@ -272,19 +272,21 @@ const EditProfile = () => {
             />
           </div>
 
-          {/* Address Field */}
-          <div className="space-y-2">
-            <Label htmlFor="address" className="text-sm font-medium">
-              Indirizzo (opzionale)
-            </Label>
-            <Input
-              id="address"
-              value={addressText}
-              onChange={(e) => setAddressText(e.target.value)}
-              placeholder="Es. Via Roma 1"
-              className={`${inputBorderClasses}`}
-            />
-          </div>
+          {/* Address Field - Only for Employers */}
+          {isEmployer && (
+            <div className="space-y-2">
+              <Label htmlFor="address" className="text-sm font-medium">
+                Indirizzo attività
+              </Label>
+              <Input
+                id="address"
+                value={addressText}
+                onChange={(e) => setAddressText(e.target.value)}
+                placeholder="Es. Via Roma 1"
+                className={`${inputBorderClasses}`}
+              />
+            </div>
+          )}
 
           {/* Bio Field */}
           <div className="space-y-2">
