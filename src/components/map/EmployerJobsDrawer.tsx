@@ -1,4 +1,5 @@
 import { Clock, MapPin, ChevronRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import {
   Drawer,
   DrawerContent,
@@ -28,10 +29,12 @@ export function EmployerJobsDrawer({
 }: EmployerJobsDrawerProps) {
   const { isEmployer } = useUser();
   const { theme } = useAppTheme();
+  const navigate = useNavigate();
   
   if (jobs.length === 0) return null;
   
   const firstJob = jobs[0];
+  const employerId = firstJob.owner_id;
   const photos = firstJob.profiles?.photos;
   const avatarUrl = photos && photos.length > 0 
     ? photos[0] 
@@ -48,13 +51,21 @@ export function EmployerJobsDrawer({
     }, 150);
   };
 
+  const handleEmployerClick = () => {
+    onClose();
+    navigate(`/profile/${employerId}`);
+  };
+
   return (
     <Drawer open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DrawerContent className="max-h-[85vh]">
         <div className="flex flex-col max-h-[85vh] overflow-hidden">
-          {/* Header with Employer Info */}
+          {/* Header with Employer Info - Clickable */}
           <DrawerHeader className="text-left pb-4 px-6 shrink-0">
-            <div className="flex items-center gap-3 mb-2">
+            <button 
+              onClick={handleEmployerClick}
+              className="flex items-center gap-3 mb-2 w-full text-left hover:opacity-80 active:scale-[0.98] transition-all"
+            >
               <Avatar className={`w-12 h-12 border-2 ${isEmployer ? "border-blue-600/20" : "border-primary/20"}`}>
                 <AvatarImage src={avatarUrl || undefined} alt={employerName} className="object-cover" />
                 <AvatarFallback className={`${theme.accentBg} ${theme.accentText} font-bold`}>
@@ -63,7 +74,7 @@ export function EmployerJobsDrawer({
               </Avatar>
               <div className="flex-1 min-w-0">
                 <DrawerTitle className="text-lg font-bold text-foreground truncate">
-                  Offerte presso {employerName}
+                  Annunci presso {employerName}
                 </DrawerTitle>
                 {employerAddress && (
                   <p className="text-sm text-muted-foreground truncate flex items-center gap-1">
@@ -72,7 +83,8 @@ export function EmployerJobsDrawer({
                   </p>
                 )}
               </div>
-            </div>
+              <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0" />
+            </button>
             <p className="text-sm text-muted-foreground">
               {jobs.length} annunci disponibili
             </p>
