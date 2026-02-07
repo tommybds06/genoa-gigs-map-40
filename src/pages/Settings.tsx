@@ -85,7 +85,7 @@ const Settings = () => {
       <main className="flex-1 px-4 py-4 overflow-y-auto">
         {/* User Info Card */}
         {user?.email && (
-          <div className="material-card p-4 mb-6 animate-fade-in">
+          <div className="material-card p-4 mb-6">
             <div className="flex items-center gap-3">
               <div className={`w-10 h-10 ${theme.primary} text-white rounded-full flex items-center justify-center`}>
                 <Mail className="w-5 h-5" />
@@ -99,7 +99,7 @@ const Settings = () => {
         )}
 
         {/* Account Section */}
-        <div className="mb-6 animate-fade-in" style={{ animationDelay: "0.1s" }}>
+        <div className="mb-6">
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-2 px-1">
             Account
           </h2>
@@ -131,7 +131,7 @@ const Settings = () => {
         </div>
 
         {/* Support & Info Section */}
-        <div className="mb-6 animate-fade-in" style={{ animationDelay: "0.2s" }}>
+        <div className="mb-6">
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-2 px-1">
             Supporto & Info
           </h2>
@@ -163,7 +163,7 @@ const Settings = () => {
         </div>
 
         {/* Danger Zone Section */}
-        <div className="mb-6 animate-fade-in" style={{ animationDelay: "0.3s" }}>
+        <div className="mb-6">
           <h2 className="text-sm font-semibold text-destructive uppercase tracking-wide mb-2 px-1">
             Zona Pericolo
           </h2>

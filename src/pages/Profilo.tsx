@@ -98,7 +98,7 @@ const Profilo = () => {
          <main className="flex-1 px-4 py-4 pb-4 overflow-y-auto">
         {/* Photo Carousel */}
         {profile?.photos && profile.photos.length > 0 && (
-          <div className="relative mb-4 animate-fade-in">
+          <div className="relative mb-4">
             <div className="aspect-[4/3] rounded-2xl overflow-hidden bg-muted">
               <img src={profile.photos[currentPhotoIndex]} alt={`Foto ${currentPhotoIndex + 1}`} className="w-full h-full object-cover" />
             </div>
@@ -125,7 +125,7 @@ const Profilo = () => {
         )}
 
         {/* Profile Card */}
-        <div className="material-card-elevated p-6 mb-4 animate-fade-in">
+        <div className="material-card-elevated p-6 mb-4">
           <div className="flex items-center gap-4">
             <div className={`w-20 h-20 ${theme.primary} text-white rounded-full flex items-center justify-center shadow-material-md overflow-hidden`}>
               {profile?.photos && profile.photos.length > 0 ? (
@@ -170,14 +170,14 @@ const Profilo = () => {
         </div>
 
         {profile?.bio && (
-          <div className="material-card p-4 mb-4 animate-fade-in" style={{ animationDelay: "0.2s" }}>
+          <div className="material-card p-4 mb-4">
             <h3 className="font-semibold mb-2">{isEmployer ? "Descrizione Attività" : "Presentazione"}</h3>
             <p className="text-sm text-muted-foreground leading-relaxed">{profile.bio}</p>
           </div>
         )}
 
         {isEmployer && profile?.looking_for && (
-          <div className="material-card p-4 mb-4 animate-fade-in" style={{ animationDelay: "0.25s" }}>
+          <div className="material-card p-4 mb-4">
             <h3 className="font-semibold mb-2 flex items-center gap-2">
               <Briefcase className={`w-4 h-4 ${primaryTextClasses}`} />Chi cerco
             </h3>
@@ -186,7 +186,7 @@ const Profilo = () => {
         )}
 
         {!isEmployer && profile?.experience && (
-          <div className="material-card p-4 mb-4 animate-fade-in" style={{ animationDelay: "0.25s" }}>
+          <div className="material-card p-4 mb-4">
             <h3 className="font-semibold mb-2 flex items-center gap-2">
               <Briefcase className={`w-4 h-4 ${primaryTextClasses}`} />Esperienze
             </h3>
@@ -195,7 +195,7 @@ const Profilo = () => {
         )}
 
         {!isEmployer && (
-          <div className="material-card p-4 mb-4 animate-fade-in" style={{ animationDelay: "0.3s" }}>
+          <div className="material-card p-4 mb-4">
             <div className="flex items-center justify-between mb-3">
               <h3 className="font-semibold">I tuoi Interessi</h3>
               <div className="flex gap-2">
@@ -222,7 +222,7 @@ const Profilo = () => {
 
         {!isEmployer && <WorkerJobHistory primaryTextClasses={primaryTextClasses} />}
 
-        <div className="material-card p-4 mb-4 animate-fade-in" style={{ animationDelay: "0.35s" }}>
+        <div className="material-card p-4 mb-4">
           <h3 className="font-semibold mb-3">Informazioni</h3>
           <div className="space-y-3">
             {profile?.neighborhood ? (
@@ -237,7 +237,7 @@ const Profilo = () => {
           </div>
         </div>
 
-           <button onClick={handleLogout} className="material-btn-outlined w-full p-4 flex items-center justify-center gap-2 text-destructive border-destructive/30 animate-fade-in touch-feedback" style={{ animationDelay: "0.4s" }}>
+           <button onClick={handleLogout} className="material-btn-outlined w-full p-4 flex items-center justify-center gap-2 text-destructive border-destructive/30 touch-feedback">
              <LogOut className="w-5 h-5" /><span className="font-medium">Esci</span>
            </button>
          </main>
