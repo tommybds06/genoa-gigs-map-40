@@ -14,6 +14,7 @@ import {
   Mail, 
   Lock, 
   User,
+  MapPin,
   Loader2,
   ArrowRight
 } from 'lucide-react';
@@ -75,8 +76,9 @@ const Auth = () => {
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [neighborhood, setNeighborhood] = useState('');
+  const [address, setAddress] = useState('');
   const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState<{ email?: string; password?: string; name?: string; role?: string; neighborhood?: string }>({});
+  const [errors, setErrors] = useState<{ email?: string; password?: string; name?: string; role?: string; neighborhood?: string; address?: string }>({});
 
   // Get current theme based on selected role
   const currentTheme = selectedRole ? roleThemes[selectedRole] : roleThemes.neutral;
@@ -126,8 +128,14 @@ const Auth = () => {
         }
       }
 
-      if (selectedRole === 'employer' && !neighborhood) {
-        newErrors.neighborhood = 'Seleziona il quartiere della tua attività';
+      // Neighborhood required for both roles
+      if (!neighborhood) {
+        newErrors.neighborhood = 'Seleziona il tuo quartiere';
+      }
+
+      // Address required only for employer
+      if (selectedRole === 'employer' && !address.trim()) {
+        newErrors.address = 'Inserisci l\'indirizzo della tua attività';
       }
     }
 
@@ -187,12 +195,14 @@ const Auth = () => {
             role: 'worker' | 'employer';
             full_name: string | null;
             neighborhood: string | null;
+            address_text: string | null;
             is_onboarded: boolean;
           } = {
             id: data.user.id,
             role: selectedRole,
             full_name: fullName || null,
-            neighborhood: selectedRole === 'employer' ? neighborhood : null,
+            neighborhood: neighborhood || null,
+            address_text: selectedRole === 'employer' ? address.trim() || null : null,
             is_onboarded: false,
           };
 
@@ -347,20 +357,40 @@ const Auth = () => {
               </div>
             )}
 
-            {/* Neighborhood (only for employer signup) */}
-            {!isLogin && selectedRole === 'employer' && (
+            {/* Neighborhood (for both roles during signup) */}
+            {!isLogin && selectedRole && (
               <div className="space-y-2 animate-fade-in">
                 <label className="text-sm font-medium text-foreground">
-                  In che zona si trova la tua attività? <span className="text-destructive">*</span>
+                  {selectedRole === 'employer' ? 'In che zona si trova la tua attività?' : 'In che zona abiti?'} <span className="text-destructive">*</span>
                 </label>
                 <NeighborhoodSelect
                   value={neighborhood}
                   onValueChange={setNeighborhood}
                   placeholder="Seleziona quartiere"
-                  variant="employer"
+                  variant={selectedRole === 'employer' ? 'employer' : 'default'}
                   error={!!errors.neighborhood}
                 />
                 {errors.neighborhood && <p className="text-xs text-destructive">{errors.neighborhood}</p>}
+              </div>
+            )}
+
+            {/* Address (only for employer signup) */}
+            {!isLogin && selectedRole === 'employer' && (
+              <div className="space-y-2 animate-fade-in">
+                <label className="text-sm font-medium text-foreground">
+                  Indirizzo attività <span className="text-destructive">*</span>
+                </label>
+                <div className="relative">
+                  <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <Input
+                    type="text"
+                    placeholder="Via Roma 123"
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                    className="pl-12 h-12 rounded-xl bg-muted border-none transition-all duration-500 focus:ring-2 focus:ring-blue-600"
+                  />
+                </div>
+                {errors.address && <p className="text-xs text-destructive">{errors.address}</p>}
               </div>
             )}
 
@@ -437,6 +467,7 @@ const Auth = () => {
                 setErrors({});
                 setSelectedRole(null);
                 setNeighborhood('');
+                setAddress('');
               }}
               className="text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
