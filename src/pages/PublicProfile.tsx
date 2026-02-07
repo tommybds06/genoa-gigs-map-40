@@ -7,7 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { GalleryDialog } from "@/components/profile/GalleryDialog";
 import { 
   ArrowLeft, 
   MapPin, 
@@ -19,10 +19,7 @@ import {
   CheckCircle2,
   FileText,
   Calendar,
-  Camera,
-  ChevronLeft,
-  ChevronRight,
-  X
+  Camera
 } from "lucide-react";
 import { useAppTheme } from "@/hooks/useAppTheme";
 import { useUser } from "@/contexts/UserContext";
@@ -389,57 +386,13 @@ const PublicProfile = () => {
         )}
 
         {/* Photo Gallery Dialog */}
-        <Dialog open={isGalleryOpen} onOpenChange={setIsGalleryOpen}>
-          <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 bg-black/95 border-none">
-            <div className="relative w-full h-full flex items-center justify-center min-h-[60vh]">
-              {/* Close button */}
-              <Button 
-                variant="ghost" 
-                size="icon"
-                onClick={() => setIsGalleryOpen(false)}
-                className="absolute top-2 right-2 z-10 text-white hover:bg-white/20 rounded-full"
-              >
-                <X className="w-6 h-6" />
-              </Button>
-
-              {/* Previous button */}
-              {profile.photos && profile.photos.length > 1 && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setGalleryIndex((prev) => (prev - 1 + profile.photos.length) % profile.photos.length)}
-                  className="absolute left-2 z-10 text-white hover:bg-white/20 rounded-full"
-                >
-                  <ChevronLeft className="w-8 h-8" />
-                </Button>
-              )}
-
-              {/* Image */}
-              <img 
-                src={profile.photos?.[galleryIndex]} 
-                alt={`Foto ${galleryIndex + 1}`}
-                className="max-w-full max-h-[85vh] object-contain"
-              />
-
-              {/* Next button */}
-              {profile.photos && profile.photos.length > 1 && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setGalleryIndex((prev) => (prev + 1) % profile.photos.length)}
-                  className="absolute right-2 z-10 text-white hover:bg-white/20 rounded-full"
-                >
-                  <ChevronRight className="w-8 h-8" />
-                </Button>
-              )}
-
-              {/* Counter */}
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white text-sm bg-black/50 px-3 py-1 rounded-full">
-                {galleryIndex + 1} / {profile.photos?.length}
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
+        <GalleryDialog
+          isOpen={isGalleryOpen}
+          onClose={() => setIsGalleryOpen(false)}
+          photos={profile.photos || []}
+          currentIndex={galleryIndex}
+          onIndexChange={setGalleryIndex}
+        />
 
         {isWorkerProfile && (
           <>
