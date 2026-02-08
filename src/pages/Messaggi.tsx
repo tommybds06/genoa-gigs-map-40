@@ -14,16 +14,13 @@ import { useChats, Chat } from "@/hooks/useChats";
 import { ChatListSkeleton } from "@/components/skeletons/ChatListSkeleton";
 import { useQueryClient } from "@tanstack/react-query";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
  import { SwipeNavigator } from "@/components/layout/SwipeNavigator";
 
@@ -662,70 +659,73 @@ const Messaggi = () => {
           </div>
         </div>
         
-        {/* Controlled Dialog: Hire confirmation - using Button instead of AlertDialogAction to prevent conflict */}
-        <AlertDialog open={showHireDialog} onOpenChange={setShowHireDialog}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Assumere Candidato</AlertDialogTitle>
-              <AlertDialogDescription>
+        {/* Dialog: Hire confirmation */}
+        <Dialog open={showHireDialog} onOpenChange={setShowHireDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Assumere Candidato</DialogTitle>
+              <DialogDescription>
                 Confermi di voler assumere questo candidato per l'incarico?
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Annulla</AlertDialogCancel>
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowHireDialog(false)}>
+                Annulla
+              </Button>
               <Button
                 onClick={handleHireWorker}
-                className="bg-blue-600 hover:bg-blue-700 text-white"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground"
               >
                 Conferma Assunzione
               </Button>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
         
-        {/* Controlled Dialog: Complete job confirmation - using Button instead of AlertDialogAction */}
-        <AlertDialog open={showCompleteDialog} onOpenChange={setShowCompleteDialog}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Concludi Lavoro</AlertDialogTitle>
-              <AlertDialogDescription>
+        {/* Dialog: Complete job confirmation */}
+        <Dialog open={showCompleteDialog} onOpenChange={setShowCompleteDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Concludi Lavoro</DialogTitle>
+              <DialogDescription>
                 Confermi che il lavoro è stato svolto? Questo aggiornerà lo storico del lavoratore.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Annulla</AlertDialogCancel>
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowCompleteDialog(false)}>
+                Annulla
+              </Button>
               <Button
                 onClick={handleCompleteJob}
-                className="bg-green-600 hover:bg-green-700 text-white"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground"
               >
                 Conferma
               </Button>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
-        {/* Controlled Dialog: Remove job from map after hiring - using Button */}
-        <AlertDialog open={showRemoveJobDialog} onOpenChange={setShowRemoveJobDialog}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Rimuovere annuncio dalla mappa?</AlertDialogTitle>
-              <AlertDialogDescription>
+        {/* Dialog: Remove job from map after hiring */}
+        <Dialog open={showRemoveJobDialog} onOpenChange={setShowRemoveJobDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Rimuovere annuncio dalla mappa?</DialogTitle>
+              <DialogDescription>
                 Hai trovato il candidato giusto. Vuoi rimuovere l'annuncio dalla mappa in modo che altri non possano più vederlo?
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowRemoveJobDialog(false)}>
                 No, tieni visibile
-              </AlertDialogCancel>
+              </Button>
               <Button
                 onClick={() => handleCloseJobVisibility(true)}
-                className="bg-blue-600 hover:bg-blue-700 text-white"
               >
                 Sì, rimuovi
               </Button>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     );
   }
