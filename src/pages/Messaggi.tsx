@@ -344,53 +344,59 @@ const Messaggi = () => {
     setReplyingTo(msg);
   };
 
-  // Handle hiring worker (accepted -> hired) - CONTROLLED DIALOG with OPTIMISTIC UPDATE
-  const handleHireWorker = () => {
-    if (!selectedChat || !user) return;
+  // Handle hiring worker (accepted -> hired) - use refs to avoid re-render loops
+  const pendingHireRef = useRef(false);
+  
+  const handleHireWorker = async () => {
+    if (!selectedChat || !user || pendingHireRef.current) return;
+    pendingHireRef.current = true;
     
-    // 1. Close dialog first - this is critical to prevent freeze
-    setShowHireDialog(false);
-    
-    // 2. Optimistic UI update - instant feedback
-    setApplicationStatus('hired');
-    toast.success('Candidato assunto!', { duration: 2000 });
-    
-    // 3. Show second dialog after a small delay
-    setTimeout(() => {
-      setShowRemoveJobDialog(true);
-    }, 200);
-    
-    // 4. Defer ALL async operations
+    // Capture values BEFORE any state changes
     const chatId = selectedChat.id;
     const jobId = selectedChat.job_id;
     const workerId = selectedChat.worker_id;
     const userId = user.id;
     
-    setTimeout(() => {
-      supabase
-        .from('applications')
-        .update({ status: 'hired' })
-        .eq('job_id', jobId)
-        .eq('applicant_id', workerId)
-        .then(({ error }) => {
-          if (error) {
-            console.error('Error hiring:', error);
-            setApplicationStatus('accepted');
-            toast.error('Errore nell\'assunzione');
-          }
-        });
-      
-      supabase.from('messages').insert({
-        chat_id: chatId,
-        sender_id: userId,
-        content: '🎉 Complimenti! Sei stato assunto per questo incarico.',
+    // 1. Close dialog FIRST and wait for animation to complete
+    setShowHireDialog(false);
+    
+    // 2. Wait for dialog close animation to finish before ANY other state changes
+    await new Promise(resolve => setTimeout(resolve, 150));
+    
+    // 3. Now safe to update UI
+    setApplicationStatus('hired');
+    toast.success('Candidato assunto!', { duration: 2000 });
+    
+    // 4. DB operations in background (no await - fire and forget)
+    supabase
+      .from('applications')
+      .update({ status: 'hired' })
+      .eq('job_id', jobId)
+      .eq('applicant_id', workerId)
+      .then(({ error }) => {
+        if (error) {
+          console.error('Error hiring:', error);
+          setApplicationStatus('accepted');
+          toast.error('Errore nell\'assunzione');
+        }
       });
-      
-      setTimeout(() => {
-        queryClient.invalidateQueries({ queryKey: ['chats'] });
-        queryClient.invalidateQueries({ queryKey: ['jobs'] });
-      }, 500);
-    }, 50);
+    
+    supabase.from('messages').insert({
+      chat_id: chatId,
+      sender_id: userId,
+      content: '🎉 Complimenti! Sei stato assunto per questo incarico.',
+    });
+    
+    // 5. Show second dialog AFTER a longer delay to ensure stability
+    await new Promise(resolve => setTimeout(resolve, 300));
+    setShowRemoveJobDialog(true);
+    
+    // 6. Invalidate queries much later
+    setTimeout(() => {
+      queryClient.invalidateQueries({ queryKey: ['chats'] });
+      queryClient.invalidateQueries({ queryKey: ['jobs'] });
+      pendingHireRef.current = false;
+    }, 1000);
   };
 
   // Handle closing job visibility on map
@@ -419,39 +425,46 @@ const Messaggi = () => {
     }, 0);
   };
 
-  // Handle job completion (hired -> completed) - CONTROLLED DIALOG with OPTIMISTIC UPDATE
-  const handleCompleteJob = () => {
-    if (!selectedChat) return;
+  // Handle job completion (hired -> completed) - use refs to avoid re-render loops
+  const pendingCompleteRef = useRef(false);
+  
+  const handleCompleteJob = async () => {
+    if (!selectedChat || pendingCompleteRef.current) return;
+    pendingCompleteRef.current = true;
     
-    // 1. Close dialog first - this is critical to prevent freeze
-    setShowCompleteDialog(false);
-    
-    // 2. Optimistic UI update - instant feedback
-    setApplicationStatus('completed');
-    toast.success('Lavoro concluso!', { duration: 2000 });
-    
+    // Capture values BEFORE any state changes
     const jobId = selectedChat.job_id;
     const workerId = selectedChat.worker_id;
     
-    // 3. Defer ALL async operations
+    // 1. Close dialog FIRST and wait for animation
+    setShowCompleteDialog(false);
+    
+    // 2. Wait for dialog close animation to finish
+    await new Promise(resolve => setTimeout(resolve, 150));
+    
+    // 3. Now safe to update UI
+    setApplicationStatus('completed');
+    toast.success('Lavoro concluso!', { duration: 2000 });
+    
+    // 4. DB operations in background
+    supabase
+      .from('applications')
+      .update({ status: 'completed' })
+      .eq('job_id', jobId)
+      .eq('applicant_id', workerId)
+      .then(({ error }) => {
+        if (error) {
+          console.error('Error completing job:', error);
+          setApplicationStatus('hired');
+          toast.error('Errore nella chiusura del lavoro');
+        }
+      });
+    
+    // 5. Invalidate queries later
     setTimeout(() => {
-      supabase
-        .from('applications')
-        .update({ status: 'completed' })
-        .eq('job_id', jobId)
-        .eq('applicant_id', workerId)
-        .then(({ error }) => {
-          if (error) {
-            console.error('Error completing job:', error);
-            setApplicationStatus('hired');
-            toast.error('Errore nella chiusura del lavoro');
-          }
-        });
-      
-      setTimeout(() => {
-        queryClient.invalidateQueries({ queryKey: ['chats'] });
-      }, 300);
-    }, 50);
+      queryClient.invalidateQueries({ queryKey: ['chats'] });
+      pendingCompleteRef.current = false;
+    }, 1000);
   };
 
   // Chat detail view
