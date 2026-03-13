@@ -42,4 +42,4 @@ export function isWithinGenovaBounds(lat: number, lng: number): boolean {
 /**
  * Error message for locations outside Genova
  */
-export const GEOFENCING_ERROR_MESSAGE = "GenoaGigs è operativa solo nell'area di Genova e dintorni.";
+export const GEOFENCING_ERROR_MESSAGE = "Politask è operativa solo nell'area di Genova e dintorni.";

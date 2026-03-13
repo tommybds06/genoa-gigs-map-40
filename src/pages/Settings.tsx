@@ -59,7 +59,7 @@ const Settings = () => {
   };
 
   const handleSupport = () => {
-    window.location.href = "mailto:support@genoagigs.com";
+    window.location.href = "mailto:support@politask.com";
   };
 
   // Dynamic classes based on role
@@ -199,7 +199,7 @@ const Settings = () => {
 
         {/* App Version */}
         <p className="text-center text-xs text-muted-foreground mt-8 mb-4">
-          GenoaGigs v1.0.0
+          Politask v1.0.0
         </p>
       </main>
 
