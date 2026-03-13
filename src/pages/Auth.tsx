@@ -258,10 +258,10 @@ const Auth = () => {
         {/* Logo & Title */}
         <div className="text-center mb-8 animate-fade-in">
           <h1 className="text-4xl font-bold text-foreground mb-2">
-            Genoa<span className={cn(
+            Poli<span className={cn(
               "transition-colors duration-500",
               selectedRole === 'employer' ? 'text-blue-600' : 'text-secondary'
-            )}>Gigs</span>
+            )}>Task</span>
           </h1>
           <p className="text-muted-foreground">
             {isLogin ? 'Bentornato!' : 'Unisciti alla community'}

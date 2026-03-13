@@ -45,7 +45,7 @@ interface UserContextType {
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 // Cache the role in sessionStorage to prevent flash
-const ROLE_CACHE_KEY = "genoagigs_user_role";
+const ROLE_CACHE_KEY = "politask_user_role";
 
 function getCachedRole(): UserRole | null {
   try {
