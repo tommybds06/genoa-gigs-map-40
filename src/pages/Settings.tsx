@@ -59,7 +59,7 @@ const Settings = () => {
   };
 
   const handleSupport = () => {
-    window.location.href = "mailto:support@genoagigs.com";
+    window.location.href = "mailto:support@politask.com";
   };
 
   // Dynamic classes based on role
