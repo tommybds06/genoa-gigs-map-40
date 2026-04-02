@@ -1,0 +1,1 @@
+CREATE POLICY "Workers can view jobs they applied to" ON public.jobs FOR SELECT USING (EXISTS (SELECT 1 FROM public.applications WHERE applications.job_id = jobs.id AND applications.applicant_id = auth.uid()));
