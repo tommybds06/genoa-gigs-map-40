@@ -387,9 +387,16 @@ const Messaggi = () => {
       content: '🎉 Complimenti! Sei stato assunto per questo incarico.',
     });
     
-    // 5. Show second dialog AFTER a longer delay to ensure stability
+    // 5. Only ask to remove the job if it's still visible on the map
     await new Promise(resolve => setTimeout(resolve, 300));
-    setShowRemoveJobDialog(true);
+    const { data: jobRow } = await supabase
+      .from('jobs')
+      .select('status')
+      .eq('id', jobId)
+      .maybeSingle();
+    if (jobRow?.status === 'open') {
+      setShowRemoveJobDialog(true);
+    }
     
     // 6. Invalidate queries much later
     setTimeout(() => {
@@ -459,10 +466,20 @@ const Messaggi = () => {
           toast.error('Errore nella chiusura del lavoro');
         }
       });
-    
-    // 5. Invalidate queries later
+
+    // 5. Auto-close the job listing (remove from map) on completion
+    supabase
+      .from('jobs')
+      .update({ status: 'closed' })
+      .eq('id', jobId)
+      .then(({ error }) => {
+        if (error) console.error('Error closing job on completion:', error);
+      });
+
+    // 6. Invalidate queries later
     setTimeout(() => {
       queryClient.invalidateQueries({ queryKey: ['chats'] });
+      queryClient.invalidateQueries({ queryKey: ['jobs'] });
       pendingCompleteRef.current = false;
     }, 1000);
   };

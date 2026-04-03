@@ -99,8 +99,18 @@ const Profilo = () => {
         {/* Photo Carousel */}
         {profile?.photos && profile.photos.length > 0 && (
           <div className="relative mb-4">
-            <div className="aspect-[4/3] rounded-2xl overflow-hidden bg-muted">
-              <img src={profile.photos[currentPhotoIndex]} alt={`Foto ${currentPhotoIndex + 1}`} className="w-full h-full object-cover" />
+            {/* All photos rendered stacked — browser preloads them all, only current is visible */}
+            <div className="aspect-[4/3] rounded-2xl overflow-hidden bg-muted relative">
+              {profile.photos.map((photo, index) => (
+                <img
+                  key={photo}
+                  src={photo}
+                  alt={`Foto ${index + 1}`}
+                  className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${
+                    index === currentPhotoIndex ? "opacity-100" : "opacity-0"
+                  }`}
+                />
+              ))}
             </div>
             {profile.photos.length > 1 && (
               <>

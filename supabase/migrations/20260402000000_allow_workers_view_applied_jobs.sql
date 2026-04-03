@@ -1,0 +1,3 @@
+-- This migration is intentionally empty.
+-- The policy it originally created was superseded by 20260402181238 and then
+-- dropped by 20260403000000 due to a circular RLS dependency with applications.

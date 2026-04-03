@@ -1,4 +1,5 @@
-import { memo, useState, useCallback, useEffect, useMemo } from "react";
+import { memo, useState, useCallback, useEffect, useMemo, useRef } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import Map, { Marker, Popup, NavigationControl } from "react-map-gl";
 import { Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -119,6 +120,22 @@ function InteractiveMapInner({
   
   const { isEmployer } = useUser();
   const { theme } = useAppTheme();
+  const location = useLocation();
+  const mapNavigate = useNavigate();
+
+  // Reopen sheet when returning from employer profile
+  const didRestoreJob = useRef(false);
+  useEffect(() => {
+    if (didRestoreJob.current) return;
+    const returnJob = location.state?.returnJob as Job | undefined;
+    if (returnJob) {
+      didRestoreJob.current = true;
+      setLastSelectedJob(returnJob);
+      setIsDetailsOpen(true);
+      mapNavigate(location.pathname, { replace: true, state: null });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Fetch Mapbox token - only once
   useEffect(() => {

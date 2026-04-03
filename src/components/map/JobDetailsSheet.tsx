@@ -12,7 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Clock, MapPin, GraduationCap, Truck, PartyPopper, Briefcase, Eye, ChevronRight, Loader2, Check } from "lucide-react";
 import { useUser } from "@/contexts/UserContext";
 import { useAppTheme } from "@/hooks/useAppTheme";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -75,6 +75,7 @@ export function JobDetailsSheet({ job, isOpen, onClose, showMiniMap = false }: J
   const { theme } = useAppTheme();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const queryClient = useQueryClient();
   
   const [hasApplied, setHasApplied] = useState(false);
@@ -129,8 +130,13 @@ export function JobDetailsSheet({ job, isOpen, onClose, showMiniMap = false }: J
 
   const handleEmployerClick = () => {
     if (job.owner_id) {
-      onClose();
+      // Stamp the job onto the CURRENT history entry so pressing back restores it
+      navigate(location.pathname + location.search, {
+        replace: true,
+        state: { ...(location.state as object | null), returnJob: job },
+      });
       navigate(`/profile/${job.owner_id}`);
+      onClose();
     }
   };
 

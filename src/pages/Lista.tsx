@@ -1,11 +1,11 @@
 import { Header } from "@/components/layout/Header";
 import { MapPin, Clock, Euro, SearchX, Tag, Briefcase, FileText } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { useAppTheme } from "@/hooks/useAppTheme";
 import { TagBadges } from "@/components/tags/TagSelector";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { JobDetailsSheet } from "@/components/map/JobDetailsSheet";
 import { getJobIconFromTags } from "@/lib/jobIcons";
 import { isRoleTag } from "@/constants/tags";
@@ -33,9 +33,22 @@ const Lista = () => {
   const { user } = useAuth();
   const { profile, loading: profileLoading } = useProfile();
   const { isEmployer } = useAppTheme();
+  const location = useLocation();
+  const navigate = useNavigate();
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("explore");
+
+  // Reopen sheet when returning from employer profile
+  useEffect(() => {
+    const returnJob = location.state?.returnJob;
+    if (returnJob) {
+      setSelectedJob(returnJob);
+      setIsDetailsOpen(true);
+      navigate(location.pathname, { replace: true, state: null });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const userTags = profile?.tags || [];
   const employerJobsQuery = useEmployerJobs(isEmployer ? user?.id : undefined);

@@ -38,82 +38,125 @@ export function ReviewPrompt() {
   const [comment, setComment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSkipping, setIsSkipping] = useState(false);
-  const hasChecked = useRef(false);
+  const isCheckingRef = useRef(false);
   const isMarkingReviewed = useRef(false);
 
   const checkPendingReviews = useCallback(async () => {
     const userId = user?.id;
     if (!userId || !hasLoaded || !isWorker) return;
+    if (isCheckingRef.current) return;
 
+    isCheckingRef.current = true;
     try {
-      const { data, error } = await supabase
+      // Step 1: find a completed, unreviewed application
+      const { data: appData, error: appError } = await supabase
         .from("applications")
-        .select(`
-          id,
-          job_id,
-          jobs!inner (
-            id,
-            title,
-            owner_id,
-            profiles!inner (
-              id,
-              full_name
-            )
-          )
-        `)
+        .select("id, job_id")
         .eq("applicant_id", userId)
         .eq("status", "completed")
         .eq("is_reviewed", false)
         .limit(1)
         .maybeSingle();
 
-      if (error) {
-        console.error("Error checking pending reviews:", error);
+      if (appError) {
+        console.error("Error checking pending reviews:", appError);
         return;
       }
 
-      if (data && data.jobs) {
-        if (skippedApplications.has(data.id)) {
-          return;
+      if (!appData) return;
+      if (skippedApplications.has(appData.id)) return;
+
+      // Step 2: get job + employer details
+      // The job may be closed (removed from map by employer) so we use a left
+      // join here. The new RLS policy "Workers can view jobs they applied to"
+      // ensures visibility even for closed jobs, but we still fall back to the
+      // chat record in case the migration has not been applied yet.
+      const { data: jobData } = await supabase
+        .from("jobs")
+        .select(`
+          id,
+          title,
+          owner_id,
+          profiles!inner (
+            id,
+            full_name
+          )
+        `)
+        .eq("id", appData.job_id)
+        .maybeSingle();
+
+      let employerId = "";
+      let employerName = "l'attività";
+      let jobTitle = "";
+
+      if (jobData) {
+        const profile = jobData.profiles as unknown as { id: string; full_name: string | null };
+        employerId = jobData.owner_id;
+        employerName = profile?.full_name || "l'attività";
+        jobTitle = jobData.title;
+      } else {
+        // Fallback: get employer info from the chat record (always visible to worker)
+        const { data: chatData } = await supabase
+          .from("chats")
+          .select(`
+            employer_id,
+            employer:profiles!chats_employer_id_fkey (
+              id,
+              full_name
+            )
+          `)
+          .eq("job_id", appData.job_id)
+          .eq("worker_id", userId)
+          .maybeSingle();
+
+        if (chatData) {
+          const empProfile = chatData.employer as unknown as { id: string; full_name: string | null };
+          employerId = chatData.employer_id;
+          employerName = empProfile?.full_name || "l'attività";
         }
-
-        const jobData = data.jobs as unknown as {
-          id: string;
-          title: string;
-          owner_id: string;
-          profiles: { id: string; full_name: string | null };
-        };
-
-        setPendingReview({
-          applicationId: data.id,
-          jobId: jobData.id,
-          employerId: jobData.owner_id,
-          employerName: jobData.profiles?.full_name || "l'attività",
-          jobTitle: jobData.title,
-        });
-        setIsOpen(true);
-
-        setTimeout(() => {
-          confetti({
-            particleCount: 100,
-            spread: 70,
-            origin: { y: 0.6 },
-            colors: ["#f97316", "#3b82f6", "#22c55e", "#eab308"],
-          });
-        }, 300);
       }
+
+      setPendingReview({
+        applicationId: appData.id,
+        jobId: appData.job_id,
+        employerId,
+        employerName,
+        jobTitle,
+      });
+      setIsOpen(true);
+
+      setTimeout(() => {
+        confetti({
+          particleCount: 100,
+          spread: 70,
+          origin: { y: 0.6 },
+          colors: ["#f97316", "#3b82f6", "#22c55e", "#eab308"],
+        });
+      }, 300);
     } catch (error) {
       console.error("Error checking pending reviews:", error);
+    } finally {
+      isCheckingRef.current = false;
     }
   }, [user?.id, hasLoaded, isWorker]);
 
-  // Check for pending reviews only on initial app load
+  // Check for pending reviews on login/profile load
   useEffect(() => {
-    if (!hasChecked.current && user?.id && hasLoaded && isWorker) {
-      hasChecked.current = true;
+    if (user?.id && hasLoaded && isWorker) {
       checkPendingReviews();
     }
   }, [user?.id, hasLoaded, isWorker, checkPendingReviews]);
+
+  // Re-check when app comes back to foreground (critical for PWA)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible" && user?.id && hasLoaded && isWorker && !isOpen) {
+        checkPendingReviews();
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+  }, [user?.id, hasLoaded, isWorker, isOpen, checkPendingReviews]);
 
   const markAsReviewed = async () => {
     if (!pendingReview || isMarkingReviewed.current) return;
