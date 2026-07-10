@@ -18,27 +18,33 @@ export type Database = {
         Row: {
           applicant_id: string
           created_at: string
+          employer_name: string | null
           id: string
           is_reviewed: boolean
           job_id: string
+          job_title: string | null
           status: string
           updated_at: string
         }
         Insert: {
           applicant_id: string
           created_at?: string
+          employer_name?: string | null
           id?: string
           is_reviewed?: boolean
           job_id: string
+          job_title?: string | null
           status?: string
           updated_at?: string
         }
         Update: {
           applicant_id?: string
           created_at?: string
+          employer_name?: string | null
           id?: string
           is_reviewed?: boolean
           job_id?: string
+          job_title?: string | null
           status?: string
           updated_at?: string
         }
