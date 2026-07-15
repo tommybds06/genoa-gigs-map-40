@@ -515,6 +515,7 @@ const Annunci = () => {
         onSuccess={handleDeleteSuccess}
       />
     </div>
+    </SwipeNavigator>
   );
 };
 
