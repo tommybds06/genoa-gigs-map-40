@@ -416,6 +416,7 @@ const Annunci = () => {
   }
 
   return (
+    <SwipeNavigator>
     <div className="flex flex-col h-full bg-background">
       {/* Header with "Annunci" title in blue for employers */}
       <Header />
