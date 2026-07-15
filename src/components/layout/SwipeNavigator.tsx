@@ -1,109 +1,110 @@
- import { useSwipeable, SwipeEventData } from "react-swipeable";
+ import { useSwipeable } from "react-swipeable";
  import { useNavigate, useLocation } from "react-router-dom";
  import { ReactNode, useCallback, useRef } from "react";
  import { setSwipeDirection } from "@/lib/swipeState";
- 
- // Tab order for swipe navigation
- const TAB_ORDER = ["/", "/lista", "/messaggi", "/profilo"];
- 
+ import { useUser } from "@/contexts/UserContext";
+
+ // Tab order for swipe navigation (role-aware second tab)
+ const WORKER_TAB_ORDER = ["/", "/lista", "/messaggi", "/profilo"];
+ const EMPLOYER_TAB_ORDER = ["/", "/annunci", "/messaggi", "/profilo"];
+
  interface SwipeNavigatorProps {
    children: ReactNode;
    /** Only trigger swipe in a specific zone (for map page) */
    zoneRestricted?: boolean;
  }
- 
+
  /**
   * Wrapper component that enables horizontal swipe navigation between main tabs.
-  * 
+  *
   * For the map page, use zoneRestricted=true and wrap only the header area,
   * leaving the map itself outside to allow panning.
   */
  export function SwipeNavigator({ children, zoneRestricted = false }: SwipeNavigatorProps) {
    const navigate = useNavigate();
    const location = useLocation();
+   const { isEmployer } = useUser();
    const isNavigating = useRef(false);
- 
-   const currentIndex = TAB_ORDER.indexOf(location.pathname);
- 
-   const handleSwipe = useCallback((direction: "LEFT" | "RIGHT") => {
-     // Prevent multiple navigations
-     if (isNavigating.current) return;
-     if (currentIndex === -1) return;
- 
-     let nextIndex: number;
-     
-     if (direction === "LEFT") {
-       // Swipe left = go to next tab
-       nextIndex = currentIndex + 1;
-       if (nextIndex >= TAB_ORDER.length) return; // Already at last tab
-       setSwipeDirection("left");
-     } else {
-       // Swipe right = go to previous tab
-       nextIndex = currentIndex - 1;
-       if (nextIndex < 0) return; // Already at first tab
-       setSwipeDirection("right");
-     }
- 
-     isNavigating.current = true;
-     navigate(TAB_ORDER[nextIndex]);
-     
-     // Reset navigation lock after animation completes
-     setTimeout(() => {
-       isNavigating.current = false;
-     }, 350);
-   }, [currentIndex, navigate]);
- 
-   const swipeHandlers = useSwipeable({
-     onSwipedLeft: () => handleSwipe("LEFT"),
-     onSwipedRight: () => handleSwipe("RIGHT"),
-     preventScrollOnSwipe: false,
-     trackMouse: false,
-     delta: 50, // Minimum swipe distance
-     swipeDuration: 500,
-   });
- 
-   return (
-     <div {...swipeHandlers} className={zoneRestricted ? "" : "h-full"}>
-       {children}
-     </div>
-   );
- }
- 
- /**
-  * Hook to get swipe handlers for custom integration.
-  * Useful when you need more control over which element captures the swipe.
-  */
- export function useSwipeNavigation() {
-   const navigate = useNavigate();
-   const location = useLocation();
-   const isNavigating = useRef(false);
- 
-   const currentIndex = TAB_ORDER.indexOf(location.pathname);
- 
+
+   const tabOrder = isEmployer ? EMPLOYER_TAB_ORDER : WORKER_TAB_ORDER;
+   const currentIndex = tabOrder.indexOf(location.pathname);
+
    const handleSwipe = useCallback((direction: "LEFT" | "RIGHT") => {
      if (isNavigating.current) return;
      if (currentIndex === -1) return;
- 
+
      let nextIndex: number;
-     
+
      if (direction === "LEFT") {
        nextIndex = currentIndex + 1;
-       if (nextIndex >= TAB_ORDER.length) return;
+       if (nextIndex >= tabOrder.length) return;
        setSwipeDirection("left");
      } else {
        nextIndex = currentIndex - 1;
        if (nextIndex < 0) return;
        setSwipeDirection("right");
      }
- 
+
      isNavigating.current = true;
-     navigate(TAB_ORDER[nextIndex]);
-     
+     navigate(tabOrder[nextIndex]);
+
      setTimeout(() => {
        isNavigating.current = false;
      }, 350);
-   }, [currentIndex, navigate]);
- 
+   }, [currentIndex, navigate, tabOrder]);
+
+   const swipeHandlers = useSwipeable({
+     onSwipedLeft: () => handleSwipe("LEFT"),
+     onSwipedRight: () => handleSwipe("RIGHT"),
+     preventScrollOnSwipe: false,
+     trackMouse: false,
+     delta: 50,
+     swipeDuration: 500,
+   });
+
+   return (
+     <div {...swipeHandlers} className={zoneRestricted ? "" : "h-full"}>
+       {children}
+     </div>
+   );
+ }
+
+ /**
+  * Hook to get swipe handlers for custom integration.
+  */
+ export function useSwipeNavigation() {
+   const navigate = useNavigate();
+   const location = useLocation();
+   const { isEmployer } = useUser();
+   const isNavigating = useRef(false);
+
+   const tabOrder = isEmployer ? EMPLOYER_TAB_ORDER : WORKER_TAB_ORDER;
+   const currentIndex = tabOrder.indexOf(location.pathname);
+
+   const handleSwipe = useCallback((direction: "LEFT" | "RIGHT") => {
+     if (isNavigating.current) return;
+     if (currentIndex === -1) return;
+
+     let nextIndex: number;
+
+     if (direction === "LEFT") {
+       nextIndex = currentIndex + 1;
+       if (nextIndex >= tabOrder.length) return;
+       setSwipeDirection("left");
+     } else {
+       nextIndex = currentIndex - 1;
+       if (nextIndex < 0) return;
+       setSwipeDirection("right");
+     }
+
+     isNavigating.current = true;
+     navigate(tabOrder[nextIndex]);
+
+     setTimeout(() => {
+       isNavigating.current = false;
+     }, 350);
+   }, [currentIndex, navigate, tabOrder]);
+
    return useSwipeable({
      onSwipedLeft: () => handleSwipe("LEFT"),
      onSwipedRight: () => handleSwipe("RIGHT"),
