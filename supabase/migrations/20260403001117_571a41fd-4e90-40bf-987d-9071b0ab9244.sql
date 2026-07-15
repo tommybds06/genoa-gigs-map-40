@@ -1,0 +1,1 @@
+DROP POLICY IF EXISTS "Workers can view jobs they applied to" ON public.jobs;
