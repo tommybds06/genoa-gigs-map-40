@@ -109,16 +109,16 @@ const EditProfile = () => {
   };
 
   // Dynamic classes based on role
-  const backButtonClasses = isEmployer 
-    ? "text-blue-600 hover:bg-blue-50" 
+  const backButtonClasses = isEmployer
+    ? "text-employer hover:bg-employer-50"
     : "text-primary hover:bg-accent";
-  
+
   const inputBorderClasses = isEmployer
-    ? "focus-visible:ring-blue-500 border-blue-200"
+    ? "focus-visible:ring-employer border-employer/20"
     : "focus-visible:ring-primary border-primary/20";
-  
+
   const buttonClasses = isEmployer
-    ? "bg-blue-600 hover:bg-blue-700 text-white"
+    ? "bg-employer hover:bg-employer-700 text-employer-foreground"
     : "bg-primary hover:bg-primary/90 text-primary-foreground";
 
   if (isLoading) {

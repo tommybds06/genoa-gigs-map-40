@@ -24,10 +24,10 @@ export function PhotoGalleryManager({
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const primaryColor = isEmployer ? "text-blue-600" : "text-primary";
-  const primaryBg = isEmployer ? "bg-blue-600" : "bg-primary";
-  const primaryBgLight = isEmployer ? "bg-blue-50" : "bg-accent";
-  const primaryBorder = isEmployer ? "border-blue-200" : "border-primary/20";
+  const primaryColor = isEmployer ? "text-employer" : "text-primary";
+  const primaryBg = isEmployer ? "bg-employer" : "bg-primary";
+  const primaryBgLight = isEmployer ? "bg-employer-50" : "bg-accent";
+  const primaryBorder = isEmployer ? "border-employer/20" : "border-primary/20";
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -171,7 +171,7 @@ export function PhotoGalleryManager({
               "relative aspect-square rounded-xl overflow-hidden border-2 transition-all cursor-grab active:cursor-grabbing group",
               draggedIndex === index && "opacity-50 scale-95",
               dragOverIndex === index && draggedIndex !== index && `${primaryBorder} border-dashed`,
-              index === 0 ? `ring-2 ${isEmployer ? 'ring-blue-500' : 'ring-primary'} ring-offset-2` : "border-border"
+              index === 0 ? `ring-2 ${isEmployer ? 'ring-employer' : 'ring-primary'} ring-offset-2` : "border-border"
             )}
           >
             <img

@@ -15,7 +15,7 @@ export const isBlueTag = (tag: string): boolean => {
  */
 export const getTagClasses = (tag: string): string => {
   if (isBlueTag(tag)) {
-    return "bg-blue-100 text-blue-700";
+    return "bg-employer-50 text-employer";
   }
   return "bg-orange-100 text-orange-700";
 };
@@ -26,8 +26,8 @@ export const getTagClasses = (tag: string): string => {
 export const getTagSelectedClasses = (tag: string, isSelected: boolean): string => {
   if (isBlueTag(tag)) {
     return isSelected
-      ? "bg-blue-500 text-white shadow-md"
-      : "bg-blue-100 text-blue-700 hover:bg-blue-200";
+      ? "bg-employer text-employer-foreground shadow-md"
+      : "bg-employer-50 text-employer hover:bg-employer-100";
   }
   return isSelected
     ? "bg-orange-500 text-white shadow-md"

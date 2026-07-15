@@ -64,6 +64,14 @@ export default {
           yellow: "hsl(var(--brand-yellow))",
           orange: "hsl(var(--brand-orange))",
         },
+        employer: {
+          DEFAULT: "hsl(var(--employer))",
+          foreground: "hsl(var(--employer-foreground))",
+          50: "hsl(var(--employer-50))",
+          100: "hsl(var(--employer-100))",
+          700: "hsl(var(--employer-700))",
+          800: "hsl(var(--employer-800))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",

@@ -23,7 +23,15 @@ import Auth from "./pages/Auth";
 import Onboarding from "./pages/Onboarding";
 import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      // Evita la raffica di refetch al ritorno sulla tab (concausa del freeze)
+      refetchOnWindowFocus: false,
+      staleTime: 1000 * 60, // 1 min
+    },
+  },
+});
 
 // Tab routes that show the persistent bottom nav
 const TAB_ROUTES = ['/', '/lista', '/annunci', '/messaggi', '/profilo'];

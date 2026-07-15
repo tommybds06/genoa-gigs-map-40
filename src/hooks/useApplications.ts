@@ -20,6 +20,9 @@ export interface Application {
   created_at: string;
   updated_at: string;
   is_reviewed: boolean;
+  // Snapshot salvato alla candidatura (sopravvive alla cancellazione dell'annuncio)
+  job_title: string | null;
+  employer_name: string | null;
   job: ApplicationJob | null;
 }
 

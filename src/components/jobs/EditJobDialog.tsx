@@ -124,7 +124,7 @@ export function EditJobDialog({ job, isOpen, onClose, onSuccess }: EditJobDialog
           <Button
             onClick={handleSubmit}
             disabled={loading || !title.trim()}
-            className="bg-blue-600 hover:bg-blue-700 text-white"
+            className="bg-employer hover:bg-employer-700 text-employer-foreground"
           >
             {loading ? (
               <>

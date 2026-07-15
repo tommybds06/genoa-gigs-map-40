@@ -70,7 +70,7 @@ const SingleJobMarker = memo(function SingleJobMarker({
             isHighlighted 
               ? "bg-white border-3 border-primary" 
               : isEmployer 
-                ? "bg-blue-600" 
+                ? "bg-employer"
                 : "bg-primary"
           )}
           style={isHighlighted ? { borderWidth: '3px' } : undefined}
@@ -254,8 +254,8 @@ function InteractiveMapInner({
     });
   }, [employerGroups, isSearchActive, filteredIdsString, isEmployer, handleSingleJobClick, handleGroupMarkerClick]);
 
-  const loadingBgClass = isEmployer ? "bg-blue-600/20" : "bg-primary/20";
-  const loadingIconClass = isEmployer ? "text-blue-600" : "text-primary";
+  const loadingBgClass = isEmployer ? "bg-employer/20" : "bg-primary/20";
+  const loadingIconClass = isEmployer ? "text-employer" : "text-primary";
 
   if (mapboxToken === null) {
     return (
@@ -344,12 +344,6 @@ function InteractiveMapInner({
           </Popup>
         )}
 
-        <div className="absolute bottom-4 left-4 material-card px-4 py-3">
-          <p className="text-sm font-semibold">📍 Genova Centro</p>
-          <p className="text-xs text-muted-foreground">
-            {isSearchActive ? `${jobs.length} risultati trovati` : `${jobs.length} impieghi disponibili`}
-          </p>
-        </div>
       </Map>
 
       {/* Single Job Details Sheet */}

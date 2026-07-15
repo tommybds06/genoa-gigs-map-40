@@ -246,7 +246,10 @@ const Messaggi = () => {
     };
   }, [selectedChat?.id, selectedChat?.job_id, selectedChat?.worker_id, user?.id, queryClient]);
 
-  // Scroll to bottom only for NEW messages (not on first load - CSS handles that with flex-col-reverse)
+  // Scroll management (stile WhatsApp): all'apertura la chat va in fondo (messaggio
+  // più recente) senza animazione; sui nuovi messaggi scrolla in fondo in modo fluido.
+  // Con pochi messaggi il contenuto non riempie l'area, quindi restano in alto (nessuno
+  // scroll necessario) — esattamente come WhatsApp.
   const prevMessagesCountRef = useRef(0);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -254,10 +257,19 @@ const Messaggi = () => {
       prevMessagesCountRef.current = 0;
       return;
     }
-    // Only smooth scroll for NEW messages (not initial load)
-    if (prevMessagesCountRef.current > 0 && messages.length > prevMessagesCountRef.current) {
-      // With flex-col-reverse, scrollTop 0 is at the bottom
-      messagesContainerRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+    const container = messagesContainerRef.current;
+    if (!container) return;
+
+    const isInitialLoad = prevMessagesCountRef.current === 0;
+    const hasNewMessages = messages.length > prevMessagesCountRef.current;
+
+    if (isInitialLoad) {
+      // rAF per assicurarsi che il layout sia calcolato prima di scrollare
+      requestAnimationFrame(() => {
+        container.scrollTo({ top: container.scrollHeight });
+      });
+    } else if (hasNewMessages) {
+      container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
     }
     prevMessagesCountRef.current = messages.length;
   }, [messages.length]);
@@ -534,7 +546,7 @@ const Messaggi = () => {
             {isEmployer && applicationStatus === 'accepted' && (
               <Button
                 size="sm"
-                className="shrink-0 bg-blue-600 hover:bg-blue-700 text-white"
+                className="shrink-0 bg-employer hover:bg-employer-700 text-employer-foreground"
                 onClick={() => setShowHireDialog(true)}
               >
                 <CheckCircle className="h-4 w-4 mr-1" />
@@ -574,11 +586,12 @@ const Messaggi = () => {
           </div>
         </header>
 
-        {/* Messages area - use flex column-reverse to auto-scroll to bottom without JS jank */}
-        <main 
+        {/* Messages area - stile WhatsApp: i messaggi partono dall'alto; lo scroll
+            va in fondo (messaggio più recente) all'apertura e sui nuovi messaggi via JS */}
+        <main
           ref={messagesContainerRef}
-          className="flex-1 overflow-y-auto overscroll-contain px-4 flex flex-col-reverse"
-          style={{ 
+          className="flex-1 overflow-y-auto overscroll-contain px-4 flex flex-col"
+          style={{
             WebkitOverflowScrolling: 'touch'
           }}
         >
@@ -678,7 +691,7 @@ const Messaggi = () => {
               onClick={handleSendMessage}
               disabled={(!newMessage.trim() && !pendingAttachment) || sending}
               size="icon"
-              className={`shrink-0 rounded-full ${isEmployer ? 'bg-blue-600 hover:bg-blue-700' : 'bg-primary hover:bg-primary/90'}`}
+              className={`shrink-0 rounded-full ${isEmployer ? 'bg-employer hover:bg-employer-700' : 'bg-primary hover:bg-primary/90'}`}
             >
               {sending ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -704,7 +717,7 @@ const Messaggi = () => {
               </Button>
               <Button
                 onClick={handleHireWorker}
-                className="bg-primary hover:bg-primary/90 text-primary-foreground"
+                className={isEmployer ? "bg-employer hover:bg-employer-700 text-employer-foreground" : "bg-primary hover:bg-primary/90 text-primary-foreground"}
               >
                 Conferma Assunzione
               </Button>
@@ -727,7 +740,7 @@ const Messaggi = () => {
               </Button>
               <Button
                 onClick={handleCompleteJob}
-                className="bg-primary hover:bg-primary/90 text-primary-foreground"
+                className={isEmployer ? "bg-employer hover:bg-employer-700 text-employer-foreground" : "bg-primary hover:bg-primary/90 text-primary-foreground"}
               >
                 Conferma
               </Button>
@@ -750,6 +763,7 @@ const Messaggi = () => {
               </Button>
               <Button
                 onClick={() => handleCloseJobVisibility(true)}
+                className={isEmployer ? "bg-employer hover:bg-employer-700 text-employer-foreground" : "bg-primary hover:bg-primary/90 text-primary-foreground"}
               >
                 Sì, rimuovi
               </Button>
@@ -766,7 +780,11 @@ const Messaggi = () => {
        <div className="flex flex-col h-full bg-background">
          {/* Simple Header with safe area */}
          <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-md px-4 pt-8 pb-3">
-           <h1 className={`text-2xl font-bold ${isEmployer ? "text-blue-600" : "text-primary"}`}>Messaggi</h1>
+           <img
+             src={isEmployer ? "/images/logo-employer.svg" : "/images/logo-worker.svg"}
+             alt="Politask"
+             className="h-14 w-auto -ml-1"
+           />
          </header>
  
          <main className="flex-1 px-4 pb-4 overflow-y-auto">
@@ -828,7 +846,7 @@ const Messaggi = () => {
                        </p>
                     </div>
                      {chat.unread_count && chat.unread_count > 0 && (
-                       <div className={`shrink-0 w-6 h-6 rounded-full flex items-center justify-center ${isEmployer ? 'bg-blue-600' : 'bg-primary'}`}>
+                       <div className={`shrink-0 w-6 h-6 rounded-full flex items-center justify-center ${isEmployer ? 'bg-employer' : 'bg-primary'}`}>
                          <span className="text-xs text-white font-bold">
                            {chat.unread_count > 9 ? '9+' : chat.unread_count}
                          </span>

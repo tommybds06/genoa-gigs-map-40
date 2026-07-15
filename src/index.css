@@ -8,8 +8,8 @@
   :root {
     /* Brand Colors */
     --brand-yellow: 45 100% 51%;
-    --brand-orange: 33 97% 49%;
-    
+    --brand-orange: 30 90% 63%;
+
     /* Material Design Core Palette */
     --background: 0 0% 98%;
     --foreground: 0 0% 13%;
@@ -20,7 +20,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 13%;
 
-    --primary: 33 97% 49%;
+    --primary: 30 90% 63%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 45 100% 51%;
@@ -29,33 +29,41 @@
     --muted: 220 14% 96%;
     --muted-foreground: 0 0% 45%;
 
-    --accent: 45 100% 94%;
-    --accent-foreground: 33 97% 35%;
+    --accent: 30 90% 94%;
+    --accent-foreground: 30 90% 35%;
 
     --destructive: 4 90% 58%;
     --destructive-foreground: 0 0% 100%;
 
     --border: 220 13% 91%;
     --input: 220 13% 91%;
-    --ring: 33 97% 49%;
+    --ring: 30 90% 63%;
 
     --radius: 1rem;
+
+    /* Employer Blue */
+    --employer: 213 48% 61%;
+    --employer-foreground: 0 0% 100%;
+    --employer-50: 213 48% 95%;
+    --employer-100: 213 48% 90%;
+    --employer-700: 213 48% 51%;
+    --employer-800: 213 48% 40%;
 
     /* Material Elevation Shadows */
     --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
     --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
     --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
     --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-    
+
     /* Sidebar */
     --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 0 0% 13%;
-    --sidebar-primary: 33 97% 49%;
+    --sidebar-primary: 30 90% 63%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 45 100% 94%;
+    --sidebar-accent: 30 90% 94%;
     --sidebar-accent-foreground: 0 0% 13%;
     --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 33 97% 49%;
+    --sidebar-ring: 30 90% 63%;
   }
 
   .dark {
@@ -68,7 +76,7 @@
     --popover: 0 0% 14%;
     --popover-foreground: 0 0% 95%;
 
-    --primary: 33 97% 49%;
+    --primary: 30 90% 63%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 45 100% 51%;
@@ -77,16 +85,16 @@
     --muted: 0 0% 18%;
     --muted-foreground: 0 0% 65%;
 
-    --accent: 33 60% 20%;
-    --accent-foreground: 45 100% 70%;
+    --accent: 30 60% 20%;
+    --accent-foreground: 30 90% 70%;
 
     --destructive: 4 90% 58%;
     --destructive-foreground: 0 0% 100%;
 
     --border: 0 0% 20%;
     --input: 0 0% 20%;
-    --ring: 33 97% 49%;
-    
+    --ring: 30 90% 63%;
+
     --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
     --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.3);
     --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.4), 0 4px 6px -4px rgb(0 0 0 / 0.3);

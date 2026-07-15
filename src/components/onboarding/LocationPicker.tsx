@@ -71,7 +71,7 @@ export function LocationPicker({ lat, lng, onLocationChange }: LocationPickerPro
     return (
       <div className="w-full h-[200px] bg-muted rounded-xl flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="w-6 h-6 animate-spin text-blue-600 mx-auto mb-2" />
+          <Loader2 className="w-6 h-6 animate-spin text-employer mx-auto mb-2" />
           <p className="text-sm text-muted-foreground">Caricamento mappa...</p>
         </div>
       </div>
@@ -82,7 +82,7 @@ export function LocationPicker({ lat, lng, onLocationChange }: LocationPickerPro
     return (
       <div className="w-full h-[200px] bg-muted rounded-xl flex items-center justify-center">
         <div className="text-center p-4">
-          <MapPin className="w-8 h-8 text-blue-600 mx-auto mb-2" />
+          <MapPin className="w-8 h-8 text-employer mx-auto mb-2" />
           <p className="text-sm text-muted-foreground">
             Mappa non disponibile. La posizione sarà impostata su Genova Centro.
           </p>
@@ -121,10 +121,10 @@ export function LocationPicker({ lat, lng, onLocationChange }: LocationPickerPro
             }}
           >
             <div className="flex flex-col items-center">
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center shadow-lg ${isOutOfBounds ? 'bg-destructive' : 'bg-blue-600'}`}>
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center shadow-lg ${isOutOfBounds ? 'bg-destructive' : 'bg-employer'}`}>
                 <MapPin className="w-5 h-5 text-white" />
               </div>
-              <div className={`w-0 h-0 border-l-[8px] border-r-[8px] border-t-[10px] border-l-transparent border-r-transparent -mt-1 ${isOutOfBounds ? 'border-t-destructive' : 'border-t-blue-600'}`} />
+              <div className={`w-0 h-0 border-l-[8px] border-r-[8px] border-t-[10px] border-l-transparent border-r-transparent -mt-1 ${isOutOfBounds ? 'border-t-destructive' : 'border-t-employer'}`} />
             </div>
           </Marker>
         </Map>

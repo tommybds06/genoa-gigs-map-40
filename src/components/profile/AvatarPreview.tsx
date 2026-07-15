@@ -44,8 +44,8 @@ export function AvatarPreview({
 
   const displayName = userName || "Utente";
   const initials = displayName[0].toUpperCase();
-  const primaryColor = role === "employer" || isEmployer ? "text-blue-600" : "text-primary";
-  const accentBg = role === "employer" || isEmployer ? "bg-blue-50" : "bg-accent";
+  const primaryColor = role === "employer" || isEmployer ? "text-employer" : "text-primary";
+  const accentBg = role === "employer" || isEmployer ? "bg-employer-50" : "bg-accent";
 
   const handleAvatarClick = (e: React.MouseEvent) => {
     e.stopPropagation();

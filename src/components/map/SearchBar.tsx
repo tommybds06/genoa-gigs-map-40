@@ -174,7 +174,7 @@ export function SearchBar({
             {/* Type Tags */}
             <div>
               <h4 className="text-base font-semibold text-foreground mb-3 flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-blue-600" />
+                <div className="w-3 h-3 rounded-full bg-employer" />
                 Modalità
               </h4>
               <div className="flex flex-wrap gap-2">

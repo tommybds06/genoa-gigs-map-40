@@ -41,15 +41,15 @@ const roleThemes = {
     inputFocus: 'focus:ring-primary focus:border-primary',
   },
   employer: {
-    bg: 'bg-blue-50',
-    primary: 'bg-blue-600',
-    primaryHover: 'hover:bg-blue-700',
-    text: 'text-blue-600',
-    border: 'border-blue-600',
-    ring: 'ring-blue-600',
-    cardSelected: 'bg-blue-600/10 ring-2 ring-blue-600',
-    iconBg: 'bg-blue-600 text-white',
-    inputFocus: 'focus:ring-blue-600 focus:border-blue-600',
+    bg: 'bg-employer-50',
+    primary: 'bg-employer',
+    primaryHover: 'hover:bg-employer-700',
+    text: 'text-employer',
+    border: 'border-employer',
+    ring: 'ring-employer',
+    cardSelected: 'bg-employer/10 ring-2 ring-employer',
+    iconBg: 'bg-employer text-employer-foreground',
+    inputFocus: 'focus:ring-employer focus:border-employer',
   },
   neutral: {
     bg: 'bg-background',
@@ -257,12 +257,11 @@ const Auth = () => {
       <div className="w-full max-w-md mx-auto pb-8">
         {/* Logo & Title */}
         <div className="text-center mb-8 animate-fade-in">
-          <h1 className="text-4xl font-bold text-foreground mb-2">
-            Poli<span className={cn(
-              "transition-colors duration-500",
-              selectedRole === 'employer' ? 'text-blue-600' : 'text-secondary'
-            )}>Task</span>
-          </h1>
+          <img
+            src={selectedRole === 'employer' ? "/images/logo-employer.svg" : "/images/logo-worker.svg"}
+            alt="Politask"
+            className="h-20 w-auto mx-auto mb-3 transition-all duration-500"
+          />
           <p className="text-muted-foreground">
             {isLogin ? 'Bentornato!' : 'Unisciti alla community'}
           </p>
@@ -310,7 +309,7 @@ const Auth = () => {
                     className={cn(
                       "relative p-4 rounded-2xl transition-all duration-500 text-left touch-feedback",
                       selectedRole === 'employer'
-                        ? 'bg-blue-600/10 ring-2 ring-blue-600 shadow-md'
+                        ? 'bg-employer/10 ring-2 ring-employer shadow-md'
                         : selectedRole === 'worker'
                           ? 'bg-muted opacity-60 hover:opacity-80'
                           : 'bg-muted hover:bg-muted/80'
@@ -318,14 +317,14 @@ const Auth = () => {
                   >
                     <div className={cn(
                       "w-12 h-12 rounded-xl flex items-center justify-center mb-3 transition-colors duration-500",
-                      selectedRole === 'employer' ? 'bg-blue-600 text-white' : 'bg-background'
+                      selectedRole === 'employer' ? 'bg-employer text-employer-foreground' : 'bg-background'
                     )}>
                       <Store className="w-6 h-6" />
                     </div>
                     <h3 className="font-semibold text-sm text-foreground">Offro Impiego</h3>
                     <p className="text-xs text-muted-foreground mt-1">Privato o Attività</p>
                     {selectedRole === 'employer' && (
-                      <div className="absolute top-2 right-2 w-3 h-3 bg-blue-600 rounded-full animate-scale-in" />
+                      <div className="absolute top-2 right-2 w-3 h-3 bg-employer rounded-full animate-scale-in" />
                     )}
                   </button>
                 </div>
@@ -348,7 +347,7 @@ const Auth = () => {
                     className={cn(
                       "pl-12 h-12 rounded-xl bg-muted border-none transition-all duration-500",
                       selectedRole === 'worker' && "focus:ring-2 focus:ring-primary",
-                      selectedRole === 'employer' && "focus:ring-2 focus:ring-blue-600",
+                      selectedRole === 'employer' && "focus:ring-2 focus:ring-employer",
                       !selectedRole && "focus:ring-2 focus:ring-ring"
                     )}
                   />
@@ -387,7 +386,7 @@ const Auth = () => {
                     placeholder="Via Roma 123"
                     value={address}
                     onChange={(e) => setAddress(e.target.value)}
-                    className="pl-12 h-12 rounded-xl bg-muted border-none transition-all duration-500 focus:ring-2 focus:ring-blue-600"
+                    className="pl-12 h-12 rounded-xl bg-muted border-none transition-all duration-500 focus:ring-2 focus:ring-employer"
                   />
                 </div>
                 {errors.address && <p className="text-xs text-destructive">{errors.address}</p>}
@@ -407,7 +406,7 @@ const Auth = () => {
                   className={cn(
                     "pl-12 h-12 rounded-xl bg-muted border-none transition-all duration-500",
                     !isLogin && selectedRole === 'worker' && "focus:ring-2 focus:ring-primary",
-                    !isLogin && selectedRole === 'employer' && "focus:ring-2 focus:ring-blue-600",
+                    !isLogin && selectedRole === 'employer' && "focus:ring-2 focus:ring-employer",
                     (isLogin || !selectedRole) && "focus:ring-2 focus:ring-ring"
                   )}
                 />
@@ -428,7 +427,7 @@ const Auth = () => {
                   className={cn(
                     "pl-12 h-12 rounded-xl bg-muted border-none transition-all duration-500",
                     !isLogin && selectedRole === 'worker' && "focus:ring-2 focus:ring-primary",
-                    !isLogin && selectedRole === 'employer' && "focus:ring-2 focus:ring-blue-600",
+                    !isLogin && selectedRole === 'employer' && "focus:ring-2 focus:ring-employer",
                     (isLogin || !selectedRole) && "focus:ring-2 focus:ring-ring"
                   )}
                 />
@@ -443,7 +442,7 @@ const Auth = () => {
               className={cn(
                 "w-full h-14 rounded-xl font-semibold text-lg shadow-md hover:shadow-lg transition-all duration-500 touch-feedback",
                 !isLogin && selectedRole === 'worker' && "bg-primary hover:bg-primary/90 text-primary-foreground",
-                !isLogin && selectedRole === 'employer' && "bg-blue-600 hover:bg-blue-700 text-white",
+                !isLogin && selectedRole === 'employer' && "bg-employer hover:bg-employer-700 text-employer-foreground",
                 (isLogin || !selectedRole) && "bg-gradient-to-r from-primary to-secondary text-foreground"
               )}
             >
@@ -476,7 +475,7 @@ const Auth = () => {
               ) : (
                 <>Hai già un account? <span className={cn(
                   "font-medium transition-colors duration-500",
-                  selectedRole === 'employer' ? 'text-blue-600' : 'text-secondary'
+                  selectedRole === 'employer' ? 'text-employer' : 'text-secondary'
                 )}>Accedi</span></>
               )}
             </button>

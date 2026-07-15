@@ -296,7 +296,7 @@ const PublicProfile = () => {
             variant="ghost" 
             size="sm" 
             onClick={() => navigate(-1)}
-            className={`rounded-full ${isEmployer ? 'bg-blue-50 text-blue-600 hover:bg-blue-100' : 'bg-accent text-primary hover:bg-accent/80'}`}
+            className={`rounded-full ${isEmployer ? 'bg-employer-50 text-employer hover:bg-employer-100' : 'bg-accent text-primary hover:bg-accent/80'}`}
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Indietro
@@ -309,7 +309,7 @@ const PublicProfile = () => {
           <div className="flex justify-center mb-4">
             <Avatar className="w-32 h-32 border-4 border-background shadow-lg">
               <AvatarImage src={avatarUrl || undefined} alt={displayName} className="object-cover" />
-              <AvatarFallback className={`${isWorkerProfile ? 'bg-accent text-primary' : 'bg-blue-50 text-blue-600'} text-4xl font-bold`}>
+              <AvatarFallback className={`${isWorkerProfile ? 'bg-accent text-primary' : 'bg-employer-50 text-employer'} text-4xl font-bold`}>
                 {initials}
               </AvatarFallback>
             </Avatar>
@@ -322,7 +322,7 @@ const PublicProfile = () => {
             {/* Role Badge */}
             <Badge 
               variant="outline" 
-              className={`mb-2 ${isWorkerProfile ? 'bg-accent text-primary border-primary/30' : 'bg-blue-50 text-blue-600 border-blue-200'}`}
+              className={`mb-2 ${isWorkerProfile ? 'bg-accent text-primary border-primary/30' : 'bg-employer-50 text-employer border-employer/20'}`}
             >
               {isWorkerProfile ? "Worker" : "Employer"}
             </Badge>
@@ -348,9 +348,9 @@ const PublicProfile = () => {
                     key={star} 
                     className={`w-5 h-5 ${
                       star <= reviewStats.avg 
-                        ? "text-blue-500 fill-blue-500" 
+                        ? "text-employer fill-employer"
                         : reviewStats.avg >= star - 0.5
-                        ? "text-blue-500 fill-blue-500/50"
+                        ? "text-employer fill-employer/50"
                         : "text-muted-foreground/30"
                     }`}
                   />
@@ -367,7 +367,7 @@ const PublicProfile = () => {
           <div className="px-4 pb-6">
             <div className="bg-card rounded-2xl p-5 shadow-sm border border-border">
               <div className="flex items-center gap-2 mb-4">
-                <Camera className={`w-5 h-5 ${isWorkerProfile ? 'text-primary' : 'text-blue-600'}`} />
+                <Camera className={`w-5 h-5 ${isWorkerProfile ? 'text-primary' : 'text-employer'}`} />
                 <h3 className="font-bold text-lg">Foto</h3>
                 <span className="text-muted-foreground text-sm">({profile.photos.length})</span>
               </div>
@@ -491,7 +491,7 @@ const PublicProfile = () => {
               <div className="px-4 pb-6">
                 <div className="bg-card rounded-2xl p-5 shadow-sm border border-border">
                   <div className="flex items-center gap-2 mb-3">
-                    <FileText className="w-5 h-5 text-blue-600" />
+                    <FileText className="w-5 h-5 text-employer" />
                     <h3 className="font-bold text-lg">Chi siamo</h3>
                   </div>
                   <p className="text-foreground leading-relaxed">{profile.bio}</p>
@@ -504,7 +504,7 @@ const PublicProfile = () => {
               <div className="px-4 pb-6">
                 <div className="bg-card rounded-2xl p-5 shadow-sm border border-border">
                   <div className="flex items-center gap-2 mb-3">
-                    <Briefcase className="w-5 h-5 text-blue-600" />
+                    <Briefcase className="w-5 h-5 text-employer" />
                     <h3 className="font-bold text-lg">Chi cerchiamo</h3>
                   </div>
                   <p className="text-foreground leading-relaxed">{profile.looking_for}</p>
@@ -516,7 +516,7 @@ const PublicProfile = () => {
             <div className="px-4 pb-6">
               <div className="bg-card rounded-2xl p-5 shadow-sm border border-border">
                 <div className="flex items-center gap-2 mb-3">
-                  <Star className="w-5 h-5 text-blue-500" />
+                  <Star className="w-5 h-5 text-employer" />
                   <h3 className="font-bold text-lg">Recensioni</h3>
                 </div>
                 {reviews.length === 0 ? (
@@ -536,9 +536,9 @@ const PublicProfile = () => {
                                 key={star}
                                 className={`w-3.5 h-3.5 ${
                                   star <= review.rating
-                                    ? "text-blue-500 fill-blue-500"
+                                    ? "text-employer fill-employer"
                                     : review.rating >= star - 0.5
-                                    ? "text-blue-500 fill-blue-500/50"
+                                    ? "text-employer fill-employer/50"
                                     : "text-muted-foreground/30"
                                 }`}
                               />
@@ -562,7 +562,7 @@ const PublicProfile = () => {
             <div className="px-4 pb-6">
               <div className="bg-card rounded-2xl p-5 shadow-sm border border-border">
                 <div className="flex items-center gap-2 mb-4">
-                  <Briefcase className="w-5 h-5 text-blue-600" />
+                  <Briefcase className="w-5 h-5 text-employer" />
                   <h3 className="font-bold text-lg">Annunci Attivi</h3>
                 </div>
                 
@@ -584,10 +584,10 @@ const PublicProfile = () => {
                             setSelectedJob(job);
                             setIsJobDetailsOpen(true);
                           }}
-                          className="w-full p-3 rounded-xl bg-muted/50 border border-border hover:border-blue-300 hover:shadow-md active:scale-[0.98] transition-all text-left"
+                          className="w-full p-3 rounded-xl bg-muted/50 border border-border hover:border-employer/30 hover:shadow-md active:scale-[0.98] transition-all text-left"
                         >
                           <div className="flex items-start gap-3">
-                            <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center shrink-0">
+                            <div className="w-10 h-10 bg-employer-50 text-employer rounded-xl flex items-center justify-center shrink-0">
                               <Icon className="w-5 h-5" />
                             </div>
                             <div className="flex-1 min-w-0">
@@ -602,7 +602,7 @@ const PublicProfile = () => {
                                   </span>
                                 )}
                                 {job.price && (
-                                  <span className="inline-flex items-center gap-1 text-blue-600 font-semibold">
+                                  <span className="inline-flex items-center gap-1 text-employer font-semibold">
                                     <Euro className="w-3.5 h-3.5" />
                                     {job.price}
                                   </span>

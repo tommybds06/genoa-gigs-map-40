@@ -142,17 +142,26 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     fetchProfile();
   }, [user, fetchProfile]);
 
-  // Listen for auth state changes and invalidate profile cache on sign in
+  // Listen for auth state changes and invalidate profile cache on sign in.
+  //
+  // IMPORTANTE (bug del freeze): NON chiamare metodi supabase — né usare await —
+  // direttamente dentro il callback di onAuthStateChange. Il client Supabase tiene
+  // un lock sull'auth (Web Locks API) mentre esegue il callback; una query supabase
+  // qui dentro prova ad acquisire lo stesso lock e va in DEADLOCK, freezando l'app
+  // (risolto solo da hard refresh). Si differisce tutto FUORI dal lock con setTimeout(0).
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event) => {
+      (event) => {
         if (event === 'SIGNED_IN') {
-          // Force immediate profile fetch on sign in
-          await queryClient.invalidateQueries({ queryKey: ['profile'] });
-          await fetchProfile();
+          setTimeout(() => {
+            queryClient.invalidateQueries({ queryKey: ['profile'] });
+            fetchProfile();
+          }, 0);
         } else if (event === 'SIGNED_OUT') {
           clearCachedRole();
-          await queryClient.invalidateQueries({ queryKey: ['profile'] });
+          setTimeout(() => {
+            queryClient.invalidateQueries({ queryKey: ['profile'] });
+          }, 0);
         }
       }
     );

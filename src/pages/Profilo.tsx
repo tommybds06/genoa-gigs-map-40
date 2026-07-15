@@ -85,12 +85,16 @@ const Profilo = () => {
          {/* Header */}
          <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-md px-4 pt-8 pb-3">
            <div className="flex items-center justify-between">
-             <h1 className={`text-2xl font-bold ${isEmployer ? "text-blue-600" : "text-primary"}`}>Profilo</h1>
-             <button 
+             <img
+               src={isEmployer ? "/images/logo-employer.svg" : "/images/logo-worker.svg"}
+               alt="Politask"
+               className="h-14 w-auto -ml-1"
+             />
+             <button
                onClick={() => navigate("/settings")}
-               className={`p-2 rounded-full transition-colors touch-feedback ${isEmployer ? "hover:bg-blue-50" : "hover:bg-accent"}`}
+               className={`p-2 rounded-full transition-colors touch-feedback ${isEmployer ? "hover:bg-employer-50" : "hover:bg-accent"}`}
              >
-               <Settings className={`w-5 h-5 ${isEmployer ? "text-blue-600" : "text-primary"}`} />
+               <Settings className={`w-5 h-5 ${isEmployer ? "text-employer" : "text-primary"}`} />
              </button>
            </div>
          </header>

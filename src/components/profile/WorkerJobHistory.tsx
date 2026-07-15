@@ -14,6 +14,9 @@ interface CompletedJob {
   id: string;
   job_id: string;
   created_at: string;
+  // Snapshot salvato alla candidatura (sopravvive alla cancellazione dell'annuncio)
+  job_title: string | null;
+  employer_name: string | null;
   job: {
     title: string;
     schedule: string | null;
@@ -53,7 +56,7 @@ export const WorkerJobHistory = ({ primaryTextClasses }: WorkerJobHistoryProps) 
         // Fetch ONLY completed applications for current worker
         const { data: applicationsData, error } = await supabase
           .from('applications')
-          .select('id, job_id, created_at')
+          .select('id, job_id, created_at, job_title, employer_name')
           .eq('applicant_id', user.id)
           .eq('status', 'completed')
           .order('created_at', { ascending: false });
@@ -68,7 +71,7 @@ export const WorkerJobHistory = ({ primaryTextClasses }: WorkerJobHistoryProps) 
               .from('jobs')
               .select('title, schedule, created_at, owner_id')
               .eq('id', app.job_id)
-              .single();
+              .maybeSingle();
 
             // Fetch employer details
             let employerData = null;
@@ -77,7 +80,7 @@ export const WorkerJobHistory = ({ primaryTextClasses }: WorkerJobHistoryProps) 
                 .from('profiles')
                 .select('id, full_name')
                 .eq('id', jobData.owner_id)
-                .single();
+                .maybeSingle();
               employerData = profile;
             }
 
@@ -85,6 +88,8 @@ export const WorkerJobHistory = ({ primaryTextClasses }: WorkerJobHistoryProps) 
               id: app.id,
               job_id: app.job_id,
               created_at: app.created_at,
+              job_title: app.job_title,
+              employer_name: app.employer_name,
               job: jobData,
               employer: employerData,
             };
@@ -141,11 +146,11 @@ export const WorkerJobHistory = ({ primaryTextClasses }: WorkerJobHistoryProps) 
                     className="bg-muted/50 rounded-xl p-3 cursor-pointer hover:bg-muted transition-colors"
                     onClick={() => job.employer?.id && navigate(`/profile/${job.employer.id}`)}
                   >
-                    <h4 className="font-medium text-sm">{job.job?.title || 'Lavoro'}</h4>
+                    <h4 className="font-medium text-sm">{job.job?.title || job.job_title || 'Lavoro'}</h4>
                     
                     <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
                       <Building2 className="w-3.5 h-3.5" />
-                      <span>{job.employer?.full_name || 'Attività'}</span>
+                      <span>{job.employer?.full_name || job.employer_name || 'Attività'}</span>
                     </div>
                     
                     <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">

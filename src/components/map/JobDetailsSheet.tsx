@@ -64,7 +64,7 @@ const categoryLabels: Record<string, string> = {
 };
 
 const categoryColors: Record<string, string> = {
-  tutoring: "bg-blue-100 text-blue-700",
+  tutoring: "bg-employer-50 text-employer",
   delivery: "bg-green-100 text-green-700",
   event: "bg-purple-100 text-purple-700",
   general: "bg-secondary/20 text-secondary",
@@ -150,6 +150,9 @@ export function JobDetailsSheet({ job, isOpen, onClose, showMiniMap = false }: J
         .insert({
           job_id: job.id,
           applicant_id: user.id,
+          // Snapshot: preserva titolo ed employer anche se l'annuncio verrà cancellato
+          job_title: job.title,
+          employer_name: job.profiles?.full_name ?? null,
         });
 
       if (error) {
@@ -187,7 +190,7 @@ export function JobDetailsSheet({ job, isOpen, onClose, showMiniMap = false }: J
                 onClick={handleEmployerClick}
                 className="flex items-center gap-3 mb-4 p-3 -mx-3 rounded-2xl hover:bg-muted/50 active:scale-[0.98] transition-all text-left"
               >
-                <Avatar className={`w-14 h-14 border-2 ${isEmployer ? "border-blue-600/20" : "border-primary/20"}`}>
+                <Avatar className={`w-14 h-14 border-2 ${isEmployer ? "border-employer/20" : "border-primary/20"}`}>
                   <AvatarImage src={employerAvatar || undefined} alt={employerName} />
                   <AvatarFallback className={`${theme.accentBg} ${theme.accentText} font-bold text-lg`}>
                     {employerInitials}
@@ -219,7 +222,7 @@ export function JobDetailsSheet({ job, isOpen, onClose, showMiniMap = false }: J
               {/* Schedule Display - Larger for better readability */}
               {job.schedule && (
                 <div className="flex items-center gap-2 mt-3 text-foreground">
-                  <Clock className={`w-5 h-5 ${isEmployer ? 'text-blue-600' : 'text-primary'}`} />
+                  <Clock className={`w-5 h-5 ${isEmployer ? 'text-employer' : 'text-primary'}`} />
                   <span className="text-lg font-semibold">{job.schedule}</span>
                 </div>
               )}
@@ -242,7 +245,7 @@ export function JobDetailsSheet({ job, isOpen, onClose, showMiniMap = false }: J
             {/* Description */}
             {job.description && (
               <div className="py-4 border-t border-border">
-                <h3 className={`text-sm font-bold mb-3 ${isEmployer ? 'text-blue-600' : 'text-primary'}`}>
+                <h3 className={`text-sm font-bold mb-3 ${isEmployer ? 'text-employer' : 'text-primary'}`}>
                   DESCRIZIONE
                 </h3>
                 <p className="text-foreground leading-relaxed">
@@ -253,7 +256,7 @@ export function JobDetailsSheet({ job, isOpen, onClose, showMiniMap = false }: J
 
             {/* Location Section - Mini Map or Address Display */}
             <div className="py-4 border-t border-border">
-              <h3 className={`text-sm font-bold mb-3 ${isEmployer ? 'text-blue-600' : 'text-primary'}`}>
+              <h3 className={`text-sm font-bold mb-3 ${isEmployer ? 'text-employer' : 'text-primary'}`}>
                 POSIZIONE
               </h3>
               {showMiniMap && job.lat && job.lng && job.lat !== 0 && job.lng !== 0 ? (
@@ -264,12 +267,12 @@ export function JobDetailsSheet({ job, isOpen, onClose, showMiniMap = false }: J
                   address={employerAddress}
                 />
               ) : (
-                <div className={`flex items-center gap-3 p-4 rounded-2xl ${isEmployer ? 'bg-blue-50' : 'bg-accent'}`}>
+                <div className={`flex items-center gap-3 p-4 rounded-2xl ${isEmployer ? 'bg-employer-50' : 'bg-accent'}`}>
                   <div className={`w-12 h-12 ${theme.primary} rounded-xl flex items-center justify-center shadow-md`}>
                     <MapPin className="w-6 h-6 text-white" />
                   </div>
                   <div className="flex-1">
-                    <p className={`text-xl font-bold ${isEmployer ? 'text-blue-600' : 'text-primary'}`}>
+                    <p className={`text-xl font-bold ${isEmployer ? 'text-employer' : 'text-primary'}`}>
                       {job.neighborhood || "Zona non specificata"}
                     </p>
                     {employerAddress && (

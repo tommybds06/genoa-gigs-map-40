@@ -43,7 +43,7 @@ export const MessageBubble = ({
   const getBubbleColors = () => {
     if (isOwn) {
       return isEmployer
-        ? "bg-blue-600 text-white rounded-br-sm"
+        ? "bg-employer text-employer-foreground rounded-br-sm"
         : "bg-primary text-primary-foreground rounded-br-sm";
     }
     return "bg-muted text-foreground rounded-bl-sm";
@@ -51,7 +51,7 @@ export const MessageBubble = ({
 
   const getTimestampColors = () => {
     if (isOwn) {
-      return isEmployer ? "text-blue-200" : "text-primary-foreground/70";
+      return isEmployer ? "text-employer-foreground/70" : "text-primary-foreground/70";
     }
     return "text-muted-foreground";
   };
@@ -61,7 +61,7 @@ export const MessageBubble = ({
     
     if (message.is_read) {
       // Read: Blue for workers, Yellow for employers (contrast on blue)
-      return isEmployer ? "text-yellow-400" : "text-blue-500";
+      return isEmployer ? "text-yellow-400" : "text-employer-50";
     }
     // Unread: Gray
     return "text-gray-400";
@@ -70,7 +70,7 @@ export const MessageBubble = ({
   const getReplyPreviewColors = () => {
     if (isOwn) {
       return isEmployer
-        ? "bg-blue-700/50 border-blue-300 text-blue-100"
+        ? "bg-employer-700/50 border-employer/30 text-employer-foreground/90"
         : "bg-primary/70 border-primary-foreground/50 text-primary-foreground/90";
     }
     return "bg-muted/80 border-muted-foreground/50 text-muted-foreground";

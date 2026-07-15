@@ -66,7 +66,7 @@ export function EmployerJobsDrawer({
               onClick={handleEmployerClick}
               className="flex items-center gap-3 mb-2 w-full text-left hover:opacity-80 active:scale-[0.98] transition-all"
             >
-              <Avatar className={`w-12 h-12 border-2 ${isEmployer ? "border-blue-600/20" : "border-primary/20"}`}>
+              <Avatar className={`w-12 h-12 border-2 ${isEmployer ? "border-employer/20" : "border-primary/20"}`}>
                 <AvatarImage src={avatarUrl || undefined} alt={employerName} className="object-cover" />
                 <AvatarFallback className={`${theme.accentBg} ${theme.accentText} font-bold`}>
                   {initials}
@@ -104,7 +104,7 @@ export function EmployerJobsDrawer({
                   >
                     {/* Icon */}
                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
-                      isEmployer ? "bg-blue-100 text-blue-600" : "bg-accent text-primary"
+                      isEmployer ? "bg-employer-50 text-employer" : "bg-accent text-primary"
                     }`}>
                       <Icon className="w-5 h-5" />
                     </div>

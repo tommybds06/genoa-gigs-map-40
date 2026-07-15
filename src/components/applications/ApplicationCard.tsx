@@ -26,7 +26,7 @@ const statusConfig: Record<string, { label: string; className: string }> = {
   },
   accepted: {
     label: "Accettato",
-    className: "bg-blue-100 text-blue-700 border-blue-300 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-700",
+    className: "bg-employer-50 text-employer border-employer/30 dark:bg-employer/10 dark:text-employer dark:border-employer/30",
   },
   hired: {
     label: "Assunto",
@@ -89,10 +89,10 @@ export function ApplicationCard({ application, userId }: ApplicationCardProps) {
 
         {/* Content */}
         <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-base truncate">{job?.title || "Lavoro"}</h3>
+          <h3 className="font-semibold text-base truncate">{job?.title || application.job_title || "Lavoro"}</h3>
           
           <div className="flex items-center gap-2 mt-1">
-            {job?.profiles && (
+            {job?.profiles ? (
               <div className="flex items-center gap-1.5">
                 <Avatar className="w-4 h-4">
                   <AvatarImage src={job.profiles.avatar_url || undefined} />
@@ -104,7 +104,19 @@ export function ApplicationCard({ application, userId }: ApplicationCardProps) {
                   {job.profiles.full_name || "Employer"}
                 </span>
               </div>
-            )}
+            ) : application.employer_name ? (
+              // Annuncio cancellato: usa lo snapshot del nome employer
+              <div className="flex items-center gap-1.5">
+                <Avatar className="w-4 h-4">
+                  <AvatarFallback className="text-[8px]">
+                    {application.employer_name.charAt(0)}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="text-sm text-muted-foreground truncate max-w-[120px]">
+                  {application.employer_name}
+                </span>
+              </div>
+            ) : null}
           </div>
 
           <div className="flex items-center gap-1.5 mt-1.5 text-xs text-muted-foreground">

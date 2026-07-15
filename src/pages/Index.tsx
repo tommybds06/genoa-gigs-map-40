@@ -131,10 +131,7 @@ const Index = () => {
     <div className="flex flex-col h-full overflow-hidden">
        {/* Swipe zone - only header/search area triggers navigation */}
        <SwipeNavigator zoneRestricted>
-         <Header 
-           title="Mappa" 
-           titleColor={isEmployer ? "text-blue-600" : "text-primary"}
-         />
+         <Header />
  
          {!isEmployer && (
            <div className="px-4 pt-2 pb-3 z-30 shrink-0">

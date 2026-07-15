@@ -159,7 +159,7 @@ const CreateJob = () => {
   if (profileLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+        <Loader2 className="w-8 h-8 animate-spin text-employer" />
       </div>
     );
   }
@@ -170,7 +170,7 @@ const CreateJob = () => {
       style={{ touchAction: 'pan-y', WebkitOverflowScrolling: 'touch' }}
     >
       {/* Header */}
-      <div className="bg-blue-600 text-white px-6 py-6">
+      <div className="bg-employer text-employer-foreground px-6 py-6">
         <div className="flex items-center gap-3 mb-2">
           <button 
             onClick={() => navigate(-1)}
@@ -189,7 +189,7 @@ const CreateJob = () => {
         {/* Title */}
         <div className="space-y-2">
           <Label htmlFor="title" className="text-base font-medium flex items-center gap-2">
-            <Briefcase className="h-4 w-4 text-blue-600" />
+            <Briefcase className="h-4 w-4 text-employer" />
             Titolo <span className="text-destructive">*</span>
           </Label>
           <Input
@@ -205,7 +205,7 @@ const CreateJob = () => {
         {/* Description */}
         <div className="space-y-2">
           <Label htmlFor="description" className="text-base font-medium flex items-center gap-2">
-            <FileText className="h-4 w-4 text-blue-600" />
+            <FileText className="h-4 w-4 text-employer" />
             Descrizione <span className="text-destructive">*</span>
           </Label>
           <Textarea
@@ -221,7 +221,7 @@ const CreateJob = () => {
         {/* Schedule */}
         <div className="space-y-2">
           <Label htmlFor="schedule" className="text-base font-medium flex items-center gap-2">
-            <Clock className="h-4 w-4 text-blue-600" />
+            <Clock className="h-4 w-4 text-employer" />
             Orario
           </Label>
           <Input
@@ -235,7 +235,7 @@ const CreateJob = () => {
         {/* Price */}
         <div className="space-y-2">
           <Label htmlFor="price" className="text-base font-medium flex items-center gap-2">
-            <Euro className="h-4 w-4 text-blue-600" />
+            <Euro className="h-4 w-4 text-employer" />
             Paga
           </Label>
           <Input
@@ -249,7 +249,7 @@ const CreateJob = () => {
         {/* Type Tag (Modalità) - Single Selection Required */}
         <div className="space-y-3">
           <Label className="text-base font-medium flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-blue-600" />
+            <div className="w-3 h-3 rounded-full bg-employer" />
             Modalità <span className="text-destructive">*</span>
           </Label>
           <p className="text-sm text-muted-foreground">
@@ -263,8 +263,8 @@ const CreateJob = () => {
                 onClick={() => setSelectedTypeTag(tag)}
                 className={`flex items-center justify-center px-3 py-2.5 rounded-full text-sm font-medium transition-all border-2 ${
                   selectedTypeTag === tag
-                    ? 'bg-blue-600 text-white border-blue-600'
-                    : 'bg-blue-50 text-blue-700 border-transparent hover:bg-blue-100'
+                    ? 'bg-employer text-employer-foreground border-employer'
+                    : 'bg-employer-50 text-employer border-transparent hover:bg-employer-100'
                 }`}
               >
                 {tag}
@@ -344,7 +344,7 @@ const CreateJob = () => {
         <Button
           onClick={handleSubmit}
           disabled={loading}
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-6"
+          className="w-full bg-employer hover:bg-employer-700 text-employer-foreground font-semibold py-6"
         >
           {loading ? (
             <>

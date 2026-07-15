@@ -63,8 +63,8 @@ const Settings = () => {
   };
 
   // Dynamic classes based on role
-  const backButtonClasses = isEmployer 
-    ? "text-blue-600 hover:bg-blue-50" 
+  const backButtonClasses = isEmployer
+    ? "text-employer hover:bg-employer-50"
     : "text-primary hover:bg-accent";
 
   return (
@@ -78,7 +78,11 @@ const Settings = () => {
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
-          <h1 className={`text-xl font-bold ${isEmployer ? "text-blue-600" : "text-primary"}`}>Impostazioni</h1>
+          <img
+            src={isEmployer ? "/images/logo-employer.svg" : "/images/logo-worker.svg"}
+            alt="Politask"
+            className="h-8 w-auto"
+          />
         </div>
       </header>
 

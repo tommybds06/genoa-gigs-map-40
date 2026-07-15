@@ -291,7 +291,7 @@ const Annunci = () => {
       case 'hired':
         return <Badge className="bg-green-600 text-white">Assunto</Badge>;
       case 'accepted':
-        return <Badge className="bg-blue-500 text-white">In Colloquio</Badge>;
+        return <Badge className="bg-employer text-employer-foreground">In Colloquio</Badge>;
       case 'rejected':
         return <Badge className="bg-red-500 text-white">Rifiutato</Badge>;
       case 'completed':
@@ -313,7 +313,7 @@ const Annunci = () => {
               variant="ghost"
               size="icon"
               onClick={handleBack}
-              className="rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 touch-feedback"
+              className="rounded-full bg-employer-50 text-employer hover:bg-employer-100 touch-feedback"
             >
               <ArrowLeft className="h-5 w-5" />
             </Button>
@@ -343,7 +343,7 @@ const Annunci = () => {
                     className="flex items-center gap-4 cursor-pointer touch-feedback"
                     onClick={() => navigate(`/profile/${app.applicant.id}`)}
                   >
-                    <Avatar className="h-14 w-14 border-2 border-blue-600/20">
+                    <Avatar className="h-14 w-14 border-2 border-employer/20">
                       <AvatarImage src={app.applicant.avatar_url || undefined} />
                       <AvatarFallback className={`${theme.accentBg} ${theme.primaryText} font-semibold`}>
                         {(app.applicant.full_name || 'U')[0].toUpperCase()}
@@ -387,7 +387,7 @@ const Annunci = () => {
                         <Button
                           onClick={() => handleAccept(app)}
                           disabled={processingAppId === app.id}
-                          className="flex-1 bg-blue-600 hover:bg-blue-700 text-white touch-feedback"
+                          className="flex-1 bg-employer hover:bg-employer-700 text-employer-foreground touch-feedback"
                         >
                           {processingAppId === app.id ? (
                             <Loader2 className="h-4 w-4 animate-spin" />
@@ -417,14 +417,14 @@ const Annunci = () => {
   return (
     <div className="flex flex-col h-full bg-background">
       {/* Header with "Annunci" title in blue for employers */}
-      <Header title="Annunci" titleColor="text-blue-600" />
+      <Header />
 
       <main className="flex-1 px-4 pb-4 overflow-y-auto">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-lg font-semibold text-foreground">I Tuoi Annunci Pubblicati</h2>
           <Button
             onClick={() => navigate('/create-job')}
-            className="bg-blue-600 hover:bg-blue-700 text-white rounded-full px-4 touch-feedback"
+            className="bg-employer hover:bg-employer-700 text-employer-foreground rounded-full px-4 touch-feedback"
             size="sm"
           >
             <Plus className="h-4 w-4 mr-1" />
@@ -476,9 +476,9 @@ const Annunci = () => {
                       variant="ghost"
                       size="icon"
                       onClick={(e) => handleEditClick(e, job)}
-                      className="h-8 w-8 rounded-full hover:bg-blue-100 touch-feedback"
+                      className="h-8 w-8 rounded-full hover:bg-employer-100 touch-feedback"
                     >
-                      <Pencil className="h-4 w-4 text-blue-600" />
+                      <Pencil className="h-4 w-4 text-employer" />
                     </Button>
                     <Button
                       variant="ghost"

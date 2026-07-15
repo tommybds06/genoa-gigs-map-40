@@ -31,7 +31,7 @@ export function NeighborhoodSelect({
   const triggerClasses = cn(
     "w-full",
     error && "border-destructive",
-    variant === "employer" && "focus:ring-blue-500 border-blue-200",
+    variant === "employer" && "focus:ring-employer border-employer/20",
     variant === "worker" && "focus:ring-primary border-primary/20",
     className
   );
@@ -42,7 +42,7 @@ export function NeighborhoodSelect({
         <div className="flex items-center gap-2">
           <MapPin className={cn(
             "w-4 h-4",
-            variant === "employer" ? "text-blue-600" : "text-primary"
+            variant === "employer" ? "text-employer" : "text-primary"
           )} />
           <SelectValue placeholder={placeholder} />
         </div>

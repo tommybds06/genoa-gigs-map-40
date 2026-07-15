@@ -66,31 +66,31 @@ export const workerTheme: AppTheme = {
 };
 
 export const employerTheme: AppTheme = {
-  primary: "bg-blue-600",
-  primaryHover: "hover:bg-blue-700",
-  primaryBg: "bg-blue-50",
-  primaryBgHover: "hover:bg-blue-100",
-  primaryText: "text-blue-600",
-  primaryBorder: "border-blue-600",
-  primaryRing: "ring-blue-500",
-  
-  secondary: "bg-blue-800",
-  secondaryText: "text-blue-800",
-  
-  navActive: "text-blue-600",
-  navActiveBg: "bg-blue-50",
-  
-  accentBg: "bg-blue-50",
-  accentText: "text-blue-700",
-  
-  headerBg: "bg-blue-600",
+  primary: "bg-employer",
+  primaryHover: "hover:bg-employer-700",
+  primaryBg: "bg-employer-50",
+  primaryBgHover: "hover:bg-employer-100",
+  primaryText: "text-employer",
+  primaryBorder: "border-employer",
+  primaryRing: "ring-employer",
+
+  secondary: "bg-employer-700",
+  secondaryText: "text-employer-700",
+
+  navActive: "text-employer",
+  navActiveBg: "bg-employer-50",
+
+  accentBg: "bg-employer-50",
+  accentText: "text-employer",
+
+  headerBg: "bg-employer",
   headerText: "text-white",
-  
-  btnFilled: "bg-blue-600 text-white",
-  btnFilledHover: "hover:bg-blue-700",
-  btnOutline: "border-blue-600 text-blue-600",
-  btnOutlineHover: "hover:bg-blue-50",
-  
+
+  btnFilled: "bg-employer text-employer-foreground",
+  btnFilledHover: "hover:bg-employer-700",
+  btnOutline: "border-employer text-employer",
+  btnOutlineHover: "hover:bg-employer-50",
+
   roleLabel: "Employer",
 };
 

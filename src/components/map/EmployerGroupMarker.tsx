@@ -51,7 +51,7 @@ export const EmployerGroupMarker = memo(function EmployerGroupMarker({
         <div 
           className={cn(
             "absolute -top-1 -right-1 z-10 min-w-[20px] h-[20px] rounded-full flex items-center justify-center shadow-md border-2 border-white",
-            isEmployer ? "bg-blue-600" : "bg-primary"
+            isEmployer ? "bg-employer" : "bg-primary"
           )}
         >
           <span className="text-white text-xs font-bold px-1">{count}</span>
@@ -64,7 +64,7 @@ export const EmployerGroupMarker = memo(function EmployerGroupMarker({
             isHighlighted 
               ? "bg-white border-3 border-primary" 
               : isEmployer 
-                ? "bg-blue-600" 
+                ? "bg-employer"
                 : "bg-primary"
           )}
           style={isHighlighted ? { borderWidth: '3px' } : undefined}
