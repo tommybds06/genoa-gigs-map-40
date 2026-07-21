@@ -13,6 +13,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { EditJobDialog } from '@/components/jobs/EditJobDialog';
 import { DeleteJobDialog } from '@/components/jobs/DeleteJobDialog';
+import { SwipeNavigator } from '@/components/layout/SwipeNavigator';
 
 interface Job {
   id: string;
@@ -416,6 +417,7 @@ const Annunci = () => {
   }
 
   return (
+    <SwipeNavigator>
     <div className="flex flex-col h-full bg-background">
       {/* Header with "Annunci" title in blue for employers */}
       <Header />
@@ -514,6 +516,7 @@ const Annunci = () => {
         onSuccess={handleDeleteSuccess}
       />
     </div>
+    </SwipeNavigator>
   );
 };
 
