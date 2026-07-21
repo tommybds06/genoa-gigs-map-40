@@ -2,6 +2,7 @@ import { memo, useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Map, { Marker, Popup, NavigationControl } from "react-map-gl";
 import { Clock } from "lucide-react";
+import { OrologioIcon } from "@/components/icons/uiIcons";
 import { Badge } from "@/components/ui/badge";
 import { JobDetailsSheet } from "./JobDetailsSheet";
 import { EmployerGroupMarker } from "./EmployerGroupMarker";
@@ -66,9 +67,9 @@ const SingleJobMarker = memo(function SingleJobMarker({
       >
         <div
           className={cn(
-            "w-10 h-10 rounded-full flex items-center justify-center shadow-material-md relative transition-all duration-300",
-            isHighlighted 
-              ? "bg-white border-3 border-primary" 
+            "w-12 h-12 rounded-full flex items-center justify-center shadow-material-md relative transition-all duration-300",
+            isHighlighted
+              ? "bg-white border-3 border-primary"
               : isEmployer 
                 ? "bg-employer"
                 : "bg-primary"
@@ -77,16 +78,16 @@ const SingleJobMarker = memo(function SingleJobMarker({
         >
           <Icon 
             className={cn(
-              "w-5 h-5 transition-colors duration-300",
+              "w-6 h-6 transition-colors duration-300",
               isHighlighted ? "text-primary" : "text-white"
-            )} 
+            )}
           />
         </div>
         <div
           className={cn(
-            "w-0 h-0 border-l-[8px] border-r-[8px] border-t-[10px] border-l-transparent border-r-transparent -mt-1 transition-all duration-300",
-            isHighlighted 
-              ? "border-t-primary" 
+            "w-0 h-0 border-l-[9px] border-r-[9px] border-t-[12px] border-l-transparent border-r-transparent -mt-1 transition-all duration-300",
+            isHighlighted
+              ? "border-t-primary"
               : isEmployer 
                 ? "border-t-blue-600" 
                 : "border-t-primary"
@@ -326,7 +327,7 @@ function InteractiveMapInner({
                 )}
                 {selectedJob.schedule && (
                   <div className="flex items-center gap-1 text-muted-foreground shrink-0">
-                    <Clock className="w-3 h-3" />
+                    <OrologioIcon className="w-3 h-3" />
                     <span className="text-xs">{selectedJob.schedule}</span>
                   </div>
                 )}

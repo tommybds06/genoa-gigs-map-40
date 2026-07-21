@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { Briefcase, Loader2, Calendar, Building2, ChevronDown } from "lucide-react";
+import { Loader2, ChevronDown } from "lucide-react";
+import { CalendarioIcon, AnnunciIcon, StoricoLavoriIcon } from "@/components/icons/uiIcons";
+import { GenericoIcon } from "@/components/icons/roleIcons";
 import { useNavigate } from "react-router-dom";
 import {
   Accordion,
@@ -111,7 +113,7 @@ export const WorkerJobHistory = ({ primaryTextClasses }: WorkerJobHistoryProps) 
     return (
       <div className="material-card p-4 mb-4 animate-fade-in">
         <h3 className="font-semibold mb-3 flex items-center gap-2">
-          <Briefcase className={`w-4 h-4 ${primaryTextClasses}`} />
+          <StoricoLavoriIcon className={`w-4 h-4 ${primaryTextClasses}`} />
           Storico Lavori Completati
         </h3>
         <div className="flex items-center justify-center py-6">
@@ -127,7 +129,7 @@ export const WorkerJobHistory = ({ primaryTextClasses }: WorkerJobHistoryProps) 
         <AccordionItem value="job-history" className="border-none">
           <AccordionTrigger className="py-0 hover:no-underline">
             <h3 className="font-semibold flex items-center gap-2">
-              <Briefcase className={`w-4 h-4 ${primaryTextClasses}`} />
+              <StoricoLavoriIcon className={`w-4 h-4 ${primaryTextClasses}`} />
               Storico Lavori Completati ({jobs.length})
             </h3>
           </AccordionTrigger>
@@ -149,12 +151,12 @@ export const WorkerJobHistory = ({ primaryTextClasses }: WorkerJobHistoryProps) 
                     <h4 className="font-medium text-sm">{job.job?.title || job.job_title || 'Lavoro'}</h4>
                     
                     <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
-                      <Building2 className="w-3.5 h-3.5" />
+                      <AnnunciIcon className="w-3.5 h-3.5" />
                       <span>{job.employer?.full_name || job.employer_name || 'Attività'}</span>
                     </div>
                     
                     <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
-                      <Calendar className="w-3.5 h-3.5" />
+                      <CalendarioIcon className="w-3.5 h-3.5" />
                       <span>{formatJobDate(job.created_at)}</span>
                     </div>
                   </div>

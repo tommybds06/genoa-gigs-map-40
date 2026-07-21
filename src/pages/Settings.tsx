@@ -1,15 +1,10 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { 
-  ChevronLeft, 
-  User, 
-  Bell, 
-  HelpCircle, 
-  FileText, 
-  LogOut, 
-  Trash2,
+import { NotificheIcon, IndietroIcon, MailIcon, DocumentoIcon, EsciIcon, BidoneIcon, ProfiloIcon, InfoIcon } from "@/components/icons/uiIcons";
+import {
+  User,
+  HelpCircle,
   ChevronRight,
-  Mail,
   Loader2
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
@@ -76,7 +71,7 @@ const Settings = () => {
             onClick={handleBack}
             className={`p-2 rounded-full transition-colors ${backButtonClasses}`}
           >
-            <ChevronLeft className="w-5 h-5" />
+            <IndietroIcon className="w-5 h-5" />
           </button>
           <img
             src={isEmployer ? "/images/logo-employer.svg" : "/images/logo-worker.svg"}
@@ -92,7 +87,7 @@ const Settings = () => {
           <div className="material-card p-4 mb-6">
             <div className="flex items-center gap-3">
               <div className={`w-10 h-10 ${theme.primary} text-white rounded-full flex items-center justify-center`}>
-                <Mail className="w-5 h-5" />
+                <MailIcon className="w-5 h-5" />
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Loggato come</p>
@@ -114,7 +109,7 @@ const Settings = () => {
               className="w-full flex items-center justify-between p-4 hover:bg-muted/50 transition-colors border-b border-border"
             >
               <div className="flex items-center gap-3">
-                <User className="w-5 h-5 text-muted-foreground" />
+                <ProfiloIcon className="w-5 h-5 text-muted-foreground" />
                 <span className="font-medium">Modifica Profilo</span>
               </div>
               <ChevronRight className="w-5 h-5 text-muted-foreground" />
@@ -123,12 +118,13 @@ const Settings = () => {
             {/* Notifications */}
             <div className="flex items-center justify-between p-4">
               <div className="flex items-center gap-3">
-                <Bell className="w-5 h-5 text-muted-foreground" />
+                <NotificheIcon className="w-5 h-5 text-muted-foreground" />
                 <span className="font-medium">Notifiche</span>
               </div>
-              <Switch 
+              <Switch
                 checked={notificationsEnabled}
                 onCheckedChange={setNotificationsEnabled}
+                className={isEmployer ? "data-[state=checked]:bg-employer" : ""}
               />
             </div>
           </div>
@@ -146,7 +142,7 @@ const Settings = () => {
               className="w-full flex items-center justify-between p-4 hover:bg-muted/50 transition-colors border-b border-border"
             >
               <div className="flex items-center gap-3">
-                <HelpCircle className="w-5 h-5 text-muted-foreground" />
+                <InfoIcon className="w-5 h-5 text-muted-foreground" />
                 <span className="font-medium">Assistenza</span>
               </div>
               <ChevronRight className="w-5 h-5 text-muted-foreground" />
@@ -158,7 +154,7 @@ const Settings = () => {
               className="w-full flex items-center justify-between p-4 hover:bg-muted/50 transition-colors"
             >
               <div className="flex items-center gap-3">
-                <FileText className="w-5 h-5 text-muted-foreground" />
+                <DocumentoIcon className="w-5 h-5 text-muted-foreground" />
                 <span className="font-medium">Termini e Privacy</span>
               </div>
               <ChevronRight className="w-5 h-5 text-muted-foreground" />
@@ -182,7 +178,7 @@ const Settings = () => {
                 {isLoggingOut ? (
                   <Loader2 className="w-5 h-5 text-destructive animate-spin" />
                 ) : (
-                  <LogOut className="w-5 h-5 text-destructive" />
+                  <EsciIcon className="w-5 h-5 text-destructive" />
                 )}
                 <span className="font-medium text-destructive">Esci</span>
               </div>
@@ -194,7 +190,7 @@ const Settings = () => {
               className="w-full flex items-center justify-between p-4 hover:bg-destructive/5 transition-colors"
             >
               <div className="flex items-center gap-3">
-                <Trash2 className="w-5 h-5 text-destructive" />
+                <BidoneIcon className="w-5 h-5 text-destructive" />
                 <span className="font-medium text-destructive">Elimina Account</span>
               </div>
             </button>

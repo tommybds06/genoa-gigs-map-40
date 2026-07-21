@@ -1,5 +1,6 @@
 import { Header } from "@/components/layout/Header";
 import { MapPin, Clock, Euro, SearchX, Tag, Briefcase, FileText } from "lucide-react";
+import { XIcon, OrologioIcon, MappaIcon } from "@/components/icons/uiIcons";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
@@ -182,41 +183,38 @@ function JobsList({ jobs, loading, isEmployer, hasTags, onJobClick }: JobsListPr
             onClick={() => onJobClick(job)}
           >
             <div className="flex items-start gap-3">
-              <div className="w-12 h-12 bg-accent text-accent-foreground rounded-2xl flex items-center justify-center shrink-0">
-                <Icon className="w-5 h-5" />
+              <div className="w-12 h-12 flex items-center justify-center shrink-0">
+                <Icon className="w-10 h-10 text-primary" />
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-base truncate mb-2">{job.title}</h3>
-                
+                <div className="flex items-start justify-between gap-2">
+                  <h3 className="font-semibold text-base truncate">{job.title}</h3>
+                  <span className="text-xs text-muted-foreground shrink-0 mt-0.5">{getTimeAgo(job.created_at)}</span>
+                </div>
+
                 {job.tags && job.tags.length > 0 && (
-                  <TagBadges tags={job.tags} className="mb-2" />
+                  <TagBadges tags={job.tags} className="mt-1.5" />
                 )}
-                
-                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm mt-2 text-muted-foreground">
                   {job.schedule && (
-                    <span className="inline-flex items-center gap-1 text-muted-foreground">
-                      <Clock className="w-3.5 h-3.5" />
+                    <span className="inline-flex items-center gap-1">
+                      <OrologioIcon className="w-4 h-4" />
                       {job.schedule}
                     </span>
                   )}
                   {(job.lat && job.lng) || job.neighborhood ? (
-                    <span className="inline-flex items-center gap-1 text-muted-foreground">
-                      <MapPin className="w-3.5 h-3.5" />
+                    <span className="inline-flex items-center gap-1">
+                      <MappaIcon className="w-4 h-4" />
                       {job.neighborhood || "Genova"}
                     </span>
                   ) : null}
-                  {job.price && (
-                    <span className="inline-flex items-center gap-1 text-primary font-semibold">
-                      <Euro className="w-3.5 h-3.5" />
-                      {job.price}
-                    </span>
-                  )}
                 </div>
+
+                {job.price && (
+                  <div className="mt-2 text-primary font-bold text-base">€ {job.price}</div>
+                )}
               </div>
-              <span className="text-xs text-muted-foreground flex items-center gap-1 shrink-0">
-                <Clock className="w-3 h-3" />
-                {getTimeAgo(job.created_at)}
-              </span>
             </div>
           </div>
         );
@@ -286,7 +284,7 @@ function EmptyState({ isEmployer, hasTags }: { isEmployer: boolean; hasTags: boo
     <div className="flex flex-col items-center justify-center py-16 text-center">
       <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-4">
         {hasTags ? (
-          <SearchX className="w-8 h-8 text-muted-foreground" />
+          <XIcon className="w-8 h-8 text-muted-foreground" />
         ) : (
           <Tag className="w-8 h-8 text-muted-foreground" />
         )}

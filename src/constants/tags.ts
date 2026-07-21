@@ -2,24 +2,26 @@
 export const ROLE_TAGS = [
   "Rider",
   "Cameriere",
+  "Aiuto cucina",
   "Cassa",
+  "Vendite",
+  "Pulizie",
   "Ripetizioni",
+  "Babysitter",
+  "Dog-sitter",
   "Grafico",
   "Social",
-  "Staff",
-  "Biglietteria",
-  "Pulizie",
-  "Vendite",
-  "Security",
+  "Promoter",
+  "Steward",
 ] as const;
 
-// Type Tags - Blue themed
+// Type Tags - Blue themed — DURATA indicativa dell'impiego (scala progressiva)
 export const TYPE_TAGS = [
-  "Occasionale",
-  "A Chiamata",
-  "Mensile",
-  "Settimanale",
-  "Weekend",
+  "Una tantum",
+  "Giorni",
+  "Settimane",
+  "Mesi",
+  "Continuativo",
 ] as const;
 
 export type RoleTag = (typeof ROLE_TAGS)[number];

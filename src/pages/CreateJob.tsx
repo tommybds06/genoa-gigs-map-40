@@ -22,6 +22,8 @@ import {
 } from 'lucide-react';
 import { ROLE_TAGS, TYPE_TAGS } from '@/constants/tags';
 import { getJobIcon } from '@/lib/jobIcons';
+import { PennaIcon, IndietroIcon, DocumentoIcon, OrologioIcon, CalendarioIcon, InvioIcon } from '@/components/icons/uiIcons';
+import { GenericoIcon } from '@/components/icons/roleIcons';
 import { isWithinGenovaBounds, GEOFENCING_ERROR_MESSAGE } from '@/constants/geofencing';
 
 const CreateJob = () => {
@@ -176,7 +178,7 @@ const CreateJob = () => {
             onClick={() => navigate(-1)}
             className="p-2 -ml-2 rounded-full hover:bg-white/10 transition-colors"
           >
-            <ArrowLeft className="w-5 h-5" />
+            <IndietroIcon className="w-5 h-5" />
           </button>
           <h1 className="text-xl font-bold">Crea Annuncio</h1>
         </div>
@@ -188,8 +190,7 @@ const CreateJob = () => {
       <div className="px-6 py-6 space-y-6 pb-32">
         {/* Title */}
         <div className="space-y-2">
-          <Label htmlFor="title" className="text-base font-medium flex items-center gap-2">
-            <Briefcase className="h-4 w-4 text-employer" />
+          <Label htmlFor="title" className="text-lg font-semibold">
             Titolo <span className="text-destructive">*</span>
           </Label>
           <Input
@@ -205,7 +206,7 @@ const CreateJob = () => {
         {/* Description */}
         <div className="space-y-2">
           <Label htmlFor="description" className="text-base font-medium flex items-center gap-2">
-            <FileText className="h-4 w-4 text-employer" />
+            <DocumentoIcon className="h-4 w-4 text-employer" />
             Descrizione <span className="text-destructive">*</span>
           </Label>
           <Textarea
@@ -221,7 +222,7 @@ const CreateJob = () => {
         {/* Schedule */}
         <div className="space-y-2">
           <Label htmlFor="schedule" className="text-base font-medium flex items-center gap-2">
-            <Clock className="h-4 w-4 text-employer" />
+            <OrologioIcon className="h-4 w-4 text-employer" />
             Orario
           </Label>
           <Input
@@ -249,8 +250,8 @@ const CreateJob = () => {
         {/* Type Tag (Modalità) - Single Selection Required */}
         <div className="space-y-3">
           <Label className="text-base font-medium flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-employer" />
-            Modalità <span className="text-destructive">*</span>
+            <CalendarioIcon className="h-4 w-4 text-employer" />
+            Durata <span className="text-destructive">*</span>
           </Label>
           <p className="text-sm text-muted-foreground">
             Seleziona il tipo di impiego
@@ -277,7 +278,7 @@ const CreateJob = () => {
         {/* Role Tag (Ruoli) - Single Selection Required with Custom Option */}
         <div className="space-y-3">
           <Label className="text-base font-medium flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-orange-500" />
+            <GenericoIcon className="h-4 w-4 text-primary" />
             Ruolo <span className="text-destructive">*</span>
           </Label>
           <p className="text-sm text-muted-foreground">
@@ -295,11 +296,11 @@ const CreateJob = () => {
                   onClick={() => handleRoleSelect(tag)}
                   className={`flex flex-col items-center gap-1.5 p-3 rounded-xl text-sm font-medium transition-all border-2 ${
                     isSelected
-                      ? 'bg-orange-500 text-white border-orange-500'
-                      : 'bg-orange-50 text-orange-700 border-transparent hover:bg-orange-100'
+                      ? 'bg-primary text-primary-foreground border-primary'
+                      : 'bg-accent text-accent-foreground border-transparent hover:bg-primary/20'
                   }`}
                 >
-                  <Icon className={`w-5 h-5 ${isSelected ? 'text-white' : 'text-orange-500'}`} />
+                  <Icon className={`w-5 h-5 ${isSelected ? 'text-primary-foreground' : 'text-accent-foreground'}`} />
                   <span className="text-xs text-center leading-tight">{tag}</span>
                 </button>
               );
@@ -311,11 +312,11 @@ const CreateJob = () => {
               onClick={() => handleRoleSelect('custom')}
               className={`flex flex-col items-center gap-1.5 p-3 rounded-xl text-sm font-medium transition-all border-2 ${
                 isCustomRole
-                  ? 'bg-orange-500 text-white border-orange-500'
-                  : 'bg-orange-50 text-orange-700 border-transparent hover:bg-orange-100'
+                  ? 'bg-primary text-primary-foreground border-primary'
+                  : 'bg-accent text-accent-foreground border-transparent hover:bg-primary/20'
               }`}
             >
-              <Pencil className={`w-5 h-5 ${isCustomRole ? 'text-white' : 'text-orange-500'}`} />
+              <PennaIcon className={`w-5 h-5 ${isCustomRole ? 'text-primary-foreground' : 'text-accent-foreground'}`} />
               <span className="text-xs text-center leading-tight">Altro</span>
             </button>
           </div>
@@ -353,7 +354,7 @@ const CreateJob = () => {
             </>
           ) : (
             <>
-              <Send className="h-5 w-5 mr-2" />
+              <InvioIcon className="h-5 w-5 mr-2" />
               Pubblica Annuncio
             </>
           )}

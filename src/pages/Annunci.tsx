@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useAppTheme } from '@/hooks/useAppTheme';
 import { supabase } from '@/integrations/supabase/client';
 import { Briefcase, Users, ChevronRight, ArrowLeft, Loader2, Plus, Pencil, Trash2, Check, X } from 'lucide-react';
+import { IndietroIcon, PennaIcon, BidoneIcon, XIcon } from '@/components/icons/uiIcons';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -315,7 +316,7 @@ const Annunci = () => {
               onClick={handleBack}
               className="rounded-full bg-employer-50 text-employer hover:bg-employer-100 touch-feedback"
             >
-              <ArrowLeft className="h-5 w-5" />
+              <IndietroIcon className="h-5 w-5" />
             </Button>
             <div>
               <h2 className="text-lg font-semibold">{selectedJob.title}</h2>
@@ -329,7 +330,7 @@ const Annunci = () => {
             </div>
           ) : applications.length === 0 ? (
             <div className="text-center py-12">
-              <Users className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+              <XIcon className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
               <h3 className="font-semibold text-lg mb-1">Nessuna candidatura</h3>
               <p className="text-sm text-muted-foreground">
                 Non ci sono ancora candidati per questo annuncio
@@ -478,7 +479,7 @@ const Annunci = () => {
                       onClick={(e) => handleEditClick(e, job)}
                       className="h-8 w-8 rounded-full hover:bg-employer-100 touch-feedback"
                     >
-                      <Pencil className="h-4 w-4 text-employer" />
+                      <PennaIcon className="h-4 w-4 text-employer" />
                     </Button>
                     <Button
                       variant="ghost"
@@ -486,7 +487,7 @@ const Annunci = () => {
                       onClick={(e) => handleDeleteClick(e, job)}
                       className="h-8 w-8 rounded-full hover:bg-red-100 touch-feedback"
                     >
-                      <Trash2 className="h-4 w-4 text-destructive" />
+                      <BidoneIcon className="h-4 w-4 text-destructive" />
                     </Button>
                     <ChevronRight className="h-5 w-5 text-muted-foreground" />
                   </div>

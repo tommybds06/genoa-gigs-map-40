@@ -1,5 +1,7 @@
 import { useState } from "react";
-import { Search, SlidersHorizontal, X, MapPin, Check } from "lucide-react";
+import { X, MapPin, Check } from "lucide-react";
+import { SearchIcon, FiltriIcon, CalendarioIcon, MappaIcon } from "@/components/icons/uiIcons";
+import { GenericoIcon } from "@/components/icons/roleIcons";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -79,7 +81,7 @@ export function SearchBar({
       <div className="flex items-center gap-2 w-full">
         {/* Search Input */}
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary" />
           <Input
             type="text"
             placeholder="Cerca impiego..."
@@ -109,7 +111,7 @@ export function SearchBar({
               : "bg-background hover:bg-accent"
           )}
         >
-          <SlidersHorizontal className="w-4 h-4" />
+          <FiltriIcon className="w-4 h-4 text-primary" />
           {activeFiltersCount > 0 && (
             <span className="absolute -top-1 -right-1 w-5 h-5 bg-orange-600 text-white text-xs rounded-full flex items-center justify-center font-medium">
               {activeFiltersCount}
@@ -149,7 +151,7 @@ export function SearchBar({
             {/* Role Tags */}
             <div>
               <h4 className="text-base font-semibold text-foreground mb-3 flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-primary" />
+                <GenericoIcon className="w-4 h-4 text-primary" />
                 Ruoli
               </h4>
               <div className="flex flex-wrap gap-2">
@@ -174,8 +176,8 @@ export function SearchBar({
             {/* Type Tags */}
             <div>
               <h4 className="text-base font-semibold text-foreground mb-3 flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-employer" />
-                Modalità
+                <CalendarioIcon className="w-4 h-4 text-employer" />
+                Durata
               </h4>
               <div className="flex flex-wrap gap-2">
                 {TYPE_TAGS.map((tag) => {
@@ -199,7 +201,7 @@ export function SearchBar({
             {/* Neighborhoods */}
             <div>
               <h4 className="text-base font-semibold text-foreground mb-3 flex items-center gap-2">
-                <MapPin className="w-4 h-4 text-primary" />
+                <MappaIcon className="w-4 h-4 text-primary" />
                 Quartiere
               </h4>
               <div className="grid grid-cols-2 gap-2">

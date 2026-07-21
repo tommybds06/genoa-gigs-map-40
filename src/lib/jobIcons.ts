@@ -1,64 +1,32 @@
-import { 
-  Bike, 
-  Utensils, 
-  Banknote, 
-  BookOpen, 
-  Palette, 
-  Smartphone, 
-  Users, 
-  Ticket, 
-  Sparkles, 
-  ShoppingBag, 
-  Shield, 
-  Briefcase,
-  LucideIcon
-} from 'lucide-react';
+// Mapping ruolo → icona custom (Fase 3). Le icone vivono in components/icons/roleIcons.tsx
+// e sono theme-aware (currentColor). Questo modulo mantiene l'API storica (getJobIcon,
+// getJobIconFromTags, DefaultJobIcon) usata da card, marker, dettaglio annuncio, ecc.
+import {
+  getRoleIcon,
+  GenericoIcon,
+  ROLE_ICON_MAP,
+  type RoleIconComponent,
+} from '@/components/icons/roleIcons';
 
-// Global icon mapping for job roles
-const ICON_MAP: Record<string, LucideIcon> = {
-  'rider': Bike,
-  'consegne': Bike,
-  'cameriere': Utensils,
-  'barista': Utensils,
-  'cassa': Banknote,
-  'ripetizioni': BookOpen,
-  'grafico': Palette,
-  'social': Smartphone,
-  'staff': Users,
-  'biglietteria': Ticket,
-  'pulizie': Sparkles,
-  'vendite': ShoppingBag,
-  'security': Shield,
-};
+export type { RoleIconComponent };
 
 /**
- * Get the appropriate icon for a job based on its role tag
- * @param tagName - The role tag name (e.g., "Rider", "Cameriere")
- * @returns The corresponding Lucide icon component
+ * Icona per un singolo tag di ruolo (es. "Rider", "Cameriere"). Fallback: Generico.
  */
-export function getJobIcon(tagName: string | null | undefined): LucideIcon {
-  if (!tagName) return Briefcase;
-  
-  const normalized = tagName.toLowerCase().trim();
-  return ICON_MAP[normalized] || Briefcase;
+export function getJobIcon(tagName: string | null | undefined): RoleIconComponent {
+  return getRoleIcon(tagName);
 }
 
 /**
- * Get icon from an array of tags - finds the first role tag match
- * @param tags - Array of tag strings
- * @returns The corresponding Lucide icon component
+ * Trova la prima icona-ruolo corrispondente in un array di tag. Fallback: Generico.
  */
-export function getJobIconFromTags(tags: string[] | null | undefined): LucideIcon {
-  if (!tags || tags.length === 0) return Briefcase;
-  
+export function getJobIconFromTags(tags: string[] | null | undefined): RoleIconComponent {
+  if (!tags || tags.length === 0) return GenericoIcon;
   for (const tag of tags) {
-    const normalized = tag.toLowerCase().trim();
-    if (ICON_MAP[normalized]) {
-      return ICON_MAP[normalized];
-    }
+    const key = tag.toLowerCase().trim();
+    if (ROLE_ICON_MAP[key]) return ROLE_ICON_MAP[key];
   }
-  
-  return Briefcase;
+  return GenericoIcon;
 }
 
-export { Briefcase as DefaultJobIcon };
+export { GenericoIcon as DefaultJobIcon };

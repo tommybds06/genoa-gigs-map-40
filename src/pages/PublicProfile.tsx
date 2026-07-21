@@ -19,10 +19,11 @@ import {
   MessageCircle,
   CheckCircle2,
   FileText,
-  Calendar,
   Camera,
   ChevronRight
 } from "lucide-react";
+import { CalendarioIcon, IndietroIcon, StellaIcon, StellaVuotaIcon, MezzaStellaIcon, DocumentoIcon, FotoIcon, AnnunciAttiviIcon, MappaIcon, StoricoLavoriIcon } from "@/components/icons/uiIcons";
+import { GenericoIcon } from "@/components/icons/roleIcons";
 import { useAppTheme } from "@/hooks/useAppTheme";
 import { useUser } from "@/contexts/UserContext";
 import { getJobIconFromTags } from "@/lib/jobIcons";
@@ -267,7 +268,7 @@ const PublicProfile = () => {
             <h2 className="text-xl font-semibold mb-2">Profilo non trovato</h2>
             <p className="text-muted-foreground mb-4">L'utente richiesto non esiste.</p>
             <Button onClick={() => navigate(-1)}>
-              <ArrowLeft className="w-4 h-4 mr-2" />
+              <IndietroIcon className="w-4 h-4 mr-2" />
               Torna indietro
             </Button>
           </div>
@@ -298,7 +299,7 @@ const PublicProfile = () => {
             onClick={() => navigate(-1)}
             className={`rounded-full ${isEmployer ? 'bg-employer-50 text-employer hover:bg-employer-100' : 'bg-accent text-primary hover:bg-accent/80'}`}
           >
-            <ArrowLeft className="w-4 h-4 mr-2" />
+            <IndietroIcon className="w-4 h-4 mr-2" />
             Indietro
           </Button>
         </div>
@@ -330,9 +331,9 @@ const PublicProfile = () => {
             {/* Location - Workers show only neighborhood, Employers show full address */}
             {(isWorkerProfile ? profile.neighborhood : profile.address_text) && (
               <p className="text-muted-foreground flex items-center justify-center gap-1 mt-2">
-                <MapPin className="w-4 h-4" />
-                {isWorkerProfile 
-                  ? profile.neighborhood 
+                <MappaIcon className="w-4 h-4" />
+                {isWorkerProfile
+                  ? profile.neighborhood
                   : profile.address_text
                 }
               </p>
@@ -343,18 +344,15 @@ const PublicProfile = () => {
           {!isWorkerProfile && reviewStats && (
             <div className="flex items-center justify-center gap-2 mb-4">
               <div className="flex items-center gap-1">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <Star 
-                    key={star} 
-                    className={`w-5 h-5 ${
-                      star <= reviewStats.avg 
-                        ? "text-employer fill-employer"
-                        : reviewStats.avg >= star - 0.5
-                        ? "text-employer fill-employer/50"
-                        : "text-muted-foreground/30"
-                    }`}
-                  />
-                ))}
+                {[1, 2, 3, 4, 5].map((star) => {
+                  const StarComp =
+                    star <= reviewStats.avg
+                      ? StellaIcon
+                      : reviewStats.avg >= star - 0.5
+                      ? MezzaStellaIcon
+                      : StellaVuotaIcon;
+                  return <StarComp key={star} className="w-5 h-5 text-employer" />;
+                })}
               </div>
               <span className="font-semibold">{reviewStats.avg}</span>
               <span className="text-muted-foreground text-sm">({reviewStats.count} recensioni)</span>
@@ -367,7 +365,7 @@ const PublicProfile = () => {
           <div className="px-4 pb-6">
             <div className="bg-card rounded-2xl p-5 shadow-sm border border-border">
               <div className="flex items-center gap-2 mb-4">
-                <Camera className={`w-5 h-5 ${isWorkerProfile ? 'text-primary' : 'text-employer'}`} />
+                <FotoIcon className={`w-5 h-5 ${isWorkerProfile ? 'text-primary' : 'text-employer'}`} />
                 <h3 className="font-bold text-lg">Foto</h3>
                 <span className="text-muted-foreground text-sm">({profile.photos.length})</span>
               </div>
@@ -409,7 +407,7 @@ const PublicProfile = () => {
             <div className="px-4 pb-6">
               <div className="bg-card rounded-2xl p-5 shadow-sm border border-border">
                 <div className="flex items-center gap-2 mb-3">
-                  <FileText className="w-5 h-5 text-primary" />
+                  <DocumentoIcon className="w-5 h-5 text-primary" />
                   <h3 className="font-bold text-lg">Presentazione</h3>
                 </div>
                 <p className="text-foreground leading-relaxed">
@@ -423,7 +421,7 @@ const PublicProfile = () => {
               <div className="px-4 pb-6">
                 <div className="bg-card rounded-2xl p-5 shadow-sm border border-border">
                   <div className="flex items-center gap-2 mb-3">
-                    <Briefcase className="w-5 h-5 text-primary" />
+                    <GenericoIcon className="w-5 h-5 text-primary" />
                     <h3 className="font-bold text-lg">Esperienze</h3>
                   </div>
                   <p className="text-foreground leading-relaxed">{profile.experience}</p>
@@ -435,7 +433,7 @@ const PublicProfile = () => {
             <div className="px-4 pb-6">
               <div className="bg-card rounded-2xl p-5 shadow-sm border border-border">
                 <div className="flex items-center gap-2 mb-4">
-                  <CheckCircle2 className="w-5 h-5 text-primary" />
+                  <StoricoLavoriIcon className="w-5 h-5 text-primary" />
                   <h3 className="font-bold text-lg">Storico Lavori</h3>
                 </div>
                 
@@ -450,18 +448,18 @@ const PublicProfile = () => {
                       const Icon = getJobIconFromTags(job.tags);
                       
                       return (
-                        <div 
-                          key={job.applicationId} 
-                          className="flex items-start gap-3 p-3 rounded-xl bg-muted/50 border border-border"
+                        <div
+                          key={job.applicationId}
+                          className="flex items-start gap-3 p-3 rounded-xl bg-card border-2 border-primary/30"
                         >
-                          <div className="w-10 h-10 bg-accent text-primary rounded-xl flex items-center justify-center shrink-0">
-                            <Icon className="w-5 h-5" />
+                          <div className="flex items-center justify-center shrink-0">
+                            <Icon className="w-11 h-11 text-primary" />
                           </div>
                           <div className="flex-1 min-w-0">
                             <h4 className="font-semibold text-sm truncate">{job.title}</h4>
                             <p className="text-xs text-muted-foreground">{job.employerName}</p>
                             <div className="flex items-center gap-2 mt-1">
-                              <Calendar className="w-3 h-3 text-muted-foreground" />
+                              <CalendarioIcon className="w-3 h-3 text-muted-foreground" />
                               <span className="text-xs text-muted-foreground">
                                 {formatDate(job.completedAt)}
                               </span>
@@ -491,7 +489,7 @@ const PublicProfile = () => {
               <div className="px-4 pb-6">
                 <div className="bg-card rounded-2xl p-5 shadow-sm border border-border">
                   <div className="flex items-center gap-2 mb-3">
-                    <FileText className="w-5 h-5 text-employer" />
+                    <DocumentoIcon className="w-5 h-5 text-employer" />
                     <h3 className="font-bold text-lg">Chi siamo</h3>
                   </div>
                   <p className="text-foreground leading-relaxed">{profile.bio}</p>
@@ -504,7 +502,7 @@ const PublicProfile = () => {
               <div className="px-4 pb-6">
                 <div className="bg-card rounded-2xl p-5 shadow-sm border border-border">
                   <div className="flex items-center gap-2 mb-3">
-                    <Briefcase className="w-5 h-5 text-employer" />
+                    <GenericoIcon className="w-5 h-5 text-employer" />
                     <h3 className="font-bold text-lg">Chi cerchiamo</h3>
                   </div>
                   <p className="text-foreground leading-relaxed">{profile.looking_for}</p>
@@ -516,7 +514,7 @@ const PublicProfile = () => {
             <div className="px-4 pb-6">
               <div className="bg-card rounded-2xl p-5 shadow-sm border border-border">
                 <div className="flex items-center gap-2 mb-3">
-                  <Star className="w-5 h-5 text-employer" />
+                  <StellaIcon className="w-5 h-5 text-employer" />
                   <h3 className="font-bold text-lg">Recensioni</h3>
                 </div>
                 {reviews.length === 0 ? (
@@ -531,18 +529,15 @@ const PublicProfile = () => {
                         <div className="flex items-center justify-between mb-2">
                           <span className="font-medium text-sm">{review.worker_name}</span>
                           <div className="flex items-center gap-1">
-                            {[1, 2, 3, 4, 5].map((star) => (
-                              <Star
-                                key={star}
-                                className={`w-3.5 h-3.5 ${
-                                  star <= review.rating
-                                    ? "text-employer fill-employer"
-                                    : review.rating >= star - 0.5
-                                    ? "text-employer fill-employer/50"
-                                    : "text-muted-foreground/30"
-                                }`}
-                              />
-                            ))}
+                            {[1, 2, 3, 4, 5].map((star) => {
+                              const StarComp =
+                                star <= review.rating
+                                  ? StellaIcon
+                                  : review.rating >= star - 0.5
+                                  ? MezzaStellaIcon
+                                  : StellaVuotaIcon;
+                              return <StarComp key={star} className="w-3.5 h-3.5 text-employer" />;
+                            })}
                           </div>
                         </div>
                         {review.comment && (
@@ -562,13 +557,13 @@ const PublicProfile = () => {
             <div className="px-4 pb-6">
               <div className="bg-card rounded-2xl p-5 shadow-sm border border-border">
                 <div className="flex items-center gap-2 mb-4">
-                  <Briefcase className="w-5 h-5 text-employer" />
+                  <AnnunciAttiviIcon className="w-5 h-5 text-employer" />
                   <h3 className="font-bold text-lg">Annunci Attivi</h3>
                 </div>
                 
                 {jobs.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-8 text-center">
-                    <Briefcase className="w-10 h-10 text-muted-foreground/30 mb-2" />
+                    <AnnunciAttiviIcon className="w-10 h-10 text-muted-foreground/30 mb-2" />
                     <p className="text-muted-foreground text-sm">Nessun annuncio attivo</p>
                   </div>
                 ) : (

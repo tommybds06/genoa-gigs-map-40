@@ -57,10 +57,10 @@ export const EmployerGroupMarker = memo(function EmployerGroupMarker({
           <span className="text-white text-xs font-bold px-1">{count}</span>
         </div>
         
-        {/* Main marker - same size as single markers (w-10 h-10) */}
+        {/* Main marker - same size as single markers (w-12 h-12) */}
         <div
           className={cn(
-            "w-10 h-10 rounded-full flex items-center justify-center shadow-material-md relative transition-all duration-300",
+            "w-12 h-12 rounded-full flex items-center justify-center shadow-material-md relative transition-all duration-300",
             isHighlighted 
               ? "bg-white border-3 border-primary" 
               : isEmployer 
@@ -69,9 +69,9 @@ export const EmployerGroupMarker = memo(function EmployerGroupMarker({
           )}
           style={isHighlighted ? { borderWidth: '3px' } : undefined}
         >
-          <Briefcase 
+          <Briefcase
             className={cn(
-              "w-5 h-5 transition-colors duration-300",
+              "w-6 h-6 transition-colors duration-300",
               isHighlighted ? "text-primary" : "text-white"
             )} 
           />
@@ -80,7 +80,7 @@ export const EmployerGroupMarker = memo(function EmployerGroupMarker({
         {/* Pointer triangle */}
         <div
           className={cn(
-            "w-0 h-0 border-l-[8px] border-r-[8px] border-t-[10px] border-l-transparent border-r-transparent -mt-1 transition-all duration-300",
+            "w-0 h-0 border-l-[9px] border-r-[9px] border-t-[12px] border-l-transparent border-r-transparent -mt-1 transition-all duration-300",
             isHighlighted 
               ? "border-t-primary" 
               : isEmployer 

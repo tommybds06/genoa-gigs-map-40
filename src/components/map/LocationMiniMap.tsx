@@ -3,15 +3,19 @@ import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { supabase } from "@/integrations/supabase/client";
 import { MapPin } from "lucide-react";
+import { getJobIconFromTags } from "@/lib/jobIcons";
+import { renderToStaticMarkup } from "react-dom/server";
 
 interface LocationMiniMapProps {
   lat: number;
   lng: number;
   neighborhood?: string | null;
   address?: string | null;
+  tags?: string[] | null;
 }
 
-export function LocationMiniMap({ lat, lng, neighborhood, address }: LocationMiniMapProps) {
+export function LocationMiniMap({ lat, lng, neighborhood, address, tags }: LocationMiniMapProps) {
+  const tagsKey = (tags || []).join(",");
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const [mapboxToken, setMapboxToken] = useState<string | null>(null);
@@ -57,37 +61,19 @@ export function LocationMiniMap({ lat, lng, neighborhood, address }: LocationMin
       }
     });
 
-    // Create custom pin marker matching the main map style exactly
+    // Custom pin marker: arancione politask + icona del ruolo del lavoro
+    const Icon = getJobIconFromTags(tags);
+    const iconMarkup = renderToStaticMarkup(
+      <Icon width={22} height={22} style={{ color: "white" }} />
+    );
+    const pinColor = "hsl(30, 90%, 63%)";
     const markerEl = document.createElement("div");
     markerEl.innerHTML = `
-      <div style="
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        filter: drop-shadow(0 4px 6px rgba(0,0,0,0.15));
-      ">
-        <div style="
-          width: 40px;
-          height: 40px;
-          background-color: hsl(24.6, 95%, 53.1%);
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        ">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
-            <rect width="20" height="14" x="2" y="6" rx="2"/>
-          </svg>
+      <div style="display:flex;flex-direction:column;align-items:center;filter:drop-shadow(0 4px 6px rgba(0,0,0,0.15));">
+        <div style="width:40px;height:40px;background-color:${pinColor};border-radius:50%;display:flex;align-items:center;justify-content:center;">
+          ${iconMarkup}
         </div>
-        <div style="
-          width: 0;
-          height: 0;
-          border-left: 8px solid transparent;
-          border-right: 8px solid transparent;
-          border-top: 10px solid hsl(24.6, 95%, 53.1%);
-          margin-top: -1px;
-        "></div>
+        <div style="width:0;height:0;border-left:8px solid transparent;border-right:8px solid transparent;border-top:10px solid ${pinColor};margin-top:-1px;"></div>
       </div>
     `;
 
@@ -98,7 +84,7 @@ export function LocationMiniMap({ lat, lng, neighborhood, address }: LocationMin
     return () => {
       map.current?.remove();
     };
-  }, [mapboxToken, lat, lng]);
+  }, [mapboxToken, lat, lng, tagsKey]);
 
   if (isLoading) {
     return (

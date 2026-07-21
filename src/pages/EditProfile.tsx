@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft, Loader2, Save } from "lucide-react";
+import { IndietroIcon } from "@/components/icons/uiIcons";
 import { useAuth } from "@/hooks/useAuth";
 import { useUser } from "@/contexts/UserContext";
 import { useAppTheme } from "@/hooks/useAppTheme";
@@ -138,7 +139,7 @@ const EditProfile = () => {
             onClick={handleBack}
             className={`p-2 rounded-full transition-colors ${backButtonClasses}`}
           >
-            <ChevronLeft className="w-5 h-5" />
+            <IndietroIcon className="w-5 h-5" />
           </button>
           <h1 className="text-xl font-bold text-foreground">Modifica Profilo</h1>
         </div>

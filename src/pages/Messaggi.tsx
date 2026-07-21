@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { MessageCircle, ArrowLeft, Send, Loader2, ImagePlus, X, CheckCircle, Check } from "lucide-react";
+import { IndietroIcon, InvioIcon, ImmaginiIcon } from "@/components/icons/uiIcons";
 import { useAppTheme } from "@/hooks/useAppTheme";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -520,7 +521,7 @@ const Messaggi = () => {
               }}
               className="rounded-full shrink-0"
             >
-              <ArrowLeft className="h-5 w-5" />
+              <IndietroIcon className={`h-5 w-5 ${isEmployer ? 'text-employer' : 'text-primary'}`} />
             </Button>
             <div 
               className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer"
@@ -670,33 +671,33 @@ const Messaggi = () => {
               size="icon"
               onClick={() => fileInputRef.current?.click()}
               disabled={uploadingImage}
-              className="shrink-0 rounded-full"
+              className="shrink-0 rounded-full h-12 w-12"
             >
               {uploadingImage ? (
-                <Loader2 className="h-5 w-5 animate-spin" />
+                <Loader2 className="h-6 w-6 animate-spin" />
               ) : (
-                <ImagePlus className="h-5 w-5 text-muted-foreground" />
+                <ImmaginiIcon className={`!h-9 !w-9 ${isEmployer ? 'text-employer' : 'text-primary'}`} />
               )}
             </Button>
-            
+
             <Input
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
               onKeyPress={handleKeyPress}
               placeholder="Scrivi un messaggio..."
-              className="flex-1 rounded-full"
+              className="flex-1 rounded-full h-12 text-base"
               disabled={sending}
             />
             <Button
               onClick={handleSendMessage}
               disabled={(!newMessage.trim() && !pendingAttachment) || sending}
               size="icon"
-              className={`shrink-0 rounded-full ${isEmployer ? 'bg-employer hover:bg-employer-700' : 'bg-primary hover:bg-primary/90'}`}
+              className={`shrink-0 rounded-full h-12 w-12 ${isEmployer ? 'bg-employer hover:bg-employer-700' : 'bg-primary hover:bg-primary/90'}`}
             >
               {sending ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <Loader2 className="h-5 w-5 animate-spin" />
               ) : (
-                <Send className="h-4 w-4" />
+                <InvioIcon className="!h-6 !w-6" />
               )}
             </Button>
           </div>

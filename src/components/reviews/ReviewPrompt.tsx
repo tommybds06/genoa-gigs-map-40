@@ -12,7 +12,8 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Star, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import { StellaIcon, StellaVuotaIcon } from "@/components/icons/uiIcons";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
 
@@ -297,14 +298,14 @@ export function ReviewPrompt() {
                   />
                   
                   <div className="relative w-full h-full">
-                    <Star className="absolute inset-0 w-full h-full text-muted-foreground/30" />
+                    <StellaVuotaIcon className="absolute inset-0 w-full h-full text-muted-foreground/30" />
                     
                     {(filled || halfFilled) && (
                       <div
                         className="absolute inset-0 overflow-hidden"
                         style={{ width: halfFilled ? "50%" : "100%" }}
                       >
-                        <Star className="w-10 h-10 text-yellow-400 fill-yellow-400" />
+                        <StellaIcon className="w-10 h-10 text-yellow-400" />
                       </div>
                     )}
                   </div>

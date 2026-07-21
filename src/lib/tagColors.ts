@@ -17,7 +17,7 @@ export const getTagClasses = (tag: string): string => {
   if (isBlueTag(tag)) {
     return "bg-employer-50 text-employer";
   }
-  return "bg-orange-100 text-orange-700";
+  return "bg-accent text-accent-foreground";
 };
 
 /**
@@ -30,6 +30,6 @@ export const getTagSelectedClasses = (tag: string, isSelected: boolean): string 
       : "bg-employer-50 text-employer hover:bg-employer-100";
   }
   return isSelected
-    ? "bg-orange-500 text-white shadow-md"
-    : "bg-orange-100 text-orange-700 hover:bg-orange-200";
+    ? "bg-primary text-primary-foreground shadow-md"
+    : "bg-accent text-accent-foreground hover:bg-primary/20";
 };

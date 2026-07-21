@@ -9,7 +9,9 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Clock, MapPin, GraduationCap, Truck, PartyPopper, Briefcase, Eye, ChevronRight, Loader2, Check } from "lucide-react";
+import { Clock, MapPin, Eye, ChevronRight, Loader2, Check } from "lucide-react";
+import { getJobIconFromTags } from "@/lib/jobIcons";
+import { MappaIcon, OrologioIcon } from "@/components/icons/uiIcons";
 import { useUser } from "@/contexts/UserContext";
 import { useAppTheme } from "@/hooks/useAppTheme";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -48,13 +50,6 @@ interface JobDetailsSheetProps {
   onClose: () => void;
   showMiniMap?: boolean;
 }
-
-const categoryIcons: Record<string, typeof GraduationCap> = {
-  tutoring: GraduationCap,
-  delivery: Truck,
-  event: PartyPopper,
-  general: Briefcase,
-};
 
 const categoryLabels: Record<string, string> = {
   tutoring: "Ripetizioni",
@@ -115,7 +110,7 @@ export function JobDetailsSheet({ job, isOpen, onClose, showMiniMap = false }: J
   
   if (!job) return null;
 
-  const Icon = categoryIcons[job.category || 'general'] || Briefcase;
+  const Icon = getJobIconFromTags(job.tags || (job.category ? [job.category] : []));
   const categoryLabel = categoryLabels[job.category || 'general'] || "Altro";
   const categoryColor = categoryColors[job.category || 'general'] || "bg-muted text-muted-foreground";
 
@@ -200,7 +195,7 @@ export function JobDetailsSheet({ job, isOpen, onClose, showMiniMap = false }: J
                   <p className="font-semibold text-foreground truncate">{employerName}</p>
                   {employerAddress && (
                     <p className="text-sm text-muted-foreground truncate flex items-center gap-1">
-                      <MapPin className="w-3 h-3 shrink-0" />
+                      <MappaIcon className="w-3 h-3 shrink-0" />
                       {employerAddress}
                     </p>
                   )}
@@ -222,7 +217,7 @@ export function JobDetailsSheet({ job, isOpen, onClose, showMiniMap = false }: J
               {/* Schedule Display - Larger for better readability */}
               {job.schedule && (
                 <div className="flex items-center gap-2 mt-3 text-foreground">
-                  <Clock className={`w-5 h-5 ${isEmployer ? 'text-employer' : 'text-primary'}`} />
+                  <OrologioIcon className={`w-5 h-5 ${isEmployer ? 'text-employer' : 'text-primary'}`} />
                   <span className="text-lg font-semibold">{job.schedule}</span>
                 </div>
               )}
@@ -260,16 +255,17 @@ export function JobDetailsSheet({ job, isOpen, onClose, showMiniMap = false }: J
                 POSIZIONE
               </h3>
               {showMiniMap && job.lat && job.lng && job.lat !== 0 && job.lng !== 0 ? (
-                <LocationMiniMap 
-                  lat={job.lat} 
-                  lng={job.lng} 
+                <LocationMiniMap
+                  lat={job.lat}
+                  lng={job.lng}
                   neighborhood={job.neighborhood}
                   address={employerAddress}
+                  tags={job.tags}
                 />
               ) : (
                 <div className={`flex items-center gap-3 p-4 rounded-2xl ${isEmployer ? 'bg-employer-50' : 'bg-accent'}`}>
                   <div className={`w-12 h-12 ${theme.primary} rounded-xl flex items-center justify-center shadow-md`}>
-                    <MapPin className="w-6 h-6 text-white" />
+                    <MappaIcon className="w-6 h-6 text-white" />
                   </div>
                   <div className="flex-1">
                     <p className={`text-xl font-bold ${isEmployer ? 'text-employer' : 'text-primary'}`}>

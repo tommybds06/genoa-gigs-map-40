@@ -85,10 +85,17 @@ Un bug ricorrente da evitare: pulsante "indietro" arancio in contesto employer (
    Risolti: dialog recensione incoerente per i worker a fine job; sezioni Messaggi/Lista
    rotte da una dipendenza circolare in una policy RLS Supabase (fix via chat Lovable +
    migration `20260403000000_drop_circular_rls_policy.sql`).
-2. ⏳ **Logo e brand identity** ← PROSSIMA FASE (dopo le rifiniture qui sotto)
-3. Redesign icone
-4. Applicazione brand identity via Claude Code
-5. Illustrazioni custom
+2. ✅ **Logo e brand identity (Fase 2)** — logo finalizzato (`logoPOLITASK.svg`, tentacolo-P
+   con ventose + pin nella "o"), palette (worker `#f6a24d` / employer `#6e97cc` / crema
+   `#FBF2E2`, font Outfit), icona app (fondo arancio + tentacolo bianco, validata a 40px),
+   ricerca marchio preliminare (EUIPO/TMview OK, classe 35 libera), dominio `politask.app` +
+   handle social presi. Dettagli in `brand/POLITASK-brand-brief.md`.
+3. ✅ **Redesign icone (Fase 3)** — set completo di icone custom theme-aware in
+   `src/components/icons/roleIcons.tsx` + `uiIcons.tsx` (ruoli, nav, utility, stati). Bottom nav
+   stile Instagram (outline→filled, colore ruolo, no label). Dettagli in
+   `brand/POLITASK-icon-system.md`. ⚠️ Non ancora committato/pushato.
+4. ⏳ **Applicazione brand identity / UX** ← PROSSIMA
+5. Illustrazioni custom (empty states, splash, onboarding)
 6. Miglioramenti UX/UI
 7. Animazioni (Framer Motion ora; After Effects + Lottie poi)
 8. Pagamenti Stripe

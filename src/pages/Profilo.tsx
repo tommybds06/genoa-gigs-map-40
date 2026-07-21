@@ -1,4 +1,6 @@
-import { User, Star, MapPin, Briefcase, Settings, LogOut, Save, Instagram, Globe, ChevronLeft, ChevronRight } from "lucide-react";
+import { User, MapPin, Briefcase, Save, Instagram, Globe, ChevronLeft, ChevronRight } from "lucide-react";
+import { ImpostazioniIcon, ProfiloIcon, CuoreIcon, InfoIcon, EsciIcon, StellaIcon, FrecciaSinistraIcon, FrecciaDestraIcon, MappaIcon } from "@/components/icons/uiIcons";
+import { GenericoIcon } from "@/components/icons/roleIcons";
 import { useAuth } from "@/hooks/useAuth";
 import { useUser } from "@/contexts/UserContext";
 import { useAppTheme } from "@/hooks/useAppTheme";
@@ -94,7 +96,7 @@ const Profilo = () => {
                onClick={() => navigate("/settings")}
                className={`p-2 rounded-full transition-colors touch-feedback ${isEmployer ? "hover:bg-employer-50" : "hover:bg-accent"}`}
              >
-               <Settings className={`w-5 h-5 ${isEmployer ? "text-employer" : "text-primary"}`} />
+               <ImpostazioniIcon className={`w-7 h-7 ${isEmployer ? "text-employer" : "text-primary"}`} />
              </button>
            </div>
          </header>
@@ -118,11 +120,11 @@ const Profilo = () => {
             </div>
             {profile.photos.length > 1 && (
               <>
-                <button onClick={prevPhoto} className="absolute left-2 top-1/2 -translate-y-1/2 bg-background/80 backdrop-blur-sm p-2 rounded-full shadow-md touch-feedback">
-                  <ChevronLeft className="w-5 h-5" />
+                <button onClick={prevPhoto} className="absolute left-2 top-1/2 -translate-y-1/2 touch-feedback">
+                  <FrecciaSinistraIcon className={`w-9 h-9 ${primaryTextClasses}`} style={{ filter: 'drop-shadow(1px 0 0 #fff) drop-shadow(-1px 0 0 #fff) drop-shadow(0 1px 0 #fff) drop-shadow(0 -1px 0 #fff)' }} />
                 </button>
-                <button onClick={nextPhoto} className="absolute right-2 top-1/2 -translate-y-1/2 bg-background/80 backdrop-blur-sm p-2 rounded-full shadow-md touch-feedback">
-                  <ChevronRight className="w-5 h-5" />
+                <button onClick={nextPhoto} className="absolute right-2 top-1/2 -translate-y-1/2 touch-feedback">
+                  <FrecciaDestraIcon className={`w-9 h-9 ${primaryTextClasses}`} style={{ filter: 'drop-shadow(1px 0 0 #fff) drop-shadow(-1px 0 0 #fff) drop-shadow(0 1px 0 #fff) drop-shadow(0 -1px 0 #fff)' }} />
                 </button>
                 <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
                   {profile.photos.map((_, index) => (
@@ -157,7 +159,7 @@ const Profilo = () => {
                   <>
                     <span className="text-muted-foreground text-sm">•</span>
                     <div className={`flex items-center gap-1 ${primaryTextClasses}`}>
-                      <Star className="w-4 h-4" fill="currentColor" />
+                      <StellaIcon className="w-4 h-4" />
                       <span className="font-semibold text-sm">{reviewStats.avg}</span>
                       <span className="text-muted-foreground text-sm">({reviewStats.count})</span>
                     </div>
@@ -185,7 +187,9 @@ const Profilo = () => {
 
         {profile?.bio && (
           <div className="material-card p-4 mb-4">
-            <h3 className="font-semibold mb-2">{isEmployer ? "Descrizione" : "Presentazione"}</h3>
+            <h3 className="font-semibold mb-2 flex items-center gap-2">
+              <ProfiloIcon className={`w-4 h-4 ${primaryTextClasses}`} />{isEmployer ? "Descrizione" : "Presentazione"}
+            </h3>
             <p className="text-sm text-muted-foreground leading-relaxed">{profile.bio}</p>
           </div>
         )}
@@ -193,7 +197,7 @@ const Profilo = () => {
         {isEmployer && profile?.looking_for && (
           <div className="material-card p-4 mb-4">
             <h3 className="font-semibold mb-2 flex items-center gap-2">
-              <Briefcase className={`w-4 h-4 ${primaryTextClasses}`} />Chi cerco
+              <GenericoIcon className={`w-4 h-4 ${primaryTextClasses}`} />Chi cerco
             </h3>
             <p className="text-sm text-muted-foreground leading-relaxed">{profile.looking_for}</p>
           </div>
@@ -202,7 +206,7 @@ const Profilo = () => {
         {!isEmployer && profile?.experience && (
           <div className="material-card p-4 mb-4">
             <h3 className="font-semibold mb-2 flex items-center gap-2">
-              <Briefcase className={`w-4 h-4 ${primaryTextClasses}`} />Esperienze
+              <GenericoIcon className={`w-4 h-4 ${primaryTextClasses}`} />Esperienze
             </h3>
             <p className="text-sm text-muted-foreground leading-relaxed">{profile.experience}</p>
           </div>
@@ -211,7 +215,7 @@ const Profilo = () => {
         {!isEmployer && (
           <div className="material-card p-4 mb-4">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="font-semibold">I tuoi Interessi</h3>
+              <h3 className="font-semibold flex items-center gap-2"><CuoreIcon className={`w-4 h-4 ${primaryTextClasses}`} />I tuoi Interessi</h3>
               <div className="flex gap-2">
                 {hasChanges && (
                   <button onClick={handleSaveTags} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-colors touch-feedback ${primaryBtnClasses}`}>
@@ -226,7 +230,7 @@ const Profilo = () => {
             {editMode ? (
               <>
                 <p className="text-sm text-muted-foreground mb-4">Seleziona i tag per personalizzare la tua esperienza nella Lista</p>
-                <TagSelector selectedTags={selectedTags} onChange={setSelectedTags} />
+                <TagSelector selectedTags={selectedTags} onChange={setSelectedTags} roleLayout="grid" showDuration={false} />
               </>
             ) : (
               <TagBadges tags={selectedTags} />
@@ -237,22 +241,22 @@ const Profilo = () => {
         {!isEmployer && <WorkerJobHistory primaryTextClasses={primaryTextClasses} />}
 
         <div className="material-card p-4 mb-4">
-          <h3 className="font-semibold mb-3">Informazioni</h3>
+          <h3 className="font-semibold mb-3 flex items-center gap-2"><InfoIcon className={`w-4 h-4 ${primaryTextClasses}`} />Informazioni</h3>
           <div className="space-y-3">
             {profile?.neighborhood ? (
-              <div className="flex items-center gap-3 text-sm"><MapPin className="w-4 h-4 text-muted-foreground" /><span>Genova, {profile.neighborhood}</span></div>
+              <div className="flex items-center gap-3 text-sm"><MappaIcon className="w-4 h-4 text-muted-foreground" /><span>Genova, {profile.neighborhood}</span></div>
             ) : profile?.address_text ? (
-              <div className="flex items-center gap-3 text-sm"><MapPin className="w-4 h-4 text-muted-foreground" /><span>{profile.address_text}</span></div>
+              <div className="flex items-center gap-3 text-sm"><MappaIcon className="w-4 h-4 text-muted-foreground" /><span>{profile.address_text}</span></div>
             ) : null}
             <div className="flex items-center gap-3 text-sm">
-              <Briefcase className="w-4 h-4 text-muted-foreground" />
+              <GenericoIcon className="w-4 h-4 text-muted-foreground" />
               <span>Ruolo: <span className={`font-medium ${primaryTextClasses}`}>{isEmployer ? "Employer" : "Worker"}</span></span>
             </div>
           </div>
         </div>
 
            <button onClick={handleLogout} className="material-btn-outlined w-full p-4 flex items-center justify-center gap-2 text-destructive border-destructive/30 touch-feedback">
-             <LogOut className="w-5 h-5" /><span className="font-medium">Esci</span>
+             <EsciIcon className="w-5 h-5" /><span className="font-medium">Esci</span>
            </button>
          </main>
        </div>

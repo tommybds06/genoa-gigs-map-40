@@ -8,16 +8,16 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { NeighborhoodSelect } from '@/components/ui/NeighborhoodSelect';
-import { 
-  GraduationCap, 
-  Store, 
-  Mail, 
-  Lock, 
+import {
+  GraduationCap,
+  Store,
   User,
   MapPin,
   Loader2,
   ArrowRight
 } from 'lucide-react';
+import { MailIcon, LucchettoIcon, AnnunciIcon, ProfiloIcon, MappaIcon } from '@/components/icons/uiIcons';
+import { GenericoIcon } from '@/components/icons/roleIcons';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
@@ -293,7 +293,7 @@ const Auth = () => {
                       "w-12 h-12 rounded-xl flex items-center justify-center mb-3 transition-colors duration-500",
                       selectedRole === 'worker' ? 'bg-primary text-primary-foreground' : 'bg-background'
                     )}>
-                      <GraduationCap className="w-6 h-6" />
+                      <GenericoIcon className="w-6 h-6" />
                     </div>
                     <h3 className="font-semibold text-sm text-foreground">Cerco Impiego</h3>
                     <p className="text-xs text-muted-foreground mt-1">Sono uno Studente</p>
@@ -319,7 +319,7 @@ const Auth = () => {
                       "w-12 h-12 rounded-xl flex items-center justify-center mb-3 transition-colors duration-500",
                       selectedRole === 'employer' ? 'bg-employer text-employer-foreground' : 'bg-background'
                     )}>
-                      <Store className="w-6 h-6" />
+                      <AnnunciIcon className="w-6 h-6" />
                     </div>
                     <h3 className="font-semibold text-sm text-foreground">Offro Impiego</h3>
                     <p className="text-xs text-muted-foreground mt-1">Privato o Attività</p>
@@ -338,7 +338,7 @@ const Auth = () => {
                   {selectedRole === 'employer' ? 'Nome attività (se ne si ha una)' : 'Nome completo'}
                 </label>
                 <div className="relative">
-                  <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <ProfiloIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                   <Input
                     type="text"
                     placeholder={selectedRole === 'employer' ? 'Trattoria Da Luigi' : 'Mario Rossi'}
@@ -380,7 +380,7 @@ const Auth = () => {
                   Indirizzo attività <span className="text-destructive">*</span>
                 </label>
                 <div className="relative">
-                  <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <MappaIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                   <Input
                     type="text"
                     placeholder="Via Roma 123"
@@ -397,7 +397,7 @@ const Auth = () => {
             <div className="space-y-2">
               <label className="text-sm font-medium text-foreground">Email</label>
               <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                <MailIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
                   type="email"
                   placeholder="mario.rossi@email.com"
@@ -418,7 +418,7 @@ const Auth = () => {
             <div className="space-y-2">
               <label className="text-sm font-medium text-foreground">Password</label>
               <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                <LucchettoIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
                   type="password"
                   placeholder="••••••••"
