@@ -93,8 +93,8 @@ Un bug ricorrente da evitare: pulsante "indietro" arancio in contesto employer (
 3. ✅ **Redesign icone (Fase 3)** — set completo di icone custom theme-aware in
    `src/components/icons/roleIcons.tsx` + `uiIcons.tsx` (ruoli, nav, utility, stati). Bottom nav
    stile Instagram (outline→filled, colore ruolo, no label). Dettagli in
-   `brand/POLITASK-icon-system.md`. ⚠️ Non ancora committato/pushato.
-4. ⏳ **Applicazione brand identity / UX** ← PROSSIMA
+   `brand/POLITASK-icon-system.md`. ✅ Committato e pushato (luglio 2026).
+4. ⏳ **Applicazione brand identity / UX** ← PROSSIMA (in corso in nuova chat)
 5. Illustrazioni custom (empty states, splash, onboarding)
 6. Miglioramenti UX/UI
 7. Animazioni (Framer Motion ora; After Effects + Lottie poi)
@@ -102,11 +102,45 @@ Un bug ricorrente da evitare: pulsante "indietro" arancio in contesto employer (
 9. Gamification
 10. Conversione app nativa con Despia
 
+## 🔄 HANDOFF — stato attuale (leggere per riprendere in nuova chat)
+
+**Fatto e PUSHATO su GitHub/Lovable** (fasi 1-3 complete): bug fix, brand identity (logo
+`logoPOLITASK.svg` arancio/blu, palette, icona app, marchio pre-verificato, dominio
+`politask.app` + social presi), e **Fase 3 icone completa** (tutte custom theme-aware in
+`src/components/icons/roleIcons.tsx` + `uiIcons.tsx`; bottom nav stile Instagram
+outline→filled). Dettagli in `brand/POLITASK-brand-brief.md` e `brand/POLITASK-icon-system.md`.
+
+**Prossimo: Fase 4 — applicazione brand identity / UX.** Brainstorm concordato, 5 temi:
+1. **Design system:** sweep dei colori Tailwind grezzi (`orange-500/700`, `blue-600`, `bg-orange-*`)
+   → sostituirli con token brand (`primary`/`accent`/`employer`); scala tipografica coerente
+   (font Outfit); spaziature/raggi/ombre uniformi.
+2. **Stati** (vuoto/loading/errore) coerenti e theme-aware.
+3. **Componenti ricorrenti:** badge di stato, card candidatura (idea: bordo sinistro colorato
+   per stato), chip/tag, bottoni.
+4. **Rifiniture UX (da audit):** togliere titoli di pagina ridondanti dove c'è il logo; chip
+   scorciatoia sotto la search della mappa; messaggi di sistema in chat con stile diverso;
+   coerenza dimensione logo (Settings ancora `h-8`).
+5. **Micro-polish:** dimensioni icone coerenti, hover/active, tap target, contrasto.
+Approccio: partire dallo **sweep design-system** (colori/token fuori-brand), poi schermata per schermata.
+
+**Punti aperti / da non dimenticare:**
+- Bottoni `variant="outline"` (Annulla / "No, tieni visibile"): in hover diventano arancioni
+  anche in contesto employer → da rendere blu.
+- Soglia mezza-stella recensioni: ora 0.5 (es. 4.6→4½). Cambiabile.
+- **Teaser video** (tentacolo che si arrotola nel logo): da generare sul **proprio account
+  Higgsfield** (il connettore MCP non ha piano). Il reveal pulito → Fase 7 (After Effects/Lottie).
+- **Marchio**: deposito EUTM/italiano (9/35, denominativo+figurativo) da fare prima del lancio.
+- **Landing/waitlist** su politask.app (pre-lancio).
+- Higgsfield trial gratuito: **disdire** prima del rinnovo automatico.
+
+**Come riprendere:** connettere la stessa cartella (`~/Downloads/POLITASK_asset`); Claude Code
+legge in automatico questo `CLAUDE.md`. Se serve, dire: "leggi CLAUDE.md e i doc in `brand/`".
+
 ### ⚠️ Modifiche NON committate nel working tree
 Al momento ci sono ~26 file modificati e non committati (pass di theming/branding su tutta
 l'app: `useAppTheme`, `index.css`, `tailwind.config.ts` + ritocchi diffusi). È il lavoro di
-una sessione precedente rimasto sospeso. **Decidere se committarli** prima di procedere
-(vedi "Come committare" sotto). File nuovi non tracciati: `public/images/`, `.claude/`.
+una sessione precedente rimasto sospeso. **(AGGIORNAMENTO luglio 2026: tutto committato e
+pushato su `origin main`. Working tree pulito. Vedi HANDOFF sopra.)**
 
 ## Prossimi passi immediati (le rifiniture prima della Fase 2)
 
