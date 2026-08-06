@@ -26,6 +26,7 @@ import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/ui/StatusBadge";
  import { SwipeNavigator } from "@/components/layout/SwipeNavigator";
 import { formatOrarioChat, anteprimaMessaggio } from "@/lib/dates";
+import { useAttachmentUrl } from "@/hooks/useAttachmentUrl";
 
 interface Message {
   id: string;
