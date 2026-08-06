@@ -70,6 +70,7 @@ const Messaggi = () => {
   const [replyingTo, setReplyingTo] = useState<Message | null>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [pendingAttachment, setPendingAttachment] = useState<string | null>(null);
+  const pendingAttachmentUrl = useAttachmentUrl(pendingAttachment);
   const [applicationStatus, setApplicationStatus] = useState<string | null>(null);
   const [showHireDialog, setShowHireDialog] = useState(false);
   const [showCompleteDialog, setShowCompleteDialog] = useState(false);
