@@ -33,6 +33,7 @@ export const MessageBubble = ({
   formatTime 
 }: MessageBubbleProps) => {
   const [showReplyIcon, setShowReplyIcon] = useState(false);
+  const attachmentUrl = useAttachmentUrl(message.attachment_url);
   const x = useMotionValue(0);
   const controls = useAnimation();
   
@@ -144,10 +145,10 @@ export const MessageBubble = ({
         
         <div className={`px-4 py-2 rounded-2xl relative ${getBubbleColors()}`}>
           {/* Attachment image */}
-          {message.attachment_url && (
+          {attachmentUrl && (
             <div className="mb-2 -mx-2 -mt-1">
               <img 
-                src={message.attachment_url} 
+                src={attachmentUrl} 
                 alt="Allegato" 
                 className="rounded-xl max-w-full h-auto object-cover max-h-64"
               />
