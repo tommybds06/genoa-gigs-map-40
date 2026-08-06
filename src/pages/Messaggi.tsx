@@ -629,7 +629,7 @@ const Messaggi = () => {
         {/* Pending attachment preview */}
         {pendingAttachment && (
           <div className="px-4 py-2 bg-muted/50 border-t flex items-center gap-3">
-            <img src={pendingAttachment} alt="Allegato" className="h-12 w-12 rounded-lg object-cover" />
+            {pendingAttachmentUrl && <img src={pendingAttachmentUrl} alt="Allegato" className="h-12 w-12 rounded-lg object-cover" />}
             <p className="flex-1 text-sm text-muted-foreground">Immagine allegata</p>
             <Button
               variant="ghost"
