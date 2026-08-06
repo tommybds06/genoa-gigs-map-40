@@ -561,7 +561,7 @@ const PublicProfile = () => {
                   <div className="space-y-3">
                     {jobs.map((job) => {
                       const Icon = getJobIconFromTags(job.tags);
-                      const roleTag = job.tags?.find(t => !['Occasionale', 'A Chiamata', 'Mensile', 'Settimanale', 'Weekend'].includes(t));
+                      const roleTag = job.tags?.find(t => !isTypeTag(t) && !LEGACY_TYPE_TAGS.includes(t));
                       
                       return (
                         <button 
