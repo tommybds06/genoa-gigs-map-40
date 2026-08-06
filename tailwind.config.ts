@@ -25,6 +25,9 @@ export default {
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
+          // Variante scura leggibile: usare per TESTO arancio e bottoni con label
+          // bianca. L'arancio di brand è troppo chiaro (1.9:1 su crema).
+          strong: "hsl(var(--primary-strong))",
         },
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
@@ -61,8 +64,22 @@ export default {
           ring: "hsl(var(--sidebar-ring))",
         },
         brand: {
-          yellow: "hsl(var(--brand-yellow))",
           orange: "hsl(var(--brand-orange))",
+          "orange-ink": "hsl(var(--brand-orange-ink))",
+          blue: "hsl(var(--brand-blue))",
+          "blue-ink": "hsl(var(--brand-blue-ink))",
+          amber: "hsl(var(--brand-amber))",
+        },
+        // Le superfici di carta. `paper` = fondo, `sheet` = la card.
+        paper: {
+          DEFAULT: "hsl(var(--paper))",
+          sheet: "hsl(var(--paper-sheet))",
+          sunken: "hsl(var(--paper-sunken))",
+          line: "hsl(var(--paper-line))",
+        },
+        ink: {
+          DEFAULT: "hsl(var(--ink))",
+          soft: "hsl(var(--ink-soft))",
         },
         employer: {
           DEFAULT: "hsl(var(--employer))",
@@ -72,11 +89,57 @@ export default {
           700: "hsl(var(--employer-700))",
           800: "hsl(var(--employer-800))",
         },
+        // Stati semantici: NON seguono il dual-theme (un errore è rosso sia per
+        // worker che per employer). Le varianti "soft" sono i fondi dei badge.
+        success: {
+          DEFAULT: "hsl(var(--success))",
+          foreground: "hsl(var(--success-foreground))",
+          soft: "hsl(var(--success-soft))",
+          "soft-foreground": "hsl(var(--success-soft-foreground))",
+        },
+        warning: {
+          DEFAULT: "hsl(var(--warning))",
+          foreground: "hsl(var(--warning-foreground))",
+          soft: "hsl(var(--warning-soft))",
+          "soft-foreground": "hsl(var(--warning-soft-foreground))",
+        },
+        danger: {
+          DEFAULT: "hsl(var(--danger))",
+          foreground: "hsl(var(--danger-foreground))",
+          soft: "hsl(var(--danger-soft))",
+          "soft-foreground": "hsl(var(--danger-soft-foreground))",
+        },
+        info: {
+          soft: "hsl(var(--info-soft))",
+          "soft-foreground": "hsl(var(--info-soft-foreground))",
+        },
+        neutral: {
+          DEFAULT: "hsl(var(--neutral))",
+          soft: "hsl(var(--neutral-soft))",
+          "soft-foreground": "hsl(var(--neutral-soft-foreground))",
+        },
       },
+      // Scala monotona e prevedibile. Prima era incoerente: rounded-sm (0.75rem)
+      // valeva quanto il rounded-xl di default di Tailwind.
       borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
+        sm: "calc(var(--radius) - 0.5rem)",   /* 0.5rem  */
+        md: "calc(var(--radius) - 0.25rem)",  /* 0.75rem */
+        lg: "var(--radius)",                  /* 1rem    */
+        xl: "calc(var(--radius) + 0.25rem)",  /* 1.25rem */
+        "2xl": "calc(var(--radius) + 0.5rem)", /* 1.5rem  */
+        "3xl": "calc(var(--radius) + 1rem)",  /* 2rem    */
+      },
+      // Outfit ha un'x-height generosa: alle misure display serve tracking
+      // negativo, ai corpi piccoli interlinea più ariosa.
+      fontSize: {
+        xs: ["0.75rem", { lineHeight: "1.125rem", letterSpacing: "0.01em" }],
+        sm: ["0.875rem", { lineHeight: "1.3125rem", letterSpacing: "0" }],
+        base: ["1rem", { lineHeight: "1.5rem", letterSpacing: "-0.005em" }],
+        lg: ["1.125rem", { lineHeight: "1.625rem", letterSpacing: "-0.01em" }],
+        xl: ["1.25rem", { lineHeight: "1.75rem", letterSpacing: "-0.015em" }],
+        "2xl": ["1.5rem", { lineHeight: "1.9375rem", letterSpacing: "-0.02em" }],
+        "3xl": ["1.875rem", { lineHeight: "2.25rem", letterSpacing: "-0.025em" }],
+        "4xl": ["2.25rem", { lineHeight: "2.5rem", letterSpacing: "-0.03em" }],
       },
       boxShadow: {
         "material-sm": "var(--shadow-sm)",

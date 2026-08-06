@@ -87,7 +87,7 @@ export function SearchBar({
             placeholder="Cerca impiego..."
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="pl-9 pr-8 bg-background shadow-md border-0 rounded-full h-10"
+            className="pl-9 pr-8 bg-card shadow-md border-0 rounded-full h-10"
           />
           {searchQuery && (
             <button
@@ -107,13 +107,13 @@ export function SearchBar({
           className={cn(
             "relative rounded-full h-10 w-10 shadow-md border-0",
             activeFiltersCount > 0
-              ? "bg-primary text-white hover:bg-primary/90"
-              : "bg-background hover:bg-accent"
+              ? "bg-primary text-primary-foreground hover:bg-primary/90"
+              : "bg-card hover:bg-accent"
           )}
         >
           <FiltriIcon className="w-4 h-4 text-primary" />
           {activeFiltersCount > 0 && (
-            <span className="absolute -top-1 -right-1 w-5 h-5 bg-orange-600 text-white text-xs rounded-full flex items-center justify-center font-medium">
+            <span className="absolute -top-1 -right-1 w-5 h-5 bg-primary-strong text-white text-xs rounded-full flex items-center justify-center font-medium">
               {activeFiltersCount}
             </span>
           )}
@@ -214,7 +214,7 @@ export function SearchBar({
                       className={cn(
                         "flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all border",
                         isSelected
-                          ? "bg-primary text-white border-primary"
+                          ? "bg-primary text-primary-foreground border-primary"
                           : "bg-muted/50 text-foreground border-transparent hover:bg-muted"
                       )}
                     >
@@ -231,7 +231,7 @@ export function SearchBar({
           <DrawerFooter className="flex-shrink-0 border-t pt-4">
             <Button
               onClick={applyFilters}
-              className="w-full bg-primary hover:bg-primary/90 text-white font-semibold py-6 rounded-xl"
+              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-6 rounded-xl"
             >
               Applica
               {tempFiltersCount > 0 && (

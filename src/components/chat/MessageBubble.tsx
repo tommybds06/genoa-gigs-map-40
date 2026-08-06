@@ -61,10 +61,10 @@ export const MessageBubble = ({
     
     if (message.is_read) {
       // Read: Blue for workers, Yellow for employers (contrast on blue)
-      return isEmployer ? "text-yellow-400" : "text-employer-50";
+      return isEmployer ? "text-secondary" : "text-employer-50";
     }
     // Unread: Gray
-    return "text-gray-400";
+    return "text-muted-foreground";
   };
 
   const getReplyPreviewColors = () => {

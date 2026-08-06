@@ -23,7 +23,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { StatusBadge } from "@/components/ui/StatusBadge";
  import { SwipeNavigator } from "@/components/layout/SwipeNavigator";
+import { formatOrarioChat, anteprimaMessaggio } from "@/lib/dates";
 
 interface Message {
   id: string;
@@ -560,7 +562,7 @@ const Messaggi = () => {
               <Button
                 variant="outline"
                 size="sm"
-                className="shrink-0 text-green-600 border-green-600 hover:bg-green-50"
+                className="shrink-0 text-success border-success hover:bg-success-soft"
                 onClick={() => setShowCompleteDialog(true)}
               >
                 <Check className="h-4 w-4 mr-1" />
@@ -570,20 +572,10 @@ const Messaggi = () => {
             )}
             
             {/* Hired badge for Worker */}
-            {!isEmployer && applicationStatus === 'hired' && (
-              <Badge className="shrink-0 bg-green-600 text-white">
-                <CheckCircle className="h-3 w-3 mr-1" />
-                Assunto
-              </Badge>
-            )}
-            
+            {!isEmployer && applicationStatus === 'hired' && <StatusBadge stato="hired" />}
+
             {/* Completed badge */}
-            {applicationStatus === 'completed' && (
-              <Badge variant="outline" className="shrink-0 text-green-600 border-green-600">
-                <Check className="h-3 w-3 mr-1" />
-                Concluso
-              </Badge>
-            )}
+            {applicationStatus === 'completed' && <StatusBadge stato="completed" />}
           </div>
         </header>
 
@@ -804,17 +796,28 @@ const Messaggi = () => {
               </div>
             </div>
            ) : (
-             <div className="space-y-2">
+             <div className="space-y-2 card-tilt">
                {chats.map((chat) => {
                  const isCompleted = chat.application_status === 'completed';
                  const isHired = chat.application_status === 'hired';
-                 
+                 const nonLetti = chat.unread_count ?? 0;
+                 const ultimo = chat.last_message;
+                 const anteprima = ultimo
+                   ? anteprimaMessaggio(
+                       ultimo.content,
+                       ultimo.has_attachment,
+                       ultimo.sender_id === user?.id
+                     )
+                   : '';
+
                  return (
                     <div
                       key={chat.id}
                       onClick={() => setSelectedChat(chat)}
-                      className={`material-card p-4 flex items-center gap-3 cursor-pointer touch-feedback ${
-                        isCompleted ? 'bg-muted/50 opacity-80' : ''
+                      className={`material-card flex items-center gap-3 cursor-pointer touch-feedback ${
+                        // Le concluse si comprimono, non si sbiadiscono: prima
+                        // l'opacità le faceva sembrare disabilitate.
+                        isCompleted ? 'p-3' : 'p-4'
                       }`}
                    >
                       <AvatarPreview
@@ -826,30 +829,42 @@ const Messaggi = () => {
                       />
                      <div className="flex-1 min-w-0">
                        <div className="flex items-center gap-2">
-                         <h3 className="font-semibold truncate">
+                         <h3 className={`truncate ${nonLetti > 0 ? 'font-bold' : 'font-semibold'}`}>
                            {chat.other_user?.full_name || 'Utente'}
                          </h3>
-                         {isHired && (
-                           <Badge className="bg-green-600 text-white text-xs shrink-0">
-                             <CheckCircle className="h-3 w-3 mr-0.5" />
-                             Assunto
-                           </Badge>
-                         )}
-                         {isCompleted && (
-                           <Badge variant="outline" className="text-green-600 border-green-600 text-xs shrink-0">
-                             <Check className="h-3 w-3 mr-0.5" />
-                             Concluso
-                           </Badge>
+                         {isHired && <StatusBadge stato="hired" />}
+                         {isCompleted && <StatusBadge stato="completed" />}
+                         {ultimo && (
+                           <span className="ml-auto shrink-0 text-xs text-muted-foreground">
+                             {formatOrarioChat(ultimo.created_at)}
+                           </span>
                          )}
                        </div>
-                       <p className="text-sm text-muted-foreground truncate">
-                         {chat.job?.title}
-                       </p>
+
+                       {/* L'anteprima è l'informazione per cui si apre questa lista. */}
+                       {anteprima ? (
+                         <p className={`text-sm truncate ${
+                           nonLetti > 0 ? 'text-foreground font-medium' : 'text-muted-foreground'
+                         }`}>
+                           {anteprima}
+                         </p>
+                       ) : (
+                         <p className="text-sm text-muted-foreground italic truncate">
+                           Nessun messaggio
+                         </p>
+                       )}
+
+                       {!isCompleted && chat.job?.title && (
+                         <p className="text-xs text-muted-foreground/80 truncate mt-0.5">
+                           {chat.job.title}
+                         </p>
+                       )}
                     </div>
-                     {chat.unread_count && chat.unread_count > 0 && (
+                     {/* nonLetti > 0 e non `nonLetti &&`: con 0 React stampava lo zero. */}
+                     {nonLetti > 0 && (
                        <div className={`shrink-0 w-6 h-6 rounded-full flex items-center justify-center ${isEmployer ? 'bg-employer' : 'bg-primary'}`}>
                          <span className="text-xs text-white font-bold">
-                           {chat.unread_count > 9 ? '9+' : chat.unread_count}
+                           {nonLetti > 9 ? '9+' : nonLetti}
                          </span>
                        </div>
                      )}

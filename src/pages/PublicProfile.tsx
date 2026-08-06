@@ -27,6 +27,7 @@ import { GenericoIcon } from "@/components/icons/roleIcons";
 import { useAppTheme } from "@/hooks/useAppTheme";
 import { useUser } from "@/contexts/UserContext";
 import { getJobIconFromTags } from "@/lib/jobIcons";
+import { formatTempoTrascorso } from "@/lib/dates";
 
 interface Profile {
   id: string;
@@ -70,16 +71,6 @@ interface Review {
   worker_name: string | null;
 }
 
-function getTimeAgo(dateString: string): string {
-  const date = new Date(dateString);
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffHours = Math.floor(diffMs / 3600000);
-  const diffDays = Math.floor(diffMs / 86400000);
-
-  if (diffHours < 24) return `${diffHours} ore fa`;
-  return `${diffDays} giorni fa`;
-}
 
 function formatDate(dateString: string): string {
   return new Date(dateString).toLocaleDateString('it-IT', {
@@ -544,7 +535,7 @@ const PublicProfile = () => {
                           <p className="text-sm text-muted-foreground">{review.comment}</p>
                         )}
                         <p className="text-xs text-muted-foreground/60 mt-1">
-                          {getTimeAgo(review.created_at)}
+                          {formatTempoTrascorso(review.created_at)}
                         </p>
                       </div>
                     ))}
@@ -606,7 +597,7 @@ const PublicProfile = () => {
                             </div>
                             <div className="flex flex-col items-end gap-2 shrink-0">
                               <span className="text-xs text-muted-foreground">
-                                {getTimeAgo(job.created_at)}
+                                {formatTempoTrascorso(job.created_at)}
                               </span>
                               <ChevronRight className="w-5 h-5 text-muted-foreground" />
                             </div>

@@ -2,103 +2,227 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Politask Design System - Google Material Design Style */
+/* Politask Design System — palette CARTA
+   Vedi brand/POLITASK-brand-brief.md e brand/palette-carta.html.
+
+   Il modello mentale è "inchiostro su cartoncino avorio", non "UI su bianco":
+   - le SUPERFICI sono carta (avorio) e foglio (la card, appena più chiara);
+     la gerarchia la fa il BORDO, non un salto di tono
+   - il "nero" dell'app e' un bruno (--ink), mai #000
+   - i colori di stato sono INCHIOSTRI (verde bosco, terracotta, ocra), non
+     i semafori di Tailwind (#22C55E, #EF4444), che non appartengono a nessuna palette
+
+   IL PUNTO CHE SPIEGA TUTTO IL RESTO: arancio e blu di brand sono pastello e
+   NON reggono testo bianco (2,07:1 e 3,03:1). Con --ink sopra danno 6,45 e 4,41.
+   Quindi: colori pieni = campiture con testo scuro; per testo e tratti sottili
+   esistono le varianti -ink.
+
+   REGOLA: nei componenti niente colori Tailwind grezzi (orange-500, green-600...)
+   ne' hex hard-coded. Solo i token qui sotto, via useAppTheme(). */
 
 @layer base {
   :root {
-    /* Brand Colors */
-    --brand-yellow: 45 100% 51%;
-    --brand-orange: 30 90% 63%;
+    /* ---- Brand (sorgente di verita') ---- */
+    --brand-orange: 30 90% 63%;      /* #F6A24D — worker, campiture */
+    --brand-blue: 213 48% 61%;       /* #6E97CC — employer, campiture */
+    --brand-amber: 36 92% 58%;       /* #F6A831 — accento caldo */
 
-    /* Material Design Core Palette */
-    --background: 0 0% 98%;
-    --foreground: 0 0% 13%;
+    /* Versioni INCHIOSTRO: per testo, icone piccole e tratti sottili. */
+    --brand-orange-ink: 24 72% 38%;  /* #A7531B — 4,66 su carta */
+    --brand-blue-ink: 213 45% 38%;   /* #355D8D — 5,86 su carta */
 
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 13%;
+    /* ---- Carta ---- */
+    --paper: 43 44% 92%;             /* #F4EEE2 — avorio, fondo app */
+    /* Il foglio era a 96,5%: troppo vicino al bianco, leggeva come "card bianca".
+       Abbassato a 95% e reso piu' caldo — resta carta, non diventa foglio A4. */
+    --paper-sheet: 44 58% 95%;       /* #FAF5E9 */
+    --paper-sunken: 42 33% 86.5%;    /* #E8E1D1 — incavi, campi, tab inattive */
+    --paper-line: 40 32% 79%;        /* #DACFB8 — bordi */
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 13%;
+    /* ---- Inchiostro ---- */
+    --ink: 28 22% 18%;               /* #382D24 — 11,58 su carta */
+    --ink-soft: 30 13% 40%;          /* #746759 — 4,90 su carta (a 42% restava a 4,47) */
 
-    --primary: 30 90% 63%;
-    --primary-foreground: 0 0% 100%;
+    /* ---- Core Palette (mappata sulla carta) ---- */
+    --background: var(--paper);
+    --foreground: var(--ink);
 
-    --secondary: 45 100% 51%;
-    --secondary-foreground: 0 0% 13%;
+    --card: var(--paper-sheet);
+    --card-foreground: var(--ink);
 
-    --muted: 220 14% 96%;
-    --muted-foreground: 0 0% 45%;
+    --popover: var(--paper-sheet);
+    --popover-foreground: var(--ink);
 
-    --accent: 30 90% 94%;
-    --accent-foreground: 30 90% 35%;
+    --primary: var(--brand-orange);
+    --primary-foreground: var(--ink);   /* testo SCURO sull'arancio: 6,45 */
+    --primary-strong: var(--brand-orange-ink);
 
-    --destructive: 4 90% 58%;
+    --secondary: var(--brand-amber);
+    --secondary-foreground: var(--ink);
+
+    --muted: var(--paper-sunken);
+    --muted-foreground: var(--ink-soft);
+
+    /* accent = tile arancio chiara (icone ruolo, chip, badge) */
+    --accent: 36 60% 87%;            /* #F2E2CA */
+    --accent-foreground: var(--brand-orange-ink);
+
+    /* Terracotta piu' decisa: a 52/44 era troppo timida per un'azione distruttiva. */
+    --destructive: 8 62% 42%;        /* #AD3E2A */
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 30 90% 63%;
+    --border: var(--paper-line);
+    --input: var(--paper-line);
+    --ring: var(--brand-orange-ink);
+
+    /* ---- Stati come INCHIOSTRI ----
+       Non seguono il dual-theme: un errore e' terracotta sia per worker che per
+       employer. I "-soft" sono i fondi dei badge, tarati sull'avorio (~1,05-1,11
+       di stacco: si vedono, ma non bucano la pagina). */
+    --success: 152 38% 32%;            /* #337154 verde bosco — 5,01 */
+    --success-foreground: 0 0% 100%;
+    --success-soft: 152 32% 90%;
+    --success-soft-foreground: 152 45% 24%;
+
+    --warning: 38 62% 40%;             /* #A57727 ocra — 3,45 */
+    --warning-foreground: 0 0% 100%;
+    --warning-soft: 40 52% 88%;
+    --warning-soft-foreground: 34 70% 26%;
+
+    --danger: 8 62% 42%;               /* #AD3E2A terracotta — 5,24 */
+    --danger-foreground: 0 0% 100%;
+    --danger-soft: 10 45% 91%;
+    --danger-soft-foreground: 8 55% 34%;
+
+    --info-soft: 213 40% 91%;
+    --info-soft-foreground: var(--brand-blue-ink);
+
+    --neutral: 35 14% 48%;             /* #8C7D69 grigio caldo — 3,46 */
+    --neutral-soft: 40 22% 88%;
+    --neutral-soft-foreground: 32 14% 36%;
 
     --radius: 1rem;
 
     /* Employer Blue */
-    --employer: 213 48% 61%;
-    --employer-foreground: 0 0% 100%;
-    --employer-50: 213 48% 95%;
-    --employer-100: 213 48% 90%;
-    --employer-700: 213 48% 51%;
-    --employer-800: 213 48% 40%;
+    --employer: var(--brand-blue);
+    --employer-foreground: var(--ink);  /* testo SCURO sul blu: 4,41 */
+    --employer-50: 213 40% 93%;
+    --employer-100: 213 42% 88%;
+    --employer-700: 213 46% 48%;
+    --employer-800: var(--brand-blue-ink);
 
-    /* Material Elevation Shadows */
-    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+    /* Elevazione: ombre BRUNE, corte e strette — "carta appoggiata su carta".
+       Il nero sfocato faceva sembrare le card rettangoli sospesi. */
+    --shadow-sm: 0 1px 0 0 rgb(56 45 36 / 0.07);
+    --shadow-md: 0 1.5px 0 0 rgb(56 45 36 / 0.10), 0 3px 5px -2px rgb(56 45 36 / 0.13);
+    --shadow-lg: 0 2px 0 0 rgb(56 45 36 / 0.10), 0 6px 10px -4px rgb(56 45 36 / 0.16);
+    --shadow-xl: 0 3px 0 0 rgb(56 45 36 / 0.10), 0 12px 20px -8px rgb(56 45 36 / 0.20);
+
+    /* GRANA: nessuna. Decisione presa, non lavoro in sospeso.
+       Il gancio resta (`background-image: var(--grana)` su body e .material-card)
+       cosi' riattivarla e' una riga sola, ma la conclusione dopo cinque
+       tentativi e' che a Politask la texture non serve.
+
+       Cosa e' stato provato, per non rifarlo:
+       - rumore procedurale (feTurbulence): casuale per pixel, su schermi a 2-3×
+         legge sempre come sgranatura digitale, mai come fibra;
+       - scansione di carta vera a piastrella piccola: sembrava intonaco a 360px,
+         tessuto a 120px, marmo ruotata di 45°, e croci una volta isotropizzata;
+       - piastrella grande (800px, 128 KB): tecnicamente corretta — il difetto
+         era la RIPETIZIONE, non la fibra — ma non aggiungeva abbastanza da
+         giustificare il peso.
+
+       Il carattere di carta lo portano gia' l'avorio, i bordi caldi, le ombre
+       corte e la rotazione delle card (.card-tilt). Il salto successivo sono le
+       cornici disegnate a mano, non la superficie. */
+    --grana: none;
+    --grana-scala: 800px;
 
     /* Sidebar */
-    --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 0 0% 13%;
-    --sidebar-primary: 30 90% 63%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 30 90% 94%;
-    --sidebar-accent-foreground: 0 0% 13%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 30 90% 63%;
+    --sidebar-background: var(--paper-sheet);
+    --sidebar-foreground: var(--ink);
+    --sidebar-primary: var(--brand-orange);
+    --sidebar-primary-foreground: var(--ink);
+    --sidebar-accent: 36 60% 87%;
+    --sidebar-accent-foreground: var(--ink);
+    --sidebar-border: var(--paper-line);
+    --sidebar-ring: var(--brand-orange-ink);
   }
 
   .dark {
-    --background: 0 0% 10%;
-    --foreground: 0 0% 95%;
+    /* "Carta bagnata": stessa famiglia calda, ribaltata. Non grigi neutri. */
+    --paper: 30 10% 11%;
+    --paper-sheet: 32 9% 15%;
+    --paper-sunken: 30 8% 18%;
+    --paper-line: 32 8% 24%;
+    --ink: 42 30% 94%;
+    --ink-soft: 38 12% 66%;
 
-    --card: 0 0% 14%;
-    --card-foreground: 0 0% 95%;
+    --background: var(--paper);
+    --foreground: var(--ink);
 
-    --popover: 0 0% 14%;
-    --popover-foreground: 0 0% 95%;
+    --card: var(--paper-sheet);
+    --card-foreground: var(--ink);
 
-    --primary: 30 90% 63%;
-    --primary-foreground: 0 0% 100%;
+    --popover: var(--paper-sheet);
+    --popover-foreground: var(--ink);
 
-    --secondary: 45 100% 51%;
-    --secondary-foreground: 0 0% 13%;
+    --primary: var(--brand-orange);
+    --primary-foreground: 28 22% 14%;   /* resta scuro: l'arancio non cambia */
+    /* In dark il testo arancio deve SCHIARIRE, non scurire. */
+    --primary-strong: 32 95% 72%;
 
-    --muted: 0 0% 18%;
-    --muted-foreground: 0 0% 65%;
+    --secondary: var(--brand-amber);
+    --secondary-foreground: 28 22% 14%;
 
-    --accent: 30 60% 20%;
-    --accent-foreground: 30 90% 70%;
+    --muted: var(--paper-sunken);
+    --muted-foreground: var(--ink-soft);
 
-    --destructive: 4 90% 58%;
+    --accent: 28 45% 22%;
+    --accent-foreground: 33 85% 74%;
+
+    --destructive: 10 60% 52%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 0 0% 20%;
-    --input: 0 0% 20%;
-    --ring: 30 90% 63%;
+    --border: var(--paper-line);
+    --input: var(--paper-line);
+    --ring: 32 95% 72%;
 
-    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
-    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.3);
-    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.4), 0 4px 6px -4px rgb(0 0 0 / 0.3);
-    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.5), 0 8px 10px -6px rgb(0 0 0 / 0.4);
+    /* Inchiostri in dark: il pigmento schiarisce, i fondi si scuriscono. */
+    --success: 152 42% 46%;
+    --success-foreground: 0 0% 100%;
+    --success-soft: 152 26% 18%;
+    --success-soft-foreground: 152 48% 72%;
+
+    --warning: 40 70% 54%;
+    --warning-foreground: 28 22% 14%;
+    --warning-soft: 38 34% 18%;
+    --warning-soft-foreground: 40 75% 72%;
+
+    --danger: 10 60% 54%;
+    --danger-foreground: 0 0% 100%;
+    --danger-soft: 10 34% 20%;
+    --danger-soft-foreground: 10 70% 74%;
+
+    --info-soft: 213 30% 22%;
+    --info-soft-foreground: 213 60% 76%;
+
+    --neutral: 35 16% 58%;
+    --neutral-soft: 32 8% 21%;
+    --neutral-soft-foreground: 38 12% 70%;
+
+    --employer-foreground: 28 22% 14%;
+    --employer-50: 213 28% 20%;
+    --employer-100: 213 30% 26%;
+    --employer-800: 213 55% 72%;
+
+    /* In dark la fibra chiara sparirebbe e quella scura sporcherebbe: si spegne. */
+    --grana: none;
+
+    --shadow-sm: 0 1px 0 0 rgb(0 0 0 / 0.35);
+    --shadow-md: 0 1.5px 0 0 rgb(0 0 0 / 0.4), 0 3px 5px -2px rgb(0 0 0 / 0.45);
+    --shadow-lg: 0 2px 0 0 rgb(0 0 0 / 0.4), 0 6px 10px -4px rgb(0 0 0 / 0.5);
+    --shadow-xl: 0 3px 0 0 rgb(0 0 0 / 0.4), 0 12px 20px -8px rgb(0 0 0 / 0.55);
   }
 }
 
@@ -118,6 +242,13 @@
     font-family: 'Outfit', sans-serif;
     min-height: 100vh;
     min-height: 100dvh;
+    /* La grana della carta: un layer solo, ripetuto.
+       Niente `background-attachment: fixed` — su mobile costringe il browser a
+       ridipingere lo sfondo a ogni frame di scroll, ed e' una causa classica di
+       scatti. Con lo scroll normale il layer viene composto una volta. */
+    background-image: var(--grana);
+    background-repeat: repeat;
+    background-size: var(--grana-scala);
   }
 
   /* Re-enable text selection for inputs and editable content */
@@ -146,19 +277,72 @@
 }
 
 @layer components {
-  /* Material Card */
+  /* La card e' un PEZZETTO DI CARTA: foglio appena piu' chiaro del fondo,
+     bordo visibile, ombra corta. La gerarchia la fa il bordo — il salto di
+     tono da solo la riporterebbe a essere un rettangolo bianco.
+
+     LA GRANA ANCHE QUI e' la parte che conta: con la texture solo sul body,
+     le card erano l'unica superficie liscia della pagina e leggevano come
+     plastica appoggiata sulla carta. Il tile e' lo stesso data-URI del fondo,
+     quindi il browser lo decodifica una volta sola e lo riusa ovunque. */
   .material-card {
-    @apply bg-card rounded-2xl;
+    @apply bg-card rounded-2xl border border-border;
+    background-image: var(--grana);
+    background-size: var(--grana-scala);
     box-shadow: var(--shadow-md);
     transition: box-shadow 0.2s ease, transform 0.2s ease;
   }
-  
+
   .material-card:hover {
     box-shadow: var(--shadow-lg);
   }
-  
+
+  /* "Pezzetti di carta incollati": la sensazione viene dalla GEOMETRIA, non
+     dalla texture. Rotazione alternata minima + angoli con raggi diversi.
+     E' una `transform`, quindi gira in GPU e non costa fluidita'.
+
+     Due modi d'uso:
+       .card-tilt  sul CONTENITORE di una lista → alterna da solo i figli
+       .tilt-l / .tilt-r  sulla SINGOLA card    → quando le card non sono
+                          fratelli diretti (es. sezioni del Profilo) */
+
+  .card-tilt > *:nth-child(odd),
+  .tilt-l {
+    transform: rotate(-0.5deg);
+  }
+
+  .card-tilt > *:nth-child(even),
+  .tilt-r {
+    transform: rotate(0.4deg);
+  }
+
+  /* I raggi irregolari devono arrivare alla card anche quando il figlio
+     diretto e' un wrapper (in ApplicationsList ogni card ha un <div key>). */
+  .card-tilt > *:nth-child(odd),
+  .card-tilt > *:nth-child(odd) .material-card,
+  .tilt-l.material-card {
+    border-radius: 17px 13px 18px 14px;
+  }
+
+  .card-tilt > *:nth-child(even),
+  .card-tilt > *:nth-child(even) .material-card,
+  .tilt-r.material-card {
+    border-radius: 13px 18px 14px 17px;
+  }
+
+  /* Chi preferisce l'interfaccia ferma non paga il vezzo. */
+  @media (prefers-reduced-motion: reduce) {
+    .card-tilt > *,
+    .tilt-l,
+    .tilt-r {
+      transform: none;
+    }
+  }
+
   .material-card-elevated {
-    @apply bg-card rounded-2xl;
+    @apply bg-card rounded-2xl border border-border;
+    background-size: var(--grana-scala);
+    background-image: var(--grana);
     box-shadow: var(--shadow-lg);
   }
   
@@ -194,41 +378,44 @@
     @apply bg-muted;
   }
   
-  /* Material Input */
+  /* Il campo e' un INCAVO nella carta: fondo piu' scuro del foglio e bordo,
+     invece del grigio freddo pieno di prima. */
   .material-input {
-    @apply rounded-full bg-muted px-5 py-3 font-medium border-0 transition-all duration-200;
-    box-shadow: inset 0 1px 2px rgb(0 0 0 / 0.05);
+    @apply rounded-full bg-muted px-5 py-3 font-medium border border-border transition-all duration-200;
+    box-shadow: inset 0 1px 2px rgb(56 45 36 / 0.06);
   }
-  
+
   .material-input:focus {
-    @apply outline-none ring-2 ring-primary/30 bg-card;
+    @apply outline-none ring-2 ring-primary/40 bg-card border-primary;
     box-shadow: var(--shadow-sm);
   }
-  
+
   /* Material Chip/Filter */
   .material-chip {
-    @apply inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium bg-muted transition-all duration-200;
+    @apply inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium bg-muted border border-border transition-all duration-200;
   }
-  
+
   .material-chip:hover {
-    @apply bg-accent;
+    @apply bg-accent border-primary;
   }
-  
+
   .material-chip-selected {
-    @apply inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium bg-primary text-primary-foreground;
+    @apply inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium bg-primary text-primary-foreground border border-primary;
     box-shadow: var(--shadow-sm);
   }
-  
+
   /* Map Container - Material Style */
   .map-container {
-    @apply rounded-3xl overflow-hidden;
-    box-shadow: var(--shadow-lg);
+    @apply rounded-3xl overflow-hidden border-2 border-border;
+    box-shadow: var(--shadow-md);
   }
   
   /* Bottom Nav - Material Style */
+  /* La nav e' CARTA come la pagina, non un blocco bianco incollato sotto.
+     Separazione via bordo, non via colore ne' via ombra larga. */
   .material-nav {
-    @apply bg-card border-t border-border;
-    box-shadow: 0 -4px 20px -5px rgb(0 0 0 / 0.1);
+    @apply bg-background border-t-2 border-border;
+    box-shadow: none;
   }
   
   /* Nav States */

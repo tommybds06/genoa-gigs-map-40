@@ -60,8 +60,8 @@ const categoryLabels: Record<string, string> = {
 
 const categoryColors: Record<string, string> = {
   tutoring: "bg-employer-50 text-employer",
-  delivery: "bg-green-100 text-green-700",
-  event: "bg-purple-100 text-purple-700",
+  delivery: "bg-success-soft text-success-soft-foreground",
+  event: "bg-info-soft text-info-soft-foreground",
   general: "bg-secondary/20 text-secondary",
 };
 
@@ -265,7 +265,7 @@ export function JobDetailsSheet({ job, isOpen, onClose, showMiniMap = false }: J
               ) : (
                 <div className={`flex items-center gap-3 p-4 rounded-2xl ${isEmployer ? 'bg-employer-50' : 'bg-accent'}`}>
                   <div className={`w-12 h-12 ${theme.primary} rounded-xl flex items-center justify-center shadow-md`}>
-                    <MappaIcon className="w-6 h-6 text-white" />
+                    <MappaIcon className="w-6 h-6 text-primary-foreground" />
                   </div>
                   <div className="flex-1">
                     <p className={`text-xl font-bold ${isEmployer ? 'text-employer' : 'text-primary'}`}>
@@ -307,7 +307,7 @@ export function JobDetailsSheet({ job, isOpen, onClose, showMiniMap = false }: J
               </Button>
             ) : (
               <Button 
-                className={`w-full h-14 ${theme.btnFilled} text-white font-bold text-lg rounded-xl shadow-material-md`}
+                className={`w-full h-14 ${theme.btnFilled} font-bold text-lg rounded-xl shadow-material-md`}
                 onClick={handleApply}
                 disabled={isApplying}
               >

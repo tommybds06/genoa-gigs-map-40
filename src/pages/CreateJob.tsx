@@ -182,7 +182,7 @@ const CreateJob = () => {
           </button>
           <h1 className="text-xl font-bold">Crea Annuncio</h1>
         </div>
-        <p className="text-white/80 text-sm">
+        <p className="text-primary-foreground/75 text-sm">
           Pubblica un nuovo annuncio di lavoro
         </p>
       </div>
@@ -328,7 +328,6 @@ const CreateJob = () => {
                 placeholder="Scrivi il ruolo personalizzato..."
                 value={customRoleTag}
                 onChange={(e) => setCustomRoleTag(e.target.value)}
-                className="border-orange-200 focus:border-orange-500"
               />
               <p className="text-xs text-muted-foreground mt-1">
                 L'icona visualizzata sarà una valigetta generica

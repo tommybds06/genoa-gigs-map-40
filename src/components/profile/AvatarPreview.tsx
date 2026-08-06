@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { MessageCircle, Info } from "lucide-react";
+import { MessaggiIcon, ProfiloIcon, XIcon } from "@/components/icons/uiIcons";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Dialog,
@@ -88,18 +88,44 @@ export function AvatarPreview({
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogPortal>
-          <DialogOverlay className="bg-black/90" />
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <DialogOverlay className="bg-foreground/70" />
+          {/* z-[90]: DialogOverlay è z-[80]. Con z-50 l'overlay copriva
+              l'anteprima, che risultava tutta scurita.
+
+              stopPropagation sull'intero contenitore: l'anteprima è renderizzata
+              in un portal, ma React fa risalire gli eventi lungo l'albero dei
+              COMPONENTI, non del DOM. Senza questo, un click qui dentro arrivava
+              fino all'onClick della riga chat che monta AvatarPreview, e chiudere
+              l'anteprima apriva la conversazione. */}
+          <div
+            className="fixed inset-0 z-[90] flex items-center justify-center p-4"
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsOpen(false);
+            }}
+          >
             {/* Custom content without the default DialogContent styling */}
             <div
-              className="w-full max-w-sm animate-in fade-in-0 zoom-in-95 duration-200"
+              className="w-full max-w-sm animate-in fade-in-0 zoom-in-95 duration-200 overflow-hidden rounded-2xl shadow-material-xl"
               onClick={(e) => e.stopPropagation()}
             >
-              {/* Header - Name bar */}
-              <div className="bg-foreground/95 backdrop-blur-sm px-4 py-3 rounded-t-xl">
-                <h3 className="text-background font-semibold text-lg truncate text-center">
+              {/* Header - Name bar: stessa superficie della barra azioni, così
+                  incorniciano la foto. Prima era bianco su nero, fuori palette. */}
+              <div className="bg-card pl-12 pr-2 py-3 border-b border-border flex items-center gap-2">
+                <h3 className="flex-1 text-foreground font-semibold text-lg truncate text-center">
                   {displayName}
                 </h3>
+                <button
+                  type="button"
+                  aria-label="Chiudi anteprima"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsOpen(false);
+                  }}
+                  className="w-9 h-9 shrink-0 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted active:scale-95 transition-all"
+                >
+                  <XIcon className="w-5 h-5" />
+                </button>
               </div>
 
               {/* Image container */}
@@ -120,7 +146,7 @@ export function AvatarPreview({
               </div>
 
               {/* Footer - Action bar */}
-              <div className="bg-background px-6 py-4 rounded-b-xl flex items-center justify-center gap-12">
+              <div className="bg-card px-6 py-4 border-t border-border flex items-center justify-center gap-12">
                 {/* Message button */}
                 <button
                   onClick={handleMessageClick}
@@ -130,7 +156,7 @@ export function AvatarPreview({
                     "w-12 h-12 rounded-full flex items-center justify-center transition-all",
                     "bg-muted group-hover:bg-muted/80 group-active:scale-95"
                   )}>
-                    <MessageCircle className={cn("w-6 h-6", primaryColor)} />
+                    <MessaggiIcon className={cn("w-6 h-6", primaryColor)} />
                   </div>
                   <span className="text-xs text-muted-foreground">Messaggio</span>
                 </button>
@@ -144,18 +170,14 @@ export function AvatarPreview({
                     "w-12 h-12 rounded-full flex items-center justify-center transition-all",
                     "bg-muted group-hover:bg-muted/80 group-active:scale-95"
                   )}>
-                    <Info className={cn("w-6 h-6", primaryColor)} />
+                    <ProfiloIcon className={cn("w-6 h-6", primaryColor)} />
                   </div>
                   <span className="text-xs text-muted-foreground">Profilo</span>
                 </button>
               </div>
             </div>
-
-            {/* Click outside to close */}
-            <div
-              className="absolute inset-0 -z-10"
-              onClick={() => setIsOpen(false)}
-            />
+            {/* Il click fuori lo gestisce il contenitore qui sopra: il vecchio
+                catcher a -z-10 chiudeva l'anteprima ma lasciava passare l'evento. */}
           </div>
         </DialogPortal>
       </Dialog>

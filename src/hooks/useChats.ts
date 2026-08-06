@@ -17,6 +17,12 @@ export interface Chat {
   };
   unread_count?: number;
   application_status?: string;
+  last_message?: {
+    content: string | null;
+    created_at: string;
+    sender_id: string;
+    has_attachment: boolean;
+  } | null;
 }
 
 const STALE_TIME = 1000 * 60 * 2; // 2 minutes cache (reduced for faster updates)
@@ -54,13 +60,25 @@ export function useChats(userId: string | undefined) {
             .eq("is_read", false)
             .neq("sender_id", userId);
 
+          // Ultimo messaggio, per l'anteprima in lista.
+          const { data: lastMessage } = await supabase
+            .from("messages")
+            .select("content, created_at, sender_id, attachment_url")
+            .eq("chat_id", chat.id)
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
           // Get application status for this chat's job
+          // maybeSingle(): se la candidatura non esiste più, single() risponderebbe
+          // 406 e riempirebbe la console di errori (stesso bug già visto in
+          // WorkerJobHistory).
           const { data: applicationData } = await supabase
             .from("applications")
             .select("status")
             .eq("job_id", chat.job_id)
             .eq("applicant_id", chat.worker_id)
-            .single();
+            .maybeSingle();
 
           const avatarUrl =
             profile?.photos && profile.photos.length > 0
@@ -79,11 +97,28 @@ export function useChats(userId: string | undefined) {
               : { id: otherUserId, full_name: null, avatar_url: null },
             unread_count: count || 0,
             application_status: applicationData?.status || "pending",
+            last_message: lastMessage
+              ? {
+                  content: lastMessage.content,
+                  created_at: lastMessage.created_at,
+                  sender_id: lastMessage.sender_id,
+                  has_attachment: !!lastMessage.attachment_url,
+                }
+              : null,
           };
         })
       );
 
-      return chatsWithUsers as Chat[];
+      // Riordino sull'ultimo messaggio reale.
+      // La query ordina per `chats.updated_at`, ma quella colonna non viene
+      // aggiornata quando si inserisce un messaggio: la lista arrivava in un
+      // ordine arbitrario (22/07, 10/07, 22/07, 03/03…). Finché non c'è un
+      // trigger che tocca `updated_at`, l'ordine giusto lo ricaviamo qui.
+      return (chatsWithUsers as Chat[]).sort((a, b) => {
+        const ta = new Date(a.last_message?.created_at ?? a.created_at).getTime();
+        const tb = new Date(b.last_message?.created_at ?? b.created_at).getTime();
+        return tb - ta;
+      });
     },
     staleTime: STALE_TIME,
     enabled: !!userId,

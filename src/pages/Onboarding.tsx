@@ -140,7 +140,7 @@ const Onboarding = () => {
         <h1 className="text-2xl font-bold">
           {isEmployer ? 'Configura la tua Attività' : 'Completa il tuo profilo'}
         </h1>
-        <p className={`${isEmployer ? 'text-white/80' : 'text-primary-foreground/80'} mt-1`}>
+        <p className={`text-primary-foreground/75 mt-1`}>
           {isEmployer ? 'Fatti trovare dai migliori candidati!' : 'Fatti conoscere dalla community!'}
         </p>
       </div>
@@ -320,7 +320,7 @@ const Onboarding = () => {
         <Button
           onClick={handleComplete}
           disabled={loading}
-          className={`w-full ${buttonBgClass} text-white font-semibold py-6`}
+          className={`w-full ${buttonBgClass} text-primary-foreground font-semibold py-6`}
         >
           {loading ? (
             <>

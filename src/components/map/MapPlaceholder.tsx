@@ -16,7 +16,7 @@ export function MapPlaceholder() {
       {/* Stylized map background - representing Genova's terrain */}
       <div className="absolute inset-0">
         {/* Water/Sea */}
-        <div className="absolute bottom-0 left-0 right-0 h-1/4 bg-blue-100/60" />
+        <div className="absolute bottom-0 left-0 right-0 h-1/4 bg-employer-50/60" />
         
         {/* Hills/Terrain Lines */}
         <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
@@ -90,8 +90,8 @@ export function MapPlaceholder() {
       {/* Center Location Marker */}
       <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
         <div className="relative">
-          <div className="w-4 h-4 bg-blue-500 rounded-full shadow-material-lg" />
-          <div className="absolute -inset-2 bg-blue-500/20 rounded-full animate-pulse-soft" />
+          <div className="w-4 h-4 bg-employer rounded-full shadow-material-lg" />
+          <div className="absolute -inset-2 bg-employer/25 rounded-full animate-pulse-soft" />
         </div>
       </div>
 

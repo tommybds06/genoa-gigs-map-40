@@ -15,13 +15,13 @@ function UserLocationMarkerInner({ latitude, longitude }: UserLocationMarkerProp
     >
       <div className="relative flex items-center justify-center">
         {/* Outer pulsing ring */}
-        <div className="absolute w-8 h-8 rounded-full bg-blue-500/30 animate-ping" />
+        <div className="absolute w-8 h-8 rounded-full bg-employer/40 animate-ping" />
         
         {/* Middle static ring */}
-        <div className="absolute w-6 h-6 rounded-full bg-blue-500/20" />
+        <div className="absolute w-6 h-6 rounded-full bg-employer/25" />
         
         {/* Inner blue dot */}
-        <div className="relative w-4 h-4 rounded-full bg-blue-500 border-2 border-white shadow-lg z-10" />
+        <div className="relative w-4 h-4 rounded-full bg-employer border-2 border-card shadow-material-md z-10" />
       </div>
     </Marker>
   );

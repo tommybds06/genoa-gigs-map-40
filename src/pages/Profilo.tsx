@@ -1,11 +1,12 @@
 import { User, MapPin, Briefcase, Save, Instagram, Globe, ChevronLeft, ChevronRight } from "lucide-react";
-import { ImpostazioniIcon, ProfiloIcon, CuoreIcon, InfoIcon, EsciIcon, StellaIcon, FrecciaSinistraIcon, FrecciaDestraIcon, MappaIcon } from "@/components/icons/uiIcons";
+import { ImpostazioniIcon, ProfiloIcon, CuoreIcon, InfoIcon, StellaIcon, FrecciaSinistraIcon, FrecciaDestraIcon, MappaIcon } from "@/components/icons/uiIcons";
 import { GenericoIcon } from "@/components/icons/roleIcons";
 import { useAuth } from "@/hooks/useAuth";
 import { useUser } from "@/contexts/UserContext";
 import { useAppTheme } from "@/hooks/useAppTheme";
 import { useNavigate } from "react-router-dom";
 import { TagSelector, TagBadges } from "@/components/tags/TagSelector";
+import { isTypeTag } from "@/constants/tags";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { WorkerJobHistory } from "@/components/profile/WorkerJobHistory";
@@ -13,7 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
  import { SwipeNavigator } from "@/components/layout/SwipeNavigator";
 
 const Profilo = () => {
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
   const { profile, loading, updateTags } = useUser();
   const { theme, isEmployer } = useAppTheme();
   const navigate = useNavigate();
@@ -49,11 +50,6 @@ const Profilo = () => {
       setHasChanges(tagsChanged);
     }
   }, [selectedTags, profile?.tags]);
-
-  const handleLogout = async () => {
-    await signOut();
-    navigate("/auth");
-  };
 
   const handleSaveTags = async () => {
     try {
@@ -143,7 +139,7 @@ const Profilo = () => {
         {/* Profile Card */}
         <div className="material-card-elevated p-6 mb-4">
           <div className="flex items-center gap-4">
-            <div className={`w-20 h-20 ${theme.primary} text-white rounded-full flex items-center justify-center shadow-material-md overflow-hidden`}>
+            <div className={`w-20 h-20 ${theme.primary} text-primary-foreground rounded-full flex items-center justify-center shadow-material-md overflow-hidden`}>
               {profile?.photos && profile.photos.length > 0 ? (
                 <img src={profile.photos[0]} alt="Avatar" className="w-full h-full object-cover" />
               ) : (
@@ -186,7 +182,7 @@ const Profilo = () => {
         </div>
 
         {profile?.bio && (
-          <div className="material-card p-4 mb-4">
+          <div className="material-card tilt-l p-4 mb-4">
             <h3 className="font-semibold mb-2 flex items-center gap-2">
               <ProfiloIcon className={`w-4 h-4 ${primaryTextClasses}`} />{isEmployer ? "Descrizione" : "Presentazione"}
             </h3>
@@ -195,7 +191,7 @@ const Profilo = () => {
         )}
 
         {isEmployer && profile?.looking_for && (
-          <div className="material-card p-4 mb-4">
+          <div className="material-card tilt-r p-4 mb-4">
             <h3 className="font-semibold mb-2 flex items-center gap-2">
               <GenericoIcon className={`w-4 h-4 ${primaryTextClasses}`} />Chi cerco
             </h3>
@@ -204,7 +200,7 @@ const Profilo = () => {
         )}
 
         {!isEmployer && profile?.experience && (
-          <div className="material-card p-4 mb-4">
+          <div className="material-card tilt-l p-4 mb-4">
             <h3 className="font-semibold mb-2 flex items-center gap-2">
               <GenericoIcon className={`w-4 h-4 ${primaryTextClasses}`} />Esperienze
             </h3>
@@ -213,7 +209,7 @@ const Profilo = () => {
         )}
 
         {!isEmployer && (
-          <div className="material-card p-4 mb-4">
+          <div className="material-card tilt-r p-4 mb-4">
             <div className="flex items-center justify-between mb-3">
               <h3 className="font-semibold flex items-center gap-2"><CuoreIcon className={`w-4 h-4 ${primaryTextClasses}`} />I tuoi Interessi</h3>
               <div className="flex gap-2">
@@ -233,14 +229,19 @@ const Profilo = () => {
                 <TagSelector selectedTags={selectedTags} onChange={setSelectedTags} roleLayout="grid" showDuration={false} />
               </>
             ) : (
-              <TagBadges tags={selectedTags} />
+              // Solo i ruoli: la durata e' stata tolta dalle preferenze
+              // (il selettore ha gia' showDuration={false}), ma i tag salvati
+              // prima restano nel profilo e comparivano come chip blu in mezzo
+              // agli arancioni. Si filtrano in lettura: nessuna migration, e i
+              // dati vecchi non danno fastidio.
+              <TagBadges tags={selectedTags.filter((t) => !isTypeTag(t))} />
             )}
           </div>
         )}
 
         {!isEmployer && <WorkerJobHistory primaryTextClasses={primaryTextClasses} />}
 
-        <div className="material-card p-4 mb-4">
+        <div className="material-card tilt-l p-4 mb-4">
           <h3 className="font-semibold mb-3 flex items-center gap-2"><InfoIcon className={`w-4 h-4 ${primaryTextClasses}`} />Informazioni</h3>
           <div className="space-y-3">
             {profile?.neighborhood ? (
@@ -255,9 +256,8 @@ const Profilo = () => {
           </div>
         </div>
 
-           <button onClick={handleLogout} className="material-btn-outlined w-full p-4 flex items-center justify-center gap-2 text-destructive border-destructive/30 touch-feedback">
-             <EsciIcon className="w-5 h-5" /><span className="font-medium">Esci</span>
-           </button>
+           {/* "Esci" vive solo in Impostazioni: era duplicato qui e lì, e le
+               azioni distruttive non vanno offerte in due posti diversi. */}
          </main>
        </div>
      </SwipeNavigator>

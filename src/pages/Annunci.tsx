@@ -9,11 +9,13 @@ import { IndietroIcon, PennaIcon, BidoneIcon, XIcon } from '@/components/icons/u
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import { StatusBadge } from '@/components/ui/StatusBadge';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { EditJobDialog } from '@/components/jobs/EditJobDialog';
 import { DeleteJobDialog } from '@/components/jobs/DeleteJobDialog';
 import { SwipeNavigator } from '@/components/layout/SwipeNavigator';
+import { formatTempoTrascorso } from "@/lib/dates";
 
 interface Job {
   id: string;
@@ -44,18 +46,6 @@ interface JobWithCount extends Job {
   applicationCount: number;
 }
 
-function getTimeAgo(dateString: string): string {
-  const date = new Date(dateString);
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffMins = Math.floor(diffMs / 60000);
-  const diffHours = Math.floor(diffMs / 3600000);
-  const diffDays = Math.floor(diffMs / 86400000);
-
-  if (diffMins < 60) return `${diffMins} min fa`;
-  if (diffHours < 24) return `${diffHours} ore fa`;
-  return `${diffDays} giorni fa`;
-}
 
 const Annunci = () => {
   const { user } = useAuth();
@@ -288,20 +278,8 @@ const Annunci = () => {
     toast.success('Annuncio eliminato!', { duration: 2000 });
   };
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'hired':
-        return <Badge className="bg-green-600 text-white">Assunto</Badge>;
-      case 'accepted':
-        return <Badge className="bg-employer text-employer-foreground">In Colloquio</Badge>;
-      case 'rejected':
-        return <Badge className="bg-red-500 text-white">Rifiutato</Badge>;
-      case 'completed':
-        return <Badge className="bg-gray-500 text-white">Concluso</Badge>;
-      default:
-        return <Badge className="bg-yellow-500 text-white">In attesa</Badge>;
-    }
-  };
+  // Un solo componente per tutti gli stati, in tutta l'app (vedi StatusBadge.tsx).
+  const getStatusBadge = (status: string) => <StatusBadge stato={status} />;
 
   if (selectedJob) {
     return (
@@ -375,7 +353,7 @@ const Annunci = () => {
                           onClick={() => handleReject(app)}
                           disabled={processingAppId === app.id}
                           variant="outline"
-                          className="flex-1 border-slate-300 text-slate-500 hover:bg-slate-50 touch-feedback"
+                          className="flex-1 border-border text-muted-foreground hover:bg-muted touch-feedback"
                         >
                           {processingAppId === app.id ? (
                             <Loader2 className="h-4 w-4 animate-spin" />
@@ -487,7 +465,7 @@ const Annunci = () => {
                       variant="ghost"
                       size="icon"
                       onClick={(e) => handleDeleteClick(e, job)}
-                      className="h-8 w-8 rounded-full hover:bg-red-100 touch-feedback"
+                      className="h-8 w-8 rounded-full hover:bg-danger-soft touch-feedback"
                     >
                       <BidoneIcon className="h-4 w-4 text-destructive" />
                     </Button>

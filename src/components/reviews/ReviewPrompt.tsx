@@ -305,7 +305,7 @@ export function ReviewPrompt() {
                         className="absolute inset-0 overflow-hidden"
                         style={{ width: halfFilled ? "50%" : "100%" }}
                       >
-                        <StellaIcon className="w-10 h-10 text-yellow-400" />
+                        <StellaIcon className="w-10 h-10 text-secondary" />
                       </div>
                     )}
                   </div>

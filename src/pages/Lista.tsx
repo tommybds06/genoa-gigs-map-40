@@ -16,19 +16,8 @@ import { JobCardSkeletonList } from "@/components/skeletons/JobCardSkeleton";
 import { SwipeNavigator } from "@/components/layout/SwipeNavigator";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ApplicationCard, ApplicationCardSkeleton } from "@/components/applications/ApplicationCard";
+import { formatTempoTrascorso } from "@/lib/dates";
 
-function getTimeAgo(dateString: string): string {
-  const date = new Date(dateString);
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffMins = Math.floor(diffMs / 60000);
-  const diffHours = Math.floor(diffMs / 3600000);
-  const diffDays = Math.floor(diffMs / 86400000);
-
-  if (diffMins < 60) return `${diffMins} min fa`;
-  if (diffHours < 24) return `${diffHours} ore fa`;
-  return `${diffDays} giorni fa`;
-}
 
 const Lista = () => {
   const { user } = useAuth();
@@ -77,13 +66,13 @@ const Lista = () => {
               <TabsList className="w-full h-12 p-1 mb-4 bg-muted rounded-xl">
                 <TabsTrigger 
                   value="explore" 
-                  className="flex-1 h-full rounded-lg font-semibold text-sm data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all duration-200"
+                  className="flex-1 h-full rounded-lg font-semibold text-sm data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all duration-200"
                 >
                   Esplora
                 </TabsTrigger>
                 <TabsTrigger 
                   value="applications" 
-                  className="flex-1 h-full rounded-lg font-semibold text-sm data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all duration-200"
+                  className="flex-1 h-full rounded-lg font-semibold text-sm data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all duration-200"
                 >
                   Le mie Candidature
                   {applications.length > 0 && (
@@ -170,7 +159,7 @@ function JobsList({ jobs, loading, isEmployer, hasTags, onJobClick }: JobsListPr
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3 card-tilt">
       {jobs.map((job, index) => {
         const roleTag = job.tags?.find(t => isRoleTag(t));
         const Icon = getJobIconFromTags(job.tags);
@@ -189,7 +178,7 @@ function JobsList({ jobs, loading, isEmployer, hasTags, onJobClick }: JobsListPr
               <div className="flex-1 min-w-0">
                 <div className="flex items-start justify-between gap-2">
                   <h3 className="font-semibold text-base truncate">{job.title}</h3>
-                  <span className="text-xs text-muted-foreground shrink-0 mt-0.5">{getTimeAgo(job.created_at)}</span>
+                  <span className="text-xs text-muted-foreground shrink-0 mt-0.5">{formatTempoTrascorso(job.created_at)}</span>
                 </div>
 
                 {job.tags && job.tags.length > 0 && (
@@ -255,7 +244,7 @@ function ApplicationsList({ applications, loading, userId }: ApplicationsListPro
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3 card-tilt">
       {applications.map((application) => (
         <div key={application.id}>
           <ApplicationCard application={application} userId={userId} />

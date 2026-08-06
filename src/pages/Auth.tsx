@@ -30,7 +30,7 @@ const nameSchema = z.string().trim().max(100, 'Nome troppo lungo').optional();
 // Theme configuration for each role
 const roleThemes = {
   worker: {
-    bg: 'bg-orange-50',
+    bg: 'bg-accent/50',
     primary: 'bg-primary',
     primaryHover: 'hover:bg-primary/90',
     text: 'text-primary',
@@ -53,7 +53,7 @@ const roleThemes = {
   },
   neutral: {
     bg: 'bg-background',
-    primary: 'bg-gradient-to-r from-primary to-secondary',
+    primary: 'bg-primary',
     primaryHover: 'hover:opacity-90',
     text: 'text-foreground',
     border: 'border-muted',
@@ -285,13 +285,13 @@ const Auth = () => {
                       selectedRole === 'worker'
                         ? 'bg-primary/10 ring-2 ring-primary shadow-md'
                         : selectedRole === 'employer'
-                          ? 'bg-muted opacity-60 hover:opacity-80'
+                          ? 'bg-muted hover:bg-muted/80'
                           : 'bg-muted hover:bg-muted/80'
                     )}
                   >
                     <div className={cn(
                       "w-12 h-12 rounded-xl flex items-center justify-center mb-3 transition-colors duration-500",
-                      selectedRole === 'worker' ? 'bg-primary text-primary-foreground' : 'bg-background'
+                      selectedRole === 'worker' ? 'bg-primary text-primary-foreground' : 'bg-card'
                     )}>
                       <GenericoIcon className="w-6 h-6" />
                     </div>
@@ -311,13 +311,13 @@ const Auth = () => {
                       selectedRole === 'employer'
                         ? 'bg-employer/10 ring-2 ring-employer shadow-md'
                         : selectedRole === 'worker'
-                          ? 'bg-muted opacity-60 hover:opacity-80'
+                          ? 'bg-muted hover:bg-muted/80'
                           : 'bg-muted hover:bg-muted/80'
                     )}
                   >
                     <div className={cn(
                       "w-12 h-12 rounded-xl flex items-center justify-center mb-3 transition-colors duration-500",
-                      selectedRole === 'employer' ? 'bg-employer text-employer-foreground' : 'bg-background'
+                      selectedRole === 'employer' ? 'bg-employer text-employer-foreground' : 'bg-card'
                     )}>
                       <AnnunciIcon className="w-6 h-6" />
                     </div>
@@ -345,7 +345,7 @@ const Auth = () => {
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     className={cn(
-                      "pl-12 h-12 rounded-xl bg-muted border-none transition-all duration-500",
+                      "pl-12",
                       selectedRole === 'worker' && "focus:ring-2 focus:ring-primary",
                       selectedRole === 'employer' && "focus:ring-2 focus:ring-employer",
                       !selectedRole && "focus:ring-2 focus:ring-ring"
@@ -386,7 +386,7 @@ const Auth = () => {
                     placeholder="Via Roma 123"
                     value={address}
                     onChange={(e) => setAddress(e.target.value)}
-                    className="pl-12 h-12 rounded-xl bg-muted border-none transition-all duration-500 focus:ring-2 focus:ring-employer"
+                    className="pl-12"
                   />
                 </div>
                 {errors.address && <p className="text-xs text-destructive">{errors.address}</p>}
@@ -404,7 +404,7 @@ const Auth = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className={cn(
-                    "pl-12 h-12 rounded-xl bg-muted border-none transition-all duration-500",
+                    "pl-12",
                     !isLogin && selectedRole === 'worker' && "focus:ring-2 focus:ring-primary",
                     !isLogin && selectedRole === 'employer' && "focus:ring-2 focus:ring-employer",
                     (isLogin || !selectedRole) && "focus:ring-2 focus:ring-ring"
@@ -425,7 +425,7 @@ const Auth = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className={cn(
-                    "pl-12 h-12 rounded-xl bg-muted border-none transition-all duration-500",
+                    "pl-12",
                     !isLogin && selectedRole === 'worker' && "focus:ring-2 focus:ring-primary",
                     !isLogin && selectedRole === 'employer' && "focus:ring-2 focus:ring-employer",
                     (isLogin || !selectedRole) && "focus:ring-2 focus:ring-ring"
@@ -443,7 +443,7 @@ const Auth = () => {
                 "w-full h-14 rounded-xl font-semibold text-lg shadow-md hover:shadow-lg transition-all duration-500 touch-feedback",
                 !isLogin && selectedRole === 'worker' && "bg-primary hover:bg-primary/90 text-primary-foreground",
                 !isLogin && selectedRole === 'employer' && "bg-employer hover:bg-employer-700 text-employer-foreground",
-                (isLogin || !selectedRole) && "bg-gradient-to-r from-primary to-secondary text-foreground"
+                (isLogin || !selectedRole) && "bg-primary text-primary-foreground"
               )}
             >
               {loading ? (
@@ -484,7 +484,7 @@ const Auth = () => {
 
         {/* Footer */}
         <p className="text-center text-xs text-muted-foreground mt-6">
-          La gig economy studentesca di Genova 🌊
+          La gig economy studentesca di Genova
         </p>
       </div>
     </div>

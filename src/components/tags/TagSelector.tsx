@@ -112,7 +112,7 @@ export function TagSelector({
             }}
             placeholder="Aggiungi un ruolo personalizzato…"
             maxLength={30}
-            className="flex-1 rounded-full border border-input bg-background px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-primary/40"
+            className="flex-1 rounded-full border border-input bg-card px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-primary/40"
           />
           <button
             type="button"

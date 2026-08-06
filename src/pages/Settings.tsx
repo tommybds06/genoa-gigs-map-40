@@ -76,7 +76,7 @@ const Settings = () => {
           <img
             src={isEmployer ? "/images/logo-employer.svg" : "/images/logo-worker.svg"}
             alt="Politask"
-            className="h-8 w-auto"
+            className="h-14 w-auto"
           />
         </div>
       </header>
@@ -86,7 +86,7 @@ const Settings = () => {
         {user?.email && (
           <div className="material-card p-4 mb-6">
             <div className="flex items-center gap-3">
-              <div className={`w-10 h-10 ${theme.primary} text-white rounded-full flex items-center justify-center`}>
+              <div className={`w-10 h-10 ${theme.primary} text-primary-foreground rounded-full flex items-center justify-center`}>
                 <MailIcon className="w-5 h-5" />
               </div>
               <div>
@@ -109,7 +109,7 @@ const Settings = () => {
               className="w-full flex items-center justify-between p-4 hover:bg-muted/50 transition-colors border-b border-border"
             >
               <div className="flex items-center gap-3">
-                <ProfiloIcon className="w-5 h-5 text-muted-foreground" />
+                <ProfiloIcon className={`w-5 h-5 ${theme.primaryText}`} />
                 <span className="font-medium">Modifica Profilo</span>
               </div>
               <ChevronRight className="w-5 h-5 text-muted-foreground" />
@@ -118,7 +118,7 @@ const Settings = () => {
             {/* Notifications */}
             <div className="flex items-center justify-between p-4">
               <div className="flex items-center gap-3">
-                <NotificheIcon className="w-5 h-5 text-muted-foreground" />
+                <NotificheIcon className={`w-5 h-5 ${theme.primaryText}`} />
                 <span className="font-medium">Notifiche</span>
               </div>
               <Switch
@@ -142,7 +142,7 @@ const Settings = () => {
               className="w-full flex items-center justify-between p-4 hover:bg-muted/50 transition-colors border-b border-border"
             >
               <div className="flex items-center gap-3">
-                <InfoIcon className="w-5 h-5 text-muted-foreground" />
+                <InfoIcon className={`w-5 h-5 ${theme.primaryText}`} />
                 <span className="font-medium">Assistenza</span>
               </div>
               <ChevronRight className="w-5 h-5 text-muted-foreground" />
@@ -154,7 +154,7 @@ const Settings = () => {
               className="w-full flex items-center justify-between p-4 hover:bg-muted/50 transition-colors"
             >
               <div className="flex items-center gap-3">
-                <DocumentoIcon className="w-5 h-5 text-muted-foreground" />
+                <DocumentoIcon className={`w-5 h-5 ${theme.primaryText}`} />
                 <span className="font-medium">Termini e Privacy</span>
               </div>
               <ChevronRight className="w-5 h-5 text-muted-foreground" />
