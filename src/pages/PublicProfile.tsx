@@ -28,6 +28,10 @@ import { useAppTheme } from "@/hooks/useAppTheme";
 import { useUser } from "@/contexts/UserContext";
 import { getJobIconFromTags } from "@/lib/jobIcons";
 import { formatTempoTrascorso } from "@/lib/dates";
+import { isTypeTag } from "@/constants/tags";
+
+// Tag durata usati prima della rinomina, ancora presenti su annunci vecchi
+const LEGACY_TYPE_TAGS = ['Occasionale', 'A Chiamata', 'Mensile', 'Settimanale', 'Weekend'];
 
 interface Profile {
   id: string;
@@ -561,7 +565,7 @@ const PublicProfile = () => {
                   <div className="space-y-3">
                     {jobs.map((job) => {
                       const Icon = getJobIconFromTags(job.tags);
-                      const roleTag = job.tags?.find(t => !['Occasionale', 'A Chiamata', 'Mensile', 'Settimanale', 'Weekend'].includes(t));
+                      const roleTag = job.tags?.find(t => !isTypeTag(t) && !LEGACY_TYPE_TAGS.includes(t));
                       
                       return (
                         <button 
