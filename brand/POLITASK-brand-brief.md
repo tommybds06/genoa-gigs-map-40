@@ -157,6 +157,90 @@ spariscono in piccolo; troppi colori; effetti/ombre complesse; riempire fino ai 
 - Società omonime senza marchio: POLITASK ENGINEERING SRL (Roma, ingegneria), POLITASK INVESTMENTS LTD (Cipro). Settori diversi → rischio basso.
 - **Prossimo passo marchio:** deposito **EUTM denominativo + figurativo** in classi 9/35 (valutare 45; 42 con cautela per il claim SaaS). Consigliato un consulente marchi prima del deposito.
 
+---
+
+## 10. Aggiornamento agosto 2026 — palette, font, componenti
+
+### Palette CARTA (sostituisce la crema #FBF2E2 in app)
+
+Il modello è **inchiostro su cartoncino avorio**. Dettagli e token in `CLAUDE.md`
+e `src/index.css`; il confronto visivo in `brand/palette-carta.html`.
+
+- **carta** `#F4EEE2` (fondo) · **foglio** `#FAF5E9` (card) · **linea** `#DACFB8`
+- **inchiostro** `#382D24` — il "nero" del brand non è nero
+- arancio `#F6A24D` e blu `#6E97CC` restano, ma **solo come campiture**
+
+> ⚠️ **Scoperta che vale per tutto il brand:** arancio e blu di brand sono pastello e
+> non reggono testo bianco (2,07:1 e 3,03:1 contro i 4,5 richiesti). Con l'inchiostro
+> sopra danno 6,45 e 4,41. Vale anche fuori dall'app — su social, landing e materiali
+> stampati, l'arancio non va usato come fondo di testo bianco. Per testo e tratti
+> sottili esistono `#A7531B` (arancio inchiostro) e `#355D8D` (blu inchiostro).
+
+**Stati come inchiostri stampati**, non semafori: verde bosco `#337154`, terracotta
+`#AD3E2A`, ocra `#A57727`, grigio caldo `#8C7D69`.
+
+**Texture: valutata e scartata.** Cinque tentativi (rumore procedurale e scansione di
+carta vera a varie scale e intensità): ogni versione leggeva come un materiale sbagliato
+— intonaco, tessuto, marmo. Il carattere lo portano colore, bordi, ombre corte e la
+leggera rotazione delle card.
+
+### Font — sistema ibrido
+
+- **Testo/UI: Outfit.** Resta. Legge bene a 12px, molte varianti di peso.
+- **Display: Shinjo** (Komet&Flicker, Creative Market) — hand-drawn, un solo peso, set
+  accentato italiano completo. **Solo titoli grandi, mai sotto i ~18px**: l'irregolarità
+  a corpo piccolo diventa rumore.
+- **Lettering custom** per le ~12 stringhe fisse (titoli pagina, empty state,
+  onboarding), disegnate in Illustrator ed esportate come SVG. Il contenuto dinamico
+  (titoli annuncio, nomi, prezzi) resta su font.
+- Gabarito era la scelta migliore tra i font gratuiti (vedi `brand/confronto-font.html`),
+  ed è il piano B se Shinjo si rivelasse problematico sul fronte licenza.
+
+### ⚠️ 10.1 LICENZA FONT — da chiudere PRIMA del deposito EUTM
+
+I termini di Creative Market permettono l'uso di un font in un logo **solo se** l'asset
+è (1) modificato **e** (2) non è l'elemento dominante; e in caso di registrazione come
+marchio impongono di **disconoscere il font** e di non rivendicare diritti su di esso.
+
+**Nel wordmark Politask le lettere SONO l'elemento dominante**, quindi la condizione (2)
+non è soddisfatta così com'è.
+
+**Via d'uscita:** usare Shinjo come base di partenza e **ridisegnare le lettere** in
+Illustrator finché sono originali — proporzioni, terminazioni, la `a`, la `k`.
+
+**Licenze da acquistare:** Desktop (~$17) + Webfont (~$14) coprono il fabbisogno attuale.
+La licenza App (~$133) serve solo per l'embedding nel binario nativo, cioè la Fase 10
+con Despia.
+
+**Nota giurisdizionale (non è consulenza legale).** Negli USA il *disegno* di un
+carattere non è protetto da copyright — è protetto solo il file del font. **Nell'UE è
+il contrario**: il disegno è proteggibile come design comunitario, anche **non
+registrato** (nasce da solo, dura 3 anni, senza depositi). La prassi del "ricalco in
+Illustrator" nasce dalla giurisdizione americana ed è molto più rischiosa in Italia.
+
+### Componenti — direzione outline-forte
+
+Contorni spessi, riempimenti piatti, niente ombre. Tecnica validata in
+`brand/prototipo-cornici.html`: SVG montati con `border-image` a 9 sezioni, così gli
+angoli non si deformano mentre i lati si allungano.
+
+**Da disegnare: 3 cornici** (bottone primario, chip, contenitore empty state) in **2
+misure di tratto** — sotto i 40px di altezza la cornice grande non ci sta. Vincolo di
+disegno: i 32px centrali di ogni lato devono restare quasi dritti, perché è la banda che
+viene allungata; tutto il carattere va negli angoli.
+
+### Logo — parere non recepito, lasciato agli atti
+
+Togliendo le ventose dalla P il segno perde il riferimento al polpo e diventa una
+spirale, che è una forma molto comune nei loghi. Il problema è di tempismo: adottando
+Shinjo le lettere non sono più originali e in sede di deposito vanno disconosciute,
+quindi **tutta la distintività del marchio si concentra sulla P**. Proposta: rimettere
+3-4 ventose grandi solo sull'arco esterno, conservando la nuova geometria (che riempie
+il quadrato molto meglio, e il contorno esterno a forma di pin è una sintesi riuscita).
+Da riverificare l'occhiello centrale della spirale a 40px.
+
+---
+
 **Domini:**
 - `politask.com` → **parcheggiato / in vendita** (domain investor, prezzo premium incerto) — NON preso.
 - `politask.it` → registrato (403) — NON preso.

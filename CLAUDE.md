@@ -39,6 +39,19 @@ npm run lint     # eslint
 npm run preview  # preview build
 ```
 
+### ⚠️ TYPECHECK — il comando ovvio è SBAGLIATO
+
+```sh
+npx tsc --noEmit                      # ❌ NON CONTROLLA NIENTE
+npx tsc -p tsconfig.app.json --noEmit  # ✅ questo
+```
+
+`tsconfig.json` ha `"files": []` e solo `references`, quindi il primo comando compila
+zero file ed esce sempre in silenzio. Durante la sessione di agosto 2026 ho letto quel
+silenzio come "tutto a posto" per ore, e sono passati due errori veri (un componente
+usato senza import → crash della sezione Messaggi, e un `e.target` inesistente nei tipi
+di react-map-gl). **Vale la pena aggiungere uno script `"typecheck"` in `package.json`.**
+
 ## Struttura
 
 ```
@@ -66,35 +79,76 @@ public/images/    # logo-worker.svg, logo-employer.svg, logo-employer.jpg
 Route con bottom nav (`TAB_ROUTES` in `App.tsx`): `/ /lista /annunci /messaggi /profilo`.
 Tutte le route (tranne `/auth` e `/onboarding`) sono dietro `ProtectedRoute`.
 
-## Sistema di temi (IMPORTANTE)
+## Sistema di temi e palette CARTA (IMPORTANTE — riscritto agosto 2026)
 
-Il dual-theme è centralizzato in `src/hooks/useAppTheme.tsx`.
-- `workerTheme` usa i token `primary` / `accent` / `secondary` (arancio/ambra)
-- `employerTheme` usa i token `employer` / `employer-50/100/700/800` (blu)
-- I colori sono definiti come CSS variables in `src/index.css` e mappati in `tailwind.config.ts`
-  (namespace `employer` e `brand.yellow` / `brand.orange`)
+Il dual-theme è centralizzato in `src/hooks/useAppTheme.tsx`; i token in `src/index.css`
+e `tailwind.config.ts`.
 
-**Regola:** NON hard-codare colori arancio/blu nei componenti. Usare `useAppTheme()` e le sue
-classi (`theme.primary`, `theme.headerBg`, ecc.) oppure `getColor(workerColor, employerColor)`.
-Un bug ricorrente da evitare: pulsante "indietro" arancio in contesto employer (deve essere blu).
+### Il modello mentale: inchiostro su cartoncino avorio
 
-## Stato attuale (aggiornato: luglio 2026)
+Non "UI su bianco". Le superfici sono **carta** (fondo) e **foglio** (le card, appena più
+chiare); la gerarchia la fa il **bordo**, non un salto di tono. Il "nero" dell'app è un
+**bruno**, mai `#000`.
+
+| Token | Valore | Uso |
+|---|---|---|
+| `--paper` | `#F4EEE2` avorio | fondo app |
+| `--paper-sheet` | `#FAF5E9` | card (stacco 1,07 dal fondo) |
+| `--paper-sunken` | `#E8E1D1` | incavi, campi, tab inattive |
+| `--paper-line` | `#DACFB8` | bordi |
+| `--ink` | `#382D24` | testo — 11,6 su carta |
+| `--ink-soft` | `#746759` | testo secondario — 4,9 |
+
+### ⚠️ LA REGOLA CHE SPIEGA TUTTO IL RESTO
+
+**Arancio e blu di brand sono pastello e NON reggono testo bianco.** Bianco su arancio
+dà **2,07:1** (serve 4,5), bianco su blu **3,03:1**. Con `--ink` sopra danno **6,45** e
+**4,41**.
+
+- colori **pieni** (`--primary`, `--employer`) → solo campiture, con testo **scuro**
+  (`--primary-foreground` e `--employer-foreground` sono ink, non bianco)
+- per **testo e tratti sottili** esistono `--brand-orange-ink` `#A7531B` (4,66) e
+  `--brand-blue-ink` `#355D8D` (5,86)
+
+Nessuna scelta di fondo risolve il problema: desaturando la crema da 76% a 20% il
+contrasto passa da 1,89 a 1,84. È la luminanza dei colori di brand, non lo sfondo.
+
+### Stati = inchiostri, non semafori
+
+Non seguono il dual-theme (un errore è terracotta sia per worker che per employer).
+
+| Stato | Token | Prima era |
+|---|---|---|
+| Assunto | `--success` `#337154` verde bosco | `#22C55E` (contrasto 1,87) |
+| Rifiutato | `--danger` `#AD3E2A` terracotta | `#EF4444` |
+| In attesa | `--warning` `#A57727` ocra | `#FFC105` (contrasto 1,45) |
+| Concluso | `--neutral` `#8C7D69` grigio caldo | `#6B7280` freddo |
+
+**`src/components/ui/StatusBadge.tsx` è la sorgente unica.** Regola: **pieno** = stato
+attivo (Assunto, Accettato), **contorno** = in sospeso o concluso. Prima ogni schermata
+se li ridisegnava e "Concluso" era verde nei messaggi e grigio nelle candidature.
+
+### Altre regole
+
+- **NON hard-codare colori** Tailwind grezzi (`orange-500`, `green-600`) né hex. Usare
+  `useAppTheme()` o i token. Attenzione alle varianti direzionali: `border-t-blue-600`
+  sfugge ai grep fatti su `border-`.
+- Ombre **brune, corte e strette** (`--shadow-*`): il nero sfocato faceva sembrare le
+  card rettangoli sospesi invece che fogli appoggiati.
+- **Grana/texture: decisa NO** — vedi il commento in `index.css`, che elenca i cinque
+  tentativi falliti. Il gancio `--grana` resta ma è `none`.
+- **`.card-tilt`** sul contenitore di una lista, **`.tilt-l`/`.tilt-r`** sulla singola
+  card: rotazione minima alternata + raggi irregolari. È una `transform` (GPU) e
+  rispetta `prefers-reduced-motion`.
+- Bug ricorrente da evitare: pulsante "indietro" arancio in contesto employer.
+
+## Stato attuale (aggiornato: agosto 2026)
 
 **Piano di esecuzione a 10 fasi:**
-1. ✅ **Bug fix (Fase 1 completata)** — commit `bf51341 "fix: risolti bug fase 1"`.
-   Risolti: dialog recensione incoerente per i worker a fine job; sezioni Messaggi/Lista
-   rotte da una dipendenza circolare in una policy RLS Supabase (fix via chat Lovable +
-   migration `20260403000000_drop_circular_rls_policy.sql`).
-2. ✅ **Logo e brand identity (Fase 2)** — logo finalizzato (`logoPOLITASK.svg`, tentacolo-P
-   con ventose + pin nella "o"), palette (worker `#f6a24d` / employer `#6e97cc` / crema
-   `#FBF2E2`, font Outfit), icona app (fondo arancio + tentacolo bianco, validata a 40px),
-   ricerca marchio preliminare (EUIPO/TMview OK, classe 35 libera), dominio `politask.app` +
-   handle social presi. Dettagli in `brand/POLITASK-brand-brief.md`.
-3. ✅ **Redesign icone (Fase 3)** — set completo di icone custom theme-aware in
-   `src/components/icons/roleIcons.tsx` + `uiIcons.tsx` (ruoli, nav, utility, stati). Bottom nav
-   stile Instagram (outline→filled, colore ruolo, no label). Dettagli in
-   `brand/POLITASK-icon-system.md`. ✅ Committato e pushato (luglio 2026).
-4. ⏳ **Applicazione brand identity / UX** ← PROSSIMA (in corso in nuova chat)
+1. ✅ Bug fix (commit `bf51341`)
+2. ✅ Logo e brand identity
+3. ✅ Redesign icone (set completo custom theme-aware)
+4. 🔄 **Applicazione brand identity / UX — IN CORSO**, vedi sotto
 5. Illustrazioni custom (empty states, splash, onboarding)
 6. Miglioramenti UX/UI
 7. Animazioni (Framer Motion ora; After Effects + Lottie poi)
@@ -102,66 +156,116 @@ Un bug ricorrente da evitare: pulsante "indietro" arancio in contesto employer (
 9. Gamification
 10. Conversione app nativa con Despia
 
-## 🔄 HANDOFF — stato attuale (leggere per riprendere in nuova chat)
+---
 
-**Fatto e PUSHATO su GitHub/Lovable** (fasi 1-3 complete): bug fix, brand identity (logo
-`logoPOLITASK.svg` arancio/blu, palette, icona app, marchio pre-verificato, dominio
-`politask.app` + social presi), e **Fase 3 icone completa** (tutte custom theme-aware in
-`src/components/icons/roleIcons.tsx` + `uiIcons.tsx`; bottom nav stile Instagram
-outline→filled). Dettagli in `brand/POLITASK-brand-brief.md` e `brand/POLITASK-icon-system.md`.
+## 🔄 HANDOFF — Fase 4 (leggere per riprendere in nuova chat)
 
-**Prossimo: Fase 4 — applicazione brand identity / UX.** Brainstorm concordato, 5 temi:
-1. **Design system:** sweep dei colori Tailwind grezzi (`orange-500/700`, `blue-600`, `bg-orange-*`)
-   → sostituirli con token brand (`primary`/`accent`/`employer`); scala tipografica coerente
-   (font Outfit); spaziature/raggi/ombre uniformi.
-2. **Stati** (vuoto/loading/errore) coerenti e theme-aware.
-3. **Componenti ricorrenti:** badge di stato, card candidatura (idea: bordo sinistro colorato
-   per stato), chip/tag, bottoni.
-4. **Rifiniture UX (da audit):** togliere titoli di pagina ridondanti dove c'è il logo; chip
-   scorciatoia sotto la search della mappa; messaggi di sistema in chat con stile diverso;
-   coerenza dimensione logo (Settings ancora `h-8`).
-5. **Micro-polish:** dimensioni icone coerenti, hover/active, tap target, contrasto.
-Approccio: partire dallo **sweep design-system** (colori/token fuori-brand), poi schermata per schermata.
+### Fatto in questa sessione (TUTTO DA COMMITTARE, ~25 file)
 
-**Punti aperti / da non dimenticare:**
-- Bottoni `variant="outline"` (Annulla / "No, tieni visibile"): in hover diventano arancioni
-  anche in contesto employer → da rendere blu.
-- Soglia mezza-stella recensioni: ora 0.5 (es. 4.6→4½). Cambiabile.
-- **Teaser video** (tentacolo che si arrotola nel logo): da generare sul **proprio account
-  Higgsfield** (il connettore MCP non ha piano). Il reveal pulito → Fase 7 (After Effects/Lottie).
-- **Marchio**: deposito EUTM/italiano (9/35, denominativo+figurativo) da fare prima del lancio.
-- **Landing/waitlist** su politask.app (pre-lancio).
-- Higgsfield trial gratuito: **disdire** prima del rinnovo automatico.
+**Blocco funzionale** (da `brand/POLITASK-audit-ux.md`, punti 1-7):
+- **Messaggi**: aggiunta anteprima ultimo messaggio + orario; il badge contatore
+  mostrava `0` per un classico di JS (`{n && n > 0 && ...}` con `n=0` **stampa lo zero**
+  — serve `n > 0`); conversazioni concluse compresse invece che sbiadite.
+- **Date**: `getTimeAgo` era duplicato in 4 file con gli stessi difetti ("0 min fa",
+  "1 ore fa", relativo infinito fino a "187 giorni fa"). Ora `src/lib/dates.ts` è la
+  sorgente unica: relativo sotto i 30 giorni, assoluto sopra. Testato su 23 casi.
+- **Candidature**: regola unica delle affordance — chevron se la riga porta da qualche
+  parte, icona chat se la conversazione esiste, niente cursore se non porta da nessuna
+  parte (prima c'erano righe con `cursor-pointer` che al tap non facevano nulla).
+- **Esci** rimosso dal Profilo (era duplicato con Impostazioni).
+- `.single()` → `.maybeSingle()` in `useChats.ts` (stesso bug 406 già visto).
+- **AvatarPreview**: l'anteprima appariva tutta scura perché `DialogOverlay` è `z-[80]`
+  e il contenuto era `z-50`; e cliccando fuori si apriva la chat perché **React propaga
+  gli eventi lungo l'albero dei componenti, non del DOM** (il portal non isola).
+  Aggiunta una X esplicita. ⚠️ Escape non chiude: il componente non usa `DialogContent`.
 
-**Come riprendere:** connettere la stessa cartella (`~/Downloads/POLITASK_asset`); Claude Code
-legge in automatico questo `CLAUDE.md`. Se serve, dire: "leggi CLAUDE.md e i doc in `brand/`".
+**Palette carta** — vedi la sezione "Sistema di temi" sopra. Sweep completo: **zero**
+colori Tailwind grezzi rimasti nell'app.
 
-### ⚠️ Modifiche NON committate nel working tree
-Al momento ci sono ~26 file modificati e non committati (pass di theming/branding su tutta
-l'app: `useAppTheme`, `index.css`, `tailwind.config.ts` + ritocchi diffusi). È il lavoro di
-una sessione precedente rimasto sospeso. **(AGGIORNAMENTO luglio 2026: tutto committato e
-pushato su `origin main`. Working tree pulito. Vedi HANDOFF sopra.)**
+**Mappa** (`src/lib/mapPaperStyle.ts` + `InteractiveMap.tsx`) — PROTOTIPO a runtime:
+- base **`outdoors-v12`** e non `streets-v12`, perché ha curve di livello e rilievo,
+  che sono il segno grafico della cartina;
+- la terra prende lo stesso avorio del fondo app: la mappa non è un riquadro estraneo;
+- si RICOLORA, non si toglie. Primo tentativo: avevo nascosto i POI e schiacciato
+  l'hillshade a 0.06 → mappa grigia e triste, l'opposto del brand. POI e nomi delle
+  attività **sono informazione utile** e restano;
+- a Genova il centro storico è quasi tutto pedonale e Mapbox lo classifica `path`:
+  dipingerlo come i sentieri di montagna anneriva ogni caruggio → le pedonali sono
+  chiare come le strade;
+- POI sotto zoom 15,5 e curve di livello sotto 13: la confusione veniva dalla **densità**
+  delle etichette, non dal colore;
+- zoom control nascosti (su mobile si pizzica).
 
-## Prossimi passi immediati (le rifiniture prima della Fase 2)
+⚠️ È un prototipo: **nasconde invece di eliminare**, quindi Mapbox scarica comunque tutti
+i layer. Da congelare in uno stile pubblicato da Mapbox Studio. In dev stampa in console
+`[Politask] stile cartina: N proprietà su M layer`.
 
-1. ✅ **Logo provvisorio** — FATTO (luglio 2026): sostituiti `public/images/logo-worker.svg`
-   e `logo-employer.svg` con le nuove versioni wordmark (da `LOGO/logo_workerD.svg` arancio
-   `#f6a24d` e `logo_employerD.svg` blu `#6e97cc`). Ingranditi: Header `h-8`→`h-14`
-   (allineato a sinistra, `-ml-1` per allineamento ottico), Auth `h-14`→`h-20`. Fixato il bug in `Auth.tsx`: il logo era hard-coded su worker e non
-   cambiava colore col ruolo — ora `src` dipende da `selectedRole` (employer=blu, altrimenti
-   arancio). Logo ingrandito a `h-14` (`-ml-1`) anche in `Messaggi.tsx` e `Profilo.tsx`.
-   `Settings.tsx` è rimasto `h-8` (layout con back button accanto). Tutte le pagine
-   commutano worker/employer via `isEmployer`.
-2. ✅ **Dialog employer arancioni → blu** — FATTO: in `Messaggi.tsx` i 3 pulsanti pieni dei
-   dialog (Conferma Assunzione, Concludi Lavoro→Conferma, "Sì, rimuovi" annuncio dalla mappa)
-   erano hard-coded `bg-primary` (arancio). Ora usano il pattern `isEmployer ? bg-employer... :
-   bg-primary...`. Nota aperta: i pulsanti `variant="outline"` (Annulla / No tieni visibile)
-   hanno bordo neutro ma in hover usano `bg-accent` (arancio) anche in employer — da valutare
-   se renderli blu.
-3. ✅ **Rimosso box "Genova Centro / N impieghi disponibili"** — FATTO: era il `<div>` a
-   `bottom-4 left-4` in `InteractiveMap.tsx`, non interattivo, presente sia in worker che
-   employer. Rimosso (il fallback `MapFallback` senza token è rimasto invariato).
-4. **Altri fix UI / mini bug** — *(da dettagliare da parte di Tommaso)*.
+### Decisioni di brand prese
+
+**Font — ibrido.** Outfit resta per il testo (legge bene a 12px). Per il display:
+- Gabarito ha vinto il confronto a 4 (`brand/confronto-font.html`), ma Tommaso ha
+  ridisegnato il logo con **Shinjo** (Creative Market, hand-drawn, un solo peso, set
+  accentato italiano completo);
+- **Shinjo va usato SOLO per i titoli grandi**, mai sotto i ~18px: l'irregolarità
+  diventa rumore;
+- ~12 stringhe fisse (titoli pagina, empty state, onboarding) saranno **lettering
+  disegnato da Tommaso** come SVG; il dinamico resta su font.
+
+**⚠️ LICENZA FONT — da chiudere PRIMA del deposito EUTM.** I termini di Creative Market
+permettono l'uso di un font in un logo *solo se* l'asset è modificato **e** non è
+l'elemento dominante, e in caso di registrazione come marchio impongono di **disconoscere
+il font**. Nel wordmark le lettere SONO dominanti → la condizione non è soddisfatta così
+com'è. Via d'uscita: usare Shinjo come base e **ridisegnare le lettere** finché sono
+originali. Serve Desktop (~$17) + Webfont (~$14); la licenza App (~$133) riguarda
+l'embedding nel binario, cioè la Fase 10 con Despia.
+Nota: negli USA il disegno di un carattere non è protetto da copyright, ma **nell'UE sì**
+(design comunitario anche NON registrato, 3 anni, senza depositi) — quindi il "ricalco in
+Illustrator" è molto più rischioso qui che nella giurisdizione da cui viene quella prassi.
+
+**Logo.** Tommaso ha tolto le ventose dalla P e ridisegnato il tentacolo a spirale, con
+il contorno esterno dell'icona che diventa un **pin** (sintesi riuscita). ⚠️ Parere non
+recepito: togliere le ventose costa distintività proprio ora che le lettere sono di una
+foundry e vanno disconosciute — tutta la distintività del marchio si concentra sulla P.
+Proposta: rimettere 3-4 ventose grandi solo sull'arco esterno. Da verificare anche
+l'occhiello centrale a 40px.
+
+**Componenti hand-drawn — outline-forte.** Direzione scelta: contorni spessi, riempimenti
+piatti, niente ombre. Tecnica validata in `brand/prototipo-cornici.html`: SVG montati con
+`border-image` a **9 sezioni**, così gli angoli non si deformano mentre i lati si
+allungano. Servono **3 cornici** disegnate da Tommaso (bottone primario, chip, contenitore
+empty state) in **2 misure di tratto** — sotto i 40px di altezza la cornice grande non ci
+sta. Vincolo: i 32px centrali di ogni lato devono restare quasi dritti, perché è la banda
+che viene allungata. Tutto il resto (card lista, sezioni profilo, input) resta bordo CSS:
+venti cornici disegnate in una lista sono rumore.
+
+**Texture: NO, decisione chiusa.** Cinque tentativi, vedi il commento in `index.css`.
+
+### Documenti in `brand/`
+- `POLITASK-audit-ux.md` — **25 problemi UI/UX** su 11 schermate, per gravità. I punti
+  1-7 sono fatti; **8-25 sono ancora aperti** ed è la lista da cui ripartire.
+- `palette-carta.html`, `carta-tuner.html`, `texture-tuner.html`, `confronto-font.html`,
+  `prototipo-cornici.html` — strumenti di scelta, non deliverable.
+
+### ⚠️ Prossimi passi
+
+1. **Committare** (~25 file modificati + `src/lib/dates.ts`, `src/lib/mapPaperStyle.ts`,
+   `src/components/ui/StatusBadge.tsx`). Cancellare `public/textures/`.
+2. **Audit punti 8-25**: tre stili di input diversi, gerarchia dei titoli rovesciata,
+   header blu solo in CreateJob, logo `h-8` in Settings, gradiente nei bottoni di Auth,
+   icone grigie in Settings, tag "Settimane" blu tra i ruoli, emoji 🌊 nel claim.
+3. **Tre migration** rimandate: trigger su `chats.updated_at` (l'ordinamento delle chat
+   è fatto client-side come rattoppo), colonna `is_system` su `messages` (ora i messaggi
+   automatici sono riconosciuti per stringa in `dates.ts`), vista per l'N+1 di `useChats`
+   (4 query per conversazione).
+4. **Cornici e lettering** da Tommaso.
+5. **Mappa** da congelare in Mapbox Studio.
+
+### Punti aperti minori
+- `variant="outline"` in hover diventa arancione anche in contesto employer.
+- Soglia mezza-stella recensioni: 0.5.
+- Teaser video (tentacolo che si arrotola) → Fase 7. Higgsfield: disdire il trial.
+- Landing/waitlist su `politask.app`.
+- Contrasti al limite: ink su blu employer **4,41** (serve 4,5) e tile accent **4,24**.
 
 ## Bug importanti (sessione luglio 2026)
 
@@ -200,8 +304,8 @@ titolo). `WorkerJobHistory.tsx` faceva `.single()` sul job cancellato → PostgR
 > ancora nel DB, **la candidatura fallisce**. Le candidature verso annunci già cancellati
 > restano "Lavoro" (dato irrecuperabile); tutte le nuove avranno il titolo corretto per sempre.
 
-> Nota per Claude: quando Tommaso fornisce i dettagli dei punti 2 e 3, sostituire i
-> "(da dettagliare)" qui sopra con la descrizione precisa, così restano in memoria.
+> Nota: la sezione "Prossimi passi immediati" che stava qui è stata assorbita
+> nell'HANDOFF Fase 4 (agosto 2026) — quei punti erano tutti chiusi.
 
 ## Come committare (da fare da terminale/desktop di Tommaso)
 
@@ -223,6 +327,21 @@ Il push su `origin main` è già permesso (vedi `.claude/settings.local.json`).
 - Tommaso preferisce **critica diretta e onesta** rispetto alla validazione; pianificazione
   strutturata e per fasi; iterazione visiva round-by-round su logo/icone.
 - Già esperto di Adobe (Illustrator; After Effects in pipeline).
+
+**Lezioni di metodo dalla sessione di agosto 2026** (costate tempo a Tommaso):
+- **Verificare col comando giusto.** Vedi l'avvertenza sul typecheck sopra: un comando
+  che esce in silenzio non è una conferma finché non si è visto fallire almeno una volta.
+- **Giudicare alla scala d'uso.** La texture è stata tarata guardando uno zoom 4×, dove
+  qualunque cosa sembra plausibile. Le anteprime vanno generate a dimensione reale
+  (schermata da ~390px con i componenti veri).
+- **Rinominare gli asset quando cambiano.** Il browser mette in cache per URL: un file
+  sostituito senza cambiare nome fa sembrare che le modifiche non abbiano effetto.
+- **Fermarsi dopo il secondo tentativo fallito** e chiedersi se lo strumento è quello
+  giusto, invece di tarare parametri. Sulla texture ci sono voluti cinque giri per
+  arrivare a "non serve".
+- **Gli script di sostituzione automatica vanno verificati, non solo eseguiti.** Due
+  guardie sbagliate hanno stampato "✓" senza fare nulla, e il risultato è stato un
+  crash in produzione locale.
 
 ## Note & sicurezza
 

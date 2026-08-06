@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Politask — Palette carta</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300..900&family=Gabarito:wght@400..900&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* ---------- ORA ---------- */
+  --ora-bg:#FBF2E2; --ora-card:#FFFFFF; --ora-line:#E5DDD1;
+  --ora-verde:#22C55E; --ora-rosso:#EF4444; --ora-giallo:#FFC105; --ora-grigio:#6B7280;
+
+  /* ---------- CARTA ---------- */
+  --carta:#F2EEE6;          /* fondo, saturazione 26% invece di 76% */
+  --foglio:#FCFAF4;         /* il "pezzetto di carta" delle card */
+  --incavo:#E5DFD5;
+  --linea:#D3C9BA;
+  --ink:#382D24;            /* il nero dell'app è un bruno */
+  --ink-soft:#786B5E;
+
+  --arancio:#F6A24D;        /* brand, per campiture */
+  --arancio-ink:#A7531B;    /* brand, per testo e tratti */
+  --blu:#6E97CC;
+  --blu-ink:#355D8D;
+
+  --verde:#337154; --verde-soft:#DDEAE3;
+  --terra:#AB4936; --terra-soft:#F2E0DB;
+  --ocra:#A57727;  --ocra-soft:#F0E6D2;
+  --neutro:#8C7D69; --neutro-soft:#E8E2D8;
+
+  --grana:.32;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;padding:30px 20px 80px;background:var(--carta);color:var(--ink);
+  font-family:'Outfit',system-ui,sans-serif;-webkit-font-smoothing:antialiased;
+}
+/* La grana: UN solo layer sul body. Il browser lo rasterizza una volta e lo
+   compone in GPU — costo trascurabile, nessun impatto sulla fluidità. */
+body{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.4'/%3E%3C/svg%3E");
+}
+.wrap{max-width:1040px;margin:0 auto}
+h1,h2,h3{font-family:'Gabarito','Outfit',sans-serif;letter-spacing:-.02em}
+h1{font-size:26px;margin:0 0 6px}
+h2{font-size:18px;margin:0 0 3px}
+.lead{margin:0;font-size:13.5px;line-height:1.65;color:var(--ink-soft);max-width:74ch}
+section{margin-top:36px;padding-top:22px;border-top:2px solid var(--linea)}
+.hint{font-size:12.5px;line-height:1.6;color:var(--ink-soft);margin:5px 0 16px;max-width:74ch}
+
+.due{display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:start}
+@media(max-width:760px){.due{grid-template-columns:1fr}}
+.col-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-soft);margin-bottom:8px}
+
+/* ---------- telefono ---------- */
+.ph{border-radius:20px;overflow:hidden;border:2px solid var(--linea)}
+.ph-h{padding:14px 14px 10px;font-family:'Gabarito',sans-serif;font-weight:800;font-size:21px}
+.ph-b{padding:0 12px 14px}
+
+/* card annuncio */
+.card{border-radius:15px;padding:11px 12px;margin-bottom:9px;display:flex;gap:11px;align-items:flex-start}
+.ico{width:38px;height:38px;flex:none;border-radius:11px;display:grid;place-items:center;font-size:17px}
+.tit{font-size:14.5px;font-weight:700;margin:0 0 1px;font-family:'Gabarito',sans-serif}
+.sub{font-size:12px;margin:0 0 6px}
+.bdg{font-size:10.5px;font-weight:700;padding:2px 9px;border-radius:999px;display:inline-block;border:1.5px solid}
+
+/* ---------- ORA ---------- */
+.ora{background:var(--ora-bg)}
+.ora .card{background:var(--ora-card);box-shadow:0 4px 6px -1px rgb(0 0 0/.1)}
+.ora .ico{background:#FDF0E2}
+.ora .sub{color:#737373}
+.ora .tit{color:#212121}
+
+/* ---------- CARTA ---------- */
+.pap{background:var(--carta)}
+/* Il "pezzetto di carta": foglio più chiaro + bordo + ombra corta e stretta.
+   La separazione la fa il bordo, non un salto di tono. */
+.pap .card{
+  background:var(--foglio);border:1.5px solid var(--linea);
+  box-shadow:0 1.5px 0 0 rgb(56 45 36/.10), 0 3px 5px -2px rgb(56 45 36/.13);
+}
+.pap .ico{background:var(--ocra-soft);border:1.5px solid var(--linea)}
+.pap .sub{color:var(--ink-soft)}
+.pap .tit{color:var(--ink)}
+
+/* ---------- mappa ---------- */
+.map{position:relative;height:190px;border-radius:15px;overflow:hidden;border:2px solid var(--linea)}
+.map i{position:absolute;display:block}
+.pin{width:26px;height:26px;border-radius:50% 50% 50% 4px;transform:rotate(-45deg);display:grid;place-items:center}
+.pin b{transform:rotate(45deg);font-size:11px;font-weight:800}
+
+/* ---------- swatch ---------- */
+.sw{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:9px}
+.s{border:1.5px solid var(--linea);border-radius:11px;overflow:hidden;background:var(--foglio)}
+.s .chip{height:46px;display:grid;place-items:center;font-size:11px;font-weight:700}
+.s .m{padding:6px 9px;font-size:11px;line-height:1.45}
+.s .m b{display:block;font-size:11.5px}
+.s .m code{color:var(--ink-soft);font-family:ui-monospace,monospace;font-size:10.5px}
+
+table{border-collapse:collapse;width:100%;font-size:13px;margin-top:6px}
+td,th{text-align:left;padding:7px 9px;border-bottom:1.5px solid var(--linea)}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft)}
+.ctl{font:inherit;font-size:12.5px;font-weight:600;color:var(--ink);background:var(--foglio);
+     border:1.5px solid var(--ink);border-radius:999px;padding:6px 14px;cursor:pointer}
+.nota{border:1.5px solid var(--ink);border-radius:13px;background:var(--ocra-soft);
+      padding:12px 15px;font-size:13px;line-height:1.65;margin-top:16px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Palette carta</h1>
+<p class="lead">A sinistra com'è ora, a destra la proposta. Cambiano tre cose: il fondo si <b>desatura</b> (76% → 26%) così l'arancio smette di impastarsi; i colori di stato diventano <b>inchiostri stampati</b> invece di semafori; e compare una <b>grana</b> di carta su tutta la pagina — la stai già guardando, è il fondo di questo documento.</p>
+
+<div style="margin-top:16px;display:flex;gap:9px;flex-wrap:wrap;align-items:center">
+  <button class="ctl" id="g">Grana: normale</button>
+  <span style="font-size:12.5px;color:var(--ink-soft)">Allontanati e socchiudi gli occhi: la colonna giusta è quella che resta calma.</span>
+</div>
+
+<!-- ============ 1. LISTA ============ -->
+<section>
+  <h2>1 · Gli annunci come pezzetti di carta</h2>
+  <p class="hint">A destra la card non è più un rettangolo bianco sospeso: è un foglio leggermente più chiaro del fondo, con un bordo e un'ombra <b>corta e stretta</b>, come carta appoggiata su carta. Il verde e il rosso accesi diventano timbri.</p>
+  <div class="due">
+    <div>
+      <div class="col-lbl">Ora</div>
+      <div class="ph ora"><div class="ph-h" style="color:#F6A24D">Politask</div><div class="ph-b" id="l-ora"></div></div>
+    </div>
+    <div>
+      <div class="col-lbl">Carta</div>
+      <div class="ph pap"><div class="ph-h" style="color:var(--arancio-ink)">Politask</div><div class="ph-b" id="l-pap"></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 2. MAPPA ============ -->
+<section>
+  <h2>2 · La mappa come una cartina</h2>
+  <p class="hint">Stesso principio applicato a Mapbox: la terra prende <b>lo stesso colore del fondo app</b>, così la mappa non è un riquadro estraneo ma la stessa carta. Verdi e acqua desaturati, strade in bianco carta, etichette in inchiostro. I tuoi marker diventano l'unica cosa satura sullo schermo — è così che si fanno risaltare.</p>
+  <div class="due">
+    <div><div class="col-lbl">Ora — Mapbox streets-v12</div><div class="map" id="m-ora"></div></div>
+    <div><div class="col-lbl">Carta</div><div class="map" id="m-pap"></div></div>
+  </div>
+</section>
+
+<!-- ============ 3. INCHIOSTRI ============ -->
+<section>
+  <h2>3 · Gli stati come inchiostri</h2>
+  <p class="hint">Il verde <code>#22C55E</code> e il rosso <code>#EF4444</code> sono colori da notifica di sistema: non appartengono a nessuna palette, arrivano da Tailwind. Sostituiti con inchiostri che stanno nella stessa famiglia calda del brand.</p>
+  <div class="sw" id="sw"></div>
+
+  <table>
+    <tr><th>Ruolo</th><th>Ora</th><th>Carta</th><th>Contrasto su carta</th></tr>
+    <tr><td>Assunto</td><td><code>#22C55E</code></td><td><code>#337154</code></td><td>1,87 → <b>5,13</b></td></tr>
+    <tr><td>Rifiutato</td><td><code>#EF4444</code></td><td><code>#AB4936</code></td><td>3,35 → <b>4,98</b></td></tr>
+    <tr><td>In attesa</td><td><code>#FFC105</code></td><td><code>#A57727</code></td><td>1,45 → <b>3,54</b></td></tr>
+    <tr><td>Concluso</td><td><code>#6B7280</code> freddo</td><td><code>#8C7D69</code> caldo</td><td>4,29 → 3,55</td></tr>
+  </table>
+</section>
+
+<!-- ============ 4. IL BRAND COME INCHIOSTRO ============ -->
+<section>
+  <h2>4 · Arancio e blu in due versioni</h2>
+  <p class="hint">Questa è la parte che risolve davvero il contrasto. I colori pieni restano identici per le <b>campiture grandi</b>; per <b>testo e tratti sottili</b> serve la versione inchiostro, perché i pieni non superano 1,9:1 su nessun fondo chiaro.</p>
+  <div class="sw" id="brand"></div>
+  <div class="nota">
+    <b>Cosa NON risolve la desaturazione.</b> Passando il fondo da 76% a 20% di saturazione, il contrasto dell'arancio va da 1,89 a 1,84 — praticamente identico. Il beige non c'entrava: sono i colori di brand a essere troppo chiari. La desaturazione serve all'<b>armonia</b> (l'impasto che vedevi), gli inchiostri servono alla <b>leggibilità</b>. Due problemi diversi, due rimedi diversi.
+  </div>
+</section>
+
+<section>
+  <h2>5 · La grana</h2>
+  <p class="hint">È un solo <code>background-image</code> sul <code>body</code>, un SVG con <code>feTurbulence</code> da ~250 byte. Il browser lo rasterizza una volta e lo compone in GPU: non ridisegna nulla allo scroll e non tocca il costo delle animazioni. Se la vuoi solo sulle card invece che su tutto, si può — ma costa di più, perché diventa un layer per elemento.</p>
+</section>
+
+</div>
+
+<script>
+const LAV=[
+ {i:'🛵',t:'Rider serale in centro',s:'Sottoripa · 1,2 km',b:'Assunto',k:'ok'},
+ {i:'🍽️',t:'Cameriere per sabato',s:'Masetto · 2,4 km',b:'In attesa',k:'wait'},
+ {i:'🧹',t:'Pulizie ufficio',s:'Foce · 3,1 km',b:'Rifiutato',k:'no'},
+ {i:'📚',t:'Ripetizioni di mate',s:'Albaro · 1,8 km',b:'Concluso',k:'done'},
+];
+const ORA={ok:['#DCFCE7','#15803D','#86EFAC'],wait:['#FEF3C7','#B45309','#FCD34D'],
+           no:['#FEE2E2','#B91C1C','#FCA5A5'],done:['#E5E7EB','#4B5563','#D1D5DB']};
+const PAP={ok:['var(--verde-soft)','var(--verde)','var(--verde)'],
+           wait:['var(--ocra-soft)','var(--ocra)','var(--ocra)'],
+           no:['var(--terra-soft)','var(--terra)','var(--terra)'],
+           done:['var(--neutro-soft)','var(--neutro)','var(--neutro)']};
+
+const riga=(l,C,iconCol)=>`<div class="card">
+  <div class="ico" style="color:${iconCol}">${l.i}</div>
+  <div style="flex:1;min-width:0">
+    <p class="tit">${l.t}</p><p class="sub">${l.s}</p>
+    <span class="bdg" style="background:${C[l.k][0]};color:${C[l.k][1]};border-color:${C[l.k][2]}">${l.b}</span>
+  </div></div>`;
+document.getElementById('l-ora').innerHTML = LAV.map(l=>riga(l,ORA,'#F6A24D')).join('');
+document.getElementById('l-pap').innerHTML = LAV.map(l=>riga(l,PAP,'var(--arancio-ink)')).join('');
+
+/* mappe finte, stessi elementi, due palette */
+function mappa(el,c){
+  el.innerHTML=`
+   <i style="inset:0;background:${c.terra}"></i>
+   <i style="width:180px;height:120px;left:-40px;top:-30px;border-radius:45%;background:${c.verde}"></i>
+   <i style="width:150px;height:110px;right:-30px;bottom:-25px;border-radius:45%;background:${c.verde}"></i>
+   <i style="width:70px;height:200px;right:20px;top:-20px;border-radius:40%;background:${c.acqua};transform:rotate(18deg)"></i>
+   <i style="width:130%;height:9px;left:-15%;top:88px;background:${c.strada};transform:rotate(-10deg)"></i>
+   <i style="width:120%;height:6px;left:-10%;top:140px;background:${c.strada};transform:rotate(5deg)"></i>
+   <i style="width:34px;height:26px;left:60px;top:112px;background:${c.edif}"></i>
+   <i style="width:26px;height:22px;left:104px;top:120px;background:${c.edif}"></i>
+   <i style="left:52px;top:64px" class="pin" ><b>R</b></i>
+   <i style="left:146px;top:104px" class="pin"><b>C</b></i>
+   <i style="left:214px;top:56px" class="pin"><b>P</b></i>
+   <span style="position:absolute;left:44px;top:150px;font-size:10.5px;font-weight:700;color:${c.label}">Sottoripa</span>`;
+  const cols=[c.p1,c.p2,c.p3];
+  el.querySelectorAll('.pin').forEach((p,i)=>{
+    p.style.background=cols[i]; p.style.border=`1.5px solid ${c.pinLine}`;
+    p.querySelector('b').style.color=c.pinInk;
+  });
+}
+mappa(document.getElementById('m-ora'),{
+  terra:'#F2EFE9',verde:'#C8DFAF',acqua:'#A8CCE8',strada:'#FFFFFF',edif:'#E4DFD6',
+  label:'#4A4A4A',p1:'#F6A24D',p2:'#F6A24D',p3:'#6E97CC',pinLine:'#FFFFFF',pinInk:'#FFFFFF'});
+mappa(document.getElementById('m-pap'),{
+  terra:'#F2EEE6',verde:'#D3DCC2',acqua:'#C3D4DE',strada:'#FCFAF4',edif:'#E5DFD5',
+  label:'#786B5E',p1:'#F6A24D',p2:'#F6A831',p3:'#6E97CC',pinLine:'#382D24',pinInk:'#382D24'});
+
+/* swatch */
+const sw=(arr,el)=>document.getElementById(el).innerHTML=arr.map(([n,c,hexa,txt,nota])=>`
+  <div class="s"><div class="chip" style="background:${c};color:${txt}">${n}</div>
+  <div class="m"><b>${n}</b><code>${hexa}</code>${nota?`<div style="color:var(--ink-soft);margin-top:2px">${nota}</div>`:''}</div></div>`).join('');
+sw([
+ ['Assunto','var(--verde)','#337154','#fff','verde bosco'],
+ ['Rifiutato','var(--terra)','#AB4936','#fff','terracotta'],
+ ['In attesa','var(--ocra)','#A57727','#fff','ocra'],
+ ['Concluso','var(--neutro)','#8C7D69','#fff','grigio caldo'],
+],'sw');
+sw([
+ ['Arancio','var(--arancio)','#F6A24D','#382D24','solo campiture'],
+ ['Arancio ink','var(--arancio-ink)','#A7531B','#fff','testo e tratti · 4,78'],
+ ['Blu','var(--blu)','#6E97CC','#382D24','solo campiture'],
+ ['Blu ink','var(--blu-ink)','#355D8D','#fff','testo e tratti · 6,01'],
+ ['Carta','var(--carta)','#F2EEE6','#382D24','fondo app'],
+ ['Foglio','var(--foglio)','#FCFAF4','#382D24','card'],
+ ['Inchiostro','var(--ink)','#382D24','#fff','testo · 11,9'],
+ ['Linea','var(--linea)','#D3C9BA','#382D24','bordi'],
+],'brand');
+
+/* grana regolabile */
+const liv=[['normale',.4],['forte',.75],['spenta',0]]; let i=0;
+const b=document.getElementById('g');
+b.onclick=()=>{
+  i=(i+1)%liv.length; const [n,o]=liv[i]; b.textContent='Grana: '+n;
+  document.body.style.backgroundImage = o===0 ? 'none' :
+    `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='${o}'/%3E%3C/svg%3E")`;
+};
+</script>
+</body>
+</html>

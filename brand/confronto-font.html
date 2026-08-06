@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Politask — Confronto font (Fase 4)</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300..900&family=Bricolage+Grotesque:opsz,wght@12..96,200..800&family=Fraunces:ital,opsz,wght@0,9..144,100..900;1,9..144,100..900&family=Gabarito:wght@400..900&family=Baloo+2:wght@400..800&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --cream:#FBF2E2;
+    --cream-hi:#FFFDF8;
+    --orange:#F6A24D;
+    --orange-strong:#AA510E;
+    --blue:#6E97CC;
+    --amber:#F6A831;
+    --ink:#3B2A18;          /* bruno scuro: il "nero" di Politask */
+    --ink-soft:#7A6248;
+    --accent:#F9E3C8;
+    --line:2.5px;
+  }
+
+  *{box-sizing:border-box}
+  body{
+    margin:0; padding:32px 20px 80px;
+    background:var(--cream);
+    color:var(--ink);
+    font-family:'Outfit',system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1180px;margin:0 auto}
+
+  /* ---------- intestazione documento ---------- */
+  .doc-head{margin-bottom:28px;padding-bottom:20px;border-bottom:var(--line) solid var(--ink)}
+  .doc-head h1{margin:0 0 6px;font-size:26px;letter-spacing:-.02em}
+  .doc-head p{margin:0;font-size:14px;color:var(--ink-soft);max-width:70ch;line-height:1.6}
+
+  /* ---------- avviso caricamento font ---------- */
+  #fontcheck{
+    margin:0 0 24px;padding:12px 16px;border:var(--line) solid var(--ink);
+    border-radius:14px;background:var(--cream-hi);font-size:13px;line-height:1.6;
+  }
+  #fontcheck b{font-weight:700}
+  .ok{color:#2C6B3F}
+  .ko{color:#A13D2D}
+
+  /* ---------- controlli ---------- */
+  .controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:26px}
+  .ctl{
+    font:inherit;font-size:13px;font-weight:600;color:var(--ink);
+    background:var(--cream-hi);border:var(--line) solid var(--ink);
+    border-radius:999px;padding:8px 16px;cursor:pointer;
+  }
+  .ctl[aria-pressed="true"]{background:var(--accent)}
+
+  /* ---------- griglia dei candidati ---------- */
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:24px}
+
+  .cand{display:flex;flex-direction:column;gap:12px}
+  .cand-label{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+  .cand-label h2{margin:0;font-size:15px;font-weight:700;font-family:'Outfit',sans-serif}
+  .cand-label span{font-size:12px;color:var(--ink-soft);font-family:'Outfit',sans-serif}
+  .verdict{font-size:12.5px;line-height:1.6;color:var(--ink-soft);font-family:'Outfit',sans-serif;margin:0}
+
+  /* ---------- il telefono ---------- */
+  .phone{
+    width:100%;max-width:340px;margin:0 auto;
+    border:var(--line) solid var(--ink);border-radius:26px;
+    background:var(--cream);overflow:hidden;
+    display:flex;flex-direction:column;
+  }
+
+  .ph-head{padding:16px 16px 10px}
+  .ph-logo{height:34px;display:block;margin-bottom:12px}
+
+  /* search — stile OUTLINE-FORTE: contorno spesso, fill piatto, niente ombra */
+  .ph-search{display:flex;gap:8px;align-items:center}
+  .ph-input{
+    flex:1;display:flex;align-items:center;gap:8px;
+    background:var(--cream-hi);border:var(--line) solid var(--ink);
+    border-radius:999px;padding:9px 14px;font-size:14px;color:var(--ink-soft);
+  }
+  .ph-fbtn{
+    width:40px;height:40px;flex:none;display:grid;place-items:center;
+    background:var(--cream-hi);border:var(--line) solid var(--ink);border-radius:999px;
+  }
+
+  /* finta mappa in palette Politask (anticipa lo stile Mapbox custom) */
+  .ph-map{
+    position:relative;height:206px;margin:12px 12px 0;
+    border:var(--line) solid var(--ink);border-radius:18px;overflow:hidden;
+    background:#F2EAD8;
+  }
+  .ph-map .land{position:absolute;background:#E4E7D2;border-radius:40%}
+  .ph-map .road{position:absolute;background:#FFFDF8;height:7px;border-radius:4px}
+  .pin{
+    position:absolute;width:30px;height:30px;border-radius:50% 50% 50% 6px;
+    transform:rotate(-45deg);border:var(--line) solid var(--ink);
+    display:grid;place-items:center;
+  }
+  .pin span{transform:rotate(45deg);font-size:13px;font-weight:800;color:var(--ink)}
+
+  /* card annuncio — outline-forte */
+  .ph-body{padding:12px}
+  .job{
+    background:var(--cream-hi);border:var(--line) solid var(--ink);
+    border-radius:18px;padding:11px 12px;display:flex;gap:11px;align-items:flex-start;
+    margin-bottom:10px;
+  }
+  .job-ico{
+    width:40px;height:40px;flex:none;border-radius:12px;
+    background:var(--accent);border:var(--line) solid var(--ink);
+    display:grid;place-items:center;font-size:17px;
+  }
+  .job-main{flex:1;min-width:0}
+  .job-title{font-size:15px;font-weight:700;margin:0 0 2px;letter-spacing:-.01em}
+  .job-meta{font-size:12.5px;color:var(--ink-soft);margin:0 0 7px}
+  .chips{display:flex;gap:5px;flex-wrap:wrap}
+  .chip{
+    font-size:11px;font-weight:700;padding:2.5px 9px;border-radius:999px;
+    border:2px solid var(--ink);background:var(--cream);
+  }
+  .chip.pay{background:var(--amber)}
+  .job-cta{
+    width:100%;padding:10px;border-radius:999px;border:var(--line) solid var(--ink);
+    background:var(--orange);color:var(--ink);font-weight:800;font-size:14.5px;
+    text-align:center;letter-spacing:-.01em;
+  }
+  .job-cta.ghost{background:var(--cream-hi)}
+
+  /* empty state — è qui che il display font si vede davvero */
+  .empty{text-align:center;padding:14px 8px 4px}
+  .empty h3{margin:0 0 4px;font-size:21px;letter-spacing:-.02em}
+  .empty p{margin:0;font-size:13px;color:var(--ink-soft);line-height:1.55}
+
+  /* bottom nav — crema, non bianca, stacco via bordo */
+  .ph-nav{
+    display:flex;justify-content:space-around;align-items:center;
+    padding:11px 0 13px;border-top:var(--line) solid var(--ink);
+    background:var(--cream);margin-top:8px;
+  }
+  .ph-nav div{width:23px;height:23px;border-radius:6px;background:var(--orange)}
+  .ph-nav div:not(:first-child){background:none;border:2.5px solid var(--ink-soft);opacity:.55}
+
+  /* ---------- pannello tipografico ---------- */
+  .specimen{
+    border:var(--line) solid var(--ink);border-radius:16px;
+    background:var(--cream-hi);padding:14px 16px;
+  }
+  .specimen .big{font-size:30px;font-weight:800;letter-spacing:-.03em;line-height:1.1;margin:0 0 8px}
+  .specimen .mid{font-size:16px;font-weight:600;margin:0 0 6px}
+  .specimen .small{font-size:12.5px;line-height:1.5;color:var(--ink-soft);margin:0;font-family:'Outfit',sans-serif}
+  .specimen .num{font-size:22px;font-weight:800;letter-spacing:-.02em;margin:8px 0 0}
+
+  footer{margin-top:44px;padding-top:20px;border-top:var(--line) solid var(--ink);font-size:13px;line-height:1.7;color:var(--ink-soft)}
+  footer b{color:var(--ink)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="doc-head">
+    <h1>Politask — confronto font</h1>
+    <p>Stessa schermata, quattro accoppiate. Il font di testo resta <b>Outfit</b> in tutte (legge bene a 12px ed è veloce): cambia solo il <b>display</b>, cioè logo-adiacenti, titoli, empty state e numeri. I componenti sono già disegnati nello stile <b>outline-forte</b> che hai scelto — contorni spessi, riempimenti piatti, zero ombre — così giudichi font e direzione insieme. Guardalo anche da telefono.</p>
+  </div>
+
+  <div id="fontcheck">Verifica caricamento font in corso…</div>
+
+  <div class="controls">
+    <button class="ctl" id="t-dark" aria-pressed="false">Prova su fondo scuro</button>
+    <button class="ctl" id="t-zoom" aria-pressed="false">Ingrandisci i telefoni</button>
+    <span style="font-size:12.5px;color:var(--ink-soft)">Suggerimento: allontanati dallo schermo di un metro — il font giusto resta riconoscibile anche sfocato.</span>
+  </div>
+
+  <div class="grid" id="grid"></div>
+
+  <footer>
+    <b>Come giudicare.</b> Non guardare quale è “più bello”: guarda quale regge <b>l'empty state e i titoli</b> senza sembrare un template, e quale non litiga con le ventose del logo.
+    Il display lo vedrai su forse il 10% del testo dell'app — deve avere carattere, non deve essere comodo.<br><br>
+    <b>Nota sul peso.</b> Ogni famiglia in più costa banda al primo caricamento. Tutte e quattro sono variabili, quindi il costo reale è di un file solo per famiglia: attorno ai 30-40 KB compressi. Accettabile per un display, non lo sarebbe per tre.
+  </footer>
+
+</div>
+
+<script>
+const LOGO = `<svg viewBox="0 0 487.5 192.5" xmlns="http://www.w3.org/2000/svg" aria-label="Politask">
+  <circle cx="52" cy="46" r="30" fill="#F6A24D"/>
+  <path d="M52 74 C52 130 42 150 40 176 L70 176 C70 140 82 120 82 96" fill="#F6A24D"/>
+  <circle cx="49" cy="98" r="5.5" fill="#FBF2E2"/><circle cx="52" cy="118" r="5" fill="#FBF2E2"/>
+  <circle cx="55" cy="138" r="4.5" fill="#FBF2E2"/><circle cx="58" cy="157" r="4" fill="#FBF2E2"/>
+  <text x="104" y="140" font-family="__DISPLAY__" font-size="118" font-weight="800" fill="#F6A24D" letter-spacing="-4">olitask</text>
+</svg>`;
+
+const CANDIDATI = [
+  { id:'outfit', nome:'Outfit', display:"'Outfit'", nota:'Attuale — baseline',
+    verdetto:"Competente e neutro. La o perfettamente circolare e i terminali dritti non hanno niente della mano che c'è nelle icone. È il font di mille template: non ti danneggia, ma non lavora per te." },
+  { id:'bricolage', nome:'Bricolage Grotesque', display:"'Bricolage Grotesque'", nota:'Grottesco volutamente imperfetto',
+    verdetto:"Costruito apposta con irregolarità controllate: larghezze che non tornano, dettagli strani nelle terminazioni. È la lettura più letterale di hand-drawn ma clean. Rischio: è molto riconoscibile come font del momento." },
+  { id:'fraunces', nome:'Fraunces', display:"'Fraunces'", nota:'Serif variabile, assi soft e wonk',
+    verdetto:"Ha assi pensati per la stortura voluta. Caldissimo sulla crema e il più distante dal look startup. Rischio opposto: un serif può leggere come editoriale o vintage invece che Gen Z." },
+  { id:'gabarito', nome:'Gabarito', display:"'Gabarito'", nota:'Geometrico chunky con dettagli quirky',
+    verdetto:"Il più vicino al wordmark: stessa famiglia geometrica ma con tagli e curve meno prevedibili di Outfit. La scelta prudente — guadagni carattere senza spostare l'impianto." },
+  { id:'baloo', nome:'Baloo 2', display:"'Baloo 2'", nota:'Arrotondato e ciccione',
+    verdetto:"Massima continuità con la rotondità del logo e con le forme piene delle icone. Il rischio dichiarato nel brief è qui: sotto una certa soglia scivola dal giocoso all'infantile." },
+];
+
+function telefono(fontFamily){
+  return `
+  <div class="phone">
+    <div class="ph-head">
+      <div class="ph-logo">${LOGO.replace('__DISPLAY__', fontFamily.replace(/'/g,''))}</div>
+      <div class="ph-search">
+        <div class="ph-input"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#7A6248" stroke-width="3" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>Cerca impiego…</div>
+        <div class="ph-fbtn"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#3B2A18" stroke-width="3" stroke-linecap="round"><path d="M4 7h16M7 12h10M10 17h4"/></svg></div>
+      </div>
+    </div>
+
+    <div class="ph-map">
+      <div class="land" style="width:150px;height:110px;left:-30px;top:-20px"></div>
+      <div class="land" style="width:130px;height:95px;right:-25px;bottom:-15px"></div>
+      <div class="road" style="width:130%;left:-15%;top:96px;transform:rotate(-11deg)"></div>
+      <div class="road" style="width:100%;left:0;top:150px;transform:rotate(6deg);height:5px"></div>
+      <div class="pin" style="background:#F6A24D;left:58px;top:52px"><span>R</span></div>
+      <div class="pin" style="background:#F6A831;left:150px;top:96px"><span>C</span></div>
+      <div class="pin" style="background:#6E97CC;left:222px;top:44px"><span>P</span></div>
+    </div>
+
+    <div class="ph-body" style="font-family:${fontFamily},'Outfit',sans-serif">
+      <div class="job">
+        <div class="job-ico">🛵</div>
+        <div class="job-main">
+          <p class="job-title">Rider serale in centro</p>
+          <p class="job-meta" style="font-family:'Outfit',sans-serif">Sottoripa · 1,2 km da te</p>
+          <div class="chips" style="font-family:'Outfit',sans-serif">
+            <span class="chip pay">9 €/h</span><span class="chip">Serale</span><span class="chip">Una tantum</span>
+          </div>
+        </div>
+      </div>
+      <div class="job-cta">Candidati</div>
+      <div class="empty">
+        <h3>Ancora nessuna candidatura</h3>
+        <p style="font-family:'Outfit',sans-serif">Muovi la mappa per scoprire i lavoretti vicino a te.</p>
+      </div>
+    </div>
+
+    <div class="ph-nav"><div></div><div></div><div></div><div></div></div>
+  </div>`;
+}
+
+function specimen(fontFamily){
+  return `
+  <div class="specimen" style="font-family:${fontFamily},'Outfit',sans-serif">
+    <p class="big">Trova il tuo<br>lavoretto</p>
+    <p class="mid">Candidature · Annunci attivi · Profilo</p>
+    <p class="num">9 €/h · 4,5★ · 12 annunci</p>
+    <p class="small">Corpo del testo in Outfit, invariato: è la parte che devi poter leggere a 12px su un telefono al sole. Il display sopra è l'unica cosa che cambia.</p>
+  </div>`;
+}
+
+document.getElementById('grid').innerHTML = CANDIDATI.map(c => `
+  <div class="cand">
+    <div class="cand-label"><h2>${c.nome}</h2><span>${c.nota}</span></div>
+    ${telefono(c.display)}
+    ${specimen(c.display)}
+    <p class="verdict">${c.verdetto}</p>
+  </div>`).join('');
+
+/* ---- verifica onesta: se un font non ha caricato, il confronto è falsato ---- */
+document.fonts.ready.then(() => {
+  const esiti = CANDIDATI.map(c => {
+    const nome = c.display.replace(/'/g,'');
+    return { nome, ok: document.fonts.check(`700 24px "${nome}"`) };
+  });
+  const mancanti = esiti.filter(e => !e.ok);
+  const box = document.getElementById('fontcheck');
+  if (!mancanti.length){
+    box.innerHTML = `<b class="ok">✓ Tutti i font sono caricati.</b> Il confronto è attendibile — ` +
+      esiti.map(e=>e.nome).join(' · ');
+  } else {
+    box.innerHTML = `<b class="ko">⚠ Non hanno caricato: ${mancanti.map(m=>m.nome).join(', ')}.</b> ` +
+      `Quei riquadri stanno mostrando Outfit al loro posto, quindi <b>non giudicarli</b>. ` +
+      `Di solito è la connessione o un blocco su fonts.googleapis.com: ricarica la pagina.`;
+  }
+});
+
+const zoom = document.getElementById('t-zoom');
+zoom.onclick = () => {
+  const on = zoom.getAttribute('aria-pressed') === 'true';
+  zoom.setAttribute('aria-pressed', String(!on));
+  document.querySelectorAll('.phone').forEach(p => p.style.maxWidth = on ? '340px' : '440px');
+};
+
+const dark = document.getElementById('t-dark');
+dark.onclick = () => {
+  const on = dark.getAttribute('aria-pressed') === 'true';
+  dark.setAttribute('aria-pressed', String(!on));
+  document.body.style.background = on ? '#FBF2E2' : '#2A2018';
+  document.body.style.color = on ? '#3B2A18' : '#FBF2E2';
+};
+</script>
+</body>
+</html>

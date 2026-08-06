@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Politask — Prototipo cornici hand-drawn</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300..900&family=Gabarito:wght@400..900&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --cream:#FBF2E2; --cream-hi:#FFFDF8; --accent:#F9E3C8;
+    --orange:#F6A24D; --amber:#F6A831; --blue:#6E97CC; --blue-soft:#E4EDF7;
+    --ink:#3B2A18; --ink-soft:#7A6248;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;padding:32px 20px 90px;background:var(--cream);color:var(--ink);
+    font-family:'Outfit',system-ui,sans-serif;-webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1000px;margin:0 auto}
+  h1,h2,h3{font-family:'Gabarito','Outfit',sans-serif;letter-spacing:-.02em}
+  h1{font-size:27px;margin:0 0 6px}
+  h2{font-size:19px;margin:0 0 4px}
+  .lead{margin:0;font-size:14px;line-height:1.65;color:var(--ink-soft);max-width:72ch}
+  section{margin-top:40px;padding-top:26px;border-top:2.5px solid var(--ink)}
+  .hint{font-size:13px;line-height:1.6;color:var(--ink-soft);margin:6px 0 18px;max-width:72ch}
+
+  /* =========================================================
+     LA TECNICA — border-image a 9 sezioni.
+     border-width riserva lo spazio di layout; border-image-width
+     dice quanto spesso disegnare l'immagine; lo slice ritaglia
+     gli angoli, che restano INTATTI mentre solo i lati si allungano.
+     ========================================================= */
+  .hd{
+    border:16px solid transparent;              /* spazio di layout */
+    border-image-slice:32 fill;                 /* angoli 32px nell'SVG 96x96 */
+    border-image-width:16px;                    /* resi a 16px sullo schermo */
+    border-image-repeat:stretch;
+    background:transparent;
+  }
+
+  /* confronto: lo stretch ingenuo */
+  .naive{position:relative;background:var(--cream-hi)}
+  .naive>svg{position:absolute;inset:0;width:100%;height:100%}
+  .naive>.inner{position:relative}
+
+  .row{display:flex;flex-wrap:wrap;gap:16px;align-items:center;margin-bottom:14px}
+  .lbl{font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);width:100%;margin:14px 0 2px}
+
+  .demo{display:grid;place-items:center;font-weight:700;font-size:14px;padding:6px 14px}
+
+  /* ---- componenti ---- */
+  .btn{
+    font-family:'Gabarito','Outfit',sans-serif;font-size:15.5px;font-weight:700;
+    letter-spacing:-.01em;color:var(--ink);cursor:pointer;
+    padding:9px 20px;min-height:46px;display:inline-flex;align-items:center;gap:8px;
+    transition:transform .09s ease;
+  }
+  .btn:active{transform:translateY(2px)}
+  .chip{
+    font-size:12px;font-weight:700;padding:3px 12px;display:inline-flex;align-items:center;
+    border-width:10px!important;border-image-width:10px!important;min-height:30px;
+  }
+  .inp{
+    font-family:'Outfit',sans-serif;font-size:14.5px;color:var(--ink-soft);
+    padding:10px 16px;min-height:46px;display:flex;align-items:center;gap:9px;min-width:260px;
+  }
+  .card{padding:14px 16px;max-width:380px}
+  .card h3{margin:0 0 2px;font-size:17px}
+  .card p{margin:0 0 10px;font-size:13px;color:var(--ink-soft)}
+
+  .job{display:flex;gap:12px;align-items:flex-start}
+  .job-ico{
+    width:44px;height:44px;flex:none;display:grid;place-items:center;font-size:19px;
+    border-width:9px!important;border-image-width:9px!important;
+  }
+
+  /* pannello scuro per la prova su fondo scuro */
+  .darkpanel{background:#2A2018;padding:22px;border-radius:18px;margin-top:14px}
+  .darkpanel .lbl{color:#B9A88F}
+
+  pre{
+    background:var(--cream-hi);border:2.5px solid var(--ink);border-radius:14px;
+    padding:14px 16px;font-size:12.5px;line-height:1.65;overflow-x:auto;
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  }
+  table{border-collapse:collapse;width:100%;font-size:13.5px;margin-top:8px}
+  th,td{text-align:left;padding:8px 10px;border-bottom:2px solid #E5DDD1;vertical-align:top}
+  th{font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-soft)}
+  td code{background:var(--accent);padding:1px 6px;border-radius:5px;font-size:12.5px}
+  .warn{border:2.5px solid var(--ink);background:var(--accent);border-radius:14px;padding:13px 16px;font-size:13.5px;line-height:1.65;margin-top:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>Prototipo cornici hand-drawn</h1>
+  <p class="lead">
+    Le cornici qui sotto sono <b>SVG disegnati a tratto irregolare</b>, montati in CSS con <code>border-image</code> a 9 sezioni.
+    Gli angoli vengono ritagliati e disegnati a dimensione fissa; solo i lati si allungano. Risultato: un bottone da 90px e una card
+    da 380px hanno <b>esattamente lo stesso tratto</b>, senza deformazioni. Sono cornici provvisorie fatte da me — servono a
+    dimostrare che la tecnica regge. Le sostituirai con le tue.
+  </p>
+
+  <!-- ================= 1. LA PROVA CHE CONTA ================= -->
+  <section>
+    <h2>1 · La prova: gli angoli non si deformano</h2>
+    <p class="hint">Stessa identica cornice a sette proporzioni diverse, da un quadratino a una fascia larghissima.
+      Guarda gli angoli: sono sempre uguali. Poi confronta con la riga sotto.</p>
+
+    <div class="lbl">✓ border-image a 9 sezioni</div>
+    <div class="row" id="scala9"></div>
+
+    <div class="lbl">✗ SVG stirato (l'approccio ingenuo)</div>
+    <p class="hint" style="margin-top:0">Qui l'SVG è semplicemente allungato per riempire l'elemento. Gli angoli diventano ellissi
+      e il tratto si assottiglia sui lati lunghi. È l'errore da non fare.</p>
+    <div class="row" id="scalaNaive"></div>
+  </section>
+
+  <!-- ================= 2. I COMPONENTI ================= -->
+  <section>
+    <h2>2 · I componenti Politask</h2>
+    <p class="hint">Le stesse primitive con cui è fatta l'app. Premi i bottoni: l'affondamento è un <code>transform</code>,
+      cioè girato dalla GPU, molto più economico delle ombre sfocate di adesso. Display in Gabarito, testo in Outfit.</p>
+
+    <div class="lbl">Worker</div>
+    <div class="row" id="compWorker"></div>
+
+    <div class="lbl">Employer</div>
+    <div class="row" id="compEmployer"></div>
+
+    <div class="lbl">Card annuncio</div>
+    <div class="row" id="cardRow"></div>
+
+    <div class="darkpanel">
+      <div class="lbl">Prova su fondo scuro</div>
+      <div class="row" id="compDark"></div>
+    </div>
+  </section>
+
+  <!-- ================= 3. SPEC PER DISEGNARLE ================= -->
+  <section>
+    <h2>3 · Come disegnare le cornici vere</h2>
+    <p class="hint">Quando le rifai in Illustrator, questi sono i vincoli che il 9-slice impone. Sono pochi ma vanno rispettati,
+      altrimenti la cornice si rompe alle proporzioni estreme.</p>
+
+    <table>
+      <tr><th>Parametro</th><th>Valore</th><th>Perché</th></tr>
+      <tr><td>Tavola da disegno</td><td><code>96 × 96 px</code></td><td>Quadrata. Il viewBox deve combaciare con width e height.</td></tr>
+      <tr><td>Zona angolo</td><td><code>32 px</code> per lato</td><td>È il valore di slice. Tutto il carattere del disegno deve stare qui dentro.</td></tr>
+      <tr><td>Spessore tratto</td><td><code>5 px</code></td><td>Viene reso a metà scala, quindi a schermo diventa 2,5px.</td></tr>
+      <tr><td>Inset dal bordo</td><td><code>4–5 px</code></td><td>Serve spazio o il tratto viene tagliato dal ritaglio.</td></tr>
+      <tr><td>Bande centrali</td><td>quasi dritte</td><td><b>Il vincolo importante.</b> I 32px centrali di ogni lato vengono allungati: se ci metti un ricciolo, su una card larga diventa una gomma stirata. Una pendenza lieve va benissimo e anzi legge come tratto a mano.</td></tr>
+      <tr><td>Riempimento</td><td>incluso nell'SVG</td><td>Con <code>fill</code> nello slice, il centro dell'SVG fa da sfondo: non serve un background CSS separato.</td></tr>
+      <tr><td>Export</td><td>SVG, tracciati</td><td>Espandi il tratto in tracciato o tienilo come stroke — funzionano entrambi. Niente effetti raster.</td></tr>
+    </table>
+
+    <div class="warn">
+      <b>Quante te ne servono davvero:</b> cinque. Bottone pieno, bottone vuoto, card, chip, input. Il colore <b>non</b> va
+      moltiplicato per variante — lo passo io da codice, che è come qui sopra ottengo arancio, blu e crema dalla stessa cornice.
+    </div>
+
+    <h3 style="margin-top:26px;font-size:15px">Il CSS che andrà in produzione</h3>
+    <pre>.hd-frame {
+  border: 16px solid transparent;   /* spazio di layout */
+  border-image-slice: 32 fill;      /* angoli 32px nell'SVG 96×96 */
+  border-image-width: 16px;         /* resi a 16px a schermo */
+  border-image-repeat: stretch;
+  border-image-source: url("...");  /* la tua cornice */
+}</pre>
+    <p class="hint" style="margin-top:10px">Nota di resa: il bordo da 16px mangia spazio interno, quindi i bottoni hanno
+      <code>min-height:46px</code>. Sotto i 40px di altezza conviene una cornice più piccola — è il motivo per cui i chip qui
+      sopra usano una variante da 10px.</p>
+  </section>
+
+  <div id="check" class="warn" style="margin-top:34px"></div>
+
+</div>
+
+<script>
+/* =========================================================================
+   Generatore di cornici. Il tracciato è volutamente irregolare: raggi degli
+   angoli tutti diversi, lati con pendenze minime. Le bande centrali di ogni
+   lato restano quasi dritte, perché sono quelle che verranno allungate.
+   ========================================================================= */
+function tracciato(){
+  return "M 27,5.5 L 66,4.6 C 78.5,4.3 91.8,8.4 91.3,21.5 "
+       + "L 91.7,67.5 C 92,80.5 86.5,91.6 73.5,91.2 "
+       + "L 29.5,91.7 C 16.5,92 4.4,86.2 4.9,73 "
+       + "L 4.3,29 C 4,16 15,5.8 27,5.5 Z";
+}
+function cornice({stroke='#3B2A18', fill='#FFFDF8', sw=5}={}){
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96">`
+    + `<path d="${tracciato()}" fill="${fill}" stroke="${stroke}" stroke-width="${sw}" `
+    + `stroke-linejoin="round" stroke-linecap="round"/></svg>`;
+  return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
+}
+function applica(el, opts){ el.style.borderImageSource = cornice(opts); }
+
+function frame(cls, opts, html, style=''){
+  const d = document.createElement('div');
+  d.className = 'hd ' + cls;
+  d.style.cssText = style;
+  d.innerHTML = html;
+  applica(d, opts);
+  return d;
+}
+
+/* ---------- 1. prova di scala ---------- */
+const misure = [
+  [56,56],[96,46],[150,46],[230,46],[360,46],[300,110],[86,150]
+];
+const s9 = document.getElementById('scala9');
+misure.forEach(([w,h])=>{
+  s9.appendChild(frame('demo', {}, `${w}×${h}`, `width:${w}px;height:${h}px`));
+});
+
+/* confronto ingenuo: stesso SVG, ma stirato */
+const sn = document.getElementById('scalaNaive');
+misure.forEach(([w,h])=>{
+  const d = document.createElement('div');
+  d.className = 'naive demo';
+  d.style.cssText = `width:${w}px;height:${h}px;border-radius:14px`;
+  d.innerHTML = `<svg viewBox="0 0 96 96" preserveAspectRatio="none">`
+    + `<path d="${tracciato()}" fill="#FFFDF8" stroke="#3B2A18" stroke-width="5" stroke-linejoin="round"/></svg>`
+    + `<span class="inner">${w}×${h}</span>`;
+  sn.appendChild(d);
+});
+
+/* ---------- 2. componenti ---------- */
+const lente = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7A6248" stroke-width="3" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>`;
+
+function set(contenitore, colore, soft){
+  const c = document.getElementById(contenitore);
+  c.appendChild(frame('btn', {fill:colore}, 'Candidati'));
+  c.appendChild(frame('btn', {fill:'#FFFDF8'}, 'Annulla'));
+  c.appendChild(frame('btn', {fill:soft}, 'Salva bozza'));
+  c.appendChild(frame('chip', {fill:'#F6A831'}, '9 €/h'));
+  c.appendChild(frame('chip', {fill:'#FBF2E2'}, 'Serale'));
+  c.appendChild(frame('inp',  {fill:'#FFFDF8'}, lente + 'Cerca impiego…'));
+}
+set('compWorker', '#F6A24D', '#F9E3C8');
+set('compEmployer', '#6E97CC', '#E4EDF7');
+
+/* card annuncio */
+const cr = document.getElementById('cardRow');
+const card = frame('card', {fill:'#FFFDF8'}, `
+  <div class="job">
+    <div class="hd job-ico" id="ico">🛵</div>
+    <div style="flex:1">
+      <h3>Rider serale in centro</h3>
+      <p>Sottoripa · 1,2 km da te</p>
+      <div class="row" style="gap:6px;margin:0"></div>
+    </div>
+  </div>`);
+cr.appendChild(card);
+applica(card.querySelector('#ico'), {fill:'#F9E3C8'});
+const chipbox = card.querySelector('.row');
+[['9 €/h','#F6A831'],['Serale','#FBF2E2'],['Una tantum','#FBF2E2']].forEach(([t,f])=>{
+  chipbox.appendChild(frame('chip', {fill:f}, t));
+});
+cr.appendChild(frame('btn', {fill:'#F6A24D'}, 'Candidati', 'min-width:150px;justify-content:center'));
+
+/* su fondo scuro: il tratto diventa crema */
+const cd = document.getElementById('compDark');
+cd.appendChild(frame('btn', {stroke:'#FBF2E2', fill:'#F6A24D'}, 'Candidati'));
+cd.appendChild(frame('btn', {stroke:'#FBF2E2', fill:'#2A2018'}, 'Annulla', 'color:#FBF2E2'));
+cd.appendChild(frame('chip', {stroke:'#FBF2E2', fill:'#2A2018'}, '<span style="color:#FBF2E2">Serale</span>'));
+
+/* ---------- verifica onesta ---------- */
+(function(){
+  const box = document.getElementById('check');
+  const sostenuto = CSS.supports('border-image-slice','32 fill');
+  const prova = document.querySelector('#scala9 .hd');
+  const disegnato = prova && getComputedStyle(prova).borderImageSource.includes('svg');
+  const gab = document.fonts ? document.fonts.check('700 24px "Gabarito"') : false;
+
+  const righe = [
+    [sostenuto,  'Il browser supporta border-image con slice e fill'],
+    [disegnato,  'Le cornici SVG sono state applicate davvero'],
+    [gab,        'Gabarito è caricato']
+  ];
+  box.innerHTML = '<b>Verifica:</b><br>' + righe.map(([ok,t]) =>
+    `${ok ? '✓' : '⚠'} ${t}${ok ? '' : ' — <b>questo riquadro non è attendibile</b>'}`).join('<br>')
+    + (righe.every(r=>r[0]) ? '<br><br>Tutto a posto: quello che vedi è reale, non simulato.' : '');
+})();
+</script>
+</body>
+</html>

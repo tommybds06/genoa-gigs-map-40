@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Politask — Trova la carta</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300..900&family=Gabarito:wght@400..900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --carta:#F4EEE2; --foglio:#FAF6EB; --incavo:#E8E1D1; --linea:#DACFB8;
+  --ink:#382D24; --ink-soft:#746759;
+  --arancio:#F6A24D; --arancio-ink:#A7531B;
+  --verde:#337154; --verde-soft:#DDEEE6;
+  --ocra:#A57727; --ocra-soft:#F0E6D0;
+  --neutro:#8C7D69; --neutro-soft:#E7E3DA;
+  --rot-a:0deg; --rot-b:0deg; --lift:none;
+}
+*{box-sizing:border-box}
+body{margin:0;padding:26px 18px 80px;background:var(--carta);color:var(--ink);
+     font-family:'Outfit',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+h1,h2,.tit{font-family:'Gabarito','Outfit',sans-serif;letter-spacing:-.02em}
+h1{font-size:24px;margin:0 0 5px}
+.lead{margin:0 0 18px;font-size:13.5px;line-height:1.6;color:var(--ink-soft);max-width:74ch}
+.wrap{max-width:1040px;margin:0 auto}
+
+.grid{display:grid;grid-template-columns:310px 1fr;gap:24px;align-items:start}
+@media(max-width:840px){.grid{grid-template-columns:1fr}}
+
+.box{background:var(--foglio);border:1.5px solid var(--linea);border-radius:15px;padding:15px 16px}
+.box h2{font-size:14px;margin:0 0 4px}
+.box .n{font-size:11.5px;color:var(--ink-soft);line-height:1.5;margin:0 0 10px}
+
+label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;
+      color:var(--ink-soft);margin:13px 0 4px;display:flex;justify-content:space-between}
+label span{font-family:ui-monospace,monospace;font-weight:600;letter-spacing:0;text-transform:none}
+input[type=range]{width:100%;accent-color:var(--arancio-ink);margin:0}
+
+.pz{border:1.5px solid var(--linea);background:var(--foglio);border-radius:999px;padding:5px 11px;
+    font:inherit;font-size:11.5px;font-weight:700;cursor:pointer;color:var(--ink);margin:0 5px 5px 0}
+.pz:hover{border-color:var(--ink)}
+.pz[data-on="1"]{background:var(--ocra-soft);border-color:var(--ink)}
+
+.out{margin-top:12px;padding-top:10px;border-top:1.5px solid var(--linea);
+     font-family:ui-monospace,monospace;font-size:10.5px;line-height:1.5;
+     color:var(--ink-soft);word-break:break-all;max-height:130px;overflow:auto}
+
+/* ---------- anteprima ---------- */
+.ph{border:2px solid var(--linea);border-radius:20px;overflow:hidden;background:var(--carta);max-width:390px}
+.ph-h{padding:14px 14px 9px;font-weight:800;font-size:21px;color:var(--arancio-ink);font-family:'Gabarito',sans-serif}
+.ph-b{padding:0 12px 16px}
+
+.card{
+  background:var(--foglio);border:1.5px solid var(--linea);border-radius:15px;
+  padding:11px 12px;margin-bottom:11px;display:flex;gap:11px;align-items:flex-start;
+  box-shadow:0 1.5px 0 0 rgb(56 45 36/.10), 0 3px 5px -2px rgb(56 45 36/.13);
+  transition:transform .15s ease;
+}
+.card:nth-child(odd){transform:rotate(var(--rot-a))}
+.card:nth-child(even){transform:rotate(var(--rot-b))}
+.ico{width:38px;height:38px;flex:none;border-radius:11px;display:grid;place-items:center;font-size:17px;
+     background:var(--ocra-soft);border:1.5px solid var(--linea);color:var(--arancio-ink)}
+.tit{font-size:14.5px;font-weight:700;margin:0 0 1px}
+.sub{font-size:12px;margin:0 0 6px;color:var(--ink-soft)}
+.bdg{font-size:10.5px;font-weight:700;padding:2px 9px;border-radius:999px;display:inline-block;border:1.5px solid}
+
+.zoom{margin-top:16px;border:1.5px solid var(--linea);border-radius:14px;overflow:hidden}
+.zoom-h{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;
+        color:var(--ink-soft);padding:8px 12px;border-bottom:1.5px solid var(--linea);background:var(--foglio)}
+.zoom-b{height:120px;background:var(--foglio);image-rendering:auto}
+
+.nota{border:1.5px solid var(--ink);background:var(--ocra-soft);border-radius:13px;
+      padding:12px 15px;font-size:13px;line-height:1.65;margin-top:16px}
+code{background:var(--incavo);padding:1px 5px;border-radius:4px;font-family:ui-monospace,monospace;font-size:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Trova la carta</h1>
+  <p class="lead">Il fondo di questa pagina <b>e</b> le card qui sotto usano la texture che stai regolando. Il difetto della versione in app ha un numero: <code>baseFrequency 0.85</code>, cioe' quasi il massimo — quello e' rumore digitale, la neve della TV. La fibra della carta sta tra <code>0.02</code> e <code>0.15</code>: macchie larghe e morbide, non puntini.</p>
+
+  <div class="grid">
+    <div>
+      <div class="box">
+        <h2>Texture</h2>
+        <p class="n">Parti dai preset, poi rifinisci.</p>
+        <div id="presets"></div>
+
+        <label>Frequenza <span id="vF"></span></label>
+        <input type="range" id="F" min="0.015" max="0.9" step="0.005">
+
+        <label>Ottave (morbidezza) <span id="vO"></span></label>
+        <input type="range" id="O" min="1" max="6" step="1">
+
+        <label>Intensità <span id="vA"></span></label>
+        <input type="range" id="A" min="0" max="60" step="1">
+
+        <label>Dimensione piastrella <span id="vT"></span></label>
+        <input type="range" id="T" min="120" max="600" step="20">
+      </div>
+
+      <div class="box" style="margin-top:14px">
+        <h2>Pezzetti di carta</h2>
+        <p class="n">La sensazione "incollati lì" non viene dalla texture: viene dalla geometria.</p>
+        <div>
+          <button class="pz" id="bRot" data-on="0">Rotazione</button>
+          <button class="pz" id="bLift" data-on="0">Bordo sollevato</button>
+          <button class="pz" id="bIrr" data-on="0">Angoli irregolari</button>
+        </div>
+        <div class="out" id="css"></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="ph">
+        <div class="ph-h">Politask</div>
+        <div class="ph-b" id="lista"></div>
+      </div>
+
+      <div class="zoom">
+        <div class="zoom-h">La texture da vicino (zoom 4×)</div>
+        <div class="zoom-b" id="zoom"></div>
+      </div>
+
+      <div class="nota">
+        <b>Come giudicare.</b> Guarda il riquadro zoom: se vedi <b>puntini</b> distinti e' rumore digitale, se vedi <b>nuvole</b> morbide e' carta. Poi guarda le card a distanza normale: la texture non deve essere notata, deve solo togliere l'effetto plastica.
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const F=$('F'),O=$('O'),A=$('A'),T=$('T');
+
+const PRESET=[
+  ['Attuale in app (sbagliata)', 0.85, 4, 30, 160],
+  ['Fibra fine',                 0.30, 4, 22, 300],
+  ['Carta ruvida',               0.11, 5, 30, 400],
+  ['Cartoncino',                 0.045,5, 38, 500],
+  ['Spenta',                     0.10, 4,  0, 300],
+];
+
+function tessera(f,o,a,t){
+  const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='${t}' height='${t}'>`
+    + `<filter id='n'>`
+    + `<feTurbulence type='fractalNoise' baseFrequency='${f}' numOctaves='${o}' stitchTiles='stitch' seed='4'/>`
+    + `<feColorMatrix type='saturate' values='0'/>`
+    + `</filter>`
+    + `<rect width='${t}' height='${t}' filter='url(%23n)' opacity='${(a/100).toFixed(3)}'/></svg>`;
+  return `url("data:image/svg+xml,${encodeURIComponent(svg).replace(/%2523/g,'%23')}")`;
+}
+
+function applica(){
+  const f=+F.value, o=+O.value, a=+A.value, t=+T.value;
+  $('vF').textContent=f.toFixed(3);
+  $('vO').textContent=o;
+  $('vA').textContent=a===0?'spenta':a+'%';
+  $('vT').textContent=t+'px';
+
+  const url = a===0 ? 'none' : tessera(f,o,a,t);
+  document.body.style.backgroundImage = url;
+  document.querySelectorAll('.card, .zoom-b').forEach(el=>el.style.backgroundImage=url);
+  // zoom: stessa texture ingrandita 4×
+  $('zoom').style.backgroundSize = (t*4)+'px '+(t*4)+'px';
+
+  PRESET.forEach((p,i)=>{
+    document.querySelectorAll('#presets .pz')[i].dataset.on =
+      (p[1]===f && p[2]===o && p[3]===a && p[4]===t) ? '1':'0';
+  });
+  stampaCss(f,o,a,t);
+}
+
+$('presets').innerHTML = PRESET.map(p=>`<button class="pz">${p[0]}</button>`).join('');
+document.querySelectorAll('#presets .pz').forEach((b,i)=>b.onclick=()=>{
+  F.value=PRESET[i][1]; O.value=PRESET[i][2]; A.value=PRESET[i][3]; T.value=PRESET[i][4]; applica();
+});
+
+const LAV=[
+ ['🛵','Rider serale in centro','Sottoripa · 1,2 km','Assunto','verde'],
+ ['🍽️','Cameriere per sabato','Masetto · 2,4 km','In attesa','ocra'],
+ ['🧹','Pulizie ufficio','Foce · 3,1 km','Concluso','neutro'],
+];
+$('lista').innerHTML = LAV.map(([i,t,s,b,k])=>`
+  <div class="card">
+    <div class="ico">${i}</div>
+    <div style="flex:1;min-width:0">
+      <p class="tit">${t}</p><p class="sub">${s}</p>
+      <span class="bdg" style="background:var(--${k}-soft);color:var(--${k});border-color:var(--${k})">${b}</span>
+    </div>
+  </div>`).join('');
+
+/* --- pezzetti di carta --- */
+const stato={rot:false,lift:false,irr:false};
+function toggle(id,chiave,fn){
+  const b=$(id);
+  b.onclick=()=>{ stato[chiave]=!stato[chiave]; b.dataset.on=stato[chiave]?'1':'0'; fn(); applica(); };
+}
+function aggiornaCarta(){
+  const r=document.documentElement.style;
+  r.setProperty('--rot-a', stato.rot ? '-0.55deg' : '0deg');
+  r.setProperty('--rot-b', stato.rot ? '0.4deg'  : '0deg');
+  document.querySelectorAll('.card').forEach((c,i)=>{
+    c.style.boxShadow = stato.lift
+      ? '2px 3px 0 -1px rgb(56 45 36/.13), 0 6px 9px -5px rgb(56 45 36/.28)'
+      : '0 1.5px 0 0 rgb(56 45 36/.10), 0 3px 5px -2px rgb(56 45 36/.13)';
+    c.style.borderRadius = stato.irr
+      ? (i%2 ? '17px 13px 18px 14px' : '13px 18px 14px 17px')
+      : '15px';
+  });
+}
+toggle('bRot','rot',aggiornaCarta);
+toggle('bLift','lift',aggiornaCarta);
+toggle('bIrr','irr',aggiornaCarta);
+
+function stampaCss(f,o,a,t){
+  const righe=[`--grana: url("data:image/svg+xml,…baseFrequency='${f}' numOctaves='${o}' … opacity='${(a/100).toFixed(2)}' … ${t}×${t}");`];
+  if(stato.rot)  righe.push(`.material-card:nth-child(odd){transform:rotate(-.55deg)}  even: .4deg`);
+  if(stato.lift) righe.push(`--shadow-md: 2px 3px 0 -1px …/.13, 0 6px 9px -5px …/.28;`);
+  if(stato.irr)  righe.push(`border-radius: 17px 13px 18px 14px  /  13px 18px 14px 17px`);
+  $('css').textContent = righe.join('\n\n');
+}
+
+F.value=0.11; O.value=5; A.value=30; T.value=400;
+applica(); aggiornaCarta();
+</script>
+</body>
+</html>
