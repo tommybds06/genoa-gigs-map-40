@@ -28,6 +28,10 @@ import { useAppTheme } from "@/hooks/useAppTheme";
 import { useUser } from "@/contexts/UserContext";
 import { getJobIconFromTags } from "@/lib/jobIcons";
 import { formatTempoTrascorso } from "@/lib/dates";
+import { isTypeTag } from "@/constants/tags";
+
+// Tag durata usati prima della rinomina, ancora presenti su annunci vecchi
+const LEGACY_TYPE_TAGS = ['Occasionale', 'A Chiamata', 'Mensile', 'Settimanale', 'Weekend'];
 
 interface Profile {
   id: string;
