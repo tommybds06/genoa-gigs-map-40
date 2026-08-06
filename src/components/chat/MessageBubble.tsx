@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion, useMotionValue, useTransform, useAnimation, PanInfo } from "framer-motion";
 import { CheckCheck, Reply } from "lucide-react";
+import { useAttachmentUrl } from "@/hooks/useAttachmentUrl";
 
 interface Message {
   id: string;
