@@ -279,7 +279,7 @@ const Messaggi = () => {
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || !user) return;
+    if (!file || !user || !selectedChat) return;
 
     // Validate file type
     if (!file.type.startsWith('image/')) {
@@ -296,19 +296,15 @@ const Messaggi = () => {
     setUploadingImage(true);
     try {
       const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+      const filePath = `${selectedChat.id}/${user.id}/${Date.now()}.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
         .from('chat-attachments')
-        .upload(fileName, file);
+        .upload(filePath, file);
 
       if (uploadError) throw uploadError;
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('chat-attachments')
-        .getPublicUrl(fileName);
-
-      setPendingAttachment(publicUrl);
+      setPendingAttachment(filePath);
       toast.success('Immagine pronta per l\'invio', { duration: 2000 });
     } catch (error) {
       console.error('Error uploading image:', error);
