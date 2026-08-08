@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.touch_chat_updated_at() FROM PUBLIC;
