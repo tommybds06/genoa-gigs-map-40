@@ -181,6 +181,7 @@ export type Database = {
           created_at: string
           id: string
           is_read: boolean
+          is_system: boolean
           reply_to_id: string | null
           sender_id: string
         }
@@ -191,6 +192,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_read?: boolean
+          is_system?: boolean
           reply_to_id?: string | null
           sender_id: string
         }
@@ -201,10 +203,18 @@ export type Database = {
           created_at?: string
           id?: string
           is_read?: boolean
+          is_system?: boolean
           reply_to_id?: string | null
           sender_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "messages_chat_id_fkey"
+            columns: ["chat_id"]
+            isOneToOne: false
+            referencedRelation: "chat_overview"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "messages_chat_id_fkey"
             columns: ["chat_id"]
@@ -351,7 +361,60 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      chat_overview: {
+        Row: {
+          application_status: string | null
+          created_at: string | null
+          employer_avatar_url: string | null
+          employer_full_name: string | null
+          employer_id: string | null
+          employer_photos: string[] | null
+          id: string | null
+          job_id: string | null
+          job_title: string | null
+          last_message_content: string | null
+          last_message_created_at: string | null
+          last_message_has_attachment: boolean | null
+          last_message_sender_id: string | null
+          unread_for_employer: number | null
+          unread_for_worker: number | null
+          updated_at: string | null
+          worker_avatar_url: string | null
+          worker_full_name: string | null
+          worker_id: string | null
+          worker_photos: string[] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chats_employer_id_fkey"
+            columns: ["employer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chats_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chats_worker_id_fkey"
+            columns: ["worker_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_sender_id_fkey"
+            columns: ["last_message_sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       get_user_role: {
