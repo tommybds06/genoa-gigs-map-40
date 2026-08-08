@@ -787,7 +787,7 @@ const Messaggi = () => {
                  <div className={`w-16 h-16 ${theme.accentBg} ${theme.accentText} rounded-full flex items-center justify-center mx-auto mb-4`}>
                    <MessageCircle className="w-8 h-8" />
                  </div>
-                 <h2 className="text-xl font-semibold mb-2">Nessun Messaggio</h2>
+                 <h2 className="titolo-vuoto mb-2">Nessun Messaggio</h2>
                  <p className="text-muted-foreground text-sm">
                    Quando contatterai un employer o riceverai messaggi, appariranno qui.
                  </p>

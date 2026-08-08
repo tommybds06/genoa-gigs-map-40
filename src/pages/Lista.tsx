@@ -9,7 +9,7 @@ import { TagBadges } from "@/components/tags/TagSelector";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { JobDetailsSheet } from "@/components/map/JobDetailsSheet";
 import { getJobIconFromTags } from "@/lib/jobIcons";
-import { isRoleTag } from "@/constants/tags";
+import { getRoleTag } from "@/constants/tags";
 import { useOpenJobs, useEmployerJobs, Job } from "@/hooks/useJobs";
 import { useUserApplications } from "@/hooks/useApplications";
 import { JobCardSkeletonList } from "@/components/skeletons/JobCardSkeleton";
@@ -84,7 +84,7 @@ const Lista = () => {
               </TabsList>
 
               <TabsContent value="explore" className="mt-0 focus-visible:outline-none">
-                <h2 className="text-lg font-semibold mb-3 text-foreground">
+                <h2 className="titolo-sezione mb-3">
                   Impieghi per Te
                 </h2>
                 <JobsList 
@@ -97,7 +97,7 @@ const Lista = () => {
               </TabsContent>
 
               <TabsContent value="applications" className="mt-0 focus-visible:outline-none">
-                <h2 className="text-lg font-semibold mb-3 text-foreground">
+                <h2 className="titolo-sezione mb-3">
                   Stato Candidature
                 </h2>
                 <ApplicationsList 
@@ -109,7 +109,7 @@ const Lista = () => {
             </Tabs>
           ) : (
             <>
-              <h2 className="text-lg font-semibold mb-3 text-foreground">
+              <h2 className="titolo-sezione mb-3">
                 I tuoi Annunci
               </h2>
               <JobsList 
@@ -161,7 +161,7 @@ function JobsList({ jobs, loading, isEmployer, hasTags, onJobClick }: JobsListPr
   return (
     <div className="space-y-3 card-tilt">
       {jobs.map((job, index) => {
-        const roleTag = job.tags?.find(t => isRoleTag(t));
+        const roleTag = getRoleTag(job.tags);
         const Icon = getJobIconFromTags(job.tags);
         const roleLabel = roleTag || "Generale";
         
@@ -235,7 +235,7 @@ function ApplicationsList({ applications, loading, userId }: ApplicationsListPro
         <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-4">
           <FileText className="w-8 h-8 text-muted-foreground" />
         </div>
-        <h3 className="font-semibold text-lg mb-2">Nessuna candidatura</h3>
+        <h3 className="titolo-vuoto mb-2">Nessuna candidatura</h3>
         <p className="text-muted-foreground text-sm max-w-xs">
           Non hai ancora inviato candidature. Esplora gli annunci e candidati!
         </p>
@@ -261,7 +261,7 @@ function EmptyState({ isEmployer, hasTags }: { isEmployer: boolean; hasTags: boo
         <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-4">
           <Briefcase className="w-8 h-8 text-muted-foreground" />
         </div>
-        <h3 className="font-semibold text-lg mb-2">Nessun annuncio creato</h3>
+        <h3 className="titolo-vuoto mb-2">Nessun annuncio creato</h3>
         <p className="text-muted-foreground text-sm max-w-xs">
           Crea il tuo primo annuncio di lavoro per trovare lavoratori
         </p>
@@ -278,7 +278,7 @@ function EmptyState({ isEmployer, hasTags }: { isEmployer: boolean; hasTags: boo
           <Tag className="w-8 h-8 text-muted-foreground" />
         )}
       </div>
-      <h3 className="font-semibold text-lg mb-2">
+      <h3 className="titolo-vuoto mb-2">
         {hasTags ? "Nessun lavoro trovato" : "Imposta i tuoi interessi"}
       </h3>
       <p className="text-muted-foreground text-sm max-w-xs mb-4">

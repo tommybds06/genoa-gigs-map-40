@@ -277,6 +277,23 @@
 }
 
 @layer components {
+  /* ---- SCALA DEI TITOLI ----
+     Un solo posto dove cambiare quando arrivera' il font display: mettendo
+     qui `font-family`, tutte le intestazioni dell'app si adeguano insieme.
+
+     La gerarchia era ROVESCIATA: il titolo di sezione e quello dell'empty
+     state erano entrambi `text-lg`, quindi il messaggio "Nessuna candidatura"
+     pesava quanto "Impieghi per Te" — l'occhio prendeva prima la cosa meno
+     importante. Ora ci sono due livelli distinti. */
+  .titolo-sezione {
+    @apply text-2xl font-bold tracking-tight text-foreground;
+  }
+
+  /* Sta DENTRO una sezione, quindi non puo' competere col suo titolo. */
+  .titolo-vuoto {
+    @apply text-base font-semibold text-foreground;
+  }
+
   /* La card e' un PEZZETTO DI CARTA: foglio appena piu' chiaro del fondo,
      bordo visibile, ombra corta. La gerarchia la fa il bordo — il salto di
      tono da solo la riporterebbe a essere un rettangolo bianco.

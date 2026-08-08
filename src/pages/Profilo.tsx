@@ -6,7 +6,7 @@ import { useUser } from "@/contexts/UserContext";
 import { useAppTheme } from "@/hooks/useAppTheme";
 import { useNavigate } from "react-router-dom";
 import { TagSelector, TagBadges } from "@/components/tags/TagSelector";
-import { isTypeTag } from "@/constants/tags";
+import { soloRuoli } from "@/constants/tags";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { WorkerJobHistory } from "@/components/profile/WorkerJobHistory";
@@ -229,12 +229,10 @@ const Profilo = () => {
                 <TagSelector selectedTags={selectedTags} onChange={setSelectedTags} roleLayout="grid" showDuration={false} />
               </>
             ) : (
-              // Solo i ruoli: la durata e' stata tolta dalle preferenze
-              // (il selettore ha gia' showDuration={false}), ma i tag salvati
-              // prima restano nel profilo e comparivano come chip blu in mezzo
-              // agli arancioni. Si filtrano in lettura: nessuna migration, e i
-              // dati vecchi non danno fastidio.
-              <TagBadges tags={selectedTags.filter((t) => !isTypeTag(t))} />
+              // Solo i ruoli: la durata è stata tolta dalle preferenze, ma i
+              // tag salvati prima restano nel profilo. Si filtrano in lettura,
+              // così non serve nessuna migration sui dati.
+              <TagBadges tags={soloRuoli(selectedTags)} />
             )}
           </div>
         )}

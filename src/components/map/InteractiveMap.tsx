@@ -1,6 +1,6 @@
 import { memo, useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import Map, { Marker, Popup, type MapRef } from "react-map-gl";
+import Map, { Marker, Popup, NavigationControl } from "react-map-gl";
 import { Clock } from "lucide-react";
 import { OrologioIcon } from "@/components/icons/uiIcons";
 import { Badge } from "@/components/ui/badge";
@@ -14,7 +14,6 @@ import { useAppTheme } from "@/hooks/useAppTheme";
 import { getJobIconFromTags } from "@/lib/jobIcons";
 import { getTagClasses } from "@/lib/tagColors";
 import { groupJobsByEmployer, EmployerGroup } from "@/lib/groupJobsByEmployer";
-import { applyPaperStyle } from "@/lib/mapPaperStyle";
 import { Job } from "@/hooks/useJobs";
 import { cn } from "@/lib/utils";
 import "mapbox-gl/dist/mapbox-gl.css";
@@ -124,44 +123,6 @@ function InteractiveMapInner({
   const { theme } = useAppTheme();
   const location = useLocation();
   const mapNavigate = useNavigate();
-
-  // Stile "cartina" applicato a runtime (prototipo, vedi lib/mapPaperStyle.ts)
-  const mapRef = useRef<MapRef>(null);
-
-  /**
-   * Il momento in cui si ridipinge e' la parte delicata.
-   * `onLoad` scatta una volta sola: se lo stile viene sostituito dopo (cambio
-   * di mapStyle, `reuseMaps` che ricicla un'istanza gia' caricata) i colori
-   * tornano quelli di serie e nessuno li riapplica. E siccome mapbox-gl lancia
-   * eccezioni finche' lo stile non e' pronto — che noi inghiottiamo — il
-   * fallimento e' del tutto silenzioso: la mappa resta di default senza un
-   * errore in console.
-   *
-   * `idle` scatta ogni volta che la mappa ha finito di caricare e disegnare:
-   * e' il momento in cui i layer esistono di sicuro.
-   */
-  useEffect(() => {
-    const m = mapRef.current?.getMap();
-    if (!m) return;
-
-    const ridipingi = () => {
-      if (!m.isStyleLoaded?.()) return;
-      const esito = applyPaperStyle(m);
-      if (import.meta.env.DEV) {
-        console.info(
-          `[Politask] stile cartina: ${esito.tocchi} proprieta' su ${esito.layer} layer`
-        );
-      }
-    };
-
-    ridipingi();
-    m.on("styledata", ridipingi);
-    m.on("idle", ridipingi);
-    return () => {
-      m.off("styledata", ridipingi);
-      m.off("idle", ridipingi);
-    };
-  }, [mapboxToken]);
 
   // Reopen sheet when returning from employer profile
   const didRestoreJob = useRef(false);
@@ -323,18 +284,12 @@ function InteractiveMapInner({
           zoom: initialZoom,
         }}
         style={{ width: "100%", height: "100%" }}
-        /* outdoors-v12 invece di streets-v12: ha CURVE DI LIVELLO e rilievo, che
-           sono il segno grafico della cartina geografica. streets-v12 non le ha,
-           e per questo la mappa restava un foglio piatto. Una riga per tornare
-           indietro se non convince. */
-        mapStyle="mapbox://styles/mapbox/outdoors-v12"
+        mapStyle="mapbox://styles/mapbox/streets-v12"
         mapboxAccessToken={mapboxToken}
-        ref={mapRef}
         onClick={handleMapClick}
         reuseMaps
       >
-        {/* Zoom nascosto: su mobile si pizzica con le dita, e i quadrati bianchi
-            di serie erano l'unica cosa fuori palette rimasta sulla mappa. */}
+        <NavigationControl position="top-right" showCompass={false} />
         
         {/* User location marker (Worker only) */}
         {userLocation && (

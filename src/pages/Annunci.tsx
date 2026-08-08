@@ -310,7 +310,7 @@ const Annunci = () => {
           ) : applications.length === 0 ? (
             <div className="text-center py-12">
               <XIcon className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-              <h3 className="font-semibold text-lg mb-1">Nessuna candidatura</h3>
+              <h3 className="titolo-vuoto mb-1">Nessuna candidatura</h3>
               <p className="text-sm text-muted-foreground">
                 Non ci sono ancora candidati per questo annuncio
               </p>
@@ -402,7 +402,7 @@ const Annunci = () => {
 
       <main className="flex-1 px-4 pb-4 overflow-y-auto">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-semibold text-foreground">I Tuoi Annunci Pubblicati</h2>
+          <h2 className="titolo-sezione">I Tuoi Annunci Pubblicati</h2>
           <Button
             onClick={() => navigate('/create-job')}
             className="bg-employer hover:bg-employer-700 text-employer-foreground rounded-full px-4 touch-feedback"
@@ -430,7 +430,7 @@ const Annunci = () => {
         ) : jobs.length === 0 ? (
           <div className="text-center py-12">
             <Briefcase className={`h-12 w-12 ${theme.primaryText} mx-auto mb-3`} />
-            <h3 className="font-semibold text-lg mb-1">Nessun annuncio</h3>
+            <h3 className="titolo-vuoto mb-1">Nessun annuncio</h3>
             <p className="text-sm text-muted-foreground">
               Non hai ancora creato annunci di lavoro
             </p>

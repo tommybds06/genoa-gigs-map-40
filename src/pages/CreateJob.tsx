@@ -171,18 +171,20 @@ const CreateJob = () => {
       className="fixed inset-0 bg-background overflow-y-auto"
       style={{ touchAction: 'pan-y', WebkitOverflowScrolling: 'touch' }}
     >
-      {/* Header */}
-      <div className="bg-employer text-employer-foreground px-6 py-6">
-        <div className="flex items-center gap-3 mb-2">
-          <button 
+      {/* Header — era un blocco blu pieno che si interrompeva di netto sulla
+          carta: l'unica schermata dell'app fatta cosi'. Ora e' carta come le
+          altre, e il colore del ruolo resta sulla freccia e sul bordo. */}
+      <div className="bg-background border-b-2 border-border px-6 pt-8 pb-4">
+        <div className="flex items-center gap-3 mb-1">
+          <button
             onClick={() => navigate(-1)}
-            className="p-2 -ml-2 rounded-full hover:bg-white/10 transition-colors"
+            className="p-2 -ml-2 rounded-full hover:bg-employer-50 transition-colors touch-feedback"
           >
-            <IndietroIcon className="w-5 h-5" />
+            <IndietroIcon className="w-5 h-5 text-employer-800" />
           </button>
-          <h1 className="text-xl font-bold">Crea Annuncio</h1>
+          <h1 className="titolo-sezione">Crea Annuncio</h1>
         </div>
-        <p className="text-primary-foreground/75 text-sm">
+        <p className="text-muted-foreground text-sm">
           Pubblica un nuovo annuncio di lavoro
         </p>
       </div>
