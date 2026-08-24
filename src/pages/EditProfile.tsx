@@ -133,7 +133,12 @@ const EditProfile = () => {
   return (
     <div className="flex flex-col min-h-screen bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-md px-4 pt-4 pb-3 safe-top border-b border-border">
+      {/* ⚠️ NIENTE `safe-top` qui — e' gia' tornato due volte e schiaccia la
+          pagina. `.safe-top` imposta `padding-top: env(safe-area-inset-top)`,
+          che nel browser vale 0 e, arrivando dopo nel CSS compilato, ANNULLA
+          il `pt-4`. La forma sotto tiene entrambe le cose: almeno 1rem, di piu'
+          se il dispositivo ha una tacca. */}
+      <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-md px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-3 border-b border-border">
         <div className="flex items-center gap-3">
           <button 
             onClick={handleBack}
@@ -144,7 +149,6 @@ const EditProfile = () => {
           <h1 className="text-xl font-bold text-foreground">Modifica Profilo</h1>
         </div>
       </header>
-
       <main className="flex-1 px-4 py-6 pb-24 overflow-y-auto">
         {/* Photo Gallery Section */}
         <div className="mb-6">

@@ -320,7 +320,8 @@ const Onboarding = () => {
         <Button
           onClick={handleComplete}
           disabled={loading}
-          className={`w-full ${buttonBgClass} text-primary-foreground font-semibold py-6`}
+          size="lg"
+          className={`w-full ${buttonBgClass} text-primary-foreground font-semibold`}
         >
           {loading ? (
             <>

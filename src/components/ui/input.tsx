@@ -15,7 +15,10 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
           // TagSelector pillola, select quartiere con icona) e l'incoerenza si
           // sentiva piu' che altrove, perche' il campo e' cio' che si tocca di piu'.
           // h-12: bersaglio di tocco decente su mobile.
-          "flex h-12 w-full rounded-xl border border-input bg-muted px-4 py-2 text-base ring-offset-background transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:border-primary focus-visible:bg-card disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
+          // Il focus usa `ring`/`border-ring`, non `primary`: cosi' segue il
+          // ruolo (vedi [data-ruolo="employer"] in index.css) invece di essere
+          // arancione anche in contesto employer.
+          "flex h-12 w-full rounded-xl border border-input bg-muted px-4 py-2 text-base ring-offset-background transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:border-ring focus-visible:bg-card disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
           className,
         )}
         ref={ref}

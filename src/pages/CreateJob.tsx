@@ -264,9 +264,9 @@ const CreateJob = () => {
                 key={tag}
                 type="button"
                 onClick={() => setSelectedTypeTag(tag)}
-                className={`flex items-center justify-center px-3 py-2.5 rounded-full text-sm font-medium transition-all border-2 ${
+                className={`flex items-center justify-center px-3 py-2.5 sagoma-quartiere rounded-[19px] text-sm font-medium transition-all border-2 ${
                   selectedTypeTag === tag
-                    ? 'bg-employer text-employer-foreground border-employer'
+                    ? 'bg-employer-700 text-employer-foreground border-employer-700'
                     : 'bg-employer-50 text-employer border-transparent hover:bg-employer-100'
                 }`}
               >
@@ -280,7 +280,8 @@ const CreateJob = () => {
         {/* Role Tag (Ruoli) - Single Selection Required with Custom Option */}
         <div className="space-y-3">
           <Label className="text-base font-medium flex items-center gap-2">
-            <GenericoIcon className="h-4 w-4 text-primary" />
+            {/* era arancione: unica icona della schermata a non seguire il ruolo */}
+            <GenericoIcon className="h-4 w-4 text-employer" />
             Ruolo <span className="text-destructive">*</span>
           </Label>
           <p className="text-sm text-muted-foreground">
@@ -296,13 +297,13 @@ const CreateJob = () => {
                   key={tag}
                   type="button"
                   onClick={() => handleRoleSelect(tag)}
-                  className={`flex flex-col items-center gap-1.5 p-3 rounded-xl text-sm font-medium transition-all border-2 ${
+                  className={`flex flex-col items-center gap-1.5 p-3 sagoma-tag rounded-[28px] text-sm font-medium transition-all border-2 ${
                     isSelected
-                      ? 'bg-primary text-primary-foreground border-primary'
-                      : 'bg-accent text-accent-foreground border-transparent hover:bg-primary/20'
+                      ? 'bg-employer-700 text-employer-foreground border-transparent'
+                      : 'bg-accent text-accent-foreground border-transparent hover:bg-accent/70'
                   }`}
                 >
-                  <Icon className={`w-5 h-5 ${isSelected ? 'text-primary-foreground' : 'text-accent-foreground'}`} />
+                  <Icon className={`w-5 h-5 ${isSelected ? 'text-employer-foreground' : 'text-accent-foreground'}`} />
                   <span className="text-xs text-center leading-tight">{tag}</span>
                 </button>
               );
@@ -312,13 +313,13 @@ const CreateJob = () => {
             <button
               type="button"
               onClick={() => handleRoleSelect('custom')}
-              className={`flex flex-col items-center gap-1.5 p-3 rounded-xl text-sm font-medium transition-all border-2 ${
+              className={`flex flex-col items-center gap-1.5 p-3 sagoma-tag rounded-[28px] text-sm font-medium transition-all border-2 ${
                 isCustomRole
-                  ? 'bg-primary text-primary-foreground border-primary'
-                  : 'bg-accent text-accent-foreground border-transparent hover:bg-primary/20'
+                  ? 'bg-employer-700 text-employer-foreground border-transparent'
+                  : 'bg-accent text-accent-foreground border-transparent hover:bg-accent/70'
               }`}
             >
-              <PennaIcon className={`w-5 h-5 ${isCustomRole ? 'text-primary-foreground' : 'text-accent-foreground'}`} />
+              <PennaIcon className={`w-5 h-5 ${isCustomRole ? 'text-employer-foreground' : 'text-accent-foreground'}`} />
               <span className="text-xs text-center leading-tight">Altro</span>
             </button>
           </div>
@@ -346,7 +347,8 @@ const CreateJob = () => {
         <Button
           onClick={handleSubmit}
           disabled={loading}
-          className="w-full bg-employer hover:bg-employer-700 text-employer-foreground font-semibold py-6"
+          size="lg"
+          className="w-full bg-employer-700 hover:bg-employer-800 text-employer-foreground font-semibold"
         >
           {loading ? (
             <>

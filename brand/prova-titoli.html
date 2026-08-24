@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Politask — Prova dei titoli</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300..900&family=Gabarito:wght@400..900&family=Shantell+Sans:ital,wght@0,300..800;1,300..800&family=Bricolage+Grotesque:opsz,wght@12..96,200..800&family=Baloo+2:wght@400..800&family=Fraunces:ital,opsz,wght@0,9..144,100..900;1,9..144,100..900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --carta:#F4EEE2; --foglio:#FAF5E9; --incavo:#E8E1D1; --linea:#DACFB8;
+  --ink:#382D24; --ink-soft:#746759;
+  --arancio:#F6A24D; --arancio-ink:#A7531B; --blu:#6E97CC;
+  --ocra:#A57727; --ocra-soft:#F0E6D0; --verde:#337154; --verde-soft:#DDEEE6;
+}
+*{box-sizing:border-box}
+body{margin:0;padding:26px 18px 70px;background:var(--carta);color:var(--ink);
+     font-family:'Outfit',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1180px;margin:0 auto}
+h1{font-size:24px;margin:0 0 5px;letter-spacing:-.02em;font-family:'Gabarito',sans-serif}
+.lead{margin:0 0 16px;font-size:13.5px;line-height:1.65;color:var(--ink-soft);max-width:76ch}
+
+#check{margin:0 0 20px;padding:11px 15px;border:2px solid var(--ink);border-radius:13px;
+       background:var(--foglio);font-size:12.5px;line-height:1.6}
+.ok{color:#2C6B3F;font-weight:700}.ko{color:#A13D2D;font-weight:700}
+
+.griglia{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:22px}
+.col h2{margin:0 0 2px;font-size:15px;font-weight:700;font-family:'Outfit',sans-serif}
+.col .nota{margin:0 0 10px;font-size:12px;color:var(--ink-soft);font-family:'Outfit',sans-serif;line-height:1.5}
+
+/* --- telefono a larghezza VERA: 390px, come nell'app --- */
+.ph{width:100%;max-width:390px;border:2px solid var(--linea);border-radius:20px;
+    overflow:hidden;background:var(--carta)}
+.ph-top{padding:14px 16px 4px}
+.logo{font-size:26px;font-weight:800;color:var(--arancio);letter-spacing:-.02em}
+.ph-b{padding:8px 16px 18px}
+
+/* MISURE ESATTE dei token in index.css — non approssimate */
+.t-sez{font-size:1.5rem;line-height:1.9375rem;letter-spacing:-.02em;font-weight:700;margin:0 0 10px}
+.t-vuoto{font-size:1rem;line-height:1.5rem;letter-spacing:-.005em;font-weight:600;margin:0 0 3px}
+.corpo{font-family:'Outfit',sans-serif;font-size:.875rem;line-height:1.3125rem;color:var(--ink-soft);margin:0 0 14px}
+
+.card{background:var(--foglio);border:1.5px solid var(--linea);border-radius:15px;
+      padding:10px 12px;margin-bottom:8px;box-shadow:0 1.5px 0 0 rgb(56 45 36/.10)}
+.card .tt{font-size:1rem;font-weight:600;margin:0;font-family:'Outfit',sans-serif}
+.card .mm{font-size:.75rem;color:var(--ink-soft);margin:2px 0 0;font-family:'Outfit',sans-serif}
+.bdg{font-size:10.5px;font-weight:700;padding:2px 9px;border-radius:999px;border:1.5px solid;
+     font-family:'Outfit',sans-serif}
+.vuoto{text-align:center;padding:16px 8px 6px}
+.nav{display:flex;justify-content:space-around;padding:10px 0 4px;border-top:2px solid var(--linea);margin-top:10px}
+.nav i{width:20px;height:20px;border-radius:6px;background:var(--ink-soft);opacity:.35;display:block}
+.nav i:first-child{background:var(--arancio);opacity:1}
+
+.tutti{margin-top:8px;padding-top:10px;border-top:1.5px solid var(--linea)}
+.tutti p{margin:0 0 4px;font-size:1.5rem;line-height:1.4;font-weight:700;letter-spacing:-.02em}
+
+.avviso{border:2px solid var(--ink);background:var(--ocra-soft);border-radius:13px;
+        padding:12px 15px;font-size:13px;line-height:1.65;margin-top:22px}
+code{background:var(--incavo);padding:1px 5px;border-radius:4px;font-size:12px;
+     font-family:ui-monospace,monospace}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Prova dei titoli</h1>
+  <p class="lead">Le tue <b>intestazioni vere</b>, alle misure esatte dei token di <code>index.css</code> — sezione 1,5rem/700, empty state 1rem/600 — su schermo da 390px come nell'app. Tutti i font qui sono <b>gratuiti</b>: servono a rispondere alla domanda che viene prima di Shinjo, cioè <i>se</i> un display hand-drawn regge in questa interfaccia. Confronta con l'anteprima di Shinjo su Creative Market scrivendo le stesse parole.</p>
+
+  <div id="check">Verifica caricamento font…</div>
+  <div class="griglia" id="griglia"></div>
+
+  <div class="avviso">
+    <b>Cosa guardare, in ordine.</b><br>
+    1. «Imposta i tuoi interessi» e «Stato Candidature» — sono le più lunghe: vanno a capo? Si schiacciano?<br>
+    2. Le <b>accentate</b>: «Più vicino a te», «È tutto pronto». Un display senza set accentato completo qui si rompe.<br>
+    3. Il titolo di sezione deve <b>dominare</b> l'empty state sotto. Se i due pesi si assomigliano, quel font non regge la gerarchia — ed è il problema che ci si aspetta da <b>Shinjo, che ha un peso solo</b>.<br>
+    4. Allontanati un metro e socchiudi gli occhi: quello giusto resta leggibile e riconoscibile.
+  </div>
+</div>
+
+<script>
+const FONT = [
+  ['Gabarito', "'Gabarito'", 'Ha vinto il confronto a 4. Geometrico come Outfit ma con tagli meno prevedibili. La scelta prudente.'],
+  ['Shantell Sans', "'Shantell Sans'", 'Il più vicino alla categoria di Shinjo: disegnato a mano davvero, informale. Variabile, quindi i pesi ci sono — vantaggio che Shinjo non ha.'],
+  ['Bricolage Grotesque', "'Bricolage Grotesque'", 'Irregolarità volute nelle larghezze e nelle terminazioni. Lettura più letterale di «hand-drawn ma pulito».'],
+  ['Baloo 2', "'Baloo 2'", 'Arrotondato e pieno, in continuità col logo e con le icone. Il rischio del brief è qui: può scivolare nell\'infantile.'],
+  ['Fraunces', "'Fraunces'", 'Serif variabile con assi soft e wonk. Caldissimo sulla carta, il più lontano dal look startup. Ma è un serif.'],
+  ['Outfit (attuale)', "'Outfit'", 'Il riferimento: com\'è adesso, senza display.'],
+];
+
+const schermata = (f) => `
+  <div class="ph">
+    <div class="ph-top"><div class="logo" style="font-family:${f},sans-serif">Politask</div></div>
+    <div class="ph-b" style="font-family:${f},'Outfit',sans-serif">
+
+      <p class="t-sez">Stato Candidature</p>
+
+      <div class="card">
+        <p class="tt">Rider serale in centro</p>
+        <p class="mm">Masetto · 3 giorni fa</p>
+        <span class="bdg" style="background:var(--verde-soft);color:var(--verde);border-color:var(--verde);margin-top:6px;display:inline-block">Assunto</span>
+      </div>
+      <div class="card">
+        <p class="tt">Cameriere per sabato</p>
+        <p class="mm">mario rossi · 12 gen</p>
+        <span class="bdg" style="background:transparent;color:var(--ocra);border-color:var(--ocra);margin-top:6px;display:inline-block">In Attesa</span>
+      </div>
+
+      <div class="vuoto">
+        <p class="t-vuoto">Imposta i tuoi interessi</p>
+        <p class="corpo">Seleziona i tag nel tuo profilo per vedere i lavori personalizzati per te</p>
+      </div>
+
+      <div class="tutti">
+        <p>Messaggi</p>
+        <p>Impieghi per Te</p>
+        <p>I tuoi Annunci</p>
+        <p>Nessuna candidatura</p>
+        <p>Più vicino a te · È tutto pronto</p>
+      </div>
+
+      <div class="nav"><i></i><i></i><i></i><i></i></div>
+    </div>
+  </div>`;
+
+document.getElementById('griglia').innerHTML = FONT.map(([n,f,nota]) => `
+  <div class="col">
+    <h2>${n}</h2>
+    <p class="nota">${nota}</p>
+    ${schermata(f)}
+  </div>`).join('');
+
+document.fonts.ready.then(() => {
+  const esiti = FONT.map(([n,f]) => ({ n: f.replace(/'/g,''), ok: document.fonts.check(`700 24px "${f.replace(/'/g,'')}"`) }));
+  const ko = esiti.filter(e => !e.ok);
+  const box = document.getElementById('check');
+  box.innerHTML = ko.length === 0
+    ? `<span class="ok">✓ Tutti i font sono caricati.</span> Il confronto è attendibile.`
+    : `<span class="ko">⚠ Non hanno caricato: ${ko.map(k=>k.n).join(', ')}.</span> Quelle colonne mostrano Outfit al loro posto — <b>non giudicarle</b>. Di solito è la connessione o un blocco su fonts.googleapis.com: ricarica.`;
+});
+</script>
+</body>
+</html>

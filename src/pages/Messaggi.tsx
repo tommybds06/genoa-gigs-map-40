@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { MessageCircle, ArrowLeft, Send, Loader2, ImagePlus, X, CheckCircle, Check } from "lucide-react";
-import { IndietroIcon, InvioIcon, ImmaginiIcon } from "@/components/icons/uiIcons";
+import { IndietroIcon, InvioIcon, ImmaginiIcon, MessaggiVuotaIcon } from "@/components/icons/uiIcons";
 import { useAppTheme } from "@/hooks/useAppTheme";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -37,6 +37,7 @@ interface Message {
   is_read: boolean;
   reply_to_id: string | null;
   attachment_url: string | null;
+  is_system?: boolean;
   reply_to?: Message | null;
 }
 
@@ -107,7 +108,16 @@ const Messaggi = () => {
         },
         async (payload) => {
           const newMsg = payload.new as Message;
-          // If message is not from current user and not in current chat (use ref for stable reference)
+
+          // La lista va aggiornata SEMPRE, a ogni messaggio: cambiano ordine,
+          // anteprima e contatore. Prima questa riga stava dentro l'if qui
+          // sotto, quindi non scattava per i messaggi scritti da me ne' per
+          // quelli ricevuti mentre ero dentro quella chat — e la lista si
+          // riordinava solo al refresh della pagina.
+          queryClient.invalidateQueries({ queryKey: ['chats'] });
+
+          // Il toast invece resta condizionato: ha senso solo per un messaggio
+          // altrui arrivato in una conversazione che NON sto guardando.
           if (newMsg.sender_id !== user.id && (!selectedChatRef.current || newMsg.chat_id !== selectedChatRef.current.id)) {
             // Find sender name
             const { data: sender } = await supabase
@@ -115,11 +125,8 @@ const Messaggi = () => {
               .select('full_name')
               .eq('id', newMsg.sender_id)
               .single();
-            
+
             toast.info(`Nuovo messaggio da ${sender?.full_name || 'Utente'}`, { duration: 3000 });
-            
-            // Invalidate chats cache to update unread count
-            queryClient.invalidateQueries({ queryKey: ['chats'] });
           }
         }
       )
@@ -398,6 +405,11 @@ const Messaggi = () => {
       chat_id: chatId,
       sender_id: userId,
       content: '🎉 Complimenti! Sei stato assunto per questo incarico.',
+      // Va marcato in SCRITTURA. La migration ha riempito le righe esistenti
+      // confrontando il testo, ma quello e' un backfill una tantum: senza
+      // questa riga ogni nuova assunzione tornerebbe indistinguibile da un
+      // messaggio scritto da una persona.
+      is_system: true,
     });
     
     // 5. Only ask to remove the job if it's still visible on the map
@@ -547,7 +559,7 @@ const Messaggi = () => {
             {isEmployer && applicationStatus === 'accepted' && (
               <Button
                 size="sm"
-                className="shrink-0 bg-employer hover:bg-employer-700 text-employer-foreground"
+                className="shrink-0 bg-employer-700 hover:bg-employer-800 text-employer-foreground"
                 onClick={() => setShowHireDialog(true)}
               >
                 <CheckCircle className="h-4 w-4 mr-1" />
@@ -594,16 +606,27 @@ const Messaggi = () => {
             </div>
           ) : (
             <div className="space-y-3 py-4">
-              {messages.map((msg) => (
-                <MessageBubble
-                  key={msg.id}
-                  message={msg}
-                  isOwn={msg.sender_id === user?.id}
-                  isEmployer={isEmployer}
-                  onReply={handleReply}
-                  formatTime={formatMessageTime}
-                />
-              ))}
+              {messages.map((msg) =>
+                // I messaggi generati dall'app non sono scritti da nessuno:
+                // renderli come bolle li faceva sembrare parole dell'altra
+                // persona. Riga centrata, niente avatar, niente risposta.
+                msg.is_system ? (
+                  <div key={msg.id} className="flex justify-center py-1">
+                    <span className="max-w-[80%] text-center text-xs text-muted-foreground bg-muted border border-border rounded-full px-3 py-1.5">
+                      {msg.content}
+                    </span>
+                  </div>
+                ) : (
+                  <MessageBubble
+                    key={msg.id}
+                    message={msg}
+                    isOwn={msg.sender_id === user?.id}
+                    isEmployer={isEmployer}
+                    onReply={handleReply}
+                    formatTime={formatMessageTime}
+                  />
+                )
+              )}
             </div>
           )}
         </main>
@@ -682,7 +705,7 @@ const Messaggi = () => {
               onClick={handleSendMessage}
               disabled={(!newMessage.trim() && !pendingAttachment) || sending}
               size="icon"
-              className={`shrink-0 rounded-full h-12 w-12 ${isEmployer ? 'bg-employer hover:bg-employer-700' : 'bg-primary hover:bg-primary/90'}`}
+              className={`shrink-0 rounded-full h-12 w-12 ${isEmployer ? 'bg-employer-700 hover:bg-employer-800' : 'bg-primary hover:bg-primary/90'}`}
             >
               {sending ? (
                 <Loader2 className="h-5 w-5 animate-spin" />
@@ -708,7 +731,7 @@ const Messaggi = () => {
               </Button>
               <Button
                 onClick={handleHireWorker}
-                className={isEmployer ? "bg-employer hover:bg-employer-700 text-employer-foreground" : "bg-primary hover:bg-primary/90 text-primary-foreground"}
+                className={isEmployer ? "bg-employer-700 hover:bg-employer-800 text-employer-foreground" : "bg-primary hover:bg-primary/90 text-primary-foreground"}
               >
                 Conferma Assunzione
               </Button>
@@ -731,7 +754,7 @@ const Messaggi = () => {
               </Button>
               <Button
                 onClick={handleCompleteJob}
-                className={isEmployer ? "bg-employer hover:bg-employer-700 text-employer-foreground" : "bg-primary hover:bg-primary/90 text-primary-foreground"}
+                className={isEmployer ? "bg-employer-700 hover:bg-employer-800 text-employer-foreground" : "bg-primary hover:bg-primary/90 text-primary-foreground"}
               >
                 Conferma
               </Button>
@@ -754,7 +777,7 @@ const Messaggi = () => {
               </Button>
               <Button
                 onClick={() => handleCloseJobVisibility(true)}
-                className={isEmployer ? "bg-employer hover:bg-employer-700 text-employer-foreground" : "bg-primary hover:bg-primary/90 text-primary-foreground"}
+                className={isEmployer ? "bg-employer-700 hover:bg-employer-800 text-employer-foreground" : "bg-primary hover:bg-primary/90 text-primary-foreground"}
               >
                 Sì, rimuovi
               </Button>
@@ -772,20 +795,20 @@ const Messaggi = () => {
          {/* Simple Header with safe area */}
          <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-md px-4 pt-8 pb-3">
            <img
-             src={isEmployer ? "/images/logo-employer.svg" : "/images/logo-worker.svg"}
+             src={isEmployer ? "/images/logo-employer-v2.svg" : "/images/logo-worker-v2.svg"}
              alt="Politask"
              className="h-14 w-auto -ml-1"
            />
          </header>
  
-         <main className="flex-1 px-4 pb-4 overflow-y-auto">
+         <main className="flex-1 px-4 pt-2 pb-4 overflow-y-auto">
            {loading ? (
              <ChatListSkeleton count={5} />
            ) : chats.length === 0 ? (
              <div className="flex flex-col items-center justify-center py-12">
                <div className="material-card-elevated p-8 text-center max-w-sm animate-scale-in">
                  <div className={`w-16 h-16 ${theme.accentBg} ${theme.accentText} rounded-full flex items-center justify-center mx-auto mb-4`}>
-                   <MessageCircle className="w-8 h-8" />
+                   <MessaggiVuotaIcon className="w-8 h-8" />
                  </div>
                  <h2 className="titolo-vuoto mb-2">Nessun Messaggio</h2>
                  <p className="text-muted-foreground text-sm">
@@ -852,15 +875,10 @@ const Messaggi = () => {
                          </p>
                        )}
 
-                       {!isCompleted && chat.job?.title && (
-                         <p className="text-xs text-muted-foreground/80 truncate mt-0.5">
-                           {chat.job.title}
-                         </p>
-                       )}
                     </div>
                      {/* nonLetti > 0 e non `nonLetti &&`: con 0 React stampava lo zero. */}
                      {nonLetti > 0 && (
-                       <div className={`shrink-0 w-6 h-6 rounded-full flex items-center justify-center ${isEmployer ? 'bg-employer' : 'bg-primary'}`}>
+                       <div className={`shrink-0 w-6 h-6 rounded-full flex items-center justify-center ${isEmployer ? 'bg-employer-700' : 'bg-primary'}`}>
                          <span className="text-xs text-white font-bold">
                            {nonLetti > 9 ? '9+' : nonLetti}
                          </span>

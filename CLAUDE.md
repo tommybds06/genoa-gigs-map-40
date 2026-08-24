@@ -182,7 +182,139 @@ se li ridisegnava e "Concluso" era verde nei messaggi e grigio nelle candidature
 **Palette carta** — vedi la sezione "Sistema di temi" sopra. Sweep completo: **zero**
 colori Tailwind grezzi rimasti nell'app.
 
-**Mappa** (`src/lib/mapPaperStyle.ts` + `InteractiveMap.tsx`) — PROTOTIPO a runtime:
+### 🎨 SAGOME DISEGNATE — il sistema (agosto 2026)
+
+Tommaso ha disegnato in Illustrator **cinque tracciati**, montati con ritaglio a
+**9 sezioni**: i quattro angoli restano fissi, solo le bande centrali si allungano.
+Un disegno copre tutte le larghezze.
+
+| File sorgente | Tavola | Dove |
+|---|---|---|
+| `sagoma-bottone.svg` | 323 × 99, pillola | bottoni pieni (default, destructive) |
+| `sagoma-chip.svg` | 161 × 49, pillola | chip, tag, badge di stato |
+| `sagoma-tag.svg` | 120 × 100 | tessere quadrate con icona (griglia ruoli) |
+| `sagoma-quartiere.svg` | 250 × 56 | righe larghe e basse (quartieri, durata) |
+| `sagoma-card-{a,b,c,d}.svg` | 360 × 121 | tutte le superfici `.material-card` |
+
+**Il punto che decide tutto: MASCHERA, non bordo.** Il colore del componente viene
+**ritagliato** sulla forma (`mask-border` / `-webkit-mask-box-image`), quindi il
+margine è tagliato a mano e non c'è nessuna linea sopra. Il colore resta quello del
+tema, così hover e dual-theme continuano a funzionare da soli.
+
+Provato prima come `border-image`, cioè contorno bruno: **bocciato**, leggeva
+neobrutalista. Con tratto uniforme, riempimento piatto e niente ombra è letteralmente
+la definizione di quello stile. Provato anche il filo tenue nell'`-ink` del ruolo:
+bocciato lo stesso. La forma va bene, la linea sopra no.
+
+- ⚠️ **`fill` nello slice è obbligatorio**: senza, viene mascherato solo il bordo e il
+  centro del componente sparisce.
+- ⚠️ **La fetta verticale non può superare metà altezza** dell'immagine, se no il
+  browser la ridimensiona da solo e la forma cambia.
+- ⚠️ **`mask-border` è Blink/WebKit** (Firefox desktop no). Tutto dentro `@supports`:
+  dove non c'è, resta il raggio CSS e non si rompe niente. Con Despia si finisce su
+  WebKit, quindi in produzione è coperto.
+- ⚠️ **Niente `box-shadow` sulle card**: la maschera ritaglia anche l'ombra.
+- **Quattro varianti ribaltate** per le card, alternate ogni quattro (`nth-of-type`):
+  la card candidatura compare cinque volte di fila e cinque copie identiche leggono
+  come fotocopia. È la lezione della texture applicata prima di sbagliare.
+- ⚠️ **Su `<input>` e `<textarea>` la maschera NON viene dipinta** — sono elementi
+  rimpiazzati. Serve per forza un contenitore.
+
+**Regola generale: OGGETTI disegnati, INCAVI lisci.** Card, bottoni, chip e tessere
+hanno il margine tagliato; i campi no. Provato due volte il tratto sui campi (anche
+con guscio sovrapposto, tecnicamente corretto) e bocciato: un campo è un buco nella
+carta, il suo margine deve stare zitto. E se il tratto mosso ce l'hanno tutti, smette
+di distinguere qualcosa.
+
+**Filo sulle card: ci sono voluti quattro giri, e conta lo SPESSORE più della tinta.**
+A 2,3px un tratto chiaro è troppo largo per leggere come linea e troppo chiaro per
+leggere come contorno → qualunque colore sembra beige o grigio. A **1,1px** il problema
+sparisce e resta solo da tarare il buio: `#CBB284` beige, `#7C6A55` troppo scuro,
+**`#9C8B74` quello attuale** — da riconfermare alla revisione totale. Il colore sta nei
+`bordo-card-*.svg` e nel token `--paper-edge`, da tenere in sincrono.
+
+⚠️ **`--paper` non si tocca.** Provato ad abbassarlo a 86% per far risaltare le card:
+il margine si vedeva, ma il fondo si avvicinava in luminanza all'arancione e tornava
+il difetto originale. Lo sfondo non può risolvere il contrasto dei colori di brand,
+né schiarendo né scurendo.
+
+⚠️ **Font: provato Gabarito al posto di Outfit e riportato indietro.** Aveva vinto il
+confronto a quattro come font da *display*, ma sul testo minuto è meno neutro.
+
+### Audit punti 8-25 — chiusi (agosto 2026)
+
+Ricontrollati nel codice, non nel documento: **oltre metà erano già risolti** dal
+lavoro fatto dopo l'audit (9, 10, 12, 13, 14, 15, 16, 18, 20, 23, 24, 25). Chiusi in
+questa sessione i restanti:
+
+- **17 · mappa a filo** — via `px-4 pb-2` e `rounded-3xl` da `Index.tsx`, restano solo
+  gli angoli superiori arrotondati. ⚠️ Effetto collaterale non ovvio: a filo la bottom
+  nav copre **logo e attribuzione Mapbox**, che per i loro termini devono restare
+  visibili. Spostati in su in fondo a `index.css`.
+- **19 · zoom** — `NavigationControl` rimosso: su mobile si pizzica.
+- **8 · un solo stile di campo** — `ui/input.tsx` e `ui/textarea.tsx` erano già la
+  sorgente unica; restava fuori il campo del `TagSelector` (pillola su `bg-card`),
+  ora allineato. Gli altri `<input>` grezzi sono selettori di file nascosti.
+- **21 · densità** — la card era già compatta, ma il suo **scheletro** no (`p-4`, tre
+  righe contro due): al caricamento la lista faceva un salto. Allineato.
+- **Settings** — due sezioni si chiamavano entrambe «Account» a mezza pagina di
+  distanza. La seconda ora non ha intestazione.
+
+Resta aperto solo il **22** (sezioni del profilo tutte uguali), che avevi bocciato.
+
+### Bottoni: base pronta, cornici in attesa dei disegni
+
+`ui/button.tsx` è la sorgente unica. Raggio portato a `xl` come i campi (era `md`,
+6px, mentre input e card stavano a 12-24), altezze allineate alla scala dei campi con
+`default` a 44px — il minimo per un bersaglio di tocco.
+
+**Cancellate `.material-btn*` e `.material-input` da `index.css`: non le usava
+nessuno.** Erano un secondo sistema di bottoni e campi con raggi diversi
+(`rounded-full` contro `rounded-xl`), pronto a essere ripreso per sbaglio.
+
+Il gancio `.cornice-bottone` (`border-image` a 9 sezioni) è scritto e commentato in
+`index.css`: quando arrivano i 6 SVG basta togliere il commento. ⚠️ Con `border-image`
+il `border-radius` non ha effetto e va tolto, se no si vede l'angolo CSS sotto il disegno.
+
+### ⚠️ `data-ruolo` su `<html>` — per i token che non passano dal tema JS
+
+`UserContext` scrive `document.documentElement.dataset.ruolo`, e `index.css` ribalta
+`--ring` e `--accent` sotto `[data-ruolo="employer"]`. Risolve in un colpo due bug
+ricorrenti: l'anello di focus **arancione su ogni campo** anche in "Crea annuncio", e
+`variant="outline"` che **virava all'arancio in hover** in contesto blu. Prima si
+rincorrevano a mano schermata per schermata.
+
+### ⚠️ Tailwind ELIMINA le classi che non trova nei sorgenti
+
+Le classi iniettate a runtime da librerie (`.mapboxgl-ctrl-*`) non compaiono in nessun
+`.tsx`, quindi dentro `@layer components` **spariscono dal build in silenzio** — l'ho
+visto: 0 occorrenze nel CSS compilato. Vanno scritte **fuori da ogni `@layer`**, in
+fondo al file. Verifica: `npx tailwindcss -i src/index.css -o /tmp/out.css` e poi
+`grep` della classe nel risultato.
+
+### ⚠️ Mappa "disegnata": tentativo ABBANDONATO (agosto 2026)
+
+La mappa in app è e resta lo **`streets-v12` standard di Mapbox**. `InteractiveMap.tsx`
+non applica nessuno stile custom.
+
+Provato e scartato, in due giri:
+
+1. **Ricolorazione nella palette carta** → mappa grigia e triste, e i sentieri chiari
+   in città annerivano ogni caruggio (a Genova il centro storico è classificato `path`).
+2. **Motivi disegnati come `fill-pattern`** (onde per il mare, alberelli per il verde,
+   registrati a runtime con `map.addImage()`) → bocciato: «fa schifo».
+
+**La lezione:** una mappa vera è **densa di informazione** — strade, nomi, POI, edifici.
+Riempirla di motivi decorativi la rende illeggibile senza renderla più bella, e la carta
+disegnata funziona sulle *illustrazioni*, non sui dati. Il carattere hand-drawn va messo
+in ciò che sta **sopra** la mappa (marker, sheet, bottoni), non nella mappa stessa.
+
+⚠️ Se si riprova: **non leggere `e.target`** in `onLoad`/`onStyleData` — i tipi di
+react-map-gl non lo dichiarano e il typecheck fallisce (già successo due volte).
+`src/lib/mapPaperStyle.ts` resta nel repo ma **non è importato da nessuno**: o lo si
+cancella, o lo si tiene solo come appunto.
+
+Il vecchio prototipo di ricolorazione, per riferimento:
 - base **`outdoors-v12`** e non `streets-v12`, perché ha curve di livello e rilievo,
   che sono il segno grafico della cartina;
 - la terra prende lo stesso avorio del fondo app: la mappa non è un riquadro estraneo;

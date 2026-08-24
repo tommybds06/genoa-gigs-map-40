@@ -74,7 +74,7 @@ const Settings = () => {
             <IndietroIcon className="w-5 h-5" />
           </button>
           <img
-            src={isEmployer ? "/images/logo-employer.svg" : "/images/logo-worker.svg"}
+            src={isEmployer ? "/images/logo-employer-v2.svg" : "/images/logo-worker-v2.svg"}
             alt="Politask"
             className="h-14 w-auto"
           />
@@ -86,7 +86,7 @@ const Settings = () => {
         {user?.email && (
           <div className="material-card p-4 mb-6">
             <div className="flex items-center gap-3">
-              <div className={`w-10 h-10 ${theme.primary} text-primary-foreground rounded-full flex items-center justify-center`}>
+              <div className={`w-10 h-10 ${theme.btnFilled} rounded-full flex items-center justify-center`}>
                 <MailIcon className="w-5 h-5" />
               </div>
               <div>
@@ -110,7 +110,7 @@ const Settings = () => {
             >
               <div className="flex items-center gap-3">
                 <ProfiloIcon className={`w-5 h-5 ${theme.primaryText}`} />
-                <span className="font-medium">Modifica Profilo</span>
+                <span className="titolo-mini">Modifica Profilo</span>
               </div>
               <ChevronRight className="w-5 h-5 text-muted-foreground" />
             </button>
@@ -119,7 +119,7 @@ const Settings = () => {
             <div className="flex items-center justify-between p-4">
               <div className="flex items-center gap-3">
                 <NotificheIcon className={`w-5 h-5 ${theme.primaryText}`} />
-                <span className="font-medium">Notifiche</span>
+                <span className="titolo-mini">Notifiche</span>
               </div>
               <Switch
                 checked={notificationsEnabled}
@@ -143,7 +143,7 @@ const Settings = () => {
             >
               <div className="flex items-center gap-3">
                 <InfoIcon className={`w-5 h-5 ${theme.primaryText}`} />
-                <span className="font-medium">Assistenza</span>
+                <span className="titolo-mini">Assistenza</span>
               </div>
               <ChevronRight className="w-5 h-5 text-muted-foreground" />
             </button>
@@ -155,18 +155,21 @@ const Settings = () => {
             >
               <div className="flex items-center gap-3">
                 <DocumentoIcon className={`w-5 h-5 ${theme.primaryText}`} />
-                <span className="font-medium">Termini e Privacy</span>
+                <span className="titolo-mini">Termini e Privacy</span>
               </div>
               <ChevronRight className="w-5 h-5 text-muted-foreground" />
             </button>
           </div>
         </div>
 
-        {/* Danger Zone Section */}
+        {/* "Zona Pericolo" era la traduzione letterale di Danger Zone, che e'
+            una convenzione da pannello di amministrazione: in un'app consumer
+            suona minacciosa per un logout. Il rosso sulle voci basta a
+            segnalare che sono azioni serie. */}
+        {/* Nessuna intestazione: questa sezione si chiamava "Account" come
+            quella in cima allo schermo, due titoli identici a mezza pagina di
+            distanza. Il rosso delle voci dice gia' che sono azioni serie. */}
         <div className="mb-6">
-          <h2 className="text-sm font-semibold text-destructive uppercase tracking-wide mb-2 px-1">
-            Zona Pericolo
-          </h2>
           <div className="material-card overflow-hidden">
             {/* Logout */}
             <button 
@@ -180,7 +183,7 @@ const Settings = () => {
                 ) : (
                   <EsciIcon className="w-5 h-5 text-destructive" />
                 )}
-                <span className="font-medium text-destructive">Esci</span>
+                <span className="titolo-mini text-destructive">Esci</span>
               </div>
             </button>
 
@@ -191,7 +194,7 @@ const Settings = () => {
             >
               <div className="flex items-center gap-3">
                 <BidoneIcon className="w-5 h-5 text-destructive" />
-                <span className="font-medium text-destructive">Elimina Account</span>
+                <span className="titolo-mini text-destructive">Elimina Account</span>
               </div>
             </button>
           </div>

@@ -22,7 +22,7 @@ import {
   Camera,
   ChevronRight
 } from "lucide-react";
-import { CalendarioIcon, IndietroIcon, StellaIcon, StellaVuotaIcon, MezzaStellaIcon, DocumentoIcon, FotoIcon, AnnunciAttiviIcon, MappaIcon, StoricoLavoriIcon } from "@/components/icons/uiIcons";
+import { CalendarioIcon, IndietroIcon, StellaIcon, StellaVuotaIcon, MezzaStellaIcon, DocumentoIcon, FotoIcon, AnnunciAttiviIcon, MappaIcon, StoricoLavoriIcon, AnnunciVuotaIcon } from "@/components/icons/uiIcons";
 import { GenericoIcon } from "@/components/icons/roleIcons";
 import { useAppTheme } from "@/hooks/useAppTheme";
 import { useUser } from "@/contexts/UserContext";
@@ -357,7 +357,7 @@ const PublicProfile = () => {
         {/* Photo Gallery */}
         {profile.photos && profile.photos.length > 1 && (
           <div className="px-4 pb-6">
-            <div className="bg-card rounded-2xl p-5 shadow-sm border border-border">
+            <div className="material-card p-5">
               <div className="flex items-center gap-2 mb-4">
                 <FotoIcon className={`w-5 h-5 ${isWorkerProfile ? 'text-primary' : 'text-employer'}`} />
                 <h3 className="font-bold text-lg">Foto</h3>
@@ -399,7 +399,7 @@ const PublicProfile = () => {
           <>
             {/* Sezione 1: Presentazione (Bio) */}
             <div className="px-4 pb-6">
-              <div className="bg-card rounded-2xl p-5 shadow-sm border border-border">
+              <div className="material-card p-5">
                 <div className="flex items-center gap-2 mb-3">
                   <DocumentoIcon className="w-5 h-5 text-primary" />
                   <h3 className="font-bold text-lg">Presentazione</h3>
@@ -413,7 +413,7 @@ const PublicProfile = () => {
             {/* Sezione 2: Esperienze (if available) */}
             {profile.experience && (
               <div className="px-4 pb-6">
-                <div className="bg-card rounded-2xl p-5 shadow-sm border border-border">
+                <div className="material-card p-5">
                   <div className="flex items-center gap-2 mb-3">
                     <GenericoIcon className="w-5 h-5 text-primary" />
                     <h3 className="font-bold text-lg">Esperienze</h3>
@@ -425,7 +425,7 @@ const PublicProfile = () => {
 
             {/* Sezione 3: Storico Lavori Completati */}
             <div className="px-4 pb-6">
-              <div className="bg-card rounded-2xl p-5 shadow-sm border border-border">
+              <div className="material-card p-5">
                 <div className="flex items-center gap-2 mb-4">
                   <StoricoLavoriIcon className="w-5 h-5 text-primary" />
                   <h3 className="font-bold text-lg">Storico Lavori</h3>
@@ -433,7 +433,7 @@ const PublicProfile = () => {
                 
                 {completedJobs.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-8 text-center">
-                    <Briefcase className="w-10 h-10 text-muted-foreground/30 mb-2" />
+                    <AnnunciVuotaIcon className="w-10 h-10 text-muted-foreground/30 mb-2" />
                     <p className="text-muted-foreground text-sm">Nessun lavoro completato ancora</p>
                   </div>
                 ) : (
@@ -481,7 +481,7 @@ const PublicProfile = () => {
             {/* Bio Section */}
             {profile.bio && (
               <div className="px-4 pb-6">
-                <div className="bg-card rounded-2xl p-5 shadow-sm border border-border">
+                <div className="material-card p-5">
                   <div className="flex items-center gap-2 mb-3">
                     <DocumentoIcon className="w-5 h-5 text-employer" />
                     <h3 className="font-bold text-lg">Chi siamo</h3>
@@ -494,7 +494,7 @@ const PublicProfile = () => {
             {/* Looking For Section */}
             {profile.looking_for && (
               <div className="px-4 pb-6">
-                <div className="bg-card rounded-2xl p-5 shadow-sm border border-border">
+                <div className="material-card p-5">
                   <div className="flex items-center gap-2 mb-3">
                     <GenericoIcon className="w-5 h-5 text-employer" />
                     <h3 className="font-bold text-lg">Chi cerchiamo</h3>
@@ -506,7 +506,7 @@ const PublicProfile = () => {
 
             {/* Reviews Section */}
             <div className="px-4 pb-6">
-              <div className="bg-card rounded-2xl p-5 shadow-sm border border-border">
+              <div className="material-card p-5">
                 <div className="flex items-center gap-2 mb-3">
                   <StellaIcon className="w-5 h-5 text-employer" />
                   <h3 className="font-bold text-lg">Recensioni</h3>
@@ -549,7 +549,7 @@ const PublicProfile = () => {
 
             {/* Active Jobs Section */}
             <div className="px-4 pb-6">
-              <div className="bg-card rounded-2xl p-5 shadow-sm border border-border">
+              <div className="material-card p-5">
                 <div className="flex items-center gap-2 mb-4">
                   <AnnunciAttiviIcon className="w-5 h-5 text-employer" />
                   <h3 className="font-bold text-lg">Annunci Attivi</h3>

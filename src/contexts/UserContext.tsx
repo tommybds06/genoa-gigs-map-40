@@ -197,6 +197,16 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const isEmployer = role === "employer";
   const isWorker = role === "worker";
 
+  // Il ruolo finisce anche sull'elemento radice, cosi' il CSS puo' cambiare i
+  // token che non passano dal tema JS. Serve per l'anello di focus dei campi:
+  // era `ring-primary`, cioe' arancione anche in contesto employer — lo stesso
+  // bug del bottone "indietro" arancio, ma su ogni input dell'app.
+  // ⚠️ Solo un attributo: NIENTE chiamate supabase qui (vedi il deadlock auth
+  // documentato in CLAUDE.md).
+  useEffect(() => {
+    document.documentElement.dataset.ruolo = role ?? "worker";
+  }, [role]);
+
   return (
     <UserContext.Provider
       value={{

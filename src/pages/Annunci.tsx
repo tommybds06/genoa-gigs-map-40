@@ -5,7 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useAppTheme } from '@/hooks/useAppTheme';
 import { supabase } from '@/integrations/supabase/client';
 import { Briefcase, Users, ChevronRight, ArrowLeft, Loader2, Plus, Pencil, Trash2, Check, X } from 'lucide-react';
-import { IndietroIcon, PennaIcon, BidoneIcon, XIcon } from '@/components/icons/uiIcons';
+import { IndietroIcon, PennaIcon, BidoneIcon, XIcon, AnnunciVuotaIcon } from '@/components/icons/uiIcons';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -367,7 +367,7 @@ const Annunci = () => {
                         <Button
                           onClick={() => handleAccept(app)}
                           disabled={processingAppId === app.id}
-                          className="flex-1 bg-employer hover:bg-employer-700 text-employer-foreground touch-feedback"
+                          className="flex-1 bg-employer-700 hover:bg-employer-800 text-employer-foreground touch-feedback"
                         >
                           {processingAppId === app.id ? (
                             <Loader2 className="h-4 w-4 animate-spin" />
@@ -405,7 +405,7 @@ const Annunci = () => {
           <h2 className="titolo-sezione">I Tuoi Annunci Pubblicati</h2>
           <Button
             onClick={() => navigate('/create-job')}
-            className="bg-employer hover:bg-employer-700 text-employer-foreground rounded-full px-4 touch-feedback"
+            className="bg-employer-700 hover:bg-employer-800 text-employer-foreground rounded-full px-4 touch-feedback"
             size="sm"
           >
             <Plus className="h-4 w-4 mr-1" />
@@ -429,7 +429,7 @@ const Annunci = () => {
           </div>
         ) : jobs.length === 0 ? (
           <div className="text-center py-12">
-            <Briefcase className={`h-12 w-12 ${theme.primaryText} mx-auto mb-3`} />
+            <AnnunciVuotaIcon className={`h-12 w-12 ${theme.primaryText} mx-auto mb-3`} />
             <h3 className="titolo-vuoto mb-1">Nessun annuncio</h3>
             <p className="text-sm text-muted-foreground">
               Non hai ancora creato annunci di lavoro

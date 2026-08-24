@@ -25,7 +25,7 @@ export function PhotoGalleryManager({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const primaryColor = isEmployer ? "text-employer" : "text-primary";
-  const primaryBg = isEmployer ? "bg-employer" : "bg-primary";
+  const primaryBg = isEmployer ? "bg-employer-700" : "bg-primary";
   const primaryBgLight = isEmployer ? "bg-employer-50" : "bg-accent";
   const primaryBorder = isEmployer ? "border-employer/20" : "border-primary/20";
 

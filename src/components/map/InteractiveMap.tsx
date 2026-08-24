@@ -1,6 +1,6 @@
 import { memo, useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import Map, { Marker, Popup, NavigationControl } from "react-map-gl";
+import Map, { Marker, Popup } from "react-map-gl";
 import { Clock } from "lucide-react";
 import { OrologioIcon } from "@/components/icons/uiIcons";
 import { Badge } from "@/components/ui/badge";
@@ -71,25 +71,34 @@ const SingleJobMarker = memo(function SingleJobMarker({
             isHighlighted
               ? "bg-card border-3 border-primary"
               : isEmployer 
-                ? "bg-employer"
+                ? "bg-employer-700"
                 : "bg-primary"
           )}
           style={isHighlighted ? { borderWidth: '3px' } : undefined}
         >
-          <Icon 
+          {/* ⚠️ `text-primary-foreground` e' l'INK: giusto sull'arancio (6,45),
+              nero su nero sul blu scuro. Stesso inciampo dell'icona mail in
+              Impostazioni: il fondo seguiva il ruolo, il testo no. */}
+          <Icon
             className={cn(
               "w-6 h-6 transition-colors duration-300",
-              isHighlighted ? "text-primary" : "text-primary-foreground"
+              isHighlighted
+                ? "text-primary"
+                : isEmployer
+                  ? "text-employer-foreground"
+                  : "text-primary-foreground"
             )}
           />
         </div>
         <div
           className={cn(
+            // la punta prendeva il blu PASTELLO mentre il cerchio sopra era
+            // employer-700: due blu diversi nello stesso pin
             "w-0 h-0 border-l-[9px] border-r-[9px] border-t-[12px] border-l-transparent border-r-transparent -mt-1 transition-all duration-300",
             isHighlighted
               ? "border-t-primary"
-              : isEmployer 
-                ? "border-t-employer" 
+              : isEmployer
+                ? "border-t-employer-700"
                 : "border-t-primary"
           )}
         />
@@ -289,8 +298,10 @@ function InteractiveMapInner({
         onClick={handleMapClick}
         reuseMaps
       >
-        <NavigationControl position="top-right" showCompass={false} />
-        
+        {/* Niente NavigationControl: su mobile lo zoom si fa con le dita, e i
+            quadratini bianchi di serie di Mapbox erano l'unico elemento di UI
+            in tutta l'app a non essere nostro. */}
+
         {/* User location marker (Worker only) */}
         {userLocation && (
           <UserLocationMarker

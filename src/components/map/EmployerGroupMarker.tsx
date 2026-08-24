@@ -51,10 +51,10 @@ export const EmployerGroupMarker = memo(function EmployerGroupMarker({
         <div 
           className={cn(
             "absolute -top-1 -right-1 z-10 min-w-[20px] h-[20px] rounded-full flex items-center justify-center shadow-md border-2 border-white",
-            isEmployer ? "bg-employer" : "bg-primary"
+            isEmployer ? "bg-employer-700" : "bg-primary"
           )}
         >
-          <span className="text-primary-foreground text-xs font-bold px-1">{count}</span>
+          <span className={cn("text-xs font-bold px-1", isEmployer ? "text-employer-foreground" : "text-primary-foreground")}>{count}</span>
         </div>
         
         {/* Main marker - same size as single markers (w-12 h-12) */}
@@ -64,7 +64,7 @@ export const EmployerGroupMarker = memo(function EmployerGroupMarker({
             isHighlighted 
               ? "bg-card border-3 border-primary" 
               : isEmployer 
-                ? "bg-employer"
+                ? "bg-employer-700"
                 : "bg-primary"
           )}
           style={isHighlighted ? { borderWidth: '3px' } : undefined}
@@ -72,7 +72,11 @@ export const EmployerGroupMarker = memo(function EmployerGroupMarker({
           <Briefcase
             className={cn(
               "w-6 h-6 transition-colors duration-300",
-              isHighlighted ? "text-primary" : "text-primary-foreground"
+              isHighlighted
+                ? "text-primary"
+                : isEmployer
+                  ? "text-employer-foreground"
+                  : "text-primary-foreground"
             )} 
           />
         </div>
@@ -84,7 +88,7 @@ export const EmployerGroupMarker = memo(function EmployerGroupMarker({
             isHighlighted 
               ? "border-t-primary" 
               : isEmployer 
-                ? "border-t-employer" 
+                ? "border-t-employer-700" 
                 : "border-t-primary"
           )}
         />

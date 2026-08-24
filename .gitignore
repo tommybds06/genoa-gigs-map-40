@@ -12,6 +12,22 @@ dist
 dist-ssr
 *.local
 
+# ⚠️ FONT SOTTO LICENZA — public/fonts/shinjo-v1.woff2 e .woff sono committati
+# di proposito: il repo è PRIVATO, e senza i file nel repo Lovable non li ha al
+# momento del build, quindi Shinjo non comparirebbe né in anteprima né in
+# produzione. Se un giorno il repo torna pubblico vanno tolti PRIMA, e non
+# basta cancellarli: restano nella storia di git e serve riscriverla.
+# La licenza Webfont di Komet & Flicker permette di servire il font, non di
+# ridistribuirlo.
+
+# Scarti di lavorazione, non deliverable.
+# ⚠️ In .gitignore i commenti stanno solo su una riga PROPRIA: messi in fondo
+# alla riga vengono presi come parte del percorso e la regola non fa niente.
+# public/map/ = piastrelle della mappa disegnata (tentativo abbandonato)
+# brand/_logo/ = prove e anteprime generate
+public/map/
+brand/_logo/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

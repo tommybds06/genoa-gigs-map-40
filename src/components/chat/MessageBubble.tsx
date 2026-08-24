@@ -12,6 +12,7 @@ interface Message {
   is_read: boolean;
   reply_to_id: string | null;
   attachment_url: string | null;
+  is_system?: boolean;
   reply_to?: Message | null;
 }
 
@@ -45,7 +46,7 @@ export const MessageBubble = ({
   const getBubbleColors = () => {
     if (isOwn) {
       return isEmployer
-        ? "bg-employer text-employer-foreground rounded-br-sm"
+        ? "bg-employer-700 text-employer-foreground rounded-br-sm"
         : "bg-primary text-primary-foreground rounded-br-sm";
     }
     return "bg-muted text-foreground rounded-bl-sm";

@@ -12,8 +12,8 @@ export function Header({
   const { isEmployer } = useUser();
 
   const logoSrc = isEmployer
-    ? "/images/logo-employer.svg"
-    : "/images/logo-worker.svg";
+    ? "/images/logo-employer-v2.svg"
+    : "/images/logo-worker-v2.svg";
 
   return (
     <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-md px-4 pt-8 pb-3">

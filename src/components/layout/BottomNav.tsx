@@ -49,9 +49,18 @@ export function BottomNav() {
               aria-label={item.label}
               className="flex items-center justify-center px-6 py-3 touch-feedback"
             >
+              {/* Il colore sta sulla SINGOLA voce, non su tutte.
+                  Prima erano tutte del colore del ruolo e l'attiva si
+                  distingueva solo per pieno contro vuoto: su schermo piccolo
+                  la differenza era quasi impercettibile. Ora il salto e' di
+                  colore — inattive in bruno tenue, attiva nel colore del
+                  ruolo — che e' quello che fa il lavoro nello schema da cui
+                  questa nav e' ripresa. */}
               <div
-                className={`relative w-7 h-7 ${colorClass} transition-transform duration-300 ${
-                  isActive ? "scale-110" : "scale-100"
+                className={`relative w-7 h-7 transition-all duration-300 ${
+                  isActive
+                    ? `${colorClass} scale-110`
+                    : "text-muted-foreground scale-100"
                 }`}
               >
                 <Outline

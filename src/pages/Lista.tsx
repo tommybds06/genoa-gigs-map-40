@@ -1,6 +1,6 @@
 import { Header } from "@/components/layout/Header";
 import { MapPin, Clock, Euro, SearchX, Tag, Briefcase, FileText } from "lucide-react";
-import { XIcon, OrologioIcon, MappaIcon } from "@/components/icons/uiIcons";
+import { XIcon, OrologioIcon, MappaIcon, DocumentoIcon, AnnunciVuotaIcon, CuoreIcon } from "@/components/icons/uiIcons";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
@@ -233,7 +233,7 @@ function ApplicationsList({ applications, loading, userId }: ApplicationsListPro
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center">
         <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-4">
-          <FileText className="w-8 h-8 text-muted-foreground" />
+          <DocumentoIcon className="w-8 h-8 text-muted-foreground" />
         </div>
         <h3 className="titolo-vuoto mb-2">Nessuna candidatura</h3>
         <p className="text-muted-foreground text-sm max-w-xs">
@@ -259,7 +259,7 @@ function EmptyState({ isEmployer, hasTags }: { isEmployer: boolean; hasTags: boo
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center">
         <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-4">
-          <Briefcase className="w-8 h-8 text-muted-foreground" />
+          <AnnunciVuotaIcon className="w-8 h-8 text-muted-foreground" />
         </div>
         <h3 className="titolo-vuoto mb-2">Nessun annuncio creato</h3>
         <p className="text-muted-foreground text-sm max-w-xs">
@@ -275,7 +275,7 @@ function EmptyState({ isEmployer, hasTags }: { isEmployer: boolean; hasTags: boo
         {hasTags ? (
           <XIcon className="w-8 h-8 text-muted-foreground" />
         ) : (
-          <Tag className="w-8 h-8 text-muted-foreground" />
+          <CuoreIcon className="w-8 h-8 text-muted-foreground" />
         )}
       </div>
       <h3 className="titolo-vuoto mb-2">
@@ -289,7 +289,7 @@ function EmptyState({ isEmployer, hasTags }: { isEmployer: boolean; hasTags: boo
       </p>
       <Link 
         to="/profilo" 
-        className="px-4 py-2 bg-primary text-primary-foreground rounded-full text-sm font-medium touch-feedback"
+        className="px-4 py-2 bg-primary text-primary-foreground sagoma-chip rounded-full text-sm font-medium touch-feedback"
       >
         {hasTags ? "Modifica Tag" : "Vai al Profilo"}
       </Link>

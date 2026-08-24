@@ -100,7 +100,7 @@ export function EmployerJobsDrawer({
                   <button
                     key={job.id}
                     onClick={() => handleJobClick(job)}
-                    className="w-full flex items-center gap-3 p-4 bg-card rounded-2xl border border-border hover:border-primary/30 hover:shadow-md active:scale-[0.98] transition-all text-left"
+                    className="w-full flex items-center gap-3 p-4 material-card active:scale-[0.98] transition-all text-left"
                   >
                     {/* Icon */}
                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${

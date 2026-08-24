@@ -112,7 +112,7 @@ export const WorkerJobHistory = ({ primaryTextClasses }: WorkerJobHistoryProps) 
   if (loading) {
     return (
       <div className="material-card p-4 mb-4 animate-fade-in">
-        <h3 className="font-semibold mb-3 flex items-center gap-2">
+        <h3 className="titolo-mini mb-3 flex items-center gap-2">
           <StoricoLavoriIcon className={`w-4 h-4 ${primaryTextClasses}`} />
           Storico Lavori Completati
         </h3>
@@ -128,7 +128,7 @@ export const WorkerJobHistory = ({ primaryTextClasses }: WorkerJobHistoryProps) 
       <Accordion type="single" collapsible className="w-full">
         <AccordionItem value="job-history" className="border-none">
           <AccordionTrigger className="py-0 hover:no-underline">
-            <h3 className="font-semibold flex items-center gap-2">
+            <h3 className="titolo-mini flex items-center gap-2">
               <StoricoLavoriIcon className={`w-4 h-4 ${primaryTextClasses}`} />
               Storico Lavori Completati ({jobs.length})
             </h3>

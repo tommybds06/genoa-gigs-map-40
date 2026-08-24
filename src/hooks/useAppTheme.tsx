@@ -66,8 +66,11 @@ export const workerTheme: AppTheme = {
 };
 
 export const employerTheme: AppTheme = {
-  primary: "bg-employer",
-  primaryHover: "hover:bg-employer-700",
+  // `primary` e' una CAMPITURA (cerchi con icona, pallini, bottoni): usa il
+  // tono scuro, perche' ci va sopra del bianco. Il pastello di brand resta
+  // su testo, bordi e superfici decorative — vedi primaryText/primaryBorder.
+  primary: "bg-employer-700",
+  primaryHover: "hover:bg-employer-800",
   primaryBg: "bg-employer-50",
   primaryBgHover: "hover:bg-employer-100",
   primaryText: "text-employer",
@@ -83,11 +86,11 @@ export const employerTheme: AppTheme = {
   accentBg: "bg-employer-50",
   accentText: "text-employer",
 
-  headerBg: "bg-employer",
+  headerBg: "bg-employer-700",
   headerText: "text-white",
 
-  btnFilled: "bg-employer text-employer-foreground",
-  btnFilledHover: "hover:bg-employer-700",
+  btnFilled: "bg-employer-700 text-employer-foreground",
+  btnFilledHover: "hover:bg-employer-800",
   btnOutline: "border-employer text-employer",
   btnOutlineHover: "hover:bg-employer-50",
 

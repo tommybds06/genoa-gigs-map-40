@@ -1,5 +1,7 @@
-import { User, MapPin, Briefcase, Save, Instagram, Globe, ChevronLeft, ChevronRight } from "lucide-react";
-import { ImpostazioniIcon, ProfiloIcon, CuoreIcon, InfoIcon, StellaIcon, FrecciaSinistraIcon, FrecciaDestraIcon, MappaIcon } from "@/components/icons/uiIcons";
+// ChevronLeft/Right rimossi: erano le frecce sul carosello foto, che su mobile
+// coprivano la foto per un gesto che si fa gia' con lo swipe. Restano i pallini.
+import { User, MapPin, Briefcase, Save, Instagram, Globe } from "lucide-react";
+import { ImpostazioniIcon, ProfiloIcon, CuoreIcon, InfoIcon, StellaIcon, MappaIcon } from "@/components/icons/uiIcons";
 import { GenericoIcon } from "@/components/icons/roleIcons";
 import { useAuth } from "@/hooks/useAuth";
 import { useUser } from "@/contexts/UserContext";
@@ -84,7 +86,7 @@ const Profilo = () => {
          <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-md px-4 pt-8 pb-3">
            <div className="flex items-center justify-between">
              <img
-               src={isEmployer ? "/images/logo-employer.svg" : "/images/logo-worker.svg"}
+               src={isEmployer ? "/images/logo-employer-v2.svg" : "/images/logo-worker-v2.svg"}
                alt="Politask"
                className="h-14 w-auto -ml-1"
              />
@@ -116,12 +118,6 @@ const Profilo = () => {
             </div>
             {profile.photos.length > 1 && (
               <>
-                <button onClick={prevPhoto} className="absolute left-2 top-1/2 -translate-y-1/2 touch-feedback">
-                  <FrecciaSinistraIcon className={`w-9 h-9 ${primaryTextClasses}`} style={{ filter: 'drop-shadow(1px 0 0 #fff) drop-shadow(-1px 0 0 #fff) drop-shadow(0 1px 0 #fff) drop-shadow(0 -1px 0 #fff)' }} />
-                </button>
-                <button onClick={nextPhoto} className="absolute right-2 top-1/2 -translate-y-1/2 touch-feedback">
-                  <FrecciaDestraIcon className={`w-9 h-9 ${primaryTextClasses}`} style={{ filter: 'drop-shadow(1px 0 0 #fff) drop-shadow(-1px 0 0 #fff) drop-shadow(0 1px 0 #fff) drop-shadow(0 -1px 0 #fff)' }} />
-                </button>
                 <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
                   {profile.photos.map((_, index) => (
                     <button
@@ -139,7 +135,7 @@ const Profilo = () => {
         {/* Profile Card */}
         <div className="material-card-elevated p-6 mb-4">
           <div className="flex items-center gap-4">
-            <div className={`w-20 h-20 ${theme.primary} text-primary-foreground rounded-full flex items-center justify-center shadow-material-md overflow-hidden`}>
+            <div className={`w-20 h-20 ${theme.btnFilled} rounded-full flex items-center justify-center shadow-material-md overflow-hidden`}>
               {profile?.photos && profile.photos.length > 0 ? (
                 <img src={profile.photos[0]} alt="Avatar" className="w-full h-full object-cover" />
               ) : (
@@ -183,7 +179,7 @@ const Profilo = () => {
 
         {profile?.bio && (
           <div className="material-card tilt-l p-4 mb-4">
-            <h3 className="font-semibold mb-2 flex items-center gap-2">
+            <h3 className="titolo-mini mb-2 flex items-center gap-2">
               <ProfiloIcon className={`w-4 h-4 ${primaryTextClasses}`} />{isEmployer ? "Descrizione" : "Presentazione"}
             </h3>
             <p className="text-sm text-muted-foreground leading-relaxed">{profile.bio}</p>
@@ -192,7 +188,7 @@ const Profilo = () => {
 
         {isEmployer && profile?.looking_for && (
           <div className="material-card tilt-r p-4 mb-4">
-            <h3 className="font-semibold mb-2 flex items-center gap-2">
+            <h3 className="titolo-mini mb-2 flex items-center gap-2">
               <GenericoIcon className={`w-4 h-4 ${primaryTextClasses}`} />Chi cerco
             </h3>
             <p className="text-sm text-muted-foreground leading-relaxed">{profile.looking_for}</p>
@@ -201,7 +197,7 @@ const Profilo = () => {
 
         {!isEmployer && profile?.experience && (
           <div className="material-card tilt-l p-4 mb-4">
-            <h3 className="font-semibold mb-2 flex items-center gap-2">
+            <h3 className="titolo-mini mb-2 flex items-center gap-2">
               <GenericoIcon className={`w-4 h-4 ${primaryTextClasses}`} />Esperienze
             </h3>
             <p className="text-sm text-muted-foreground leading-relaxed">{profile.experience}</p>
@@ -211,7 +207,7 @@ const Profilo = () => {
         {!isEmployer && (
           <div className="material-card tilt-r p-4 mb-4">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="font-semibold flex items-center gap-2"><CuoreIcon className={`w-4 h-4 ${primaryTextClasses}`} />I tuoi Interessi</h3>
+              <h3 className="titolo-mini flex items-center gap-2"><CuoreIcon className={`w-4 h-4 ${primaryTextClasses}`} />I tuoi Interessi</h3>
               <div className="flex gap-2">
                 {hasChanges && (
                   <button onClick={handleSaveTags} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-colors touch-feedback ${primaryBtnClasses}`}>
@@ -240,7 +236,7 @@ const Profilo = () => {
         {!isEmployer && <WorkerJobHistory primaryTextClasses={primaryTextClasses} />}
 
         <div className="material-card tilt-l p-4 mb-4">
-          <h3 className="font-semibold mb-3 flex items-center gap-2"><InfoIcon className={`w-4 h-4 ${primaryTextClasses}`} />Informazioni</h3>
+          <h3 className="titolo-mini mb-3 flex items-center gap-2"><InfoIcon className={`w-4 h-4 ${primaryTextClasses}`} />Informazioni</h3>
           <div className="space-y-3">
             {profile?.neighborhood ? (
               <div className="flex items-center gap-3 text-sm"><MappaIcon className="w-4 h-4 text-muted-foreground" /><span>Genova, {profile.neighborhood}</span></div>

@@ -69,7 +69,7 @@ export function EditJobDialog({ job, isOpen, onClose, onSuccess }: EditJobDialog
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md material-card border-0">
         <DialogHeader>
           <DialogTitle>Modifica Annuncio</DialogTitle>
         </DialogHeader>
@@ -124,7 +124,7 @@ export function EditJobDialog({ job, isOpen, onClose, onSuccess }: EditJobDialog
           <Button
             onClick={handleSubmit}
             disabled={loading || !title.trim()}
-            className="bg-employer hover:bg-employer-700 text-employer-foreground"
+            className="bg-employer-700 hover:bg-employer-800 text-employer-foreground"
           >
             {loading ? (
               <>

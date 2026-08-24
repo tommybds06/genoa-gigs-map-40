@@ -10,8 +10,14 @@ import { cn } from "@/lib/utils";
  * candidature. Cinque linguaggi diversi per cinque stati.
  *
  * La regola ora e' una sola:
- *   - PIENO   = stato attivo, quello che conta adesso (Assunto, Accettato)
- *   - CONTORNO = stato in sospeso o concluso, che deve arretrare
+ *   - PIENO FORTE = stato attivo, quello che conta adesso (Assunto, Accettato)
+ *   - PIENO TENUE = stato in sospeso o concluso, che deve arretrare
+ *
+ * ⚠️ Erano a CONTORNO, e accanto alle card tagliate a mano quel filo da 1px
+ * era la cosa piu' "fatta col CSS" della schermata. Convertiti ai fondi
+ * "-soft" gia' definiti nei token: la gerarchia resta (forte contro tenue) e
+ * la sagoma disegnata puo' ritagliarli come i chip, perche' ora c'e' un
+ * riempimento da tagliare invece di una linea da mozzare.
  */
 export type StatoCandidatura =
   | "pending"
@@ -31,21 +37,21 @@ const CONFIG: Record<
   },
   accepted: {
     label: "Accettato",
-    className: "bg-employer text-employer-foreground border-transparent",
+    className: "bg-employer-700 text-employer-foreground border-transparent",
     icon: CheckCircle,
   },
   completed: {
     label: "Concluso",
-    className: "bg-transparent text-neutral border-neutral",
+    className: "bg-neutral-soft text-neutral-soft-foreground border-transparent",
     icon: Check,
   },
   pending: {
     label: "In Attesa",
-    className: "bg-transparent text-warning border-warning",
+    className: "bg-warning-soft text-warning-soft-foreground border-transparent",
   },
   rejected: {
     label: "Rifiutato",
-    className: "bg-transparent text-danger border-danger",
+    className: "bg-danger-soft text-danger-soft-foreground border-transparent",
   },
 };
 
@@ -61,7 +67,12 @@ export function StatusBadge({ stato, className }: StatusBadgeProps) {
   return (
     <Badge
       variant="outline"
-      className={cn("shrink-0 text-xs font-semibold gap-0.5", cfg.className, className)}
+      className={cn(
+        // sagoma-badge: stesso disegno dei chip, riscalato su un'altezza di ~26px
+        "shrink-0 text-xs font-semibold gap-1 py-1 sagoma-badge rounded-full",
+        cfg.className,
+        className
+      )}
     >
       {Icon && <Icon className="h-3 w-3" />}
       {cfg.label}

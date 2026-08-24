@@ -162,7 +162,7 @@ export function SearchBar({
                       key={tag}
                       onClick={() => toggleTempTag(tag)}
                       className={cn(
-                        "px-4 py-2 rounded-full text-sm font-medium transition-all",
+                        "px-4 py-2 sagoma-chip rounded-full text-sm font-medium transition-all",
                         getTagSelectedClasses(tag, isSelected)
                       )}
                     >
@@ -187,7 +187,7 @@ export function SearchBar({
                       key={tag}
                       onClick={() => toggleTempTag(tag)}
                       className={cn(
-                        "px-4 py-2 rounded-full text-sm font-medium transition-all",
+                        "px-4 py-2 sagoma-chip rounded-full text-sm font-medium transition-all",
                         getTagSelectedClasses(tag, isSelected)
                       )}
                     >
@@ -212,7 +212,7 @@ export function SearchBar({
                       key={neighborhood}
                       onClick={() => toggleTempNeighborhood(neighborhood)}
                       className={cn(
-                        "flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all border",
+                        "flex items-center justify-between px-4 py-3 sagoma-quartiere rounded-[19px] text-sm font-medium transition-all border",
                         isSelected
                           ? "bg-primary text-primary-foreground border-primary"
                           : "bg-muted/50 text-foreground border-transparent hover:bg-muted"
@@ -229,9 +229,12 @@ export function SearchBar({
 
           {/* Sticky Footer */}
           <DrawerFooter className="flex-shrink-0 border-t pt-4">
+            {/* size="lg" invece di py-6: la cornice disegnata e' tarata sulle
+                altezze delle size, non su padding messi a mano. */}
             <Button
+              size="lg"
               onClick={applyFilters}
-              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-6 rounded-xl"
+              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold"
             >
               Applica
               {tempFiltersCount > 0 && (

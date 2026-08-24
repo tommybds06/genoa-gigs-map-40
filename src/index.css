@@ -2,6 +2,25 @@
 @tailwind components;
 @tailwind utilities;
 
+/* SHINJO — font display del brand (Komet & Flicker, licenza Webfont).
+   Usato su INTESTAZIONI, ETICHETTE DEI FORM e BOTTONI (vedi la regola su
+   h1-h6/label/button piu' sotto). Outfit resta il font del TESTO DI LETTURA:
+   sotto i ~14px l'irregolarita' di un hand-drawn diventa rumore.
+
+   font-display: swap — i titoli restano leggibili in Outfit mentre Shinjo
+   scarica, invece di sparire per qualche centinaio di millisecondi.
+
+   ⚠️ I file NON vanno committati se il repository e' pubblico: la licenza
+   Webfont permette di servire il font, non di ridistribuirlo. */
+@font-face {
+  font-family: 'Shinjo';
+  src: url('/fonts/shinjo-v1.woff2') format('woff2'),
+       url('/fonts/shinjo-v1.woff') format('woff');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* Politask Design System — palette CARTA
    Vedi brand/POLITASK-brand-brief.md e brand/palette-carta.html.
 
@@ -32,12 +51,26 @@
     --brand-blue-ink: 213 45% 38%;   /* #355D8D — 5,86 su carta */
 
     /* ---- Carta ---- */
+    /* ⚠️ NON abbassare questo valore per far risaltare le card. Provato ad
+       agosto 2026: sceso a 86% il margine tagliato si vedeva, ma il fondo si
+       avvicinava in luminanza all'arancione di marca e tornava il difetto
+       originale — arancio e sfondo che si impastano. E' lo stesso vincolo di
+       sempre: il problema e' la luminanza dei colori di brand, e il fondo non
+       lo puo' risolvere, ne' schiarendo ne' scurendo. */
     --paper: 43 44% 92%;             /* #F4EEE2 — avorio, fondo app */
     /* Il foglio era a 96,5%: troppo vicino al bianco, leggeva come "card bianca".
        Abbassato a 95% e reso piu' caldo — resta carta, non diventa foglio A4. */
     --paper-sheet: 44 58% 95%;       /* #FAF5E9 */
     --paper-sunken: 42 33% 86.5%;    /* #E8E1D1 — incavi, campi, tab inattive */
-    --paper-line: 40 32% 79%;        /* #DACFB8 — bordi */
+    --paper-line: 40 32% 79%;        /* #DACFB8 — bordi CSS sottili (1px) */
+    /* Il filo DISEGNATO delle card. Ci sono voluti quattro giri, e la lezione
+       sta nello SPESSORE piu' che nella tinta: a 2,3px un tratto chiaro e'
+       troppo largo per leggere come linea e troppo chiaro per leggere come
+       contorno, quindi qualunque colore gli dai sembra beige o grigio. A
+       1,1px il problema sparisce e resta solo da tarare il buio — #7C6A55
+       era troppo scuro, questo e' un passo indietro.
+       Tenuto in sincrono con public/images/cornici/bordo-card-*.svg. */
+    --paper-edge: 34 17% 53%;        /* #9C8B74 — il filo delle card, 1,1px */
 
     /* ---- Inchiostro ---- */
     --ink: 28 22% 18%;               /* #382D24 — 11,58 su carta */
@@ -103,12 +136,21 @@
 
     --radius: 1rem;
 
-    /* Employer Blue */
-    --employer: var(--brand-blue);
-    --employer-foreground: var(--ink);  /* testo SCURO sul blu: 4,41 */
+    /* Employer Blue — DUE toni, con ruoli distinti.
+       Il pastello #6E97CC resta il colore del brand: icone, bordi, testo,
+       superfici decorative. E' quello del logo e non va cambiato.
+       Ma non regge testo sopra: con l'inchiostro misura 4,41 e col bianco
+       3,03. Il numero direbbe "usa l'inchiostro", pero' non coglie tutto —
+       un bruno CALDO su un blu FREDDO alla stessa luminanza vibra e legge
+       sporco, mentre il bianco stacca netto.
+       Quindi le CAMPITURE PIENE che portano testo o icone (bottoni, badge,
+       bolle di chat, cerchi con icona) usano --employer-700, dove il bianco
+       arriva a 4,74. */
+    --employer: var(--brand-blue);      /* #6E97CC — brand, decorativo */
+    --employer-foreground: 0 0% 100%;   /* bianco, su --employer-700 */
     --employer-50: 213 40% 93%;
     --employer-100: 213 42% 88%;
-    --employer-700: 213 46% 48%;
+    --employer-700: 213 46% 48%;   /* #4075B5 — campiture con testo bianco */
     --employer-800: var(--brand-blue-ink);
 
     /* Elevazione: ombre BRUNE, corte e strette — "carta appoggiata su carta".
@@ -147,6 +189,27 @@
     --sidebar-accent-foreground: var(--ink);
     --sidebar-border: var(--paper-line);
     --sidebar-ring: var(--brand-orange-ink);
+  }
+
+  /* ---- Override di RUOLO ----
+     `data-ruolo` viene messo su <html> da UserContext. Serve per i token che
+     non passano dal tema JS di `useAppTheme`: l'anello di focus dei campi era
+     `ring-primary`, cioe' arancione anche per un employer che compila
+     "Crea annuncio" — la versione su ogni input dello stesso bug del bottone
+     "indietro" arancio in contesto blu.
+     Si usa `-ink` e non il pastello: e' un tratto sottile, e il pastello a
+     2-3:1 non si vede su carta. */
+  [data-ruolo="employer"] {
+    --ring: var(--brand-blue-ink);
+    --sidebar-ring: var(--brand-blue-ink);
+
+    /* `accent` e' il fondo tenue di hover/selezione: era ambra fissa, quindi
+       un bottone `variant="outline"` diventava ARANCIONE al passaggio anche
+       in contesto blu. Ribaltandolo qui si sistemano tutti i punti in cui
+       compare (bottoni ghost e outline, righe di menu, hover di lista) senza
+       toccare una sola chiamata. */
+    --accent: var(--employer-50);
+    --accent-foreground: var(--brand-blue-ink);
   }
 
   .dark {
@@ -261,9 +324,35 @@
     @apply select-text;
   }
   
+  /* ---- SHINJO su TUTTE le intestazioni, etichette e bottoni ----
+     Invece di applicare una classe in cinquanta punti, la regola sta qui:
+     h1-h6 (titoli di sezione, nomi nelle chat, titoli annuncio, intestazioni
+     dei filtri), `label` (Titolo, Descrizione, Email, Password…) e `button`
+     (Accedi, Prosegui, Pubblica Annuncio, Applica).
+     Il testo di lettura resta Outfit: sotto i ~14px l'irregolarita' di un
+     hand-drawn diventa rumore invece che carattere.
+
+     `font-synthesis: none` e' la parte che conta. Shinjo ha SOLO il peso 400:
+     dove i componenti chiedono font-semibold o font-bold il browser
+     ingrasserebbe i contorni per conto suo, e su un disegno a mano il
+     risultato e' impastato. Cosi' invece usa la 400 vera e ignora la
+     richiesta, senza che io debba togliere i pesi da ogni componente.
+
+     NON su `button` in generale: quel selettore prendeva anche il select del
+     quartiere — che mostra un VALORE scelto, non un'etichetta — e la frase
+     "Hai già un account? Accedi", che e' testo di lettura dentro un bottone.
+     Shinjo va sulle etichette d'AZIONE, quindi sta sul componente Button
+     (vedi ui/button.tsx), che ora e' l'unica sorgente. */
+  h1, h2, h3, h4, h5, h6,
+  label {
+    font-family: 'Shinjo', 'Outfit', sans-serif;
+    font-synthesis: none;
+    letter-spacing: -0.04em;
+  }
+
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Outfit', sans-serif;
-    @apply font-semibold tracking-tight;
+    @apply tracking-tight;
+    letter-spacing: -0.045em;
   }
   
   /* Map page lock - applied via class */
@@ -277,21 +366,48 @@
 }
 
 @layer components {
-  /* ---- SCALA DEI TITOLI ----
-     Un solo posto dove cambiare quando arrivera' il font display: mettendo
-     qui `font-family`, tutte le intestazioni dell'app si adeguano insieme.
+  /* ---- SCALA DEI TITOLI — in Shinjo ----
+     Tre livelli, un solo posto dove cambiarli.
 
-     La gerarchia era ROVESCIATA: il titolo di sezione e quello dell'empty
-     state erano entrambi `text-lg`, quindi il messaggio "Nessuna candidatura"
-     pesava quanto "Impieghi per Te" — l'occhio prendeva prima la cosa meno
-     importante. Ora ci sono due livelli distinti. */
+     ⚠️ PESO 400 OVUNQUE, ed e' deliberato. Shinjo ha un peso solo: chiedendo
+     bold o semibold il browser lo *sintetizza*, cioe' ingrassa i contorni per
+     conto suo — e su un disegno a mano il risultato e' impastato e sporco.
+     `font-synthesis: none` glielo vieta esplicitamente. La gerarchia quindi
+     la fa la DIMENSIONE, non lo spessore: 1,5rem contro 1,125 contro 1.
+
+     La gerarchia era anche ROVESCIATA: titolo di sezione ed empty state erano
+     entrambi `text-lg`, quindi "Nessuna candidatura" pesava quanto "Impieghi
+     per Te" e l'occhio prendeva prima la cosa meno importante. */
+  .titolo-sezione,
+  .titolo-vuoto,
+  .titolo-mini {
+    font-family: 'Shinjo', 'Outfit', sans-serif;
+    font-weight: 400;
+    font-synthesis: none;
+    color: hsl(var(--foreground));
+  }
+
   .titolo-sezione {
-    @apply text-2xl font-bold tracking-tight text-foreground;
+    font-size: 1.5rem;
+    line-height: 1.9375rem;
+    /* Tracking piu' stretto del solito: le lettere di Shinjo hanno spaziature
+       irregolari e, avvicinandole, la parola legge come un oggetto unico
+       invece che come una fila di lettere disegnate. */
+    letter-spacing: -0.05em;
   }
 
   /* Sta DENTRO una sezione, quindi non puo' competere col suo titolo. */
   .titolo-vuoto {
-    @apply text-base font-semibold text-foreground;
+    font-size: 1.125rem;
+    line-height: 1.625rem;
+    letter-spacing: -0.045em;
+  }
+
+  /* I minititoli: intestazioni delle card del Profilo e simili. */
+  .titolo-mini {
+    font-size: 1.0625rem;
+    line-height: 1.5rem;
+    letter-spacing: -0.045em;
   }
 
   /* La card e' un PEZZETTO DI CARTA: foglio appena piu' chiaro del fondo,
@@ -312,6 +428,102 @@
 
   .material-card:hover {
     box-shadow: var(--shadow-lg);
+  }
+
+  /* ---- CARD RITAGLIATE SUL DISEGNO ----
+     Il foglio e' piu' chiaro della carta di appena il 7%, quindi qui il bordo
+     serve davvero: senza, la card non si vede. Percio' la card usa DUE cose
+     dallo stesso tracciato — la sagoma che ritaglia il fondo (margine tagliato
+     a mano) e il filo tenue sopra, in `--paper-line` come ogni altro bordo
+     dell'app, ma a 2,3px invece che 1.
+
+     ⚠️ Niente `box-shadow` sulle card mascherate: la maschera ritaglia anche
+     l'ombra, che uscirebbe mozzata. Non e' una rinuncia — "contorni, campiture
+     piatte, niente ombre" e' la direzione outline-forte gia' scelta.
+
+     ⚠️ Quattro varianti = lo STESSO disegno ribaltato, alternate ogni quattro
+     card. La card candidatura compare cinque volte di fila: cinque copie
+     identiche leggono come fotocopia. E' la lezione della texture, applicata
+     prima di sbagliare invece che dopo. */
+  @supports (-webkit-mask-box-image: url("/images/cornici/sagoma-card-a.svg")) or
+            (mask-border: url("/images/cornici/sagoma-card-a.svg")) {
+    .material-card,
+    .material-card-elevated {
+      position: relative;
+      border-radius: 0;
+      border-color: transparent;
+      box-shadow: none;
+      -webkit-mask-box-image-source: url("/images/cornici/sagoma-card-a.svg");
+      -webkit-mask-box-image-slice: 28 fill;
+      -webkit-mask-box-image-width: 28px;
+      -webkit-mask-box-image-repeat: stretch;
+      mask-border-source: url("/images/cornici/sagoma-card-a.svg");
+      mask-border-slice: 28 fill;
+      mask-border-width: 28px;
+      mask-border-repeat: stretch;
+    }
+
+    .material-card:hover,
+    .material-card-elevated:hover {
+      box-shadow: none;
+    }
+
+    /* ---- Il filo del bordo ----
+       Terza versione. Le prime due erano spesse 2,3px e leggevano beige o
+       grigiastre: a quello spessore un tratto chiaro e' troppo largo per
+       sembrare una linea e troppo chiaro per sembrare un contorno. A 1,1px
+       il tratto puo' essere piu' SCURO senza urlare — e' la sottigliezza a
+       tenerlo tranquillo, non il colore.
+       ⚠️ La maschera del genitore taglia anche questo strato: tratto e taglio
+       stanno sulla stessa linea, quindi resta solo la meta' interna, cioe'
+       circa mezzo pixel effettivo. Se serve piu' presenza si alza il tratto
+       nei file bordo-card-*.svg, non qui. */
+    .material-card::after,
+    .material-card-elevated::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      border-style: solid;
+      border-color: transparent;
+      border-width: 28px;
+      border-image-source: url("/images/cornici/bordo-card-a.svg");
+      border-image-slice: 28;
+      border-image-width: 28px;
+      border-image-repeat: stretch;
+    }
+
+    /* Le varianti girano sui fratelli diretti (liste) e dentro .card-tilt
+       (sezioni che non sono fratelli). Chi non rientra resta sulla "a". */
+    .material-card:nth-of-type(4n + 2),
+    .card-tilt > *:nth-child(4n + 2) .material-card {
+      -webkit-mask-box-image-source: url("/images/cornici/sagoma-card-b.svg");
+      mask-border-source: url("/images/cornici/sagoma-card-b.svg");
+    }
+    .material-card:nth-of-type(4n + 2)::after,
+    .card-tilt > *:nth-child(4n + 2) .material-card::after {
+      border-image-source: url("/images/cornici/bordo-card-b.svg");
+    }
+
+    .material-card:nth-of-type(4n + 3),
+    .card-tilt > *:nth-child(4n + 3) .material-card {
+      -webkit-mask-box-image-source: url("/images/cornici/sagoma-card-c.svg");
+      mask-border-source: url("/images/cornici/sagoma-card-c.svg");
+    }
+    .material-card:nth-of-type(4n + 3)::after,
+    .card-tilt > *:nth-child(4n + 3) .material-card::after {
+      border-image-source: url("/images/cornici/bordo-card-c.svg");
+    }
+
+    .material-card:nth-of-type(4n + 4),
+    .card-tilt > *:nth-child(4n + 4) .material-card {
+      -webkit-mask-box-image-source: url("/images/cornici/sagoma-card-d.svg");
+      mask-border-source: url("/images/cornici/sagoma-card-d.svg");
+    }
+    .material-card:nth-of-type(4n + 4)::after,
+    .card-tilt > *:nth-child(4n + 4) .material-card::after {
+      border-image-source: url("/images/cornici/bordo-card-d.svg");
+    }
   }
 
   /* "Pezzetti di carta incollati": la sensazione viene dalla GEOMETRIA, non
@@ -363,59 +575,124 @@
     box-shadow: var(--shadow-lg);
   }
   
-  /* Material Button */
-  .material-btn {
-    @apply rounded-full font-medium transition-all duration-200;
-    box-shadow: var(--shadow-sm);
-  }
-  
-  .material-btn:hover {
-    box-shadow: var(--shadow-md);
-    transform: translateY(-1px);
-  }
-  
-  .material-btn:active {
-    box-shadow: var(--shadow-sm);
-    transform: translateY(0);
-  }
-  
-  .material-btn-filled {
-    @apply material-btn bg-primary text-primary-foreground px-6 py-3;
-  }
-  
-  .material-btn-tonal {
-    @apply material-btn bg-accent text-accent-foreground px-6 py-3;
-  }
-  
-  .material-btn-outlined {
-    @apply rounded-full font-medium border border-border bg-transparent px-6 py-3 transition-all duration-200;
-  }
-  
-  .material-btn-outlined:hover {
-    @apply bg-muted;
-  }
-  
-  /* Il campo e' un INCAVO nella carta: fondo piu' scuro del foglio e bordo,
-     invece del grigio freddo pieno di prima. */
-  .material-input {
-    @apply rounded-full bg-muted px-5 py-3 font-medium border border-border transition-all duration-200;
-    box-shadow: inset 0 1px 2px rgb(56 45 36 / 0.06);
+  /* ---- SAGOME DISEGNATE (agosto 2026) ----
+     I tracciati di Tommaso non fanno da BORDO ma da MASCHERA: il colore del
+     componente viene ritagliato sulla forma disegnata. Cosi' il margine e'
+     tagliato a mano e non c'e' nessuna linea scura sopra.
+
+     Prima versione provata e scartata: la stessa forma montata come
+     `border-image`, cioe' un contorno bruno. Con tratto uniforme, riempimento
+     piatto e niente ombra il risultato leggeva NEOBRUTALISTA, non disegnato a
+     mano. Provato anche il filo tenue nell'-ink del ruolo: bocciato lo stesso.
+     La forma va bene, la linea no.
+
+     Il taglio a 9 sezioni tiene fermi i quattro angoli e allunga solo le bande
+     centrali, quindi un disegno solo copre tutte le larghezze.
+
+     ⚠️ `fill` nello slice e' obbligatorio: senza, viene mascherato SOLO il
+     bordo e il centro del componente sparisce.
+     ⚠️ Le fette sono in pixel dell'immagine e vanno lette sui file:
+        bottone  323x99  angolo 54  (pillola)      fette 49 54
+        chip     161x49  angolo 17  (pillola)      fette 24 20
+        tessera  120x100 angolo 30  (quadrata)     fette 35
+        riga     250x56  angolo 23  (larga bassa)  fette 27 26
+     La fetta verticale non puo' superare meta' altezza dell'immagine, se no
+     il browser la ridimensiona da solo e la forma cambia.
+     ⚠️ `mask-border` e' Blink/WebKit (l'app girera' li' con Despia; Firefox
+     desktop no). Dentro @supports: dove non c'e', resta il raggio CSS e non
+     si rompe niente. */
+  @supports (-webkit-mask-box-image: url("/images/cornici/sagoma-bottone.svg")) or
+            (mask-border: url("/images/cornici/sagoma-bottone.svg")) {
+    .sagoma-btn,
+    .sagoma-chip,
+    .sagoma-tag,
+    .sagoma-quartiere {
+      border-radius: 0;
+      -webkit-mask-box-image-repeat: stretch;
+      mask-border-repeat: stretch;
+    }
+
+    /* --- bottone pieno, pillola --- */
+    .sagoma-btn {
+      -webkit-mask-box-image-source: url("/images/cornici/sagoma-bottone.svg");
+      -webkit-mask-box-image-slice: 49 54 fill;
+      mask-border-source: url("/images/cornici/sagoma-bottone.svg");
+      mask-border-slice: 49 54 fill;
+    }
+    /* Le misure seguono l'altezza del bottone (44 e 56 su una tavola alta 99).
+       Il valore verticale sta sotto meta' altezza per lasciare una banda da
+       stirare: 21+21 su 44, 27+27 su 56. */
+    .sagoma-btn-md {
+      -webkit-mask-box-image-width: 21px 24px;
+      mask-border-width: 21px 24px;
+    }
+    .sagoma-btn-lg {
+      -webkit-mask-box-image-width: 27px 30px;
+      mask-border-width: 27px 30px;
+    }
+
+    /* --- chip, pillola bassa (~32px) --- */
+    .sagoma-chip {
+      -webkit-mask-box-image-source: url("/images/cornici/sagoma-chip.svg");
+      -webkit-mask-box-image-slice: 24 20 fill;
+      -webkit-mask-box-image-width: 15px 13px;
+      mask-border-source: url("/images/cornici/sagoma-chip.svg");
+      mask-border-slice: 24 20 fill;
+      mask-border-width: 15px 13px;
+    }
+
+    /* ---- CAMPI: niente tratto disegnato. Provato e tolto (agosto 2026) ----
+       Due tentativi, e il secondo era anche tecnicamente corretto — bordo su
+       un guscio sovrapposto, angolo alla misura vera. Bocciato lo stesso.
+       Resta la regola: OGGETTI disegnati (card, bottoni, chip, tessere),
+       INCAVI lisci (campi). Un campo e' un buco nella carta, non un foglio:
+       il suo margine deve stare zitto perche' l'attenzione va su cio' che ci
+       scrivi dentro. E se il tratto mosso ce l'hanno anche i campi, smette di
+       distinguere qualcosa e diventa carta da parati.
+       ⚠️ Nota tecnica per chi ci riprovasse: la maschera a 9 sezioni su
+       <input> e <textarea> NON viene dipinta — sono elementi rimpiazzati.
+       Serve per forza un contenitore. */
+
+    /* --- badge di stato (~26px): il chip riscalato piu' piccolo --- */
+    .sagoma-badge {
+      border-radius: 0;
+      -webkit-mask-box-image-source: url("/images/cornici/sagoma-chip.svg");
+      -webkit-mask-box-image-slice: 24 20 fill;
+      -webkit-mask-box-image-width: 12px 10px;
+      -webkit-mask-box-image-repeat: stretch;
+      mask-border-source: url("/images/cornici/sagoma-chip.svg");
+      mask-border-slice: 24 20 fill;
+      mask-border-width: 12px 10px;
+      mask-border-repeat: stretch;
+    }
+
+    /* --- tessera quadrata con icona (~110x95): griglia dei ruoli --- */
+    .sagoma-tag {
+      -webkit-mask-box-image-source: url("/images/cornici/sagoma-tag.svg");
+      -webkit-mask-box-image-slice: 35 fill;
+      -webkit-mask-box-image-width: 33px;
+      mask-border-source: url("/images/cornici/sagoma-tag.svg");
+      mask-border-slice: 35 fill;
+      mask-border-width: 33px;
+    }
+
+    /* --- riga larga e bassa (~46px): quartieri, durata in Crea annuncio --- */
+    .sagoma-quartiere {
+      -webkit-mask-box-image-source: url("/images/cornici/sagoma-quartiere.svg");
+      -webkit-mask-box-image-slice: 27 26 fill;
+      -webkit-mask-box-image-width: 22px 21px;
+      mask-border-source: url("/images/cornici/sagoma-quartiere.svg");
+      mask-border-slice: 27 26 fill;
+      mask-border-width: 22px 21px;
+    }
   }
 
-  .material-input:focus {
-    @apply outline-none ring-2 ring-primary/40 bg-card border-primary;
-    box-shadow: var(--shadow-sm);
-  }
-
-  /* Material Chip/Filter */
-  .material-chip {
-    @apply inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium bg-muted border border-border transition-all duration-200;
-  }
-
-  .material-chip:hover {
-    @apply bg-accent border-primary;
-  }
-
+  /* Material Chip/Filter
+     Nota: `.material-btn*`, `.material-input` e `.material-chip` stavano qui e
+     sono stati tolti perche' NON li usava nessuno — erano un secondo sistema
+     di bottoni e campi, con raggi diversi (`rounded-full` contro `rounded-xl`),
+     pronto a essere ripreso per sbaglio. Le sorgenti uniche sono
+     ui/button.tsx e ui/input.tsx. */
   .material-chip-selected {
     @apply inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium bg-primary text-primary-foreground border border-primary;
     box-shadow: var(--shadow-sm);
@@ -426,7 +703,8 @@
     @apply rounded-3xl overflow-hidden border-2 border-border;
     box-shadow: var(--shadow-md);
   }
-  
+
+
   /* Bottom Nav - Material Style */
   /* La nav e' CARTA come la pagina, non un blocco bianco incollato sotto.
      Separazione via bordo, non via colore ne' via ombra larga. */
@@ -596,4 +874,18 @@
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* ⚠️ FUORI da @layer di proposito: queste classi le inietta mapbox-gl a
+   runtime, quindi non compaiono in nessun file sorgente e Tailwind le
+   ELIMINEREBBE dal build. Messe dentro @layer components sparivano in
+   silenzio (verificato: 0 occorrenze nel CSS compilato).
+
+   Servono perche' la mappa ora arriva a filo (punto 17 dell'audit) e la bottom
+   nav le passa sopra: senza, logo e attribuzione Mapbox restano nascosti sotto
+   la nav — e i termini di Mapbox chiedono che siano visibili.
+   4,5rem = altezza nav (4rem) + un filo d'aria. */
+.mapboxgl-ctrl-bottom-left,
+.mapboxgl-ctrl-bottom-right {
+  bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
 }

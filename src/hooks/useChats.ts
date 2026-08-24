@@ -27,6 +27,22 @@ export interface Chat {
 
 const STALE_TIME = 1000 * 60 * 2; // 2 minutes cache (reduced for faster updates)
 
+/**
+ * Lista conversazioni — UNA query.
+ *
+ * Prima erano 4 query PER OGNI conversazione (profilo dell'altro utente,
+ * conteggio non letti, ultimo messaggio, stato candidatura): con 20 chat
+ * significava 81 richieste all'apertura della schermata, e cresceva in modo
+ * lineare col numero di conversazioni.
+ *
+ * Ora la vista `chat_overview` fa il lavoro nel database. La vista e'
+ * `security_invoker`, quindi le RLS delle tabelle sottostanti restano in
+ * vigore: non e' una scorciatoia sui permessi.
+ *
+ * L'ordinamento e' tornato al database (`updated_at`), perche' un trigger
+ * aggiorna quella colonna a ogni messaggio. Prima si ordinava lato client, il
+ * che funziona solo finche' si scarica tutto in una volta.
+ */
 export function useChats(userId: string | undefined) {
   return useQuery({
     queryKey: ["chats", userId],
@@ -34,90 +50,47 @@ export function useChats(userId: string | undefined) {
       if (!userId) return [];
 
       const { data, error } = await supabase
-        .from("chats")
-        .select("*, jobs(title)")
-        .or(`worker_id.eq.${userId},employer_id.eq.${userId}`)
+        .from("chat_overview")
+        .select("*")
         .order("updated_at", { ascending: false });
 
       if (error) throw error;
 
-      // Fetch other user's profile, unread count, and application status for each chat
-      const chatsWithUsers = await Promise.all(
-        (data || []).map(async (chat) => {
-          const otherUserId = chat.worker_id === userId ? chat.employer_id : chat.worker_id;
-          
-          const { data: profile } = await supabase
-            .from("profiles")
-            .select("id, full_name, avatar_url, photos")
-            .eq("id", otherUserId)
-            .single();
+      return (data || []).map((r): Chat => {
+        // La vista restituisce ENTRAMBI i profili e ENTRAMBI i conteggi: chi
+        // sono "io" lo decide il client. E' voluto — cosi' la vista non dipende
+        // da auth.uid() nel proprio corpo ed e' piu' facile da ragionare.
+        const sonoIlWorker = r.worker_id === userId;
 
-          // Count unread messages
-          const { count } = await supabase
-            .from("messages")
-            .select("*", { count: "exact", head: true })
-            .eq("chat_id", chat.id)
-            .eq("is_read", false)
-            .neq("sender_id", userId);
+        const nome = sonoIlWorker ? r.employer_full_name : r.worker_full_name;
+        const foto = sonoIlWorker ? r.employer_photos : r.worker_photos;
+        const avatar = sonoIlWorker ? r.employer_avatar_url : r.worker_avatar_url;
 
-          // Ultimo messaggio, per l'anteprima in lista.
-          const { data: lastMessage } = await supabase
-            .from("messages")
-            .select("content, created_at, sender_id, attachment_url")
-            .eq("chat_id", chat.id)
-            .order("created_at", { ascending: false })
-            .limit(1)
-            .maybeSingle();
-
-          // Get application status for this chat's job
-          // maybeSingle(): se la candidatura non esiste più, single() risponderebbe
-          // 406 e riempirebbe la console di errori (stesso bug già visto in
-          // WorkerJobHistory).
-          const { data: applicationData } = await supabase
-            .from("applications")
-            .select("status")
-            .eq("job_id", chat.job_id)
-            .eq("applicant_id", chat.worker_id)
-            .maybeSingle();
-
-          const avatarUrl =
-            profile?.photos && profile.photos.length > 0
-              ? profile.photos[0]
-              : profile?.avatar_url;
-
-          return {
-            ...chat,
-            job: chat.jobs,
-            other_user: profile
-              ? {
-                  id: profile.id,
-                  full_name: profile.full_name,
-                  avatar_url: avatarUrl,
-                }
-              : { id: otherUserId, full_name: null, avatar_url: null },
-            unread_count: count || 0,
-            application_status: applicationData?.status || "pending",
-            last_message: lastMessage
-              ? {
-                  content: lastMessage.content,
-                  created_at: lastMessage.created_at,
-                  sender_id: lastMessage.sender_id,
-                  has_attachment: !!lastMessage.attachment_url,
-                }
-              : null,
-          };
-        })
-      );
-
-      // Riordino sull'ultimo messaggio reale.
-      // La query ordina per `chats.updated_at`, ma quella colonna non viene
-      // aggiornata quando si inserisce un messaggio: la lista arrivava in un
-      // ordine arbitrario (22/07, 10/07, 22/07, 03/03…). Finché non c'è un
-      // trigger che tocca `updated_at`, l'ordine giusto lo ricaviamo qui.
-      return (chatsWithUsers as Chat[]).sort((a, b) => {
-        const ta = new Date(a.last_message?.created_at ?? a.created_at).getTime();
-        const tb = new Date(b.last_message?.created_at ?? b.created_at).getTime();
-        return tb - ta;
+        return {
+          id: r.id as string,
+          job_id: r.job_id as string,
+          worker_id: r.worker_id as string,
+          employer_id: r.employer_id as string,
+          created_at: r.created_at as string,
+          job: r.job_title ? { title: r.job_title } : undefined,
+          other_user: {
+            id: (sonoIlWorker ? r.employer_id : r.worker_id) as string,
+            full_name: nome,
+            // Stessa regola di prima: la prima foto vince sull'avatar.
+            avatar_url: foto && foto.length > 0 ? foto[0] : avatar,
+          },
+          unread_count:
+            (sonoIlWorker ? r.unread_for_worker : r.unread_for_employer) ?? 0,
+          application_status: r.application_status || "pending",
+          last_message: r.last_message_created_at
+            ? {
+                content: r.last_message_content,
+                created_at: r.last_message_created_at,
+                sender_id: r.last_message_sender_id as string,
+                has_attachment: !!r.last_message_has_attachment,
+              }
+            : null,
+        };
       });
     },
     staleTime: STALE_TIME,

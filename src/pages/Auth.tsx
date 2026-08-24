@@ -42,13 +42,13 @@ const roleThemes = {
   },
   employer: {
     bg: 'bg-employer-50',
-    primary: 'bg-employer',
-    primaryHover: 'hover:bg-employer-700',
+    primary: 'bg-employer-700',
+    primaryHover: 'hover:bg-employer-800',
     text: 'text-employer',
     border: 'border-employer',
     ring: 'ring-employer',
     cardSelected: 'bg-employer/10 ring-2 ring-employer',
-    iconBg: 'bg-employer text-employer-foreground',
+    iconBg: 'bg-employer-700 text-employer-foreground',
     inputFocus: 'focus:ring-employer focus:border-employer',
   },
   neutral: {
@@ -258,7 +258,7 @@ const Auth = () => {
         {/* Logo & Title */}
         <div className="text-center mb-8 animate-fade-in">
           <img
-            src={selectedRole === 'employer' ? "/images/logo-employer.svg" : "/images/logo-worker.svg"}
+            src={selectedRole === 'employer' ? "/images/logo-employer-v2.svg" : "/images/logo-worker-v2.svg"}
             alt="Politask"
             className="h-20 w-auto mx-auto mb-3 transition-all duration-500"
           />
@@ -317,7 +317,7 @@ const Auth = () => {
                   >
                     <div className={cn(
                       "w-12 h-12 rounded-xl flex items-center justify-center mb-3 transition-colors duration-500",
-                      selectedRole === 'employer' ? 'bg-employer text-employer-foreground' : 'bg-card'
+                      selectedRole === 'employer' ? 'bg-employer-700 text-employer-foreground' : 'bg-card'
                     )}>
                       <AnnunciIcon className="w-6 h-6" />
                     </div>
@@ -442,7 +442,7 @@ const Auth = () => {
               className={cn(
                 "w-full h-14 rounded-xl font-semibold text-lg shadow-md hover:shadow-lg transition-all duration-500 touch-feedback",
                 !isLogin && selectedRole === 'worker' && "bg-primary hover:bg-primary/90 text-primary-foreground",
-                !isLogin && selectedRole === 'employer' && "bg-employer hover:bg-employer-700 text-employer-foreground",
+                !isLogin && selectedRole === 'employer' && "bg-employer-700 hover:bg-employer-800 text-employer-foreground",
                 (isLogin || !selectedRole) && "bg-primary text-primary-foreground"
               )}
             >

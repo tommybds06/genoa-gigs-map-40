@@ -3,6 +3,7 @@ import { ROLE_TAGS, TYPE_TAGS } from "@/constants/tags";
 import { cn } from "@/lib/utils";
 import { getTagClasses, getTagSelectedClasses, isBlueTag } from "@/lib/tagColors";
 import { getJobIcon } from "@/lib/jobIcons";
+import { useAppTheme } from "@/hooks/useAppTheme";
 import { Plus, X } from "lucide-react";
 
 interface TagSelectorProps {
@@ -23,6 +24,7 @@ export function TagSelector({
   roleLayout = "chips",
 }: TagSelectorProps) {
   const [customInput, setCustomInput] = useState("");
+  const { theme } = useAppTheme();
 
   const toggleTag = (tag: string) => {
     if (selectedTags.includes(tag)) {
@@ -58,10 +60,14 @@ export function TagSelector({
           type="button"
           onClick={() => toggleTag(tag)}
           className={cn(
-            "flex flex-col items-center gap-1.5 p-3 rounded-xl text-sm font-medium transition-all border-2",
+            "flex flex-col items-center gap-1.5 p-3 sagoma-tag rounded-[28px] text-sm font-medium transition-all border-2",
+            // ⚠️ Il selezionato era `bg-primary` fisso, cioe' ARANCIONE anche in
+            // "Crea annuncio", dove tutto il resto e' blu. Non si notava finche'
+            // il non-selezionato usava un accent ambra fisso; da quando `--accent`
+            // segue il ruolo, la tessera scelta stonava con le altre.
             isSelected
-              ? "bg-primary text-primary-foreground border-primary"
-              : "bg-accent text-accent-foreground border-transparent hover:bg-primary/20"
+              ? `${theme.btnFilled} border-transparent`
+              : "bg-accent text-accent-foreground border-transparent hover:bg-accent/70"
           )}
         >
           <Icon className="w-7 h-7 shrink-0" />
@@ -78,7 +84,9 @@ export function TagSelector({
         type="button"
         onClick={() => toggleTag(tag)}
         className={cn(
-          "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all",
+          // sagoma-chip: il fondo e' ritagliato sul disegno di Tommaso.
+          // Il raggio serve da fallback dove la maschera non c'e' (vedi index.css).
+          "inline-flex items-center gap-1.5 px-3 py-1.5 sagoma-chip rounded-full text-sm font-medium transition-all",
           getTagSelectedClasses(tag, isSelected)
         )}
       >
@@ -112,7 +120,10 @@ export function TagSelector({
             }}
             placeholder="Aggiungi un ruolo personalizzato…"
             maxLength={30}
-            className="flex-1 rounded-full border border-input bg-card px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-primary/40"
+            // Era l'ultimo campo con uno stile suo (pillola su bg-card): stesso
+            // incavo di tutti gli altri, solo piu' basso perche' sta in riga
+            // col bottone "Aggiungi".
+            className="flex-1 h-10 rounded-xl border border-input bg-muted px-3 text-sm outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:border-ring focus-visible:bg-card"
           />
           <button
             type="button"
@@ -139,7 +150,7 @@ export function TagSelector({
                   type="button"
                   onClick={() => toggleTag(tag)}
                   className={cn(
-                    "px-3 py-1.5 rounded-full text-sm font-medium transition-all",
+                    "px-3 py-1.5 sagoma-chip rounded-full text-sm font-medium transition-all",
                     getTagSelectedClasses(tag, isSelected)
                   )}
                 >
