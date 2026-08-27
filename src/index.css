@@ -96,6 +96,14 @@
     --muted: var(--paper-sunken);
     --muted-foreground: var(--ink-soft);
 
+    /* Fondo dei CAMPI. Era `--paper-sunken`, un beige quasi neutro che leggeva
+       "grigetto": la carta sta al 44% di saturazione, il campo al 33%, quindi
+       accanto sembrava spento. Ora e' una velatura del colore del ruolo.
+       Resta piu' scuro della card (91% contro 95%) perche' un campo deve
+       leggersi come un incavo, ma la tinta lo tiene vivo. L'inchiostro sopra
+       sta sopra 9:1, quindi la leggibilita' non si tocca. */
+    --field: 32 55% 91%;             /* #F7E7D6 — velatura calda, worker */
+
     /* accent = tile arancio chiara (icone ruolo, chip, badge) */
     --accent: 36 60% 87%;            /* #F2E2CA */
     --accent-foreground: var(--brand-orange-ink);
@@ -210,6 +218,7 @@
        toccare una sola chiamata. */
     --accent: var(--employer-50);
     --accent-foreground: var(--brand-blue-ink);
+    --field: 213 45% 92%;            /* #E4EBF5 — velatura fredda, employer */
   }
 
   .dark {
@@ -641,17 +650,26 @@
       mask-border-width: 15px 13px;
     }
 
-    /* ---- CAMPI: niente tratto disegnato. Provato e tolto (agosto 2026) ----
-       Due tentativi, e il secondo era anche tecnicamente corretto — bordo su
-       un guscio sovrapposto, angolo alla misura vera. Bocciato lo stesso.
-       Resta la regola: OGGETTI disegnati (card, bottoni, chip, tessere),
-       INCAVI lisci (campi). Un campo e' un buco nella carta, non un foglio:
-       il suo margine deve stare zitto perche' l'attenzione va su cio' che ci
-       scrivi dentro. E se il tratto mosso ce l'hanno anche i campi, smette di
-       distinguere qualcosa e diventa carta da parati.
-       ⚠️ Nota tecnica per chi ci riprovasse: la maschera a 9 sezioni su
-       <input> e <textarea> NON viene dipinta — sono elementi rimpiazzati.
-       Serve per forza un contenitore. */
+    /* ---- BOTTONI VUOTI: il contorno disegnato ----
+       I bottoni pieni non hanno nessuna linea — e' il colore a essere
+       ritagliato. Ma un bottone `outline` non ha colore da ritagliare: senza
+       una linea non esisterebbe. Quindi qui il tratto serve, ed e' lo stesso
+       filo delle card e dei campi (#9C8B74).
+       La maschera resta, cosi' il fondo dell'hover segue la stessa forma e
+       taglia meta' del tratto: 2,6px disegnati diventano ~1,3 a schermo. */
+    .bordo-btn::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      border-style: solid;
+      border-color: transparent;
+      border-image-source: url("/images/cornici/bordo-bottone.svg");
+      border-image-slice: 49 54;
+      border-image-repeat: stretch;
+      border-width: 27px 30px;
+      border-image-width: 27px 30px;
+    }
 
     /* --- badge di stato (~26px): il chip riscalato piu' piccolo --- */
     .sagoma-badge {
@@ -888,4 +906,78 @@
 .mapboxgl-ctrl-bottom-left,
 .mapboxgl-ctrl-bottom-right {
   bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
+}
+
+/* ============================================================
+   CAMPI COL TRATTO DISEGNATO — vale per TUTTA l'app
+   ============================================================
+
+   ⚠️ FUORI da ogni @layer di proposito: gli stili non incapsulati in un layer
+   vincono sulle utility di Tailwind a prescindere dalla specificita'. Serve
+   perche' qui bisogna SPEGNERE `focus-visible:ring-2` e `focus-visible:border-ring`,
+   che sono utility e da dentro @layer components non si coprono senza !important.
+
+   ⚠️ Il tratto sta su un GUSCIO, non sul campo. Su <input> e <textarea> — che
+   sono elementi rimpiazzati — non esiste ::after, e `border-image` messo sul
+   campo costa spazio INTERNO: per rendere l'angolo alla sua misura vera
+   servirebbero 24px di bordo su un campo alto 48, e non resta niente per il
+   testo. Prima versione fatta cosi': venivano fuori rettangoli squadrati.
+   Il guscio lo generano da soli ui/input.tsx e ui/textarea.tsx; il
+   SelectTrigger e' un <button> e puo' portarsi il ::after da se'.
+
+   Il tratto e' 1,3px sulla tavola (~1,15 a schermo), lo stesso peso del filo
+   delle card. Da attivo passa a 2px e prende il colore del ruolo. */
+
+.campo-guscio {
+  position: relative;
+}
+
+.campo-guscio::after,
+[data-radix-select-trigger].campo-guscio::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-style: solid;
+  border-color: transparent;
+  border-width: 24px;
+  border-image-source: url("/images/cornici/bordo-campo.svg");
+  border-image-slice: 27 26;
+  border-image-width: 24px;
+  border-image-repeat: stretch;
+}
+
+/* Il campo perde il bordo CSS e prende il raggio del disegno (41% dell'altezza,
+   misurato sul file): cosi' il fondo resta dentro il tratto invece di spuntare
+   fuori agli angoli. */
+.campo-guscio > input,
+.campo-guscio > textarea,
+button.campo-guscio {
+  border-color: transparent;
+  border-radius: 20px;
+}
+
+/* Da attivo: niente anello di serie, si ingrossa il tratto disegnato.
+   ⚠️ Il colore e' #C96A0E e non l'arancio di marca: il pastello sul campo
+   misura 1,89:1 e un indicatore di focus sotto 3:1 non e' distinguibile.
+   Questo tiene 3,48 e resta chiaramente arancione, non bruno. */
+.campo-guscio > input:focus,
+.campo-guscio > input:focus-visible,
+.campo-guscio > textarea:focus,
+.campo-guscio > textarea:focus-visible,
+button.campo-guscio:focus,
+button.campo-guscio:focus-visible {
+  outline: none;
+  box-shadow: none;
+  border-color: transparent;
+}
+
+.campo-guscio:focus-within::after,
+button.campo-guscio:focus::after {
+  border-image-source: url("/images/cornici/bordo-campo-attivo.svg");
+}
+
+[data-ruolo="employer"] .campo-guscio:focus-within::after,
+[data-ruolo="employer"] button.campo-guscio:focus::after {
+  border-image-source: url("/images/cornici/bordo-campo-attivo-blu.svg");
 }

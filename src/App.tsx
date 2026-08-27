@@ -21,6 +21,7 @@ import Settings from "./pages/Settings";
 import EditProfile from "./pages/EditProfile";
 import Auth from "./pages/Auth";
 import Onboarding from "./pages/Onboarding";
+import ScegliRuolo from "./pages/ScegliRuolo";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -49,6 +50,11 @@ function AnimatedRoutes() {
           <Route path="/auth" element={
             <PageTransition variant="fade">
               <Auth />
+            </PageTransition>
+          } />
+          <Route path="/scegli-ruolo" element={
+            <PageTransition variant="fade">
+              <ProtectedRoute><ScegliRuolo /></ProtectedRoute>
             </PageTransition>
           } />
           <Route path="/onboarding" element={

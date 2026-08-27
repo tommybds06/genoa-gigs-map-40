@@ -124,7 +124,7 @@ const Messaggi = () => {
               .from('profiles')
               .select('full_name')
               .eq('id', newMsg.sender_id)
-              .single();
+              .maybeSingle();
 
             toast.info(`Nuovo messaggio da ${sender?.full_name || 'Utente'}`, { duration: 3000 });
           }

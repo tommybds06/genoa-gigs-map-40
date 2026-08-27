@@ -131,7 +131,7 @@ const Annunci = () => {
             .from('profiles')
             .select('id, full_name, avatar_url, bio, level, photos')
             .eq('id', app.applicant_id)
-            .single();
+            .maybeSingle();
 
           // Use first photo as avatar if available
           const avatarUrl = profile?.photos && profile.photos.length > 0 

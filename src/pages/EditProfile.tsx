@@ -40,7 +40,7 @@ const EditProfile = () => {
         .from("profiles")
         .select("*")
         .eq("id", user.id)
-        .single();
+        .maybeSingle();
       
       if (error) throw error;
       return data;
@@ -170,7 +170,7 @@ const EditProfile = () => {
             <Label htmlFor="fullName" className="text-sm font-medium">
               {isEmployer ? "Nome" : "Nome e Cognome"}
             </Label>
-            <Input
+              <Input
               id="fullName"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
@@ -198,7 +198,7 @@ const EditProfile = () => {
               <Label htmlFor="address" className="text-sm font-medium">
                 Indirizzo
               </Label>
-              <Input
+                <Input
                 id="address"
                 value={addressText}
                 onChange={(e) => setAddressText(e.target.value)}
@@ -213,7 +213,7 @@ const EditProfile = () => {
             <Label htmlFor="bio" className="text-sm font-medium">
               {isEmployer ? "Descrizione" : "Presentazione"}
             </Label>
-            <Textarea
+              <Textarea
               id="bio"
               value={bio}
               onChange={(e) => setBio(e.target.value)}
@@ -233,7 +233,7 @@ const EditProfile = () => {
               <Label htmlFor="lookingFor" className="text-sm font-medium">
                 Chi cerco
               </Label>
-              <Textarea
+                <Textarea
                 id="lookingFor"
                 value={lookingFor}
                 onChange={(e) => setLookingFor(e.target.value)}
@@ -247,7 +247,7 @@ const EditProfile = () => {
               <Label htmlFor="experience" className="text-sm font-medium">
                 Esperienze
               </Label>
-              <Textarea
+                <Textarea
                 id="experience"
                 value={experience}
                 onChange={(e) => setExperience(e.target.value)}

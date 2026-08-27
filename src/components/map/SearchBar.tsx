@@ -81,18 +81,18 @@ export function SearchBar({
       <div className="flex items-center gap-2 w-full">
         {/* Search Input */}
         <div className="relative flex-1">
-          <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary" />
+          <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 z-10 w-4 h-4 text-primary" />
           <Input
             type="text"
             placeholder="Cerca impiego..."
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="pl-9 pr-8 bg-card shadow-md border-0 rounded-full h-10"
+            className="pl-9 pr-8 bg-card h-12"
           />
           {searchQuery && (
             <button
               onClick={() => onSearchChange("")}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              className="absolute right-3 top-1/2 -translate-y-1/2 z-10 text-muted-foreground hover:text-foreground"
             >
               <X className="w-4 h-4" />
             </button>
@@ -105,7 +105,7 @@ export function SearchBar({
           size="icon"
           onClick={openFilters}
           className={cn(
-            "relative rounded-full h-10 w-10 shadow-md border-0",
+            "relative rounded-full h-12 w-12 shadow-md border-0",
             activeFiltersCount > 0
               ? "bg-primary text-primary-foreground hover:bg-primary/90"
               : "bg-card hover:bg-accent"
