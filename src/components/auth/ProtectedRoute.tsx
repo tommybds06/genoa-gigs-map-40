@@ -1,18 +1,31 @@
 import { ReactNode } from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { useUser } from '@/contexts/UserContext';
-import { doveMandare } from '@/lib/percorsoAccesso';
 import { Loader2 } from 'lucide-react';
 
 interface ProtectedRouteProps {
   children: ReactNode;
 }
 
+/**
+ * ⚠️ NON aggiungere qui un controllo del tipo "ha un profilo? ha un ruolo?".
+ * Provato ad agosto 2026 e rimosso subito: mandava alla scelta ruolo TUTTI,
+ * anche chi entrava con email e aveva il profilo completo da mesi.
+ *
+ * Il motivo sta in UserContext: `hasLoaded` diventa `true` anche quando non
+ * c'e' nessun utente, e da li' in poi resta `true` per sempre; `profile`
+ * invece torna `null` a ogni cambio di sessione finche' la nuova lettura non
+ * e' finita. Quindi nell'istante dopo il login la coppia e'
+ * "caricato = si', profilo = nullo", che sembra "non ha un profilo" ma vuol
+ * dire solo "sto aspettando".
+ *
+ * Lo smistamento vive in Auth.tsx, dove il profilo viene letto con una query
+ * esplicita e la risposta e' certa. Se un giorno servisse anche qui, prima
+ * bisogna dare a UserContext un modo per distinguere "non ancora letto" da
+ * "letto, e non c'e'".
+ */
 const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const { user, loading } = useAuth();
-  const { profile, hasLoaded } = useUser();
-  const location = useLocation();
 
   if (loading) {
     return (
@@ -24,26 +37,6 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
 
   if (!user) {
     return <Navigate to="/auth" replace />;
-  }
-
-  /**
-   * ⚠️ Il controllo sta qui e non solo in Auth perche' dopo un accesso con
-   * Google non e' garantito che si passi da /auth: se l'indirizzo di ritorno
-   * non e' fra quelli ammessi si atterra sulla home. Senza questa guardia si
-   * entrerebbe nell'app con un profilo che nessuno ha compilato.
-   *
-   * La regola vera sta in lib/percorsoAccesso.ts — qui si applica soltanto.
-   * Si aspetta `hasLoaded`, se no al primo istante il profilo e' nullo per
-   * tutti e verrebbero rimbalzati anche gli utenti a posto.
-   */
-  const staGiaSistemando =
-    location.pathname === '/scegli-ruolo' || location.pathname === '/onboarding';
-
-  if (hasLoaded && !staGiaSistemando) {
-    const destinazione = doveMandare(user, profile);
-    if (destinazione === '/scegli-ruolo') {
-      return <Navigate to="/scegli-ruolo" replace />;
-    }
   }
 
   return <>{children}</>;
