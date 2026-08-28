@@ -134,7 +134,11 @@ const Onboarding = () => {
   const iconColorClass = theme.primaryText;
 
   return (
-    <div className="min-h-screen bg-background">
+    // ⚠️ h-full + overflow-y-auto, non min-h-screen: MainLayout mette
+    // `overflow-hidden` sul contenitore, quindi una pagina piu' alta dello
+    // schermo veniva TAGLIATA invece che scorrere — e il bottone in fondo
+    // diventava irraggiungibile.
+    <div className="h-full overflow-y-auto bg-background">
       {/* Header */}
       <div className={`${headerBgClass} ${headerTextClass} px-6 py-8 text-center`}>
         <h1 className="text-2xl font-bold">

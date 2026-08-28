@@ -2,6 +2,7 @@ import { ReactNode } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useUser } from '@/contexts/UserContext';
+import { doveMandare } from '@/lib/percorsoAccesso';
 import { Loader2 } from 'lucide-react';
 
 interface ProtectedRouteProps {
@@ -10,7 +11,7 @@ interface ProtectedRouteProps {
 
 const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const { user, loading } = useAuth();
-  const { role, hasLoaded } = useUser();
+  const { profile, hasLoaded } = useUser();
   const location = useLocation();
 
   if (loading) {
@@ -26,23 +27,23 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   }
 
   /**
-   * Sessione valida ma NESSUN ruolo: e' l'utente arrivato da Google che non ha
-   * ancora una riga in `profiles`.
+   * ⚠️ Il controllo sta qui e non solo in Auth perche' dopo un accesso con
+   * Google non e' garantito che si passi da /auth: se l'indirizzo di ritorno
+   * non e' fra quelli ammessi si atterra sulla home. Senza questa guardia si
+   * entrerebbe nell'app con un profilo che nessuno ha compilato.
    *
-   * ⚠️ Il controllo sta qui e non solo in Auth perche' dopo un accesso OAuth
-   * non e' garantito che si passi da /auth: se l'indirizzo di ritorno non e'
-   * fra quelli ammessi, si atterra sulla home. Senza questa guardia si
-   * entrerebbe nell'app con un profilo inesistente, e le pagine che leggono il
-   * ruolo si romperebbero una per una.
-   *
-   * Si aspetta `hasLoaded`, se no al primo istante il ruolo e' nullo per tutti
-   * e verrebbero rimbalzati anche gli utenti a posto.
+   * La regola vera sta in lib/percorsoAccesso.ts — qui si applica soltanto.
+   * Si aspetta `hasLoaded`, se no al primo istante il profilo e' nullo per
+   * tutti e verrebbero rimbalzati anche gli utenti a posto.
    */
   const staGiaSistemando =
     location.pathname === '/scegli-ruolo' || location.pathname === '/onboarding';
 
-  if (hasLoaded && !role && !staGiaSistemando) {
-    return <Navigate to="/scegli-ruolo" replace />;
+  if (hasLoaded && !staGiaSistemando) {
+    const destinazione = doveMandare(user, profile);
+    if (destinazione === '/scegli-ruolo') {
+      return <Navigate to="/scegli-ruolo" replace />;
+    }
   }
 
   return <>{children}</>;

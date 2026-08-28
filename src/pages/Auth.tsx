@@ -20,6 +20,7 @@ import { MailIcon, LucchettoIcon, AnnunciIcon, ProfiloIcon, MappaIcon } from '@/
 import { GenericoIcon } from '@/components/icons/roleIcons';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { doveMandare } from '@/lib/percorsoAccesso';
 
 type UserRole = 'worker' | 'employer';
 type Social = 'google' | 'apple';
@@ -121,21 +122,26 @@ const Auth = () => {
         // candidature (vedi CLAUDE.md).
         const { data: profile } = await supabase
           .from('profiles')
-          .select('is_onboarded, role')
+          .select('is_onboarded, role, neighborhood')
           .eq('id', user.id)
           .maybeSingle();
 
-        // Tre casi, in ordine di quanto manca:
-        //   niente riga o niente ruolo → non sappiamo nemmeno chi e'
-        //   riga senza onboarding      → sa chi e', mancano i dati del profilo
-        //   tutto a posto              → dentro
-        if (!profile || !profile.role) {
-          navigate('/scegli-ruolo');
-        } else if (!profile.is_onboarded) {
-          navigate('/onboarding');
-        } else {
-          navigate('/');
+        // La regola sta in lib/percorsoAccesso.ts, che e' la sorgente unica:
+        // la usa anche ProtectedRoute per chi non passa di qui.
+        const destinazione = doveMandare(user, profile);
+
+        // Diagnostica di sviluppo: senza, "non funziona" resta un'ipotesi.
+        // Dice cosa e' stato letto e cosa e' stato deciso, in una riga.
+        if (import.meta.env.DEV) {
+          console.log('[Politask] accesso →', destinazione, {
+            provider: user.app_metadata?.provider,
+            ruolo: profile?.role ?? '(nessun profilo)',
+            quartiere: profile?.neighborhood ?? null,
+            profiloCompletato: profile?.is_onboarded ?? null,
+          });
         }
+
+        if (destinazione) navigate(destinazione);
       }
     };
     
@@ -148,33 +154,56 @@ const Auth = () => {
    * nuovo si ritrova senza riga in `profiles` e viene mandato a /scegli-ruolo
    * dallo smistamento qui sopra.
    *
-   * ⚠️ Il redirect torna su /auth di proposito: e' l'unica pagina che sa
-   * decidere dove mandare la persona, e lo fa sempre allo stesso modo, sia che
-   * arrivi da un modulo sia che torni da Google.
+   * ⚠️ Si usa `supabase.auth.signInWithOAuth` e NON l'helper di Lovable
+   * (`src/integrations/lovable`). Due motivi, tutti e due verificati sul
+   * campo:
    *
-   * ⚠️ Perche' non si vede niente finche' non lo configuri: i provider vanno
-   * accesi nel pannello Supabase (Authentication → Providers) con le
-   * credenziali prese da Google Cloud e da Apple Developer. Senza, la chiamata
-   * risponde "provider is not enabled".
+   *   1. l'helper porta il browser su `/~oauth/initiate`, che e' un endpoint
+   *      dei server di Lovable: in sviluppo locale quel percorso non esiste e
+   *      si finisce su una 404 dopo un accesso andato a buon fine;
+   *   2. quel giro passa da `oauth.lovable.app`, quindi durante l'accesso
+   *      l'utente vede un dominio Lovable. In un prodotto che deve sembrare
+   *      suo, non va.
+   *
+   * Con la chiamata diretta il percorso e' app → Google → il nostro Supabase
+   * → app. Nessun dominio di terzi.
+   *
+   * ⚠️ Stessa ragione per cui in Lovable va scelto "Your own credentials" e
+   * non "Managed by Lovable": con le credenziali di Lovable, nella schermata
+   * di consenso Google mostra il nome di LOVABLE, non Politask.
+   *
+   * ⚠️ Non funziona finche' non lo configuri: vedi
+   * brand/POLITASK-guida-accesso-social.md.
    */
   const accediCon = async (provider: Social) => {
     setSocial(provider);
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider,
-      options: { redirectTo: `${window.location.origin}/auth` },
-    });
-    if (error) {
-      console.error(`Errore accesso ${provider}:`, error);
-      toast.error(
-        error.message.includes('not enabled')
-          ? `Accesso con ${provider === 'google' ? 'Google' : 'Apple'} non ancora attivo`
-          : 'Accesso non riuscito. Riprova.',
-        { duration: 3000 }
-      );
+    try {
+      const result = await supabase.auth.signInWithOAuth({
+        provider,
+        options: { redirectTo: `${window.location.origin}/auth` },
+      });
+
+      if (result.error) {
+        console.error(`Errore accesso ${provider}:`, result.error);
+        const messaggio = String(result.error.message ?? '');
+        toast.error(
+          messaggio.includes('not enabled') || messaggio.includes('not configured')
+            ? `Accesso con ${provider === 'google' ? 'Google' : 'Apple'} non ancora attivo`
+            : 'Accesso non riuscito. Riprova.',
+          { duration: 3000 }
+        );
+        setSocial(null);
+        return;
+      }
+
+      // Se e' andata, il browser sta gia' uscendo dalla pagina verso Google:
+      // non si spegne il caricamento, se no il bottone lampeggia un istante
+      // prima che la pagina cambi.
+    } catch (err) {
+      console.error(`Errore accesso ${provider}:`, err);
+      toast.error('Accesso non riuscito. Riprova.', { duration: 3000 });
       setSocial(null);
     }
-    // Se va a buon fine il browser esce dalla pagina: non serve spegnere lo
-    // stato di caricamento, e spegnerlo farebbe lampeggiare il bottone.
   };
 
   const validateForm = (): boolean => {
