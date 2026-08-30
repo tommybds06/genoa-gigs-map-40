@@ -4,7 +4,10 @@ import { cn } from "@/lib/utils";
 import { getTagClasses, getTagSelectedClasses, isBlueTag } from "@/lib/tagColors";
 import { getJobIcon } from "@/lib/jobIcons";
 import { useAppTheme } from "@/hooks/useAppTheme";
-import { Plus, X } from "lucide-react";
+import { X } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { PiuIcon } from "@/components/icons/uiIcons";
 
 interface TagSelectorProps {
   selectedTags: string[];
@@ -109,7 +112,7 @@ export function TagSelector({
 
         {/* Ruolo personalizzabile */}
         <div className="flex items-center gap-2 mt-2">
-          <input
+          <Input
             value={customInput}
             onChange={(e) => setCustomInput(e.target.value)}
             onKeyDown={(e) => {
@@ -120,20 +123,17 @@ export function TagSelector({
             }}
             placeholder="Aggiungi un ruolo personalizzato…"
             maxLength={30}
-            // Era l'ultimo campo con uno stile suo (pillola su bg-card): stesso
-            // incavo di tutti gli altri, solo piu' basso perche' sta in riga
-            // col bottone "Aggiungi".
-            className="flex-1 h-10 rounded-xl border border-input bg-muted px-3 text-sm outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:border-ring focus-visible:bg-card"
+            className="text-sm"
           />
-          <button
+          <Button
             type="button"
             onClick={addCustomRole}
             disabled={!customInput.trim()}
-            className="inline-flex items-center gap-1 rounded-full bg-primary text-primary-foreground px-3 py-1.5 text-sm font-medium transition-all hover:bg-primary/90 disabled:opacity-50"
+            className="shrink-0"
           >
-            <Plus className="w-4 h-4" />
+            <PiuIcon className="w-4 h-4" />
             Aggiungi
-          </button>
+          </Button>
         </div>
       </div>
 

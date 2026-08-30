@@ -152,7 +152,7 @@ const Index = () => {
           piu' scarsa e il margine costava ~30px senza dare niente. Restano
           solo gli angoli superiori arrotondati, per agganciarla alla search. */}
       <main className="flex-1 min-h-0">
-        <div className="w-full h-full rounded-t-3xl overflow-hidden shadow-material-lg">
+        <div className="mappa-principale w-full h-full rounded-t-3xl overflow-hidden shadow-material-lg">
           <InteractiveMap 
             jobs={filteredJobs}
             allJobs={allJobs}

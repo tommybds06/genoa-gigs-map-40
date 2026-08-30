@@ -51,7 +51,9 @@ const ScegliRuolo = () => {
   // anello di focus): il profilo non esiste ancora, quindi UserContext non
   // puo' saperlo.
   useEffect(() => {
-    document.documentElement.dataset.ruolo = ruolo ?? "worker";
+    // Stesso motivo di Auth: si scrive solo dopo una scelta vera, mai un
+    // fallback che sovrascriverebbe il ruolo gia' noto.
+    if (ruolo) document.documentElement.dataset.ruolo = ruolo;
   }, [ruolo]);
 
   useEffect(() => {

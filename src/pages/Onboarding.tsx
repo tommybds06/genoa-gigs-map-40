@@ -12,7 +12,11 @@ import { TagSelector } from '@/components/tags/TagSelector';
 import { PhotoUploader } from '@/components/onboarding/PhotoUploader';
 import { LocationPicker } from '@/components/onboarding/LocationPicker';
 import { toast } from 'sonner';
-import { Instagram, Globe, User, Briefcase, Camera, Hash, Loader2, Store, Search, MapPin } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
+import {
+  ProfiloIcon, DocumentoIcon, FotoIcon, GloboIcon, InstagramIcon,
+  HashtagIcon, SearchIcon, MappaIcon, AnnunciIcon,
+} from '@/components/icons/uiIcons';
 
 const Onboarding = () => {
   const { user } = useAuth();
@@ -144,21 +148,32 @@ const Onboarding = () => {
         <h1 className="text-2xl font-bold">
           {isEmployer ? 'Configura la tua Attività' : 'Completa il tuo profilo'}
         </h1>
-        <p className={`text-primary-foreground/75 mt-1`}>
-          {isEmployer ? 'Fatti trovare dai migliori candidati!' : 'Fatti conoscere dalla community!'}
+        {/* ⚠️ Il sottotitolo employer sta su un fondo BLU PIENO, dove
+            `primary-foreground` e' l'inchiostro: nero su blu scuro. Serve il
+            bianco. Sul worker il fondo e' arancione e l'inchiostro va bene.
+            Il testo worker era "Fatti conoscere dalla community": non dice
+            cosa ci guadagni. Ora lo dice. */}
+        <p className={`mt-1 ${isEmployer ? 'text-employer-foreground/85' : 'text-primary-foreground/75'}`}>
+          {isEmployer
+            ? 'Fatti trovare dai migliori candidati!'
+            : 'Un profilo completo viene scelto prima'}
         </p>
       </div>
 
-      <div className="px-6 py-6 space-y-8 pb-24">
+      {/* pb-28 e non pb-24: il footer e' fisso e alto ~76px, e con pb-24
+          l'ultima sezione ci finiva sotto. In compenso non serve piu' spazio
+          extra dopo i tag durata, che qui non ci sono: la durata si sceglie
+          creando un annuncio, non compilando il profilo. */}
+      <div className="px-6 py-6 space-y-8 pb-28">
         {/* Section A: Chi sei / Descrizione Attività */}
         <section className="space-y-4">
           <div className="flex items-center gap-2 text-lg font-semibold">
             {isEmployer ? (
-              <Store className={`h-5 w-5 ${iconColorClass}`} />
+              <AnnunciIcon className={`h-5 w-5 shrink-0 ${iconColorClass}`} />
             ) : (
-              <User className={`h-5 w-5 ${iconColorClass}`} />
+              <ProfiloIcon className={`h-5 w-5 shrink-0 ${iconColorClass}`} />
             )}
-            <span>{isEmployer ? 'La tua Attività' : 'Chi sei'}</span>
+            <span className="titolo-mini">{isEmployer ? 'La tua Attività' : 'Chi sei'}</span>
           </div>
           
           <div className="space-y-4">
@@ -184,7 +199,7 @@ const Onboarding = () => {
             {!isEmployer && (
               <div className="space-y-2">
                 <Label htmlFor="experience" className="text-base font-medium flex items-center gap-2">
-                  <Briefcase className="h-4 w-4" />
+                  <DocumentoIcon className="h-4 w-4 shrink-0" />
                   Esperienze
                 </Label>
                 <Textarea
@@ -201,7 +216,7 @@ const Onboarding = () => {
             {isEmployer && (
               <div className="space-y-2">
                 <Label htmlFor="lookingFor" className="text-base font-medium flex items-center gap-2">
-                  <Search className="h-4 w-4" />
+                  <SearchIcon className="h-4 w-4 shrink-0" />
                   Chi cerchi solitamente? <span className="text-destructive">*</span>
                 </Label>
                 <Textarea
@@ -221,7 +236,7 @@ const Onboarding = () => {
             {isEmployer && (
               <div className="space-y-2">
                 <Label className="text-base font-medium flex items-center gap-2">
-                  <MapPin className="h-4 w-4" />
+                  <MappaIcon className="h-4 w-4 shrink-0" />
                   Dove si trova l'attività? <span className="text-destructive">*</span>
                 </Label>
                 <p className="text-sm text-muted-foreground">
@@ -246,8 +261,8 @@ const Onboarding = () => {
         {/* Section B: La tua Vetrina / Foto Attività */}
         <section className="space-y-4">
           <div className="flex items-center gap-2 text-lg font-semibold">
-            <Camera className={`h-5 w-5 ${iconColorClass}`} />
-            <span>{isEmployer ? 'Foto Attività / Logo' : 'La tua Vetrina'}</span>
+            <FotoIcon className={`h-5 w-5 shrink-0 ${iconColorClass}`} />
+            <span className="titolo-mini">{isEmployer ? 'Foto Attività / Logo' : 'La tua Vetrina'}</span>
           </div>
           
           <p className="text-sm text-muted-foreground">
@@ -267,14 +282,14 @@ const Onboarding = () => {
         {/* Section C: Social */}
         <section className="space-y-4">
           <div className="flex items-center gap-2 text-lg font-semibold">
-            <Globe className={`h-5 w-5 ${iconColorClass}`} />
-            <span>Social</span>
+            <GloboIcon className={`h-5 w-5 shrink-0 ${iconColorClass}`} />
+            <span className="titolo-mini">Social</span>
           </div>
 
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="instagram" className="flex items-center gap-2">
-                <Instagram className="h-4 w-4" />
+                <InstagramIcon className="h-4 w-4 shrink-0" />
                 Instagram
               </Label>
               <Input
@@ -287,7 +302,7 @@ const Onboarding = () => {
 
             <div className="space-y-2">
               <Label htmlFor="website" className="flex items-center gap-2">
-                <Globe className="h-4 w-4" />
+                <GloboIcon className="h-4 w-4 shrink-0" />
                 Sito Web
               </Label>
               <Input
@@ -304,13 +319,14 @@ const Onboarding = () => {
         {!isEmployer && (
           <section className="space-y-4">
             <div className="flex items-center gap-2 text-lg font-semibold">
-              <Hash className={`h-5 w-5 ${iconColorClass}`} />
-              <span>I tuoi Interessi <span className="text-destructive">*</span></span>
+              <HashtagIcon className={`h-5 w-5 shrink-0 ${iconColorClass}`} />
+              <span className="titolo-mini">I tuoi Interessi <span className="text-destructive">*</span></span>
             </div>
 
             <TagSelector
               selectedTags={selectedTags}
               onChange={setSelectedTags}
+              showDuration={false}
             />
             {errors.tags && (
               <p className="text-sm text-destructive">{errors.tags}</p>
@@ -325,7 +341,7 @@ const Onboarding = () => {
           onClick={handleComplete}
           disabled={loading}
           size="lg"
-          className={`w-full ${buttonBgClass} text-primary-foreground font-semibold`}
+          className={`w-full ${buttonBgClass} font-semibold ${isEmployer ? 'text-employer-foreground' : 'text-primary-foreground'}`}
         >
           {loading ? (
             <>

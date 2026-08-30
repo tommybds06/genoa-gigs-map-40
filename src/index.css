@@ -902,9 +902,13 @@
    Servono perche' la mappa ora arriva a filo (punto 17 dell'audit) e la bottom
    nav le passa sopra: senza, logo e attribuzione Mapbox restano nascosti sotto
    la nav — e i termini di Mapbox chiedono che siano visibili.
-   4,5rem = altezza nav (4rem) + un filo d'aria. */
-.mapboxgl-ctrl-bottom-left,
-.mapboxgl-ctrl-bottom-right {
+   4,5rem = altezza nav (4rem) + un filo d'aria.
+
+   ⚠️ SCOPED a `.mappa-principale`. Da globale spingeva su di 4,5rem anche le
+   mini-mappe (LocationPicker, scheda annuncio), che sono alte 250px: li' il
+   logo Mapbox finiva a meta' altezza invece che in basso. */
+.mappa-principale .mapboxgl-ctrl-bottom-left,
+.mappa-principale .mapboxgl-ctrl-bottom-right {
   bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
 }
 

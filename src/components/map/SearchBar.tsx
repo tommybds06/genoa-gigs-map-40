@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { X, MapPin, Check } from "lucide-react";
+import { X, Check } from "lucide-react";
 import { SearchIcon, FiltriIcon, CalendarioIcon, MappaIcon } from "@/components/icons/uiIcons";
 import { GenericoIcon } from "@/components/icons/roleIcons";
 import { Input } from "@/components/ui/input";

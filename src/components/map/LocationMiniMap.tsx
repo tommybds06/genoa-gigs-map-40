@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
+import { MappaIcon } from "@/components/icons/uiIcons";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { supabase } from "@/integrations/supabase/client";
-import { MapPin } from "lucide-react";
+
 import { getJobIconFromTags } from "@/lib/jobIcons";
 import { renderToStaticMarkup } from "react-dom/server";
 
@@ -113,7 +114,7 @@ export function LocationMiniMap({ lat, lng, neighborhood, address, tags }: Locat
           )}
           {address && (
             <p className="text-sm text-muted-foreground flex items-center justify-center gap-1">
-              <MapPin className="w-3 h-3 shrink-0" />
+              <MappaIcon className="w-3 h-3 shrink-0" />
               {address}
             </p>
           )}

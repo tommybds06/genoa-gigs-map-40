@@ -1,4 +1,5 @@
-import { Clock, MapPin, ChevronRight } from "lucide-react";
+import { Clock, ChevronRight } from "lucide-react";
+import { MappaIcon } from "@/components/icons/uiIcons";
 import { useNavigate } from "react-router-dom";
 import {
   Drawer,
@@ -78,7 +79,7 @@ export function EmployerJobsDrawer({
                 </DrawerTitle>
                 {employerAddress && (
                   <p className="text-sm text-muted-foreground truncate flex items-center gap-1">
-                    <MapPin className="w-3 h-3 shrink-0" />
+                    <MappaIcon className="w-3 h-3 shrink-0" />
                     {employerAddress}
                   </p>
                 )}

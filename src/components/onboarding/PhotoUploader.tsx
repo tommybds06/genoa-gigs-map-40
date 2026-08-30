@@ -1,7 +1,8 @@
 import { useState, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Plus, X, Loader2 } from 'lucide-react';
+import { X, Loader2 } from 'lucide-react';
+import { PiuIcon } from '@/components/icons/uiIcons';
 
 interface PhotoUploaderProps {
   photos: string[];
@@ -91,11 +92,6 @@ export const PhotoUploader = ({
 
   return (
     <div className="space-y-4">
-      {/* Info text about first photo = avatar */}
-      <p className="text-sm text-muted-foreground text-center bg-muted/50 rounded-lg p-3">
-        📸 La prima foto che carichi sarà la tua immagine di profilo.
-      </p>
-      
       <input
         ref={fileInputRef}
         type="file"
@@ -139,7 +135,7 @@ export const PhotoUploader = ({
                 {uploading && index === 0 ? (
                   <Loader2 className="h-8 w-8 text-muted-foreground animate-spin" />
                 ) : (
-                  <Plus className="h-8 w-8 text-muted-foreground" />
+                  <PiuIcon className="h-8 w-8 text-muted-foreground" />
                 )}
               </button>
             ))}
@@ -147,8 +143,12 @@ export const PhotoUploader = ({
         )}
       </div>
 
+      {/* La nota sulla foto profilo sta QUI e non sopra: prima era un riquadro
+          grigio con un'emoji, messo prima ancora di vedere i caselli. Come
+          didascalia sotto la griglia arriva quando serve, e non compete con
+          quello che introduce. */}
       <p className="text-xs text-muted-foreground text-center">
-        {photos.length}/{maxPhotos} foto caricate
+        {photos.length}/{maxPhotos} foto caricate · la prima sarà la tua immagine di profilo
       </p>
     </div>
   );

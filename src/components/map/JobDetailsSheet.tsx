@@ -9,7 +9,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Clock, MapPin, Eye, ChevronRight, Loader2, Check } from "lucide-react";
+import { Clock, Eye, ChevronRight, Loader2, Check } from "lucide-react";
 import { getJobIconFromTags } from "@/lib/jobIcons";
 import { MappaIcon, OrologioIcon } from "@/components/icons/uiIcons";
 import { useUser } from "@/contexts/UserContext";

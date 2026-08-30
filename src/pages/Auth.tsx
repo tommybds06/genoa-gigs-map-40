@@ -110,8 +110,23 @@ const Auth = () => {
      anello di focus, hover dei bottoni. Senza, scegliendo "Offro Impiego" la
      pagina diventava blu ma i campi restavano arancioni. */
   useEffect(() => {
-    document.documentElement.dataset.ruolo = selectedRole ?? "worker";
-  }, [selectedRole]);
+    if (selectedRole) {
+      // Registrazione: il ruolo lo sta scegliendo qui, e il profilo non
+      // esiste ancora, quindi UserContext non puo' saperlo.
+      document.documentElement.dataset.ruolo = selectedRole;
+    } else if (!user) {
+      // Accesso a sessione chiusa: nessun ruolo scelto, quindi si torna al
+      // neutro (arancione). Serve perche' il ruolo resta scritto sulla radice
+      // fra una sessione e l'altra — chi era employer si ritrovava la
+      // schermata di accesso coi campi blu.
+      document.documentElement.dataset.ruolo = 'worker';
+    }
+    // ⚠️ Il terzo caso — sessione APERTA e nessun ruolo scelto qui, cioe' il
+    // ritorno da Google — non scrive NIENTE di proposito. Prima il fallback
+    // era `?? "worker"` e sovrascriveva il ruolo vero; siccome UserContext
+    // riscrive solo QUANDO IL RUOLO CAMBIA, e il ruolo non era cambiato,
+    // nessuno lo rimetteva a posto per tutta la sessione.
+  }, [selectedRole, user]);
 
   useEffect(() => {
     const checkOnboarding = async () => {

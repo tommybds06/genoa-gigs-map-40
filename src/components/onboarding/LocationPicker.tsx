@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import Map, { Marker, NavigationControl } from "react-map-gl";
-import { MapPin, Loader2, AlertTriangle } from "lucide-react";
+import { Loader2, AlertTriangle } from "lucide-react";
+import { MappaIcon } from "@/components/icons/uiIcons";
 import { supabase } from "@/integrations/supabase/client";
 import { isWithinGenovaBounds, GEOFENCING_ERROR_MESSAGE, GENOVA_CENTER } from "@/constants/geofencing";
 import { toast } from "sonner";
@@ -82,7 +83,7 @@ export function LocationPicker({ lat, lng, onLocationChange }: LocationPickerPro
     return (
       <div className="w-full h-[200px] bg-muted rounded-xl flex items-center justify-center">
         <div className="text-center p-4">
-          <MapPin className="w-8 h-8 text-employer mx-auto mb-2" />
+          <MappaIcon className="w-8 h-8 text-employer mx-auto mb-2" />
           <p className="text-sm text-muted-foreground">
             Mappa non disponibile. La posizione sarà impostata su Genova Centro.
           </p>
@@ -121,10 +122,10 @@ export function LocationPicker({ lat, lng, onLocationChange }: LocationPickerPro
             }}
           >
             <div className="flex flex-col items-center">
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center shadow-lg ${isOutOfBounds ? 'bg-destructive' : 'bg-employer'}`}>
-                <MapPin className="w-5 h-5 text-white" />
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center shadow-lg ${isOutOfBounds ? 'bg-destructive' : 'bg-employer-700'}`}>
+                <MappaIcon className="w-5 h-5 text-employer-foreground" />
               </div>
-              <div className={`w-0 h-0 border-l-[8px] border-r-[8px] border-t-[10px] border-l-transparent border-r-transparent -mt-1 ${isOutOfBounds ? 'border-t-destructive' : 'border-t-employer'}`} />
+              <div className={`w-0 h-0 border-l-[8px] border-r-[8px] border-t-[10px] border-l-transparent border-r-transparent -mt-1 ${isOutOfBounds ? 'border-t-destructive' : 'border-t-employer-700'}`} />
             </div>
           </Marker>
         </Map>
