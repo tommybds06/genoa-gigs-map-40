@@ -213,3 +213,71 @@ Il trattino sotto l'icona attiva, come nella tua prova.
 
 Mandameli anche uno alla volta: li monto man mano e vedi subito come stanno
 nell'app, invece di scoprire alla fine che un tratto è troppo spesso.
+
+---
+
+# `sagoma-cerchio.svg` — il ritaglio degli avatar (settembre 2026)
+
+Le foto **rettangolari** (carosello del profilo, griglia della gallery) usano
+già il tracciato delle card: `sagoma-card-a.svg` riletto come `.sagoma-foto`.
+Un secondo disegno solo per le foto darebbe due angoli diversi a due oggetti
+che stanno uno sotto l'altro nella stessa schermata.
+
+Gli **avatar tondi** invece non si possono ricavare da niente di esistente, e
+vale la pena capire perché prima di disegnare.
+
+## ⚠️ Perché un cerchio non si ottiene dalle sagome che ci sono
+
+Il ritaglio a 9 sezioni tiene i **quattro angoli in scala fissa** e stira solo
+le bande centrali. Quindi:
+
+- la **chip** (161×49, pillola) stirata in un quadrato non diventa un cerchio:
+  diventa un rettangolo con due estremità tonde e i fianchi dritti;
+- la **tessera** (120×100) dà un quadrato stondato, non un cerchio;
+- qualunque sagoma **scalata** senza 9 sezioni deforma gli angoli in ovali.
+
+Serve un file suo. La buona notizia: **qui il 9 sezioni non serve**, perché un
+avatar è sempre **quadrato** (`w-11 h-11`, `w-20 h-20`, `w-32 h-32`). Si usa
+come `mask-image` normale con `mask-size: 100% 100%` e il disegno viene scalato
+in modo uniforme. Un file solo copre tutte le misure.
+
+## La tavola
+
+| | |
+|---|---|
+| **Tavola** | **120 × 120**, quadrata |
+| **Soggetto** | un cerchio **pieno**, disegnato a mano libera |
+| **Colore** | nero pieno — è una maschera, conta solo l'opacità, non la tinta |
+| **Contorno** | **nessuno**. Niente stroke: il bordo non si deve vedere |
+| **Ingombro** | centro 60,60 · raggio ~**58**, cioè ~2 unità d'aria per lato |
+
+## Quanto storto
+
+Questo è l'unico numero che conta davvero, ed è la lezione delle card ripetuta:
+**lo scarto dal cerchio perfetto va tenuto entro ±2-3 unità su 120**, cioè il
+2%. Motivo:
+
+- su un avatar da **44px** (lista candidature, riga employer) il 2% è **±0,9px**
+  → si legge come «disegnato»;
+- su uno da **80px** (card del profilo) è **±1,6px**;
+- a **±6 unità** su un avatar da 44px lo scarto diventa 2,2px e il cerchio
+  smette di sembrare un cerchio: sembra sbagliato, non fatto a mano.
+
+Un solo tracciato chiuso, senza oggetti vaganti (vale il `⌘Y` di cui sopra: con
+una maschera un puntino fuori posto ritaglia un buco nella foto).
+
+## Se in lista sembra una fotocopia
+
+Gli avatar compaiono in colonna (candidature, elenco chat). Lì dentro però ci
+sono **foto diverse**, quindi la ripetizione si nota molto meno che su card
+vuote. Partiamo con **un file solo**; se guardandolo in lista sembra stampato,
+basta un secondo file speculare (`-b`) e li alterno, come per le card.
+
+## Cosa cambio io quando arriva
+
+Una riga in `ui/avatar.tsx` e valgono **tutti** gli avatar dell'app in un colpo.
+Da togliere contestualmente, perché la maschera li taglierebbe a metà:
+
+- i `border-2 border-employer/20` sugli avatar di Annunci e della scheda annuncio
+- il `border-4 border-background shadow-lg` dell'avatar grande in Profilo pubblico
+- lo `shadow-material-md` del cerchio avatar in Profilo

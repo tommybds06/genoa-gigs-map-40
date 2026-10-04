@@ -44,7 +44,22 @@ function AnimatedRoutes() {
   
   return (
     <MainLayout hideBottomNav={!isTabRoute}>
-      <AnimatePresence mode="wait" initial={false}>
+      {/* ⚠️ NIENTE `mode="wait"` — era la causa dello SFARFALLIO.
+          Con `wait` la pagina vecchia completa la sua uscita (opacità → 0) e
+          solo DOPO monta la nuova (opacità 0 → 1): fra le due c'è un istante in
+          cui sullo schermo non c'è nessuna pagina, si vede il fondo nudo di
+          MainLayout e poi ricompare tutto. Due dissolvenze in fila con un buco
+          in mezzo — a 0,1s l'occhio non legge una transizione, legge un lampo.
+
+          Senza `mode` (default `sync`) le due pagine coesistono e si
+          incrociano: nessun fotogramma vuoto. Qui è sicuro perché
+          `PageTransition` è `absolute inset-0`, quindi le due pagine si
+          sovrappongono invece di accodarsi.
+
+          In più `wait` contraddiceva le varianti di swipe: sono scritte perché
+          la vecchia esca da un lato MENTRE la nuova entra dall'altro, e con
+          `wait` erano per forza in sequenza. */}
+      <AnimatePresence initial={false}>
         <Routes location={location} key={location.pathname}>
           {/* Auth routes - no layout */}
           <Route path="/auth" element={

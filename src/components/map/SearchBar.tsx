@@ -100,18 +100,29 @@ export function SearchBar({
         </div>
 
         {/* Filter Button */}
+        {/* Solo l'icona: il riquadro chiaro con l'ombra era l'unico elemento
+            della schermata a non seguire il sistema — nessuna sagoma, nessun
+            tratto, e accanto a una barra alta 48 sembrava incollato.
+            Un'azione secondaria non ha bisogno di una superficie propria: qui
+            basta l'icona, con l'area di tocco che resta 48. */}
         <Button
-          variant="outline"
+          variant="ghost"
           size="icon"
           onClick={openFilters}
-          className={cn(
-            "relative rounded-full h-12 w-12 shadow-md border-0",
-            activeFiltersCount > 0
-              ? "bg-primary text-primary-foreground hover:bg-primary/90"
-              : "bg-card hover:bg-accent"
-          )}
+          aria-label="Filtri"
+          className="relative h-12 w-12 shrink-0 mr-2"
         >
-          <FiltriIcon className="w-4 h-4 text-primary" />
+          {/* ⚠️ `!` obbligatorio: il componente Button impone `[&_svg]:size-4`
+              a tutte le icone che contiene, ed essendo un selettore discendente
+              batte per specificita' qualunque classe messa sull'icona. Senza
+              l'important, questa icona resta 16px qualunque numero si scriva —
+              e' successo per quattro giri di fila. */}
+          <FiltriIcon
+            className={cn(
+              "!w-7 !h-7",
+              activeFiltersCount > 0 ? "text-primary-strong" : "text-primary"
+            )}
+          />
           {activeFiltersCount > 0 && (
             <span className="absolute -top-1 -right-1 w-5 h-5 bg-primary-strong text-white text-xs rounded-full flex items-center justify-center font-medium">
               {activeFiltersCount}

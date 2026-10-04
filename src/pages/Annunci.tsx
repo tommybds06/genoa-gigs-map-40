@@ -334,9 +334,6 @@ const Annunci = () => {
                       <h4 className="font-semibold truncate">
                         {app.applicant.full_name || 'Utente'}
                       </h4>
-                      <p className="text-sm text-muted-foreground">
-                        Lv. {app.applicant.level}
-                      </p>
                       {app.applicant.bio && (
                         <p className="text-sm text-muted-foreground truncate mt-1">
                           {app.applicant.bio}

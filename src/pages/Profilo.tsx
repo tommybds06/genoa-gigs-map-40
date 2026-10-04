@@ -10,6 +10,7 @@ import { useNavigate } from "react-router-dom";
 import { TagSelector, TagBadges } from "@/components/tags/TagSelector";
 import { soloRuoli } from "@/constants/tags";
 import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { WorkerJobHistory } from "@/components/profile/WorkerJobHistory";
 import { supabase } from "@/integrations/supabase/client";
@@ -24,23 +25,24 @@ const Profilo = () => {
   const [hasChanges, setHasChanges] = useState(false);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
   const [editMode, setEditMode] = useState(false);
-  const [reviewStats, setReviewStats] = useState<{ avg: number; count: number } | null>(null);
-
-  useEffect(() => {
-    const fetchReviewStats = async () => {
-      if (!profile?.id || !isEmployer) return;
+  /* In react-query e non in un `useEffect`: la pagina si smonta a ogni cambio
+     di tab, quindi senza cache la media delle recensioni la si andava a
+     ricalcolare da capo ogni volta, e il numero compariva a scoppio ritardato
+     spostando la riga sotto il nome. */
+  const { data: reviewStats = null } = useQuery({
+    queryKey: ["review-stats", profile?.id],
+    enabled: !!profile?.id && isEmployer,
+    queryFn: async () => {
       const { data, error } = await supabase
         .from("reviews")
         .select("rating")
-        .eq("employer_id", profile.id);
-
-      if (!error && data && data.length > 0) {
-        const avg = data.reduce((sum, r) => sum + r.rating, 0) / data.length;
-        setReviewStats({ avg: Math.round(avg * 10) / 10, count: data.length });
-      }
-    };
-    fetchReviewStats();
-  }, [profile?.id, isEmployer]);
+        .eq("employer_id", profile!.id);
+      if (error) throw error;
+      if (!data || data.length === 0) return null;
+      const avg = data.reduce((sum, r) => sum + r.rating, 0) / data.length;
+      return { avg: Math.round(avg * 10) / 10, count: data.length };
+    },
+  });
 
   useEffect(() => {
     if (profile?.tags) setSelectedTags(profile.tags);
@@ -83,7 +85,7 @@ const Profilo = () => {
      <SwipeNavigator>
        <div className="flex flex-col h-full bg-background">
          {/* Header */}
-         <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-md px-4 pt-8 pb-3">
+         <header className="sticky top-0 z-40 bg-background px-4 pt-8 pb-3">
            <div className="flex items-center justify-between">
              <img
                src={isEmployer ? "/images/logo-employer-v2.svg" : "/images/logo-worker-v2.svg"}
@@ -104,7 +106,10 @@ const Profilo = () => {
         {profile?.photos && profile.photos.length > 0 && (
           <div className="relative mb-4">
             {/* All photos rendered stacked — browser preloads them all, only current is visible */}
-            <div className="aspect-[4/3] rounded-2xl overflow-hidden bg-muted relative">
+            {/* ⚠️ Il ritaglio disegnato E' il contenitore: niente `rounded-*`
+                nè `border`. `overflow-hidden` resta solo per le foto in
+                `absolute` del carosello, ma il taglio vero lo fa la maschera. */}
+            <div className="aspect-[4/3] sagoma-foto rounded-2xl overflow-hidden bg-muted relative">
               {profile.photos.map((photo, index) => (
                 <img
                   key={photo}

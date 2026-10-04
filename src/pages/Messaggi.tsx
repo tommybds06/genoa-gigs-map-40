@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { MessageCircle, ArrowLeft, Send, Loader2, ImagePlus, X, CheckCircle, Check } from "lucide-react";
 import { IndietroIcon, InvioIcon, ImmaginiIcon, MessaggiVuotaIcon } from "@/components/icons/uiIcons";
 import { useAppTheme } from "@/hooks/useAppTheme";
+import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useSearchParams, useNavigate } from "react-router-dom";
@@ -519,7 +520,7 @@ const Messaggi = () => {
         style={{ height: '100dvh' }}
       >
         {/* Chat header - shrink-0 so it doesn't compress */}
-        <header className="shrink-0 z-40 bg-background/95 backdrop-blur-md px-4 pt-8 pb-3 border-b">
+        <header className="shrink-0 z-40 bg-background px-4 pt-8 pb-3 border-b">
           <div className="flex items-center gap-2">
             <Button
               variant="ghost"
@@ -705,7 +706,17 @@ const Messaggi = () => {
               onClick={handleSendMessage}
               disabled={(!newMessage.trim() && !pendingAttachment) || sending}
               size="icon"
-              className={`shrink-0 rounded-full h-12 w-12 ${isEmployer ? 'bg-employer-700 hover:bg-employer-800' : 'bg-primary hover:bg-primary/90'}`}
+              /* ⚠️ Il bug ricorrente numero uno: qui c'era solo il FONDO che
+                 seguiva il ruolo (`bg-employer-700`), mentre il testo restava
+                 quello di `variant="default"`, cioè `text-primary-foreground`
+                 = l'inchiostro. Risultato: freccia bruna su blu scuro.
+                 `theme.btnFilled` porta la coppia fondo+testo insieme, ed è
+                 l'unico modo di non rifarlo. */
+              className={cn(
+                "shrink-0 rounded-full h-12 w-12",
+                theme.btnFilled,
+                theme.btnFilledHover
+              )}
             >
               {sending ? (
                 <Loader2 className="h-5 w-5 animate-spin" />
@@ -793,7 +804,7 @@ const Messaggi = () => {
      <SwipeNavigator>
        <div className="flex flex-col h-full bg-background">
          {/* Simple Header with safe area */}
-         <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-md px-4 pt-8 pb-3">
+         <header className="sticky top-0 z-40 bg-background px-4 pt-8 pb-3">
            <img
              src={isEmployer ? "/images/logo-employer-v2.svg" : "/images/logo-worker-v2.svg"}
              alt="Politask"

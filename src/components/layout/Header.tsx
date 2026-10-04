@@ -16,9 +16,9 @@ export function Header({
     : "/images/logo-worker-v2.svg";
 
   return (
-    <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-md px-4 pt-8 pb-3">
+    <header className="sticky top-0 z-40 bg-background px-4 pt-8 pb-3">
       {/* Logo */}
-      <img src={logoSrc} alt="Politask" className="h-14 w-auto -ml-1 mb-3" />
+      <img src={logoSrc} alt="Politask" className="h-14 w-auto mb-3" />
 
       {/* Search Bar - placeholder for future use */}
       {showSearch && (

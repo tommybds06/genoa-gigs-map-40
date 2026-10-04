@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { cn } from "@/lib/utils";
 import { Header } from "@/components/layout/Header";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -372,13 +373,25 @@ const PublicProfile = () => {
                       setGalleryIndex(index);
                       setIsGalleryOpen(true);
                     }}
-                    className="aspect-square rounded-xl overflow-hidden border border-border hover:border-primary/50 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50"
+                    className="aspect-square rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                   >
-                    <img 
-                      src={photo} 
-                      alt={`Foto ${index + 1}`}
-                      className="w-full h-full object-cover"
-                    />
+                    {/* ⚠️ La maschera sta sul div INTERNO, non sul bottone: la
+                        maschera taglia anche l'anello di focus (che è un
+                        box-shadow), e il bersaglio da tastiera sparirebbe.
+                        Il contorno `border-border` è stato tolto: qui il
+                        contenitore è il margine tagliato, non una linea. */}
+                    <div
+                      className={cn(
+                        "w-full h-full overflow-hidden sagoma-foto",
+                        index % 2 === 1 && "sagoma-foto-b"
+                      )}
+                    >
+                      <img
+                        src={photo}
+                        alt={`Foto ${index + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
                   </button>
                 ))}
               </div>

@@ -63,23 +63,34 @@ const Lista = () => {
           {/* Tabs for Workers only */}
           {!isEmployer ? (
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="w-full h-12 p-1 mb-4 bg-muted rounded-xl">
-                <TabsTrigger 
-                  value="explore" 
-                  className="flex-1 h-full rounded-lg font-semibold text-sm data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all duration-200"
+              {/* ⚠️ La scheda ATTIVA usa l'inchiostro, non l'arancione.
+                  Nel resto dell'app l'arancione vuol dire "azione": metterlo
+                  sulla scheda in cui ti trovi gia' dice la cosa sbagliata.
+                  Qui lo stato lo portano il FOGLIO rialzato e il peso del
+                  testo — la posizione, non la tinta.
+
+                  ⚠️ Tolto il contatore delle candidature: mostrava il TOTALE,
+                  che non chiede niente a nessuno, ma un pallino accanto a
+                  un'etichetta promette una novita'. Acceso sempre, smette di
+                  essere guardato — e quando ci sara' davvero qualcosa di nuovo
+                  non si notera'. Da rimettere quando esistera' lo stato
+                  "aggiornata da quando l'hai vista": allora dira' "2 novita'"
+                  e varra' la pena.
+
+                  La sagoma sta sulla PISTA e non sulla linguetta: mascherare
+                  entrambe farebbe tagliare la seconda dalla prima agli estremi. */}
+              <TabsList className="w-full h-12 p-1 mb-4 bg-muted sagoma-quartiere rounded-[19px]">
+                <TabsTrigger
+                  value="explore"
+                  className="linguetta flex-1 h-full rounded-[15px] font-[Shinjo,Outfit,sans-serif] [font-synthesis:none] tracking-[-0.04em] text-[15px] text-muted-foreground data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm transition-all duration-200"
                 >
                   Esplora
                 </TabsTrigger>
-                <TabsTrigger 
-                  value="applications" 
-                  className="flex-1 h-full rounded-lg font-semibold text-sm data-[state=active]:bg-card data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all duration-200"
+                <TabsTrigger
+                  value="applications"
+                  className="linguetta flex-1 h-full rounded-[15px] font-[Shinjo,Outfit,sans-serif] [font-synthesis:none] tracking-[-0.04em] text-[15px] text-muted-foreground data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm transition-all duration-200"
                 >
-                  Le mie Candidature
-                  {applications.length > 0 && (
-                    <span className="ml-1.5 px-1.5 py-0.5 text-xs bg-primary/10 text-primary rounded-full">
-                      {applications.length}
-                    </span>
-                  )}
+                  Candidature
                 </TabsTrigger>
               </TabsList>
 

@@ -1,7 +1,8 @@
-import { memo } from "react";
+import { memo, useMemo } from "react";
 import { Marker } from "react-map-gl";
-import { Briefcase } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getJobIconFromTags } from "@/lib/jobIcons";
+import { GenericoIcon } from "@/components/icons/roleIcons";
 import { Job } from "@/hooks/useJobs";
 
 interface EmployerGroupMarkerProps {
@@ -28,6 +29,21 @@ export const EmployerGroupMarker = memo(function EmployerGroupMarker({
   onMarkerClick,
 }: EmployerGroupMarkerProps) {
   const count = jobs.length;
+
+  /**
+   * ⚠️ Qui c'era la `Briefcase` di lucide — l'ultima icona di libreria rimasta
+   * sulla mappa, accanto ai marker singoli che usano già il set nostro. Un
+   * simbolo che cambia disegno a seconda di quanti annunci ha il locale non è
+   * più un simbolo.
+   *
+   * Se i lavori del gruppo sono tutti dello stesso mestiere si mostra quella
+   * icona (due turni da cameriere restano «cameriere»); se sono mischiati si
+   * usa il generico, perché sceglierne una a caso direbbe una cosa falsa.
+   */
+  const Icona = useMemo(() => {
+    const icone = jobs.map((job) => getJobIconFromTags(job.tags));
+    return icone.every((i) => i === icone[0]) ? icone[0] : GenericoIcon;
+  }, [jobs]);
 
   return (
     <Marker
@@ -61,34 +77,34 @@ export const EmployerGroupMarker = memo(function EmployerGroupMarker({
         <div
           className={cn(
             "w-12 h-12 rounded-full flex items-center justify-center shadow-material-md relative transition-all duration-300",
-            isHighlighted 
-              ? "bg-card border-3 border-primary" 
-              : isEmployer 
+            isHighlighted
+              ? cn("bg-card border-3", isEmployer ? "border-employer-800" : "border-primary-strong")
+              : isEmployer
                 ? "bg-employer-700"
                 : "bg-primary"
           )}
           style={isHighlighted ? { borderWidth: '3px' } : undefined}
         >
-          <Briefcase
+          <Icona
             className={cn(
               "w-6 h-6 transition-colors duration-300",
               isHighlighted
-                ? "text-primary"
+                ? (isEmployer ? "text-employer-800" : "text-primary-strong")
                 : isEmployer
                   ? "text-employer-foreground"
                   : "text-primary-foreground"
-            )} 
+            )}
           />
         </div>
-        
+
         {/* Pointer triangle */}
         <div
           className={cn(
             "w-0 h-0 border-l-[9px] border-r-[9px] border-t-[12px] border-l-transparent border-r-transparent -mt-1 transition-all duration-300",
-            isHighlighted 
-              ? "border-t-primary" 
-              : isEmployer 
-                ? "border-t-employer-700" 
+            isHighlighted
+              ? (isEmployer ? "border-t-employer-800" : "border-t-primary-strong")
+              : isEmployer
+                ? "border-t-employer-700"
                 : "border-t-primary"
           )}
         />

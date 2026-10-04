@@ -615,6 +615,7 @@
     .sagoma-btn,
     .sagoma-chip,
     .sagoma-tag,
+    .sagoma-foto,
     .sagoma-quartiere {
       border-radius: 0;
       -webkit-mask-box-image-repeat: stretch;
@@ -671,7 +672,61 @@
       border-image-width: 27px 30px;
     }
 
-    /* --- badge di stato (~26px): il chip riscalato piu' piccolo --- */
+      /* ---- LINEA DIVISORIA DISEGNATA ----
+       Sostituisce i bordi da 1px sotto l'header e sopra la nav. Il tracciato
+       e' PIENO (non uno stroke), quindi il colore lo mette il file.
+
+       ⚠️ `preserveAspectRatio="none"` nel file: senza, allungandola da 241 a
+       390px il browser la ingrassa in proporzione e da 3,5px passa a 5,7 —
+       cioe' smette di essere sottile proprio dove serve che lo sia.
+
+       Si usa come sfondo e non come border-image: e' una linea sola, non una
+       cornice, e cosi' resta indipendente dal box del componente. */
+    .linea-divisoria {
+      border: 0;
+      background-image: url("/images/cornici/linea-divisoria.svg");
+      background-repeat: repeat-x;
+      background-position: center bottom;
+      background-size: 241px 4px;
+      padding-bottom: 4px;
+    }
+
+    .linea-divisoria-sopra {
+      border: 0;
+      background-image: url("/images/cornici/linea-divisoria.svg");
+      background-repeat: repeat-x;
+      background-position: center top;
+      background-size: 241px 4px;
+      padding-top: 4px;
+    }
+
+    /* ---- LINGUETTA ATTIVA della barra a schede ----
+       La PISTA ha la sagoma e nessun tratto: il margine tagliato basta.
+       La linguetta invece porta un filo sottile, perche' e' l'elemento che
+       deve staccarsi dalla pista su cui poggia.
+
+       ⚠️ Niente maschera sulla linguetta: taglierebbe a meta' il tratto
+       (resterebbe ~0,6px, invisibile) e in piu' la linguetta verrebbe
+       ritagliata dalla pista agli estremi. Qui serve il tratto intero. */
+    .linguetta {
+      position: relative;
+    }
+
+    .linguetta[data-state="active"]::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      border-style: solid;
+      border-color: transparent;
+      border-width: 15px;
+      border-image-source: url("/images/cornici/bordo-campo.svg");
+      border-image-slice: 27 26;
+      border-image-width: 15px;
+      border-image-repeat: stretch;
+    }
+
+  /* --- badge di stato (~26px): il chip riscalato piu' piccolo --- */
     .sagoma-badge {
       border-radius: 0;
       -webkit-mask-box-image-source: url("/images/cornici/sagoma-chip.svg");
@@ -692,6 +747,35 @@
       mask-border-source: url("/images/cornici/sagoma-tag.svg");
       mask-border-slice: 35 fill;
       mask-border-width: 33px;
+    }
+
+    /* --- FOTO: il margine tagliato fa da contenitore ---
+       Riusa il tracciato delle card, che e' gia' la forma "foglio" dell'app:
+       una seconda sagoma solo per le foto darebbe due angoli diversi a due
+       oggetti che stanno uno sotto l'altro nella stessa schermata.
+
+       ⚠️ Qui la maschera NON e' decorazione, e' il contenitore: niente tratto
+       sopra, niente `border`, niente `rounded-*` (li azzera `border-radius: 0`
+       della regola comune). La foto e' gia' un oggetto pieno di suo, e una
+       linea intorno la farebbe leggere come una figurina incollata.
+
+       ⚠️ Niente `box-shadow` e niente `overflow-hidden` con raggio proprio: la
+       maschera taglia gia' tutto, compresi i figli in `absolute` del
+       carosello. */
+    .sagoma-foto {
+      -webkit-mask-box-image-source: url("/images/cornici/sagoma-card-a.svg");
+      -webkit-mask-box-image-slice: 28 fill;
+      -webkit-mask-box-image-width: 28px;
+      mask-border-source: url("/images/cornici/sagoma-card-a.svg");
+      mask-border-slice: 28 fill;
+      mask-border-width: 28px;
+    }
+
+    /* Variante ribaltata, per le griglie di foto: due ritagli identici uno
+       accanto all'altro leggono come fotocopia — la stessa lezione delle card. */
+    .sagoma-foto-b {
+      -webkit-mask-box-image-source: url("/images/cornici/sagoma-card-c.svg");
+      mask-border-source: url("/images/cornici/sagoma-card-c.svg");
     }
 
     /* --- riga larga e bassa (~46px): quartieri, durata in Crea annuncio --- */
@@ -727,7 +811,7 @@
   /* La nav e' CARTA come la pagina, non un blocco bianco incollato sotto.
      Separazione via bordo, non via colore ne' via ombra larga. */
   .material-nav {
-    @apply bg-background border-t-2 border-border;
+    @apply bg-background;
     box-shadow: none;
   }
   
@@ -783,9 +867,8 @@
   display: none;
 }
 
-.job-popup .mapboxgl-popup-content {
-  padding: 0 !important;
-}
+/* La nuvoletta sull'annuncio non esiste piu': il pin apre direttamente la
+   scheda, che si ferma bassa. Vedi il commento in InteractiveMap.tsx. */
 
 @layer utilities {
   .shadow-material-sm {
@@ -899,17 +982,16 @@
    ELIMINEREBBE dal build. Messe dentro @layer components sparivano in
    silenzio (verificato: 0 occorrenze nel CSS compilato).
 
-   Servono perche' la mappa ora arriva a filo (punto 17 dell'audit) e la bottom
-   nav le passa sopra: senza, logo e attribuzione Mapbox restano nascosti sotto
-   la nav — e i termini di Mapbox chiedono che siano visibili.
-   4,5rem = altezza nav (4rem) + un filo d'aria.
+   ⚠️ NON aggiungere qui un offset per la bottom nav. Provato due volte
+   (4,5rem e 4rem) e ogni volta il logo Mapbox finiva a meta' schermo: il
+   contenitore delle pagine con tab ha gia' `pb-16` (PageTransition), quindi
+   la mappa si ferma da sola 64px sopra il fondo e la nav non la copre mai.
+   L'offset raddoppiava uno spazio che c'era gia'.
 
-   ⚠️ SCOPED a `.mappa-principale`. Da globale spingeva su di 4,5rem anche le
-   mini-mappe (LocationPicker, scheda annuncio), che sono alte 250px: li' il
-   logo Mapbox finiva a meta' altezza invece che in basso. */
+   Restano 6px di respiro, che e' l'unica cosa che serviva davvero. */
 .mappa-principale .mapboxgl-ctrl-bottom-left,
 .mappa-principale .mapboxgl-ctrl-bottom-right {
-  bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
+  bottom: 6px;
 }
 
 /* ============================================================

@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { MappaIcon } from "@/components/icons/uiIcons";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
-import { supabase } from "@/integrations/supabase/client";
+import { useMapboxToken } from "@/hooks/useMapboxToken";
 
 import { getJobIconFromTags } from "@/lib/jobIcons";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -19,24 +19,9 @@ export function LocationMiniMap({ lat, lng, neighborhood, address, tags }: Locat
   const tagsKey = (tags || []).join(",");
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
-  const [mapboxToken, setMapboxToken] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  // Fetch Mapbox token
-  useEffect(() => {
-    const fetchToken = async () => {
-      try {
-        const { data, error } = await supabase.functions.invoke('get-mapbox-token');
-        if (error) throw error;
-        setMapboxToken(data.token);
-      } catch (error) {
-        console.error('Error fetching Mapbox token:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchToken();
-  }, []);
+  /* Stessa cache di InteractiveMap: la minimappa non rifà il giro di rete. */
+  const mapboxToken = useMapboxToken();
+  const isLoading = mapboxToken === null;
 
   // Initialize map
   useEffect(() => {

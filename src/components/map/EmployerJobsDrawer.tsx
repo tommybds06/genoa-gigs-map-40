@@ -1,4 +1,5 @@
-import { Clock, ChevronRight } from "lucide-react";
+import { ChevronRight } from "lucide-react";
+import { OrologioIcon } from "@/components/icons/uiIcons";
 import { MappaIcon } from "@/components/icons/uiIcons";
 import { useNavigate } from "react-router-dom";
 import {
@@ -139,7 +140,7 @@ export function EmployerJobsDrawer({
                       <div className="flex items-center gap-2 mt-2">
                         {job.schedule && (
                           <div className="flex items-center gap-1 text-muted-foreground">
-                            <Clock className="w-3 h-3" />
+                            <OrologioIcon className="w-3 h-3" />
                             <span className="text-xs">{job.schedule}</span>
                           </div>
                         )}

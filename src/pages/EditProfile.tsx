@@ -138,7 +138,7 @@ const EditProfile = () => {
           che nel browser vale 0 e, arrivando dopo nel CSS compilato, ANNULLA
           il `pt-4`. La forma sotto tiene entrambe le cose: almeno 1rem, di piu'
           se il dispositivo ha una tacca. */}
-      <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-md px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-3 border-b border-border">
+      <header className="sticky top-0 z-40 bg-background px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-3 border-b border-border">
         <div className="flex items-center gap-3">
           <button 
             onClick={handleBack}
@@ -261,7 +261,7 @@ const EditProfile = () => {
       </main>
 
       {/* Sticky Save Button */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/95 backdrop-blur-md border-t border-border safe-bottom">
+      <div className="fixed bottom-0 left-0 right-0 p-4 bg-background border-t border-border safe-bottom">
         <Button
           onClick={handleSave}
           disabled={isSaving}

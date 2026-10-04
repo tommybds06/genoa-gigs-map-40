@@ -31,7 +31,12 @@ const DrawerContent = React.forwardRef<
     <DrawerPrimitive.Content
       ref={ref}
       className={cn(
-        "fixed inset-x-0 bottom-0 z-50 mt-24 flex h-auto flex-col rounded-t-[10px] border bg-background",
+        // ⚠️ `outline-none`: Radix sposta il fuoco sul contenuto appena il
+        // drawer si apre, e senza questo il browser ci disegna intorno il SUO
+        // anello di focus — su Chrome un rettangolo azzurro attorno a tutta la
+        // scheda. Non è un bordo nostro, è l'outline di sistema: si vedeva
+        // aprendo l'anteprima annuncio.
+        "fixed inset-x-0 bottom-0 z-50 mt-24 flex h-auto flex-col rounded-t-[10px] border bg-background outline-none focus:outline-none focus-visible:outline-none",
         className,
       )}
       {...props}
