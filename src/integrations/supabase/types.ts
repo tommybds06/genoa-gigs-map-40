@@ -65,6 +65,83 @@ export type Database = {
           },
         ]
       }
+      cartellini: {
+        Row: {
+          application_id: string
+          created_at: string
+          data_fine: string | null
+          data_inizio: string | null
+          employer_id: string
+          giorni: number[] | null
+          id: string
+          job_id: string
+          orari: string | null
+          paga_importo: number | null
+          paga_unita: string | null
+          updated_at: string
+          worker_id: string
+        }
+        Insert: {
+          application_id: string
+          created_at?: string
+          data_fine?: string | null
+          data_inizio?: string | null
+          employer_id: string
+          giorni?: number[] | null
+          id?: string
+          job_id: string
+          orari?: string | null
+          paga_importo?: number | null
+          paga_unita?: string | null
+          updated_at?: string
+          worker_id: string
+        }
+        Update: {
+          application_id?: string
+          created_at?: string
+          data_fine?: string | null
+          data_inizio?: string | null
+          employer_id?: string
+          giorni?: number[] | null
+          id?: string
+          job_id?: string
+          orari?: string | null
+          paga_importo?: number | null
+          paga_unita?: string | null
+          updated_at?: string
+          worker_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cartellini_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: true
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cartellini_employer_id_fkey"
+            columns: ["employer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cartellini_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cartellini_worker_id_fkey"
+            columns: ["worker_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chats: {
         Row: {
           created_at: string
