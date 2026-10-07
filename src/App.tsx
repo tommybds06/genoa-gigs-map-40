@@ -11,6 +11,7 @@ import { ReviewPrompt } from "@/components/reviews/ReviewPrompt";
 import { PromemoriaScadenza } from "@/components/bacheca/PromemoriaScadenza";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { PageTransition } from "@/components/layout/PageTransition";
+import { SplashScreen } from "@/components/layout/SplashScreen";
 import Index from "./pages/Index";
 import Lista from "./pages/Lista";
 import Annunci from "./pages/Annunci";
@@ -153,6 +154,9 @@ const App = () => (
              <BrowserRouter>
                <AnimatedRoutes />
              </BrowserRouter>
+             {/* Ultimo e fuori dal router: è uno strato sopra tutto, e
+                 intanto l'app sotto carica sessione e mappa. */}
+             <SplashScreen />
            </div>
          </TooltipProvider>
       </UserProvider>

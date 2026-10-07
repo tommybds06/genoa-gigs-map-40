@@ -3,7 +3,12 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-    <meta name="theme-color" content="#FFB703" />
+    <meta name="theme-color" content="#F3EFE3" />
+    <!-- Il fondo dello splash, PRIMA che arrivino JS e CSS: senza, tra il
+         caricamento della pagina e il primo fotogramma del video c'è un lampo
+         bianco. Dopo, index.css riporta il body su --paper (#F4EEE2): una
+         unità per canale di differenza, invisibile. -->
+    <style>html, body { background-color: #F3EFE3; }</style>
     
     <title>Politask - Task Locali a Genova</title>
     <meta name="description" content="Politask - La piattaforma per task locali a Genova. Trova ripetizioni, consegne, staff eventi e molto altro." />
