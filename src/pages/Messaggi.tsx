@@ -26,6 +26,10 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/ui/StatusBadge";
  import { SwipeNavigator } from "@/components/layout/SwipeNavigator";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Bacheca } from "@/components/bacheca/Bacheca";
+import { useCartellini, CHIAVE_CARTELLINI } from "@/hooks/useCartellini";
+import { eScaduto, chiudiAnnuncioSeNessunoResta } from "@/lib/bacheca";
 import { formatOrarioChat, anteprimaMessaggio } from "@/lib/dates";
 import { useAttachmentUrl } from "@/hooks/useAttachmentUrl";
 
@@ -58,7 +62,7 @@ const formatMessageTime = (dateString: string): string => {
 const Messaggi = () => {
   const { theme, isEmployer } = useAppTheme();
   const { user } = useAuth();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   
@@ -78,6 +82,21 @@ const Messaggi = () => {
   const [showCompleteDialog, setShowCompleteDialog] = useState(false);
   const [showRemoveJobDialog, setShowRemoveJobDialog] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  /* Bacheca: solo per l'employer. La scheda attiva sta nell'URL (`?vista=`)
+     e non in uno state: aprendo un profilo dal cartellino si esce dalla
+     pagina, e al ritorno si deve ritrovare la bacheca, non le chat. */
+  const vista = isEmployer && searchParams.get('vista') === 'bacheca' ? 'bacheca' : 'chat';
+  const cambiaVista = (v: string) =>
+    setSearchParams(v === 'bacheca' ? { vista: 'bacheca' } : {}, { replace: true });
+  const { data: cartellini = [] } = useCartellini(isEmployer ? user?.id : undefined);
+  const scaduti = cartellini.filter(eScaduto).length;
+
+  const apriChatDaBacheca = (chatId: string) => {
+    const chat = chats.find((c) => c.id === chatId);
+    if (chat) setSelectedChat(chat);
+    else toast.error('Chat non trovata');
+  };
 
   // Handle URL param for direct chat open
   useEffect(() => {
@@ -428,6 +447,8 @@ const Messaggi = () => {
     setTimeout(() => {
       queryClient.invalidateQueries({ queryKey: ['chats'] });
       queryClient.invalidateQueries({ queryKey: ['jobs'] });
+      // Chi viene assunto finisce sulla bacheca (trigger `appendi_assunto`).
+      queryClient.invalidateQueries({ queryKey: [CHIAVE_CARTELLINI] });
       pendingHireRef.current = false;
     }, 1000);
   };
@@ -493,19 +514,15 @@ const Messaggi = () => {
         }
       });
 
-    // 5. Auto-close the job listing (remove from map) on completion
-    supabase
-      .from('jobs')
-      .update({ status: 'closed' })
-      .eq('id', jobId)
-      .then(({ error }) => {
-        if (error) console.error('Error closing job on completion:', error);
-      });
+    // 5. Chiude l'annuncio SOLO se non resta nessun altro al lavoro: prima lo
+    //    chiudeva sempre, anche con un secondo assunto sullo stesso annuncio.
+    chiudiAnnuncioSeNessunoResta(jobId, workerId);
 
     // 6. Invalidate queries later
     setTimeout(() => {
       queryClient.invalidateQueries({ queryKey: ['chats'] });
       queryClient.invalidateQueries({ queryKey: ['jobs'] });
+      queryClient.invalidateQueries({ queryKey: [CHIAVE_CARTELLINI] });
       pendingCompleteRef.current = false;
     }, 1000);
   };
@@ -800,19 +817,8 @@ const Messaggi = () => {
   }
 
   // Chats list view
-  return (
-     <SwipeNavigator>
-       <div className="flex flex-col h-full bg-background">
-         {/* Simple Header with safe area */}
-         <header className="sticky top-0 z-40 bg-background px-4 pt-8 pb-3">
-           <img
-             src={isEmployer ? "/images/logo-employer-v2.svg" : "/images/logo-worker-v2.svg"}
-             alt="Politask"
-             className="h-14 w-auto -ml-1"
-           />
-         </header>
- 
-         <main className="flex-1 px-4 pt-2 pb-4 overflow-y-auto">
+  const listaChat = (
+    <>
            {loading ? (
              <ChatListSkeleton count={5} />
            ) : chats.length === 0 ? (
@@ -899,6 +905,55 @@ const Messaggi = () => {
                  );
                })}
              </div>
+           )}
+    </>
+  );
+
+  return (
+     <SwipeNavigator>
+       <div className="flex flex-col h-full bg-background">
+         {/* Simple Header with safe area */}
+         <header className="sticky top-0 z-40 bg-background px-4 pt-8 pb-3">
+           <img
+             src={isEmployer ? "/images/logo-employer-v2.svg" : "/images/logo-worker-v2.svg"}
+             alt="Politask"
+             className="h-14 w-auto -ml-1"
+           />
+         </header>
+ 
+         <main className="flex-1 px-4 pt-2 pb-4 overflow-y-auto">
+           {isEmployer ? (
+             <Tabs value={vista} onValueChange={cambiaVista} className="w-full">
+               {/* Stesse schede di Lista («Esplora | Candidature»): chi le ha
+                   usate là sa già come funzionano. */}
+               <TabsList className="w-full h-12 p-1 mb-4 bg-muted sagoma-quartiere rounded-[19px]">
+                 <TabsTrigger
+                   value="chat"
+                   className="linguetta flex-1 h-full rounded-[15px] font-[Shinjo,Outfit,sans-serif] [font-synthesis:none] tracking-[-0.04em] text-[15px] text-muted-foreground data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm transition-all duration-200"
+                 >
+                   Chat
+                 </TabsTrigger>
+                 <TabsTrigger
+                   value="bacheca"
+                   className="linguetta flex-1 h-full rounded-[15px] font-[Shinjo,Outfit,sans-serif] [font-synthesis:none] tracking-[-0.04em] text-[15px] text-muted-foreground data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm transition-all duration-200"
+                 >
+                   Bacheca
+                   {/* Il pallino c'e' solo se c'e' qualcosa da decidere: un
+                       lavoro con la data di fine passata. */}
+                   {scaduti > 0 && (
+                     <span className="ml-1.5 h-2 w-2 rounded-full bg-danger" aria-label={`${scaduti} da decidere`} />
+                   )}
+                 </TabsTrigger>
+               </TabsList>
+               <TabsContent value="chat" className="mt-0 focus-visible:outline-none">
+                 {listaChat}
+               </TabsContent>
+               <TabsContent value="bacheca" className="mt-0 focus-visible:outline-none">
+                 <Bacheca onApriChat={apriChatDaBacheca} />
+               </TabsContent>
+             </Tabs>
+           ) : (
+             listaChat
            )}
          </main>
        </div>

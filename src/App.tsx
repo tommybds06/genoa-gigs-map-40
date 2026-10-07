@@ -8,6 +8,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { UserProvider } from "@/contexts/UserContext";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import { ReviewPrompt } from "@/components/reviews/ReviewPrompt";
+import { PromemoriaScadenza } from "@/components/bacheca/PromemoriaScadenza";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { PageTransition } from "@/components/layout/PageTransition";
 import Index from "./pages/Index";
@@ -148,6 +149,7 @@ const App = () => (
              <Toaster />
              <Sonner />
              <ReviewPrompt />
+             <PromemoriaScadenza />
              <BrowserRouter>
                <AnimatedRoutes />
              </BrowserRouter>

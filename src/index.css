@@ -505,32 +505,38 @@
     /* Le varianti girano sui fratelli diretti (liste) e dentro .card-tilt
        (sezioni che non sono fratelli). Chi non rientra resta sulla "a". */
     .material-card:nth-of-type(4n + 2),
-    .card-tilt > *:nth-child(4n + 2) .material-card {
+    .card-tilt > *:nth-child(4n + 2) .material-card,
+    .bacheca > *:nth-child(4n + 2) .material-card {
       -webkit-mask-box-image-source: url("/images/cornici/sagoma-card-b.svg");
       mask-border-source: url("/images/cornici/sagoma-card-b.svg");
     }
     .material-card:nth-of-type(4n + 2)::after,
-    .card-tilt > *:nth-child(4n + 2) .material-card::after {
+    .card-tilt > *:nth-child(4n + 2) .material-card::after,
+    .bacheca > *:nth-child(4n + 2) .material-card::after {
       border-image-source: url("/images/cornici/bordo-card-b.svg");
     }
 
     .material-card:nth-of-type(4n + 3),
-    .card-tilt > *:nth-child(4n + 3) .material-card {
+    .card-tilt > *:nth-child(4n + 3) .material-card,
+    .bacheca > *:nth-child(4n + 3) .material-card {
       -webkit-mask-box-image-source: url("/images/cornici/sagoma-card-c.svg");
       mask-border-source: url("/images/cornici/sagoma-card-c.svg");
     }
     .material-card:nth-of-type(4n + 3)::after,
-    .card-tilt > *:nth-child(4n + 3) .material-card::after {
+    .card-tilt > *:nth-child(4n + 3) .material-card::after,
+    .bacheca > *:nth-child(4n + 3) .material-card::after {
       border-image-source: url("/images/cornici/bordo-card-c.svg");
     }
 
     .material-card:nth-of-type(4n + 4),
-    .card-tilt > *:nth-child(4n + 4) .material-card {
+    .card-tilt > *:nth-child(4n + 4) .material-card,
+    .bacheca > *:nth-child(4n + 4) .material-card {
       -webkit-mask-box-image-source: url("/images/cornici/sagoma-card-d.svg");
       mask-border-source: url("/images/cornici/sagoma-card-d.svg");
     }
     .material-card:nth-of-type(4n + 4)::after,
-    .card-tilt > *:nth-child(4n + 4) .material-card::after {
+    .card-tilt > *:nth-child(4n + 4) .material-card::after,
+    .bacheca > *:nth-child(4n + 4) .material-card::after {
       border-image-source: url("/images/cornici/bordo-card-d.svg");
     }
   }
@@ -566,6 +572,40 @@
   .card-tilt > *:nth-child(even) .material-card,
   .tilt-r.material-card {
     border-radius: 13px 18px 14px 17px;
+  }
+
+  /* ---- BACHECA ----
+     Cartellini appesi, due per riga. Piu' storti delle card in lista
+     (±0,5°): una lista e' un elenco ordinato, una bacheca no.
+     L'inclinazione la decide l'id del cartellino (lib/bacheca.ts, `varieta`)
+     e arriva qui come `--storto`, cosi' riordinare non rimescola niente.
+
+     ⚠️ Proporzione FISSA 176:248, la tavola di `cartellino-tratteggiato.svg`.
+     Il tratteggio si scala in modo uniforme invece che col 9 sezioni: provato
+     a 390px, con il 9 sezioni su un rettangolo verticale i lati sparivano. */
+  .bacheca {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 22px 14px;
+    padding-top: 12px; /* le puntine sporgono sopra il cartellino */
+  }
+
+  .cartellino,
+  .cartellino-vuoto {
+    position: relative;
+    aspect-ratio: 176 / 248;
+    transform: rotate(var(--storto, 0deg));
+  }
+
+  .cartellino-vuoto {
+    background: url("/images/cornici/cartellino-tratteggiato.svg") center / 100% 100% no-repeat;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cartellino,
+    .cartellino-vuoto {
+      transform: none;
+    }
   }
 
   /* Chi preferisce l'interfaccia ferma non paga il vezzo. */
