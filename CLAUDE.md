@@ -110,6 +110,11 @@ Sono qui perché sono costate ore, non per completezza.
 - **Data**: `@tanstack/react-query` · **Form**: `react-hook-form` + `zod`
 - **Routing**: `react-router-dom` v6
 - **Piattaforma**: **Lovable**, con commit automatici bidirezionali sul repo
+- **Drizzle** (`drizzle-kit`, `drizzle-orm`, `postgres`, `drizzle.config.ts`):
+  **aggiunto da Lovable** a ottobre 2026 per registrare le migration che
+  applica (§13). Non lo usa il codice dell'app. ⚠️ Lovable aggiorna solo
+  `bun.lock`, non `package-lock.json`: dopo un suo commit che tocca le
+  dipendenze, `npm i` in locale.
 
 ```sh
 npm i
@@ -143,18 +148,27 @@ src/
   components/
     map/          InteractiveMap, SearchBar, JobDetailsSheet,
                   EmployerJobsDrawer, EmployerGroupMarker, LocationMiniMap
-    layout/       Header, MainLayout, PageTransition, BottomNav, SwipeNavigator
+    layout/       Header, MainLayout, PageTransition, BottomNav, SwipeNavigator,
+                  SplashScreen (§17)
+    bacheca/      Bacheca, CartellinoCard, SchedaCartellino,
+                  AggiungiCartellino, PromemoriaScadenza (§16)
     chat/ applications/ jobs/ profile/ onboarding/ reviews/ tags/ skeletons/
     auth/ icons/  ui/ (shadcn)
-  hooks/          useAppTheme (dual-theme), useAuth, useChats, useJobs
-  contexts/       UserContext (role: worker | employer)
-  lib/            dates.ts, tagColors.ts, percorsoAccesso.ts, jobIcons.ts
+  hooks/          useAppTheme (dual-theme), useAuth, useChats, useJobs,
+                  useCartellini, useMapboxToken
+  contexts/       UserContext (role: worker | employer) — il profilo dell'utente
+                  sta QUI, già in memoria: non rileggerlo nelle pagine (§12)
+  lib/            dates.ts, tagColors.ts, percorsoAccesso.ts, jobIcons.ts,
+                  bacheca.ts (azioni e regole della bacheca, §16)
   integrations/   supabase/ (client, types generati), lovable/ (auto-generato)
 supabase/
-  migrations/     SQL + RLS
+  migrations/     SQL + RLS — le versioni COMMENTATE, scritte da noi
   functions/get-mapbox-token/
+drizzle/
+  migrations/     quello che Lovable ha davvero eseguito (§13)
 public/
   images/cornici/ le sagome e i bordi disegnati (§6)
+  splash/         video e fotogrammi dello splash (§17)
   fonts/          shinjo-v1.woff2 / .woff  (§13)
 brand/            audit, specifiche disegni, guide, strumenti HTML
 ```
@@ -419,6 +433,10 @@ lavori sono tutti uguali, il generico se sono mischiati.
 ⚠️ Restano lucide in `MapPlaceholder.tsx`, che però si vede solo se il token
 Mapbox non arriva.
 
+Aggiunte a ottobre: **`EuroIcon`** (in `uiIcons.tsx`) e le **tre puntine**
+della bacheca in `icons/puntine.tsx` (§16). Le puntine non sono mono: la testa
+è `currentColor`, l'**ago resta in inchiostro**.
+
 ---
 
 # 9. `data-ruolo` sulla radice — e la trappola del ripiego
@@ -571,6 +589,13 @@ di react-map-gl non lo dichiarano e il typecheck fallisce (successo due volte).
   Qui è sicuro perché `PageTransition` è `absolute inset-0`. `wait`
   contraddiceva anche le varianti di swipe, scritte perché una esca *mentre*
   l'altra entra.
+  ⚠️ **Da ottobre il tap sulla bottom nav non anima più niente**: anche la
+  dissolvenza incrociata `sync` da 0,1s era un difetto, perché a metà ci sono
+  DUE pagine intere al 50%, cioè due header e due contenuti sovrapposti, e il
+  browser compone due schermate mentre React monta la nuova. Ora il cambio è
+  istantaneo, come nelle tab bar native (iOS, WhatsApp, Instagram). Restano
+  animati solo lo swipe tra tab e i dettagli che entrano da destra, dove
+  l'animazione accompagna un gesto.
 - **vaul e `shouldScaleBackground`**: non fa niente se nel DOM non c'è un
   elemento `[data-vaul-drawer-wrapper]` — c'è un `if (!wrapper) return;` nel
   suo sorgente. Qui non c'è, quindi non è mai stato lui a far lampeggiare
@@ -591,6 +616,34 @@ di react-map-gl non lo dichiarano e il typecheck fallisce (successo due volte).
   sposta il fuoco sul contenuto appena il drawer si apre e Chrome ci disegna
   intorno il suo anello. Non è un bordo nostro: si toglie con `outline-none` su
   `DrawerContent` (shadcn ce l'ha di serie sul Dialog, sul Drawer no).
+- ⚠️ **Un tratteggio col ritaglio a 9 sezioni non regge in verticale.** Il
+  bordo tratteggiato delle card (360×121) montato su un rettangolo verticale
+  176×248: **i lati sparivano**, sia con `stretch` sia con `round`. Provato a
+  390px, non dedotto. Soluzione: disegno alla proporzione vera
+  (`cartellino-tratteggiato.svg`, 176×248) e contenitore con `aspect-ratio`
+  fisso + `background-size: 100% 100%`, così si scala in modo uniforme. Vale
+  per qualunque tratteggio: il 9 sezioni va bene solo per tratti continui.
+- **Radix `Select` dentro un drawer vaul**: combinazione nota per problemi di
+  tocco e scorrimento. Nella scheda del cartellino l'unità di paga è fatta con
+  chip, non con un menu.
+- **I `Dialog` di Radix si chiudono al `pointerdown` sul document** («clic
+  fuori») e mettono `pointer-events: none` sul `body`. Qualunque strato
+  sopra un dialog aperto (lo splash, §17) deve fare `stopPropagation` sul
+  `pointerdown` e dichiarare `pointer-events: auto`, se no il suo tocco
+  chiude il dialog sotto, o non arriva affatto.
+- **StrictMode chiama due volte l'inizializzatore di `useState`** (in
+  sviluppo). Niente scritture lì dentro: lo splash scriveva la data di
+  «visto oggi» nell'inizializzatore, e la seconda chiamata leggeva «già
+  visto» → in locale non compariva mai. Le scritture vanno in un effetto.
+- **Chromium mette in pausa i video senza audio nelle schede non visibili**
+  (`play()` → `AbortError: video-only background media was paused to save
+  power`). Nel pannello browser di Claude, se è nascosto, il video dello
+  splash non parte mai: non è un bug dell'app. Stesso motivo per cui lì
+  `requestAnimationFrame` non scatta: per misurare usare i timer.
+- **Nel pannello browser con l'emulazione mobile i clic a coordinate
+  sbagliano bersaglio** (il viewport emulato viene rimpicciolito per entrare
+  nel pannello). Se un clic «non fa niente», riprovare senza emulazione prima
+  di cercare il bug nel codice.
 
 ---
 
@@ -621,10 +674,29 @@ Casi chiusi a settembre, con i numeri:
   tutto schermo **a ogni fotogramma di scorrimento** per un effetto visibile al
   5%. Su mobile è una delle cose più care che esistano.
 
-Resta aperto, ed è il pezzo grosso: **la mappa si rimonta a ogni ritorno sulla
-home**, cioè si distrugge e si ricrea il contesto WebGL. Si risolve tenendo
-`Index` montato invece di smontarlo nella transizione — è un lavoro di
-struttura, non una riga.
+Casi chiusi a ottobre (Tommaso: «glitcha e lagga ogni volta che cambio
+pagina»):
+
+- **Lista rileggeva il profilo dal database a ogni visita**, con `useProfile()`
+  (uno `useState` + `useEffect` senza cache). Intanto mostrava lo scheletro, e
+  la query dei lavori — che dipende dai tag del profilo — partiva solo dopo.
+  Ora legge da `UserContext`, che ce l'ha già. **`useProfile` è stato
+  cancellato**: il profilo dell'utente si prende da `useUser()`.
+- **Annunci faceva 1 + N query a ogni visita**: gli annunci, poi un conteggio
+  per ognuno. Ora è **una query** con `applications(count)`, in react-query,
+  con chiave sotto `['jobs', …]` (così la invalida anche chi crea un annuncio
+  o assume) e `refetchOnMount: 'always'`: la lista compare subito dalla cache
+  e si rilegge in background, perché le candidature le mandano altri in
+  qualunque momento.
+- **Il cambio tab non anima più** (vedi §12, `AnimatePresence`).
+
+Resta aperto, ed è il pezzo grosso: **ogni cambio tab smonta e rimonta la
+pagina intera**, mappa compresa (`reuseMaps` attenua, non risolve). Si risolve
+tenendo montate le pagine già visitate invece di smontarle nella transizione.
+È un lavoro di struttura, non una riga, e ha effetti da gestire: gli effetti
+«al montaggio» non ripartono più, quindi il ritorno da un profilo con
+`location.state.returnJob` (Index, Lista) e l'apertura di una chat da
+`?chat=` vanno riscritti per reagire al cambio di indirizzo.
 
 ---
 
@@ -674,9 +746,30 @@ Market. Piano B se non rispondono: **Gabarito**, licenza SIL aperta.
 colonne che devono già esistere: al contrario, l'operazione fallisce in
 produzione (successo con lo snapshot di `applications`).
 
+## Come si applica una migration (da ottobre 2026)
+
+1. Claude la scrive in `supabase/migrations/`, **commentata** e
+   **rieseguibile** (`IF NOT EXISTS`, `CREATE OR REPLACE`, `DROP … IF
+   EXISTS`, `ON CONFLICT DO NOTHING`).
+2. ⚠️ **Lovable non legge i file del Mac**: legge solo il repo su GitHub. Il
+   testo SQL va **incollato** nella sua chat («Esegui questa migration così
+   com'è»), oppure il file va pushato da solo prima del codice. La prima volta
+   è stato incollato solo il messaggio senza l'SQL, e Lovable ha risposto che
+   il file non c'era.
+3. Lovable la esegue e la **registra a modo suo** in
+   `drizzle/migrations/NNNN_nome.sql`: lo stesso SQL senza commenti, a volte
+   con aggiunte (per `cartellini`, due `GRANT` espliciti). **Riportare le
+   aggiunte nel file commentato**, così il repo dice cosa c'è nel database.
+4. Lovable rigenera `types.ts` e committa. Prima di committare sopra:
+   `git pull --rebase`. Se avevamo scritto i tipi a mano, si tiene il suo file.
+5. **Verificare che la tabella esista davvero**, senza fidarsi del «fatto»:
+   una GET a `<VITE_SUPABASE_URL>/rest/v1/<tabella>?select=id&limit=0` con la
+   chiave pubblica del `.env` risponde **404 `PGRST205`** se la tabella non
+   esiste e **401** se esiste (all'anonimo è negata, come deve).
+
 ---
 
-# 14. Stato attuale — settembre 2026
+# 14. Stato attuale — ottobre 2026
 
 **Piano a 10 fasi:**
 
@@ -704,21 +797,33 @@ produzione (successo con lo snapshot di `applications`).
   avviso foto riscritto, colori employer corretti.
 - **Linea divisoria disegnata** sopra la bottom nav.
 - **Scheda annuncio (`JobDetailsSheet`) rifatta** — vedi §15.
+- **Bacheca dell'employer** in Messaggi, con migration `cartellini` applicata
+  — vedi §16. È una **funzione nuova**, non solo restyling.
+- **Splash d'apertura** col video del logo — vedi §17. Anticipa un pezzo della
+  Fase 5.
+- **Cambio tab più leggero**: istantaneo, Lista e Annunci senza ricaricare a
+  ogni visita (§12, Prestazioni).
 
 ## Da fare
 
-1. **Revisione schermata per schermata** (in corso): fatte accesso,
+1. **Bacheca**: provarla con dati veri (appendere, assumere, terminare,
+   l'avviso di scadenza) — scritta e verificata solo con dati finti. Poi la
+   **versione worker** (la sua bacheca «al contrario»): la tabella è già
+   pronta, il worker può leggere i propri cartellini.
+2. **Pagine montate una volta sola** invece che a ogni cambio tab (§12,
+   Prestazioni): il pezzo grosso rimasto sul lag.
+3. **Revisione schermata per schermata** (in corso): fatte accesso,
    registrazione, onboarding, home, scheda annuncio. Restano lista, messaggi,
    chat, annunci, crea annuncio, profilo, profilo pubblico, modifica profilo,
    impostazioni.
-2. **Tre migration rimandate**: trigger su `chats.updated_at`, colonna
+4. **Tre migration rimandate**: trigger su `chats.updated_at`, colonna
    `is_system` su `messages` (ora i messaggi automatici si riconoscono per
    stringa in `dates.ts`), e `lm.is_system` + `j.tags` nella vista
    `chat_overview`.
-3. **Disegni mancanti**: sagoma del pin, cornici di chip e contenitore, eventuali
+5. **Disegni mancanti**: sagoma del pin, cornici di chip e contenitore, eventuali
    illustrazioni per gli empty state.
-4. **Licenza Shinjo** — mail da mandare.
-5. **Landing/waitlist** su `politask.app`, con privacy e termini (servono anche
+6. **Licenza Shinjo** — mail da mandare.
+7. **Landing/waitlist** su `politask.app`, con privacy e termini (servono anche
    per pubblicare l'app Google e per il GDPR).
 
 ## Punti aperti minori
@@ -843,3 +948,156 @@ Conseguenze strutturali, tutte obbligate:
 - Manca la **distanza** («a 800 m da te»), che su un'app centrata sulla mappa
   sarebbe il secondo dato più utile dopo la paga. Servono le coordinate
   dell'utente nella scheda: oggi non ci arrivano.
+
+---
+
+# 16. La bacheca dell'employer — ottobre 2026
+
+**Cos'è.** In Messaggi, per l'employer, due schede **Chat | Bacheca** (le
+stesse linguette di Lista). La bacheca mostra chi lavora con lui, o chi sta
+provando, come **cartellini appesi**: due per riga, con una puntina, un po'
+storti. Toccando un cartellino si apre una scheda con gli accordi e le azioni.
+Il **«+»** (tratteggiato, sempre l'ultimo posto) appende una persona di cui ha
+accettato la candidatura. Sotto, chiusa, la sezione **Conclusi**.
+
+Idea e decisioni sono di Tommaso; la **versione worker** («al contrario») è il
+prossimo passo e la tabella è già pronta per lei.
+
+## Il modello — e le decisioni che lo reggono
+
+- **Tabella `cartellini`**, una riga per persona appesa. Migration in
+  `supabase/migrations/20261006120000_cartellini.sql` (commentata) e
+  `drizzle/migrations/0000_cartellini.sql` (quella eseguita da Lovable).
+- ⚠️ **Lo stato NON sta sul cartellino: si legge dalla candidatura.**
+  `accepted` = in prova, `hired` = assunto, `completed` = concluso
+  (`STATO_DA_CANDIDATURA` in `lib/bacheca.ts`). Così bacheca e chat non possono
+  contraddirsi.
+- **Il «+» appende IN PROVA, non assume.** Tommaso ha voluto poter appendere
+  anche chi non è assunto (il turno di prova al bar). La candidatura resta
+  `accepted`; dalla scheda si può poi **Assumere** (stesso effetto del bottone
+  in chat, messaggio automatico compreso) o **Togliere dalla bacheca** (stacca
+  solo il cartellino: candidatura e chat restano).
+- **Chi viene assunto compare da solo**: trigger `appendi_assunto` sul
+  passaggio a `hired`, da qualunque parte arrivi.
+- **`employer_id`, `worker_id`, `job_id` li scrive il database** (trigger
+  `compila_cartellino`), leggendoli dalla candidatura: il client non può
+  appendere alla propria bacheca la candidatura di un annuncio altrui.
+- **Permessi**: l'employer fa tutto sui suoi cartellini, il worker li **legge**
+  soltanto (gli accordi li ha scritti l'employer).
+- **Nella stessa migration è stata chiusa una falla**: la policy «Workers can
+  update own applications» lasciava al worker **qualsiasi** colonna, `status`
+  compreso — poteva darsi `hired` da solo. Ora il trigger
+  `proteggi_candidatura` gli lascia solo `is_reviewed`, e una candidatura
+  nasce sempre `pending`.
+
+## Gli accordi NON sono un contratto
+
+Tommaso: «sono cose che non influiscono un contratto reale, segnano solo
+all'interno dell'app questi dati». Quindi:
+
+- tutto **facoltativo**, nessuna validazione oltre il minimo (paga ≥ 0, fine
+  dopo l'inizio);
+- la sezione si chiama **«Accordi»**, mai «Contratto»;
+- ⚠️ data di fine vuota = **«Nessuna data di fine»**, mai «a tempo
+  indeterminato»: in Italia è un tipo di contratto preciso;
+- niente riga di avviso «non ha valore di contratto»: proposta e scartata da
+  Tommaso («anche senza»).
+
+Campi: date di inizio e fine, **paga** come importo + unità (ora, giorno,
+settimana, mese, forfait), **giorni** della settimana, **orari** in testo
+libero.
+
+- **I giorni sono uno SCHEMA settimanale, non un calendario.** Tommaso temeva
+  non funzionassero per lavori di mesi: valgono uguale per due settimane o sei
+  mesi. Il loro vero limite sono i turni variabili, per cui sono facoltativi
+  e affiancati dal campo «Orari e turni».
+- **La paga si precompila dal testo dell'annuncio** («9€/h» → 9, ora) con
+  `leggiPagaDaTesto`, ma **non si salva** finché l'employer non preme Salva.
+- **Nessun totale della paga**: servirebbero le ore a settimana, che non
+  chiediamo. Mostrarlo sarebbe un numero inventato.
+
+## La «notifica» di fine lavoro
+
+Non ci sono push (arrivano con Despia, Fase 10). `PromemoriaScadenza`,
+montato in `App.tsx` accanto a `ReviewPrompt`: all'avvio, **dal giorno dopo**
+la data di fine (l'ultimo giorno il lavoro c'è ancora), propone +1 settimana,
++1 mese, Concludi (o «Chiudi la prova»), Più tardi. Più un **pallino** sulla
+scheda «Bacheca» finché c'è qualcosa da decidere.
+
+## Il disegno
+
+- **Cartellino** = `.material-card` (sagome a–d alternate come nelle liste)
+  con **proporzione fissa 176:248**, foto con `.sagoma-foto`. Dentro: foto,
+  nome, mestiere, poi DUE righe sole — paga, e o l'avviso di scadenza (ha la
+  precedenza) o i giorni. Una terza riga a 360px non entra.
+- ⚠️ **Il chip «In prova» sta in basso al centro della foto**: negli angoli la
+  maschera della foto lo tagliava.
+- ⚠️ **`pb-4` sulla card**: col solo `p-2.5` l'ultima riga toccava il margine
+  tagliato.
+- **Inclinazione** fino a ±1,9°, più delle liste (±0,5°): una bacheca non è un
+  elenco ordinato. Puntina e inclinazione derivano dall'**id** (`varieta`),
+  così riordinare non le rimescola. Rispetta `prefers-reduced-motion`.
+- **Puntine**: tre disegni di Tommaso (`icons/puntine.tsx`). Testa nel colore
+  del ruolo, **ago in inchiostro** (tutto colorato leggeva come un
+  giocattolo). Provate a 390px: **arancio pastello** e **`employer-700`**
+  reggono; l'arancio-ink diventa marrone, il blu pastello sbiadisce. Stanno
+  **fuori** dalla card mascherata, se no la maschera le taglia.
+- **Il «+»**: `cartellino-tratteggiato.svg` (disegno di Tommaso, 176×248),
+  ricolorato da nero a `#9C8B74` (`--paper-edge`): in nero pesava più dei
+  cartellini veri. Perché non il 9 sezioni: vedi §12.
+- **Unità di paga a chip, non un menu**: Radix `Select` dentro vaul, vedi §12.
+
+## Codice
+
+- `lib/bacheca.ts` — **sorgente unica delle azioni**: `assumi`,
+  `terminaLavoro`, `appendi`, `stacca`, `salvaAccordi`, più date, paga e
+  varietà. La chat usa le stesse funzioni.
+- ⚠️ **`chiudiAnnuncioSeNessunoResta`**: prima «Concludi» in chat chiudeva
+  SEMPRE l'annuncio — con due persone assunte, terminarne una lo toglieva di
+  mezzo anche per l'altra. Ora lo chiude solo se non resta nessuno assunto o
+  in prova.
+- ⚠️ **Le date sono colonne `DATE`**: si confrontano come stringhe locali
+  (`oggiISO`), mai con `new Date("2026-10-06")`, che le legge come mezzanotte
+  UTC e a Genova sposta il giorno.
+- `hooks/useCartellini.ts` — letture in react-query: la bacheca e i candidati
+  da appendere (accettati non ancora appesi). La chat per il tasto «Chat» si
+  legge con una query sola per tutti i cartellini, non una a testa.
+- La scheda attiva sta nell'URL (`/messaggi?vista=bacheca`): tornando da un
+  profilo aperto dal cartellino si ritrova la bacheca.
+
+---
+
+# 17. Lo splash d'apertura — ottobre 2026
+
+Il video del logo animato all'apertura, **una volta al giorno**.
+`components/layout/SplashScreen.tsx`, file in `public/splash/`
+(`politask-splash.webm`/`.mp4`, `-inizio.png`, `-finale.png`): 720×1280,
+5,6 s, senza audio, fondo `#F3EFE3`.
+
+- **È uno strato sopra l'app, non un cancello prima**: montato per ultimo in
+  `App.tsx`, fuori dal router. L'app sotto carica sessione, profilo e mappa
+  mentre il video gira.
+- **Si chiude**: a fine video · al tocco · dopo **1 s d'immagine finale** se il
+  video non parte o dà errore (anche `play()` rifiutato: su iOS in risparmio
+  energetico l'autoplay viene negato senza eventi) · comunque dopo **7 s**.
+  Dissolvenza di 300 ms.
+- **Con «riduci movimento»** solo l'immagine finale per 1 s.
+- **Una volta al giorno**: data in `localStorage`, chiave
+  `politask-splash-visto`, sempre in try/catch. Scritta in un effetto, non
+  nell'inizializzatore di `useState` (StrictMode, §12).
+- **Per rivederlo**: `?splash` nell'indirizzo lo forza; oppure in console
+  `localStorage.removeItem('politask-splash-visto')`.
+- ⚠️ **Il tocco non deve chiudere i dialog sotto**: all'avvio si aprono proprio
+  lì il promemoria recensioni e l'avviso di fine lavoro. `stopPropagation` sul
+  `pointerdown` + `pointer-events: auto` esplicito (§12).
+- **`index.html`**: `theme-color` e fondo di `html, body` a `#F3EFE3`, in uno
+  `<style>` nell'head, così non c'è lampo bianco prima del primo fotogramma.
+  Dopo, `index.css` riporta il `body` su `--paper` (`#F4EEE2`): una unità per
+  canale, invisibile. **`--paper` non è stato toccato.**
+- ⚠️ **Nomi dei file in minuscolo col trattino.** Erano arrivati come
+  `Politask_splash.webm`: sul Mac le maiuscole non contano, online sì — un nome
+  scritto con la maiuscola sbagliata funziona in locale e dà 404 in produzione.
+- **Non ancora visto girare fino in fondo** dal pannello browser di Claude (lì
+  Chromium blocca i video quando il pannello è nascosto, §12). Verificati:
+  tocco (si chiude in 315 ms senza arrivare al document), regola del giorno,
+  ripiego sull'immagine.
