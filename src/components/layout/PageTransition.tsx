@@ -15,11 +15,24 @@ type EasingType = [number, number, number, number] | "easeOut" | "easeIn" | "eas
 type VariantValue = { x: number | string; opacity: number };
 type AnimVariants = { initial: VariantValue; animate: VariantValue; exit: VariantValue };
 
-// Ultra-fast fade for tab navigation - explicit x:0 to prevent drift
+/**
+ * TAP SULLA BOTTOM NAV: cambio ISTANTANEO, nessuna dissolvenza.
+ *
+ * ⚠️ Era una dissolvenza incrociata da 0,1s: la vecchia pagina 1→0 mentre la
+ * nuova 0→1, sovrapposte. A meta' ci sono DUE pagine intere al 50%, cioe' due
+ * header e due contenuti uno sopra l'altro — l'occhio non legge una
+ * transizione, legge un difetto. E per quei fotogrammi il browser compone due
+ * schermate intere mentre React sta ancora montando la nuova.
+ *
+ * Le tab bar delle app native non animano il cambio (iOS, WhatsApp,
+ * Instagram): la tab e' un posto, non un percorso. L'animazione resta dove
+ * racconta un gesto: lo swipe tra tab e le pagine di dettaglio che entrano da
+ * destra.
+ */
 const fadeVariants: AnimVariants = {
-  initial: { opacity: 0, x: 0 },
+  initial: { opacity: 1, x: 0 },
   animate: { opacity: 1, x: 0 },
-  exit: { opacity: 0, x: 0 },
+  exit: { opacity: 1, x: 0 },
 };
 
 // Slide from right for detail pages
@@ -58,7 +71,7 @@ export function PageTransition({ children, variant = "fade" }: PageTransitionPro
   
   // Determine animation based on frozen direction
   let variants = fadeVariants;
-  let duration = 0.1;
+  let duration = 0;
   let ease: EasingType = "easeOut";
   
   if (isSlide) {

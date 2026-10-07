@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Header } from '@/components/layout/Header';
 import { useAuth } from '@/hooks/useAuth';
 import { useAppTheme } from '@/hooks/useAppTheme';
@@ -52,8 +52,6 @@ const Annunci = () => {
   const { theme } = useAppTheme();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [jobs, setJobs] = useState<JobWithCount[]>([]);
-  const [loading, setLoading] = useState(true);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [applications, setApplications] = useState<Application[]>([]);
   const [loadingApplications, setLoadingApplications] = useState(false);
@@ -63,49 +61,45 @@ const Annunci = () => {
   const [editingJob, setEditingJob] = useState<Job | null>(null);
   const [deletingJob, setDeletingJob] = useState<Job | null>(null);
 
-  const fetchJobs = async () => {
-    if (!user) return;
-
-    try {
-      // Calculate 48 hours ago
+  /**
+   * ⚠️ In react-query e in UNA query sola. Prima era un `useEffect` con una
+   * query di conteggio PER OGNI annuncio (N+1): 1 + N giri di rete, rifatti a
+   * ogni ritorno sulla tab — PageTransition smonta le pagine — con lo
+   * scheletro e il salto del contenuto ogni volta. Ora il conteggio arriva
+   * dentro la stessa risposta (`applications(count)`), e dalla seconda visita
+   * entro un minuto la lista c'e' gia' al primo fotogramma.
+   */
+  const { data: jobs = [], isLoading: loading } = useQuery({
+    // Sotto 'jobs': chi crea un annuncio o assume invalida ['jobs'], e cosi'
+    // si aggiorna anche questa lista.
+    queryKey: ['jobs', 'annunci-employer', user?.id],
+    enabled: !!user,
+    // Le candidature le mandano altri, in qualunque momento: a ogni visita si
+    // mostra subito la cache e si rilegge in background (una query, niente
+    // scheletro), invece di aspettare che scada il minuto di staleTime.
+    refetchOnMount: 'always',
+    queryFn: async (): Promise<JobWithCount[]> => {
+      // Annunci delle ultime 48 ore
       const fortyEightHoursAgo = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
 
-      // Fetch employer's jobs from last 48 hours
-      const { data: jobsData, error: jobsError } = await supabase
+      const { data, error } = await supabase
         .from('jobs')
-        .select('*')
-        .eq('owner_id', user.id)
+        .select('*, applications(count)')
+        .eq('owner_id', user!.id)
         .gte('created_at', fortyEightHoursAgo)
         .order('created_at', { ascending: false });
 
-      if (jobsError) throw jobsError;
+      if (error) throw error;
 
-      // Fetch application counts for each job
-      const jobsWithCounts = await Promise.all(
-        (jobsData || []).map(async (job) => {
-          const { count } = await supabase
-            .from('applications')
-            .select('*', { count: 'exact', head: true })
-            .eq('job_id', job.id);
+      return (data || []).map(({ applications, ...job }) => ({
+        ...job,
+        applicationCount: (applications as unknown as { count: number }[] | null)?.[0]?.count ?? 0,
+      }));
+    },
+  });
 
-          return {
-            ...job,
-            applicationCount: count || 0,
-          };
-        })
-      );
-
-      setJobs(jobsWithCounts);
-    } catch (error) {
-      console.error('Error fetching jobs:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchJobs();
-  }, [user]);
+  /** Dopo modifica o cancellazione: si rilegge la lista. */
+  const fetchJobs = () => queryClient.invalidateQueries({ queryKey: ['jobs', 'annunci-employer'] });
 
   const fetchApplications = async (jobId: string) => {
     setLoadingApplications(true);

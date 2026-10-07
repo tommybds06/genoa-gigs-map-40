@@ -3,7 +3,7 @@ import { MapPin, Clock, Euro, SearchX, Tag, Briefcase, FileText } from "lucide-r
 import { XIcon, OrologioIcon, MappaIcon, DocumentoIcon, AnnunciVuotaIcon, CuoreIcon } from "@/components/icons/uiIcons";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { useProfile } from "@/hooks/useProfile";
+import { useUser } from "@/contexts/UserContext";
 import { useAppTheme } from "@/hooks/useAppTheme";
 import { TagBadges } from "@/components/tags/TagSelector";
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -21,7 +21,13 @@ import { formatTempoTrascorso } from "@/lib/dates";
 
 const Lista = () => {
   const { user } = useAuth();
-  const { profile, loading: profileLoading } = useProfile();
+  /* ⚠️ Il profilo da UserContext, NON da `useProfile()`: quello lo rileggeva
+     dal database a ogni montaggio, cioe' a ogni ritorno sulla tab
+     (PageTransition smonta le pagine). Intanto la lista mostrava lo
+     scheletro, e la query dei lavori — che dipende dai tag — partiva solo
+     dopo: scheletro → contenuto a ogni visita. Qui serve solo `tags`, e
+     UserContext ce l'ha gia' in memoria (e aggiornato quando cambiano). */
+  const { profile, loading: profileLoading } = useUser();
   const { isEmployer } = useAppTheme();
   const location = useLocation();
   const navigate = useNavigate();
