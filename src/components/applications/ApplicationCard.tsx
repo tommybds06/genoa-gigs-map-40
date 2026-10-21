@@ -73,7 +73,7 @@ export function ApplicationCard({ application, userId }: ApplicationCardProps) {
           <div className="flex items-center gap-1.5 mt-0.5 text-xs text-muted-foreground min-w-0">
             {nomeEmployer && (
               <>
-                <Avatar className="w-4 h-4 shrink-0">
+                <Avatar seme={nomeEmployer} className="w-4 h-4 shrink-0">
                   <AvatarImage src={job?.profiles?.avatar_url || undefined} />
                   <AvatarFallback className="text-[8px]">
                     {nomeEmployer.charAt(0)}

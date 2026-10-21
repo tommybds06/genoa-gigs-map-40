@@ -1,6 +1,7 @@
 // ChevronLeft/Right rimossi: erano le frecce sul carosello foto, che su mobile
 // coprivano la foto per un gesto che si fa gia' con lo swipe. Restano i pallini.
-import { User, MapPin, Briefcase, Save, Instagram, Globe } from "lucide-react";
+import { User, MapPin, Briefcase, Instagram, Globe } from "lucide-react";
+import { SalvaIcon } from "@/components/icons/uiIcons";
 import { ImpostazioniIcon, ProfiloIcon, CuoreIcon, InfoIcon, StellaIcon, MappaIcon } from "@/components/icons/uiIcons";
 import { GenericoIcon } from "@/components/icons/roleIcons";
 import { useAuth } from "@/hooks/useAuth";
@@ -8,6 +9,7 @@ import { useUser } from "@/contexts/UserContext";
 import { useAppTheme } from "@/hooks/useAppTheme";
 import { useNavigate } from "react-router-dom";
 import { TagSelector, TagBadges } from "@/components/tags/TagSelector";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { soloRuoli } from "@/constants/tags";
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -140,13 +142,14 @@ const Profilo = () => {
         {/* Profile Card */}
         <div className="material-card-elevated p-6 mb-4">
           <div className="flex items-center gap-4">
-            <div className={`w-20 h-20 ${theme.btnFilled} rounded-full flex items-center justify-center shadow-material-md overflow-hidden`}>
-              {profile?.photos && profile.photos.length > 0 ? (
-                <img src={profile.photos[0]} alt="Avatar" className="w-full h-full object-cover" />
-              ) : (
+            {/* Cerchio imperfetto (ui/avatar). Via l'ombra: il ritaglio la
+                taglierebbe a tratti. */}
+            <Avatar seme={profile?.id} className="w-20 h-20">
+              <AvatarImage src={profile?.photos?.[0] || undefined} alt="Avatar" />
+              <AvatarFallback className={theme.btnFilled}>
                 <User className="w-10 h-10" />
-              )}
-            </div>
+              </AvatarFallback>
+            </Avatar>
             <div>
               <h2 className="text-xl font-bold">{profile?.full_name || user?.user_metadata?.full_name || "Utente"}</h2>
               <p className="text-muted-foreground text-sm mb-1">{user?.email}</p>
@@ -216,7 +219,7 @@ const Profilo = () => {
               <div className="flex gap-2">
                 {hasChanges && (
                   <button onClick={handleSaveTags} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-colors touch-feedback ${primaryBtnClasses}`}>
-                    <Save className="w-4 h-4" />Salva
+                    <SalvaIcon className="w-4 h-4" />Salva
                   </button>
                 )}
                 {!editMode && (

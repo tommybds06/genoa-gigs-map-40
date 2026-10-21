@@ -1,22 +1,20 @@
 import { Header } from "@/components/layout/Header";
 import { MapPin, Clock, Euro, SearchX, Tag, Briefcase, FileText } from "lucide-react";
-import { XIcon, OrologioIcon, MappaIcon, DocumentoIcon, AnnunciVuotaIcon, CuoreIcon } from "@/components/icons/uiIcons";
+import { XIcon, DocumentoIcon, AnnunciVuotaIcon, CuoreIcon } from "@/components/icons/uiIcons";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useUser } from "@/contexts/UserContext";
 import { useAppTheme } from "@/hooks/useAppTheme";
-import { TagBadges } from "@/components/tags/TagSelector";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { JobDetailsSheet } from "@/components/map/JobDetailsSheet";
 import { getJobIconFromTags } from "@/lib/jobIcons";
-import { getRoleTag } from "@/constants/tags";
 import { useOpenJobs, useEmployerJobs, Job } from "@/hooks/useJobs";
 import { useUserApplications } from "@/hooks/useApplications";
 import { JobCardSkeletonList } from "@/components/skeletons/JobCardSkeleton";
 import { SwipeNavigator } from "@/components/layout/SwipeNavigator";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ApplicationCard, ApplicationCardSkeleton } from "@/components/applications/ApplicationCard";
-import { formatTempoTrascorso } from "@/lib/dates";
+import { TesseraIcona } from "@/components/ui/Tessera";
 
 
 const Lista = () => {
@@ -166,7 +164,7 @@ interface JobsListProps {
   onJobClick: (job: Job) => void;
 }
 
-function JobsList({ jobs, loading, isEmployer, hasTags, onJobClick }: JobsListProps) {
+export function JobsList({ jobs, loading, isEmployer, hasTags, onJobClick }: JobsListProps) {
   if (loading) {
     return <JobCardSkeletonList count={5} />;
   }
@@ -175,53 +173,42 @@ function JobsList({ jobs, loading, isEmployer, hasTags, onJobClick }: JobsListPr
     return <EmptyState isEmployer={isEmployer} hasTags={hasTags} />;
   }
 
+  /* LA CARD DELL'ANNUNCIO IN LISTA — tessera col mestiere, titolo, e una
+     riga «zona · paga» (Tommaso, 21 ottobre: «tante informazioni messe male
+     ed evitabili»). Il resto (tag, orario, descrizione) sta nella scheda che
+     si apre toccandola. Qui restano le tre domande con cui si sceglie su cosa
+     toccare: che lavoro è, dove (in Lista la mappa non c'è a dirlo), quanto
+     paga (il secondo criterio: senza, per confrontare bisognerebbe aprirli
+     tutti). Tolti: i tag (l'icona dice già il mestiere), l'orario, il «ieri»
+     (la lista è già dalla più recente).
+     La paga sta A DESTRA, in colonna sua (Tommaso: «a sinistra pieno, a
+     destra bianco, sbilanciato»): è anche il posto dove l'occhio la cerca
+     scorrendo, come il prezzo su Subito o la paga su Indeed, e i valori si
+     confrontano in colonna invece che in mezzo a una frase.
+     ⚠️ Prima la paga era «€ 9€/h» — l'euro due volte, perché il campo è
+     libero e spesso lo contiene già — e in arancio pastello a ~1,9:1. */
   return (
     <div className="space-y-3 card-tilt">
-      {jobs.map((job, index) => {
-        const roleTag = getRoleTag(job.tags);
+      {jobs.map((job) => {
         const Icon = getJobIconFromTags(job.tags);
-        const roleLabel = roleTag || "Generale";
-        
+        const zona = job.neighborhood || ((job.lat && job.lng) ? "Genova" : null);
+
         return (
-          <div 
-            key={job.id} 
-            className="material-card p-4 cursor-pointer touch-feedback"
+          <div
+            key={job.id}
+            className="material-card flex cursor-pointer items-center gap-3 p-3.5 touch-feedback"
             onClick={() => onJobClick(job)}
           >
-            <div className="flex items-start gap-3">
-              <div className="w-12 h-12 flex items-center justify-center shrink-0">
-                <Icon className="w-10 h-10 text-primary" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-start justify-between gap-2">
-                  <h3 className="font-semibold text-base truncate">{job.title}</h3>
-                  <span className="text-xs text-muted-foreground shrink-0 mt-0.5">{formatTempoTrascorso(job.created_at)}</span>
-                </div>
-
-                {job.tags && job.tags.length > 0 && (
-                  <TagBadges tags={job.tags} className="mt-1.5" />
-                )}
-
-                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm mt-2 text-muted-foreground">
-                  {job.schedule && (
-                    <span className="inline-flex items-center gap-1">
-                      <OrologioIcon className="w-4 h-4" />
-                      {job.schedule}
-                    </span>
-                  )}
-                  {(job.lat && job.lng) || job.neighborhood ? (
-                    <span className="inline-flex items-center gap-1">
-                      <MappaIcon className="w-4 h-4" />
-                      {job.neighborhood || "Genova"}
-                    </span>
-                  ) : null}
-                </div>
-
-                {job.price && (
-                  <div className="mt-2 text-primary font-bold text-base">€ {job.price}</div>
-                )}
-              </div>
+            <TesseraIcona icona={Icon} />
+            <div className="min-w-0 flex-1">
+              <h3 className="line-clamp-2 text-[15px] font-semibold leading-snug">{job.title}</h3>
+              {zona && <p className="mt-0.5 truncate text-[13px] text-muted-foreground">{zona}</p>}
             </div>
+            {job.price && (
+              <p className="max-w-[38%] shrink-0 text-right text-[15px] font-semibold leading-snug text-primary-strong line-clamp-2">
+                {job.price}
+              </p>
+            )}
           </div>
         );
       })}
@@ -249,9 +236,7 @@ function ApplicationsList({ applications, loading, userId }: ApplicationsListPro
   if (applications.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center">
-        <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-4">
-          <DocumentoIcon className="w-8 h-8 text-muted-foreground" />
-        </div>
+        <TesseraIcona icona={DocumentoIcon} misura="lg" className="mb-4" />
         <h3 className="titolo-vuoto mb-2">Nessuna candidatura</h3>
         <p className="text-muted-foreground text-sm max-w-xs">
           Non hai ancora inviato candidature. Esplora gli annunci e candidati!
@@ -275,9 +260,7 @@ function EmptyState({ isEmployer, hasTags }: { isEmployer: boolean; hasTags: boo
   if (isEmployer) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center">
-        <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-4">
-          <AnnunciVuotaIcon className="w-8 h-8 text-muted-foreground" />
-        </div>
+        <TesseraIcona icona={AnnunciVuotaIcon} misura="lg" className="mb-4" />
         <h3 className="titolo-vuoto mb-2">Nessun annuncio creato</h3>
         <p className="text-muted-foreground text-sm max-w-xs">
           Crea il tuo primo annuncio di lavoro per trovare lavoratori
@@ -288,13 +271,7 @@ function EmptyState({ isEmployer, hasTags }: { isEmployer: boolean; hasTags: boo
 
   return (
     <div className="flex flex-col items-center justify-center py-16 text-center">
-      <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-4">
-        {hasTags ? (
-          <XIcon className="w-8 h-8 text-muted-foreground" />
-        ) : (
-          <CuoreIcon className="w-8 h-8 text-muted-foreground" />
-        )}
-      </div>
+      <TesseraIcona icona={hasTags ? XIcon : CuoreIcon} misura="lg" className="mb-4" />
       <h3 className="titolo-vuoto mb-2">
         {hasTags ? "Nessun lavoro trovato" : "Imposta i tuoi interessi"}
       </h3>

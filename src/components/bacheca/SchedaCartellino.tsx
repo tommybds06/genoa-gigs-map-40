@@ -22,7 +22,12 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MessaggiIcon, ProfiloIcon } from "@/components/icons/uiIcons";
+import { CampoData } from "@/components/ui/CampoData";
+import { Switch } from "@/components/ui/switch";
+import { supabase } from "@/integrations/supabase/client";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Tessera } from "@/components/ui/Tessera";
+import { MessaggiIcon, ProfiloIcon, SalvaIcon } from "@/components/icons/uiIcons";
 import { useAuth } from "@/hooks/useAuth";
 import { useAppTheme } from "@/hooks/useAppTheme";
 import { CHIAVE_CANDIDATI, CHIAVE_CARTELLINI } from "@/hooks/useCartellini";
@@ -30,6 +35,9 @@ import { cn } from "@/lib/utils";
 import {
   Cartellino,
   GIORNI,
+  modoGiorni,
+  oggiISO,
+  type ModoGiorni,
   UNITA,
   UnitaPaga,
   assumi,
@@ -47,6 +55,15 @@ interface SchedaCartellinoProps {
   cartellino: Cartellino | null;
   onClose: () => void;
   onApriChat: (chatId: string) => void;
+  /**
+   * Modalità COMPILA: subito dopo l'assunzione (dalla chat o da un cartellino
+   * in prova) l'app fa compilare il cartellino — durata, paga, giorni — e in
+   * fondo chiede se togliere l'annuncio dalla mappa. È lo stesso modulo della
+   * scheda, con un titolo, un invito e un solo bottone finale.
+   */
+  compila?: boolean;
+  /** Aperta sopra la chat (z-[60]): drawer e overlay salgono a z-[70]. */
+  sopraChat?: boolean;
 }
 
 type Conferma = "assumi" | "stacca" | "termina" | null;
@@ -54,6 +71,8 @@ type Conferma = "assumi" | "stacca" | "termina" | null;
 interface Modulo {
   importo: string;
   unita: UnitaPaga | null;
+  /** fissi / variabili / un giorno solo — vedi `modoGiorni` in lib/bacheca. */
+  modo: ModoGiorni;
   giorni: number[];
   orari: string;
   dataInizio: string;
@@ -69,6 +88,7 @@ function moduloDa(c: Cartellino): Modulo {
   return {
     importo: importo === null ? "" : String(importo).replace(".", ","),
     unita: c.pagaUnita ?? dallAnnuncio.unita,
+    modo: modoGiorni(c.giorni, c.dataInizio, c.dataFine),
     giorni: c.giorni ?? [],
     orari: c.orari ?? "",
     dataInizio: c.dataInizio ?? "",
@@ -80,6 +100,7 @@ function moduloSalvato(c: Cartellino): Modulo {
   return {
     importo: c.pagaImporto === null ? "" : String(c.pagaImporto).replace(".", ","),
     unita: c.pagaUnita,
+    modo: modoGiorni(c.giorni, c.dataInizio, c.dataFine),
     giorni: c.giorni ?? [],
     orari: c.orari ?? "",
     dataInizio: c.dataInizio ?? "",
@@ -91,6 +112,7 @@ function uguali(a: Modulo, b: Modulo) {
   return (
     a.importo.trim() === b.importo.trim() &&
     a.unita === b.unita &&
+    a.modo === b.modo &&
     [...a.giorni].sort().join() === [...b.giorni].sort().join() &&
     a.orari.trim() === b.orari.trim() &&
     a.dataInizio === b.dataInizio &&
@@ -140,7 +162,7 @@ function Chip({
  * ⚠️ I dati arrivano dalla query `cartellini` e non da una copia locale: dopo
  * un salvataggio la scheda mostra quello che c'e' davvero nel database.
  */
-export function SchedaCartellino({ cartellino: c, onClose, onApriChat }: SchedaCartellinoProps) {
+export function SchedaCartellino({ cartellino: c, onClose, onApriChat, compila = false, sopraChat = false }: SchedaCartellinoProps) {
   const { user } = useAuth();
   const { theme } = useAppTheme();
   const navigate = useNavigate();
@@ -150,6 +172,26 @@ export function SchedaCartellino({ cartellino: c, onClose, onApriChat }: SchedaC
   const [salvando, setSalvando] = useState(false);
   const [conferma, setConferma] = useState<Conferma>(null);
   const [agendo, setAgendo] = useState(false);
+  // Diventa vero anche dopo «Assumi» da un cartellino in prova: si passa a compilare.
+  const [modoCompila, setModoCompila] = useState(compila);
+  // null = non si sa ancora / annuncio già chiuso: l'interruttore non compare.
+  const [annuncioAperto, setAnnuncioAperto] = useState<boolean | null>(null);
+  const [togliDallaMappa, setTogliDallaMappa] = useState(true);
+
+  // In modalità compila serve sapere se l'annuncio è ancora sulla mappa.
+  useEffect(() => {
+    if (!modoCompila || !c?.jobId) return;
+    let annullato = false;
+    supabase
+      .from("jobs")
+      .select("status")
+      .eq("id", c.jobId)
+      .maybeSingle()
+      .then(({ data }) => !annullato && setAnnuncioAperto(data?.status === "open"));
+    return () => {
+      annullato = true;
+    };
+  }, [modoCompila, c?.jobId]);
 
   // Il modulo si ricarica quando cambia cartellino, non a ogni refetch: se no
   // un aggiornamento in background cancellerebbe quello che stai scrivendo.
@@ -182,16 +224,29 @@ export function SchedaCartellino({ cartellino: c, onClose, onApriChat }: SchedaC
     if (!importoValido || !dateValide) return;
     setSalvando(true);
     try {
+      const uno = modulo.modo === "uno";
       await salvaAccordi(c.id, {
         pagaImporto: importoNumero,
         pagaUnita: importoNumero === null ? null : modulo.unita,
-        giorni: modulo.giorni,
+        // fissi → i giorni (nessuno = NULL) · variabili → [] · un giorno solo → NULL
+        giorni:
+          modulo.modo === "variabili" ? [] : modulo.modo === "fissi" && modulo.giorni.length > 0 ? modulo.giorni : null,
         orari: modulo.orari,
         dataInizio: modulo.dataInizio || null,
-        dataFine: modulo.dataFine || null,
+        // Un giorno solo = inizio e fine coincidono.
+        dataFine: uno ? modulo.dataInizio || null : modulo.dataFine || null,
       });
+      if (modoCompila && annuncioAperto && togliDallaMappa) {
+        const { error } = await supabase.from("jobs").update({ status: "closed" }).eq("id", c.jobId);
+        if (error) console.error("Chiusura annuncio:", error);
+      }
       await aggiorna();
-      toast.success("Salvato", { duration: 1500 });
+      if (modoCompila) {
+        toast.success("Cartellino in bacheca", { duration: 2000 });
+        onClose();
+      } else {
+        toast.success("Salvato", { duration: 1500 });
+      }
     } catch (e) {
       console.error("Salvataggio accordi:", e);
       toast.error("Non sono riuscito a salvare");
@@ -206,7 +261,9 @@ export function SchedaCartellino({ cartellino: c, onClose, onApriChat }: SchedaC
     try {
       if (conferma === "assumi") {
         await assumi(c, user.id);
-        toast.success(`${c.nome} è assunto`, { duration: 2000 });
+        toast.success("Assunzione fatta: compila il cartellino", { duration: 2500 });
+        // Come dalla chat: dopo l'assunzione si compila il cartellino.
+        setModoCompila(true);
       } else if (conferma === "stacca") {
         await stacca(c.id);
         toast.success("Tolto dalla bacheca", { duration: 2000 });
@@ -257,17 +314,19 @@ export function SchedaCartellino({ cartellino: c, onClose, onApriChat }: SchedaC
   return (
     <>
       <Drawer open onOpenChange={(o) => !o && onClose()}>
-        <DrawerContent className="max-h-[92vh]">
+        <DrawerContent
+          className={cn("max-h-[92vh]", sopraChat && "z-[70]")}
+          overlayClassName={sopraChat ? "z-[70]" : undefined}
+        >
           <div className="min-h-0 overflow-y-auto px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
             {/* ---- CHI ---- */}
             <DrawerHeader className="flex items-center gap-3 p-0 pt-1 text-left">
-              <div className="sagoma-foto h-16 w-16 shrink-0 overflow-hidden bg-paper-sunken">
-                {c.foto ? (
-                  <img src={c.foto} alt="" className="h-full w-full object-cover" />
-                ) : (
-                  <Iniziali nome={c.nome} className="text-xl" />
-                )}
-              </div>
+              <Avatar seme={c.workerId} className="h-14 w-14">
+                <AvatarImage src={c.foto || undefined} alt="" />
+                <AvatarFallback className="bg-transparent p-0">
+                  <Iniziali nome={c.nome} className="text-lg" />
+                </AvatarFallback>
+              </Avatar>
               <div className="min-w-0 flex-1">
                 {/* ⚠️ Misure ripetute come utility: DrawerTitle porta di suo
                     `text-lg leading-none font-semibold` e batterebbe la classe. */}
@@ -281,22 +340,32 @@ export function SchedaCartellino({ cartellino: c, onClose, onApriChat }: SchedaC
                   {etichettaStato}
                 </span>
               </div>
+              {/* Le TESSERE, come nella scheda del worker: erano due bottoni a
+                  contorno «Chat» e «Profilo» a tutta larghezza. Le due schede
+                  gemelle ora hanno la stessa testa. */}
+              <div className="flex shrink-0 gap-2">
+                <Tessera
+                  icona={MessaggiIcon}
+                  etichetta={`Scrivi a ${c.nome}`}
+                  disabled={!c.chatId}
+                  onClick={() => c.chatId && onApriChat(c.chatId)}
+                />
+                <Tessera
+                  icona={ProfiloIcon}
+                  etichetta={`Profilo di ${c.nome}`}
+                  onClick={() => navigate(`/profile/${c.workerId}`)}
+                />
+              </div>
             </DrawerHeader>
 
-            <div className="mt-4 grid grid-cols-2 gap-2">
-              <Button
-                variant="outline"
-                disabled={!c.chatId}
-                onClick={() => c.chatId && onApriChat(c.chatId)}
-              >
-                <MessaggiIcon />
-                Chat
-              </Button>
-              <Button variant="outline" onClick={() => navigate(`/profile/${c.workerId}`)}>
-                <ProfiloIcon />
-                Profilo
-              </Button>
-            </div>
+            {modoCompila && (
+              <div className="mt-4 rounded-xl bg-accent px-3.5 py-3">
+                <p className="titolo-mini">Compila il cartellino</p>
+                <p className="mt-0.5 text-[13px] text-muted-foreground">
+                  Segna gli accordi presi in chat: finiranno nella bacheca, e li vedrete tutti e due.
+                </p>
+              </div>
+            )}
 
             {avviso && (
               <p className={cn("mt-4 text-[15px] font-medium", avviso.urgente ? "text-danger" : "text-warning")}>
@@ -347,14 +416,19 @@ export function SchedaCartellino({ cartellino: c, onClose, onApriChat }: SchedaC
                 {GIORNI.map((g) => (
                   <Chip
                     key={g.n}
-                    attiva={modulo.giorni.includes(g.n)}
+                    attiva={modulo.modo === "fissi" && modulo.giorni.includes(g.n)}
                     disabled={solaLettura}
                     onClick={() =>
-                      imposta(
-                        "giorni",
-                        modulo.giorni.includes(g.n)
-                          ? modulo.giorni.filter((x) => x !== g.n)
-                          : [...modulo.giorni, g.n]
+                      setModulo((m) =>
+                        m
+                          ? {
+                              ...m,
+                              // Toccare un giorno vuol dire giorni FISSI.
+                              modo: "fissi",
+                              dataFine: m.modo === "uno" ? "" : m.dataFine,
+                              giorni: m.giorni.includes(g.n) ? m.giorni.filter((x) => x !== g.n) : [...m.giorni, g.n],
+                            }
+                          : m
                       )
                     }
                     className="h-10 w-10 shrink-0 p-0"
@@ -363,6 +437,38 @@ export function SchedaCartellino({ cartellino: c, onClose, onApriChat }: SchedaC
                     <span className="sr-only">{g.nome}</span>
                   </Chip>
                 ))}
+              </div>
+              {/* Le due alternative ai giorni fissi (Tommaso, 21 ottobre).
+                  «Un giorno solo» trasforma le date in un campo solo. */}
+              <div className="mt-2.5 flex flex-wrap gap-2">
+                <Chip
+                  attiva={modulo.modo === "variabili"}
+                  disabled={solaLettura}
+                  onClick={() =>
+                    setModulo((m) =>
+                      m ? { ...m, modo: m.modo === "variabili" ? "fissi" : "variabili", giorni: [], dataFine: m.modo === "uno" ? "" : m.dataFine } : m
+                    )
+                  }
+                  className="px-3.5 py-2"
+                >
+                  Variabili
+                </Chip>
+                <Chip
+                  attiva={modulo.modo === "uno"}
+                  disabled={solaLettura}
+                  onClick={() =>
+                    setModulo((m) =>
+                      m
+                        ? m.modo === "uno"
+                          ? { ...m, modo: "fissi", dataFine: "" }
+                          : { ...m, modo: "uno", giorni: [], dataInizio: m.dataInizio || oggiISO(), dataFine: m.dataInizio || oggiISO() }
+                        : m
+                    )
+                  }
+                  className="px-3.5 py-2"
+                >
+                  Un giorno solo
+                </Chip>
               </div>
               <div className="mt-2.5">
                 <Input
@@ -374,38 +480,45 @@ export function SchedaCartellino({ cartellino: c, onClose, onApriChat }: SchedaC
                   aria-label="Orari e turni"
                 />
               </div>
-              <p className="mt-1.5 text-[13px] text-muted-foreground">
-                Se i giorni cambiano di settimana in settimana, lascia i giorni vuoti e scrivi qui.
-              </p>
+              {modulo.modo === "variabili" && (
+                <p className="mt-1.5 text-[13px] text-muted-foreground">Scrivi qui come vi accordate sui turni.</p>
+              )}
             </section>
 
             {/* ---- DATE ---- */}
             <section className="linea-divisoria-sopra mt-4 pt-4">
-              <h3 className="titolo-mini mb-2">Date</h3>
+              <h3 className="titolo-mini mb-2">{modulo.modo === "uno" ? "Il giorno" : "Date"}</h3>
+              {modulo.modo === "uno" ? (
+                <CampoData
+                  value={modulo.dataInizio}
+                  disabled={solaLettura}
+                  onChange={(v) => setModulo((m) => (m ? { ...m, dataInizio: v, dataFine: v } : m))}
+                  aria-label="Il giorno del lavoro"
+                />
+              ) : (
               <div className="grid grid-cols-2 gap-2">
                 <label className="block">
                   <span className="mb-1 block text-[13px] text-muted-foreground">Dal</span>
-                  <Input
-                    type="date"
+                  <CampoData
                     value={modulo.dataInizio}
                     disabled={solaLettura}
-                    onChange={(e) => imposta("dataInizio", e.target.value)}
+                    onChange={(v) => imposta("dataInizio", v)}
                   />
                 </label>
                 <label className="block">
                   <span className="mb-1 block text-[13px] text-muted-foreground">Al</span>
-                  <Input
-                    type="date"
+                  <CampoData
                     value={modulo.dataFine}
                     min={modulo.dataInizio || undefined}
                     disabled={solaLettura}
-                    onChange={(e) => imposta("dataFine", e.target.value)}
+                    onChange={(v) => imposta("dataFine", v)}
                     aria-invalid={!dateValide}
                   />
                 </label>
               </div>
+              )}
               {!dateValide && <p className="mt-1.5 text-[13px] text-danger">La fine viene prima dell'inizio</p>}
-              {!solaLettura && (
+              {!solaLettura && modulo.modo !== "uno" && (
                 <div className="mt-2.5 flex flex-wrap gap-2">
                   <Chip attiva={false} onClick={() => imposta("dataFine", estendiDa(modulo.dataFine || null, 7))} className="px-3.5 py-2">
                     +1 settimana
@@ -421,7 +534,16 @@ export function SchedaCartellino({ cartellino: c, onClose, onApriChat }: SchedaC
                 </div>
               )}
               {!modulo.dataFine && (
-                <p className="mt-1.5 text-[13px] text-muted-foreground">Nessuna data di fine.</p>
+                <p className="mt-1.5 text-[13px] text-muted-foreground">
+                  Nessuna data di fine: ogni tre mesi ti chiederemo se il lavoro è ancora attivo.
+                </p>
+              )}
+              {modulo.dataFine && !solaLettura && (
+                <p className="mt-1.5 text-[13px] text-muted-foreground">
+                  {modulo.modo === "uno"
+                    ? "Il giorno dopo ti chiederemo se concluderlo."
+                    : "Anche indicativa: il giorno dopo ti chiederemo se estenderlo o concluderlo."}
+                </p>
               )}
               {solaLettura && c.dataFine && (
                 <p className="mt-1.5 text-[13px] text-muted-foreground">Concluso, era fissato fino al {formatData(c.dataFine)}.</p>
@@ -431,17 +553,30 @@ export function SchedaCartellino({ cartellino: c, onClose, onApriChat }: SchedaC
             {/* ---- AZIONI ---- */}
             {!solaLettura && (
               <div className="mt-5 space-y-2">
+                {/* Prima era una finestra a parte dopo l'assunzione («Rimuovere
+                    l'annuncio dalla mappa?»): ora sta nel modulo, una finestra
+                    in meno. Acceso di default: di solito chi assume ha trovato. */}
+                {modoCompila && annuncioAperto && (
+                  <label className="linea-divisoria-sopra flex cursor-pointer items-center gap-3 pb-2 pt-3.5">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[15px] text-foreground">Togli l'annuncio dalla mappa</p>
+                      <p className="text-[13px] text-muted-foreground">Nessun altro potrà più candidarsi.</p>
+                    </div>
+                    <Switch checked={togliDallaMappa} onCheckedChange={setTogliDallaMappa} />
+                  </label>
+                )}
+
                 <Button
                   size="lg"
                   className={cn("w-full", theme.btnFilled, theme.btnFilledHover)}
-                  disabled={!sporco || salvando || !importoValido || !dateValide}
+                  disabled={(!modoCompila && !sporco) || salvando || !importoValido || !dateValide}
                   onClick={salva}
                 >
-                  {salvando && <Loader2 className="animate-spin" />}
-                  {sporco ? "Salva" : "Salvato"}
+                  {salvando ? <Loader2 className="animate-spin" /> : <SalvaIcon />}
+                  {modoCompila ? "Salva il cartellino" : sporco ? "Salva" : "Salvato"}
                 </Button>
 
-                {c.stato === "prova" ? (
+                {modoCompila ? null : c.stato === "prova" ? (
                   <div className="grid grid-cols-2 gap-2">
                     <Button variant="outline" onClick={() => setConferma("assumi")}>
                       Assumi

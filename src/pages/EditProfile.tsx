@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, Loader2, Save } from "lucide-react";
-import { IndietroIcon } from "@/components/icons/uiIcons";
+import { ChevronLeft, Loader2 } from "lucide-react";
+import { SalvaIcon } from "@/components/icons/uiIcons";
 import { useAuth } from "@/hooks/useAuth";
 import { useUser } from "@/contexts/UserContext";
 import { useAppTheme } from "@/hooks/useAppTheme";
@@ -14,6 +14,7 @@ import { NeighborhoodSelect } from "@/components/ui/NeighborhoodSelect";
 import { PhotoGalleryManager } from "@/components/profile/PhotoGalleryManager";
 import { toast } from "sonner";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { TesseraIndietro } from "@/components/ui/Tessera";
 
 const EditProfile = () => {
   const navigate = useNavigate();
@@ -109,11 +110,6 @@ const EditProfile = () => {
     }
   };
 
-  // Dynamic classes based on role
-  const backButtonClasses = isEmployer
-    ? "text-employer hover:bg-employer-50"
-    : "text-primary hover:bg-accent";
-
   const inputBorderClasses = isEmployer
     ? "focus-visible:ring-employer border-employer/20"
     : "focus-visible:ring-primary border-primary/20";
@@ -140,12 +136,7 @@ const EditProfile = () => {
           se il dispositivo ha una tacca. */}
       <header className="sticky top-0 z-40 bg-background px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-3 border-b border-border">
         <div className="flex items-center gap-3">
-          <button 
-            onClick={handleBack}
-            className={`p-2 rounded-full transition-colors ${backButtonClasses}`}
-          >
-            <IndietroIcon className="w-5 h-5" />
-          </button>
+          <TesseraIndietro onClick={handleBack} />
           <h1 className="text-xl font-bold text-foreground">Modifica Profilo</h1>
         </div>
       </header>
@@ -274,7 +265,7 @@ const EditProfile = () => {
             </>
           ) : (
             <>
-              <Save className="w-5 h-5 mr-2" />
+              <SalvaIcon className="w-5 h-5 mr-2" />
               Salva Modifiche
             </>
           )}

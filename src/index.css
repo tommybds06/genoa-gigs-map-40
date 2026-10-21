@@ -505,38 +505,32 @@
     /* Le varianti girano sui fratelli diretti (liste) e dentro .card-tilt
        (sezioni che non sono fratelli). Chi non rientra resta sulla "a". */
     .material-card:nth-of-type(4n + 2),
-    .card-tilt > *:nth-child(4n + 2) .material-card,
-    .bacheca > *:nth-child(4n + 2) .material-card {
+    .card-tilt > *:nth-child(4n + 2) .material-card {
       -webkit-mask-box-image-source: url("/images/cornici/sagoma-card-b.svg");
       mask-border-source: url("/images/cornici/sagoma-card-b.svg");
     }
     .material-card:nth-of-type(4n + 2)::after,
-    .card-tilt > *:nth-child(4n + 2) .material-card::after,
-    .bacheca > *:nth-child(4n + 2) .material-card::after {
+    .card-tilt > *:nth-child(4n + 2) .material-card::after {
       border-image-source: url("/images/cornici/bordo-card-b.svg");
     }
 
     .material-card:nth-of-type(4n + 3),
-    .card-tilt > *:nth-child(4n + 3) .material-card,
-    .bacheca > *:nth-child(4n + 3) .material-card {
+    .card-tilt > *:nth-child(4n + 3) .material-card {
       -webkit-mask-box-image-source: url("/images/cornici/sagoma-card-c.svg");
       mask-border-source: url("/images/cornici/sagoma-card-c.svg");
     }
     .material-card:nth-of-type(4n + 3)::after,
-    .card-tilt > *:nth-child(4n + 3) .material-card::after,
-    .bacheca > *:nth-child(4n + 3) .material-card::after {
+    .card-tilt > *:nth-child(4n + 3) .material-card::after {
       border-image-source: url("/images/cornici/bordo-card-c.svg");
     }
 
     .material-card:nth-of-type(4n + 4),
-    .card-tilt > *:nth-child(4n + 4) .material-card,
-    .bacheca > *:nth-child(4n + 4) .material-card {
+    .card-tilt > *:nth-child(4n + 4) .material-card {
       -webkit-mask-box-image-source: url("/images/cornici/sagoma-card-d.svg");
       mask-border-source: url("/images/cornici/sagoma-card-d.svg");
     }
     .material-card:nth-of-type(4n + 4)::after,
-    .card-tilt > *:nth-child(4n + 4) .material-card::after,
-    .bacheca > *:nth-child(4n + 4) .material-card::after {
+    .card-tilt > *:nth-child(4n + 4) .material-card::after {
       border-image-source: url("/images/cornici/bordo-card-d.svg");
     }
   }
@@ -580,9 +574,11 @@
      L'inclinazione la decide l'id del cartellino (lib/bacheca.ts, `varieta`)
      e arriva qui come `--storto`, cosi' riordinare non rimescola niente.
 
-     ⚠️ Proporzione FISSA 176:248, la tavola di `cartellino-tratteggiato.svg`.
-     Il tratteggio si scala in modo uniforme invece che col 9 sezioni: provato
-     a 390px, con il 9 sezioni su un rettangolo verticale i lati sparivano. */
+     Proporzione FISSA 176:248. La forma — cartellino da pacco, angoli alti
+     smussati, foro con anello — NON sta qui: e' un SVG calcolato in pixel
+     dalle misure vere (components/bacheca/SagomaCartellino.tsx), perche' il
+     ritaglio a 9 sezioni stirerebbe il foro e farebbe sparire il tratteggio
+     sui lati lunghi (§12 di CLAUDE.md). */
   .bacheca {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -595,10 +591,6 @@
     position: relative;
     aspect-ratio: 176 / 248;
     transform: rotate(var(--storto, 0deg));
-  }
-
-  .cartellino-vuoto {
-    background: url("/images/cornici/cartellino-tratteggiato.svg") center / 100% 100% no-repeat;
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -1106,4 +1098,26 @@ button.campo-guscio:focus::after {
 [data-ruolo="employer"] .campo-guscio:focus-within::after,
 [data-ruolo="employer"] button.campo-guscio:focus::after {
   border-image-source: url("/images/cornici/bordo-campo-attivo-blu.svg");
+}
+
+/* ---- CAMPO DATA: l'indicatore nativo, invisibile sopra la nostra icona ----
+   Vedi ui/CampoData.tsx. Fuori da ogni @layer di proposito: è uno
+   pseudo-elemento del browser, e così vince senza !important (§12). */
+.campo-data::-webkit-calendar-picker-indicator {
+  position: absolute;
+  right: 10px;
+  width: 30px;
+  height: 30px;
+  opacity: 0;
+  cursor: pointer;
+}
+
+/* ---- LE SCHEDE DAL BASSO: la striscia sotto la scheda ----
+   vaul allunga la scheda verso il basso con un ::after (per quando la si
+   trascina oltre il limite) che prende `background: inherit`. Ora che la
+   scheda è trasparente (la carta la disegna SagomaScheda), la striscia
+   sarebbe trasparente anche lei: la ricoloriamo. Il selettore ha un
+   attributo in più di quello di vaul, che arriva dopo nel documento. */
+[data-vaul-drawer][data-vaul-drawer-direction="bottom"]:not([data-vaul-custom-container="true"])::after {
+  background: hsl(var(--background));
 }

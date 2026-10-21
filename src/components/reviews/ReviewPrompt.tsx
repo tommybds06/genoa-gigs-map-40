@@ -15,18 +15,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Loader2 } from "lucide-react";
 import { StellaIcon, StellaVuotaIcon } from "@/components/icons/uiIcons";
 import { toast } from "sonner";
+import { EVENTO_RECENSIONE, type PendingReview } from "@/lib/recensione";
 import confetti from "canvas-confetti";
 
-interface PendingReview {
-  applicationId: string;
-  jobId: string;
-  employerId: string;
-  employerName: string;
-  jobTitle: string;
-}
 
 // Session-level tracking to prevent re-showing after skip/close
 const skippedApplications = new Set<string>();
+
 
 export function ReviewPrompt() {
   const { user } = useAuth();
@@ -140,6 +135,20 @@ export function ReviewPrompt() {
       isCheckingRef.current = false;
     }
   }, [user?.id, hasLoaded, isWorker]);
+
+  useEffect(() => {
+    const apri = (e: Event) => {
+      const dettaglio = (e as CustomEvent<PendingReview>).detail;
+      if (!dettaglio) return;
+      setRating(0);
+      setHoverRating(0);
+      setComment("");
+      setPendingReview(dettaglio);
+      setIsOpen(true);
+    };
+    window.addEventListener(EVENTO_RECENSIONE, apri);
+    return () => window.removeEventListener(EVENTO_RECENSIONE, apri);
+  }, []);
 
   // Check for pending reviews on login/profile load
   useEffect(() => {

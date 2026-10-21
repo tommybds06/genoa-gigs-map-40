@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { MessageCircle, ArrowLeft, Send, Loader2, ImagePlus, X, CheckCircle, Check } from "lucide-react";
-import { IndietroIcon, InvioIcon, ImmaginiIcon, MessaggiVuotaIcon } from "@/components/icons/uiIcons";
+import { InvioIcon, ImmaginiIcon, MessaggiVuotaIcon } from "@/components/icons/uiIcons";
 import { useAppTheme } from "@/hooks/useAppTheme";
 import { cn } from "@/lib/utils";
+import { Tessera, TesseraIcona, TesseraIndietro } from "@/components/ui/Tessera";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useSearchParams, useNavigate } from "react-router-dom";
@@ -28,6 +29,9 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
  import { SwipeNavigator } from "@/components/layout/SwipeNavigator";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Bacheca } from "@/components/bacheca/Bacheca";
+import { SchedaCartellino } from "@/components/bacheca/SchedaCartellino";
+import { BachecaWorker } from "@/components/bacheca/BachecaWorker";
+import { useLavoriWorker } from "@/hooks/useLavoriWorker";
 import { useCartellini, CHIAVE_CARTELLINI } from "@/hooks/useCartellini";
 import { eScaduto, chiudiAnnuncioSeNessunoResta } from "@/lib/bacheca";
 import { formatOrarioChat, anteprimaMessaggio } from "@/lib/dates";
@@ -80,17 +84,27 @@ const Messaggi = () => {
   const [applicationStatus, setApplicationStatus] = useState<string | null>(null);
   const [showHireDialog, setShowHireDialog] = useState(false);
   const [showCompleteDialog, setShowCompleteDialog] = useState(false);
-  const [showRemoveJobDialog, setShowRemoveJobDialog] = useState(false);
+  // Dopo «Assumi»: il cartellino da compilare (vedi handleHireWorker).
+  const [compilaPer, setCompilaPer] = useState<{ jobId: string; workerId: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  /* Bacheca: solo per l'employer. La scheda attiva sta nell'URL (`?vista=`)
-     e non in uno state: aprendo un profilo dal cartellino si esce dalla
-     pagina, e al ritorno si deve ritrovare la bacheca, non le chat. */
-  const vista = isEmployer && searchParams.get('vista') === 'bacheca' ? 'bacheca' : 'chat';
+  /* Bacheca: per tutti e due i ruoli — l'employer ci appende chi lavora con
+     lui, il worker ci vede i lavori in cui è stato preso. La scheda attiva sta
+     nell'URL (`?vista=`) e non in uno state: aprendo un profilo dal cartellino
+     si esce dalla pagina, e al ritorno si deve ritrovare la bacheca. */
+  const vista = searchParams.get('vista') === 'bacheca' ? 'bacheca' : 'chat';
   const cambiaVista = (v: string) =>
     setSearchParams(v === 'bacheca' ? { vista: 'bacheca' } : {}, { replace: true });
   const { data: cartellini = [] } = useCartellini(isEmployer ? user?.id : undefined);
-  const scaduti = cartellini.filter(eScaduto).length;
+  const cartellinoDaCompilare = compilaPer
+    ? cartellini.find((c) => c.jobId === compilaPer.jobId && c.workerId === compilaPer.workerId) ?? null
+    : null;
+  const { data: lavori = [] } = useLavoriWorker(!isEmployer ? user?.id : undefined);
+  /* Il pallino: qualcosa da decidere (employer: una data di fine passata) o
+     da fare (worker: un lavoro da recensire). */
+  const daFare = isEmployer
+    ? cartellini.filter(eScaduto).length
+    : lavori.filter((l) => l.stato === 'da-recensire').length;
 
   const apriChatDaBacheca = (chatId: string) => {
     const chat = chats.find((c) => c.id === chatId);
@@ -390,93 +404,55 @@ const Messaggi = () => {
   const handleHireWorker = async () => {
     if (!selectedChat || !user || pendingHireRef.current) return;
     pendingHireRef.current = true;
-    
+
     // Capture values BEFORE any state changes
     const chatId = selectedChat.id;
     const jobId = selectedChat.job_id;
     const workerId = selectedChat.worker_id;
     const userId = user.id;
-    
+
     // 1. Close dialog FIRST and wait for animation to complete
     setShowHireDialog(false);
-    
-    // 2. Wait for dialog close animation to finish before ANY other state changes
     await new Promise(resolve => setTimeout(resolve, 150));
-    
-    // 3. Now safe to update UI
     setApplicationStatus('hired');
-    toast.success('Candidato assunto!', { duration: 2000 });
-    
-    // 4. DB operations in background (no await - fire and forget)
-    supabase
-      .from('applications')
-      .update({ status: 'hired' })
-      .eq('job_id', jobId)
-      .eq('applicant_id', workerId)
-      .then(({ error }) => {
-        if (error) {
-          console.error('Error hiring:', error);
-          setApplicationStatus('accepted');
-          toast.error('Errore nell\'assunzione');
-        }
+
+    try {
+      /* ⚠️ ASPETTATO, non più «fire and forget»: subito dopo si apre il
+         cartellino da compilare, e il cartellino lo crea il database (trigger
+         `appendi_assunto`) proprio su questo cambio di stato. */
+      const { error } = await supabase
+        .from('applications')
+        .update({ status: 'hired' })
+        .eq('job_id', jobId)
+        .eq('applicant_id', workerId);
+      if (error) throw error;
+
+      await supabase.from('messages').insert({
+        chat_id: chatId,
+        sender_id: userId,
+        content: '🎉 Complimenti! Sei stato assunto per questo incarico.',
+        // Va marcato in SCRITTURA. La migration ha riempito le righe esistenti
+        // confrontando il testo, ma quello e' un backfill una tantum: senza
+        // questa riga ogni nuova assunzione tornerebbe indistinguibile da un
+        // messaggio scritto da una persona.
+        is_system: true,
       });
-    
-    supabase.from('messages').insert({
-      chat_id: chatId,
-      sender_id: userId,
-      content: '🎉 Complimenti! Sei stato assunto per questo incarico.',
-      // Va marcato in SCRITTURA. La migration ha riempito le righe esistenti
-      // confrontando il testo, ma quello e' un backfill una tantum: senza
-      // questa riga ogni nuova assunzione tornerebbe indistinguibile da un
-      // messaggio scritto da una persona.
-      is_system: true,
-    });
-    
-    // 5. Only ask to remove the job if it's still visible on the map
-    await new Promise(resolve => setTimeout(resolve, 300));
-    const { data: jobRow } = await supabase
-      .from('jobs')
-      .select('status')
-      .eq('id', jobId)
-      .maybeSingle();
-    if (jobRow?.status === 'open') {
-      setShowRemoveJobDialog(true);
-    }
-    
-    // 6. Invalidate queries much later
-    setTimeout(() => {
+
+      /* Il flusso (Tommaso, 21 ottobre): dopo l'assunzione l'app fa compilare
+         il cartellino — durata, paga, giorni. Prima qui si chiedeva solo se
+         togliere l'annuncio dalla mappa: ora quella domanda sta nel modulo. */
+      await queryClient.invalidateQueries({ queryKey: [CHIAVE_CARTELLINI] });
+      setCompilaPer({ jobId, workerId });
+      toast.success('Assunzione fatta: compila il cartellino', { duration: 2500 });
+    } catch (e) {
+      console.error('Error hiring:', e);
+      setApplicationStatus('accepted');
+      toast.error('Errore nell\'assunzione');
+    } finally {
       queryClient.invalidateQueries({ queryKey: ['chats'] });
       queryClient.invalidateQueries({ queryKey: ['jobs'] });
-      // Chi viene assunto finisce sulla bacheca (trigger `appendi_assunto`).
-      queryClient.invalidateQueries({ queryKey: [CHIAVE_CARTELLINI] });
       pendingHireRef.current = false;
-    }, 1000);
-  };
-
-  // Handle closing job visibility on map
-  const handleCloseJobVisibility = (removeFromMap: boolean) => {
-    setShowRemoveJobDialog(false);
-    
-    if (!removeFromMap || !selectedChat) return;
-    
-    toast.success('Annuncio rimosso dalla mappa', { duration: 2000 });
-    
-    const jobId = selectedChat.job_id;
-    
-    // Defer to next tick
-    setTimeout(() => {
-      supabase
-        .from('jobs')
-        .update({ status: 'closed' })
-        .eq('id', jobId)
-        .then(({ error }) => {
-          if (error) console.error('Error closing job:', error);
-        });
-      
-      setTimeout(() => {
-        queryClient.invalidateQueries({ queryKey: ['jobs'] });
-      }, 300);
-    }, 0);
+    }
   };
 
   // Handle job completion (hired -> completed) - use refs to avoid re-render loops
@@ -539,9 +515,7 @@ const Messaggi = () => {
         {/* Chat header - shrink-0 so it doesn't compress */}
         <header className="shrink-0 z-40 bg-background px-4 pt-8 pb-3 border-b">
           <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
+            <TesseraIndietro
               onClick={() => {
                 setSelectedChat(null);
                 setReplyingTo(null);
@@ -549,15 +523,12 @@ const Messaggi = () => {
                 setApplicationStatus(null);
                 navigate('/messaggi', { replace: true });
               }}
-              className="rounded-full shrink-0"
-            >
-              <IndietroIcon className={`h-5 w-5 ${isEmployer ? 'text-employer' : 'text-primary'}`} />
-            </Button>
+            />
             <div 
               className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer"
               onClick={() => navigate(`/profile/${selectedChat.other_user?.id}`)}
             >
-              <Avatar className="h-10 w-10 shrink-0">
+              <Avatar seme={selectedChat.other_user?.id} className="h-10 w-10 shrink-0">
                 <AvatarImage src={selectedChat.other_user?.avatar_url || undefined} />
                 <AvatarFallback className={`${theme.accentBg} ${theme.primaryText}`}>
                   {(selectedChat.other_user?.full_name || 'U')[0].toUpperCase()}
@@ -719,28 +690,17 @@ const Messaggi = () => {
               className="flex-1 rounded-full h-12 text-base"
               disabled={sending}
             />
-            <Button
+            {/* L'invio è una TESSERA (ui/Tessera), come la freccia indietro in
+                alto: pieno chiaro del ruolo e icona in inchiostro, per worker
+                ed employer. La coppia fondo+icona la decide la tessera —
+                niente più `bg-` scritti a mano (il bug ricorrente numero uno). */}
+            <Tessera
+              icona={sending ? Loader2 : InvioIcon}
+              classeIcona={sending ? "animate-spin" : undefined}
+              etichetta="Invia"
               onClick={handleSendMessage}
               disabled={(!newMessage.trim() && !pendingAttachment) || sending}
-              size="icon"
-              /* ⚠️ Il bug ricorrente numero uno: qui c'era solo il FONDO che
-                 seguiva il ruolo (`bg-employer-700`), mentre il testo restava
-                 quello di `variant="default"`, cioè `text-primary-foreground`
-                 = l'inchiostro. Risultato: freccia bruna su blu scuro.
-                 `theme.btnFilled` porta la coppia fondo+testo insieme, ed è
-                 l'unico modo di non rifarlo. */
-              className={cn(
-                "shrink-0 rounded-full h-12 w-12",
-                theme.btnFilled,
-                theme.btnFilledHover
-              )}
-            >
-              {sending ? (
-                <Loader2 className="h-5 w-5 animate-spin" />
-              ) : (
-                <InvioIcon className="!h-6 !w-6" />
-              )}
-            </Button>
+            />
           </div>
         </div>
         
@@ -790,28 +750,16 @@ const Messaggi = () => {
           </DialogContent>
         </Dialog>
 
-        {/* Dialog: Remove job from map after hiring */}
-        <Dialog open={showRemoveJobDialog} onOpenChange={setShowRemoveJobDialog}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Rimuovere annuncio dalla mappa?</DialogTitle>
-              <DialogDescription>
-                Hai trovato il candidato giusto. Vuoi rimuovere l'annuncio dalla mappa in modo che altri non possano più vederlo?
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setShowRemoveJobDialog(false)}>
-                No, tieni visibile
-              </Button>
-              <Button
-                onClick={() => handleCloseJobVisibility(true)}
-                className={isEmployer ? "bg-employer-700 hover:bg-employer-800 text-employer-foreground" : "bg-primary hover:bg-primary/90 text-primary-foreground"}
-              >
-                Sì, rimuovi
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        {/* Dopo l'assunzione: «Compila il cartellino», sopra la chat. */}
+        {cartellinoDaCompilare && (
+          <SchedaCartellino
+            cartellino={cartellinoDaCompilare}
+            compila
+            sopraChat
+            onClose={() => setCompilaPer(null)}
+            onApriChat={() => setCompilaPer(null)}
+          />
+        )}
       </div>
     );
   }
@@ -824,9 +772,7 @@ const Messaggi = () => {
            ) : chats.length === 0 ? (
              <div className="flex flex-col items-center justify-center py-12">
                <div className="material-card-elevated p-8 text-center max-w-sm animate-scale-in">
-                 <div className={`w-16 h-16 ${theme.accentBg} ${theme.accentText} rounded-full flex items-center justify-center mx-auto mb-4`}>
-                   <MessaggiVuotaIcon className="w-8 h-8" />
-                 </div>
+                 <TesseraIcona icona={MessaggiVuotaIcon} misura="lg" className="mx-auto mb-4" />
                  <h2 className="titolo-vuoto mb-2">Nessun Messaggio</h2>
                  <p className="text-muted-foreground text-sm">
                    Quando contatterai un employer o riceverai messaggi, appariranno qui.
@@ -922,8 +868,7 @@ const Messaggi = () => {
          </header>
  
          <main className="flex-1 px-4 pt-2 pb-4 overflow-y-auto">
-           {isEmployer ? (
-             <Tabs value={vista} onValueChange={cambiaVista} className="w-full">
+           <Tabs value={vista} onValueChange={cambiaVista} className="w-full">
                {/* Stesse schede di Lista («Esplora | Candidature»): chi le ha
                    usate là sa già come funzionano. */}
                <TabsList className="w-full h-12 p-1 mb-4 bg-muted sagoma-quartiere rounded-[19px]">
@@ -938,10 +883,8 @@ const Messaggi = () => {
                    className="linguetta flex-1 h-full rounded-[15px] font-[Shinjo,Outfit,sans-serif] [font-synthesis:none] tracking-[-0.04em] text-[15px] text-muted-foreground data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm transition-all duration-200"
                  >
                    Bacheca
-                   {/* Il pallino c'e' solo se c'e' qualcosa da decidere: un
-                       lavoro con la data di fine passata. */}
-                   {scaduti > 0 && (
-                     <span className="ml-1.5 h-2 w-2 rounded-full bg-danger" aria-label={`${scaduti} da decidere`} />
+                   {daFare > 0 && (
+                     <span className="ml-1.5 h-2 w-2 rounded-full bg-danger" aria-label={`${daFare} da ${isEmployer ? 'decidere' : 'recensire'}`} />
                    )}
                  </TabsTrigger>
                </TabsList>
@@ -949,12 +892,13 @@ const Messaggi = () => {
                  {listaChat}
                </TabsContent>
                <TabsContent value="bacheca" className="mt-0 focus-visible:outline-none">
-                 <Bacheca onApriChat={apriChatDaBacheca} />
+                 {isEmployer ? (
+                   <Bacheca onApriChat={apriChatDaBacheca} />
+                 ) : (
+                   <BachecaWorker onApriChat={apriChatDaBacheca} />
+                 )}
                </TabsContent>
              </Tabs>
-           ) : (
-             listaChat
-           )}
          </main>
        </div>
      </SwipeNavigator>

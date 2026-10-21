@@ -27,7 +27,7 @@ export function TagSelector({
   roleLayout = "chips",
 }: TagSelectorProps) {
   const [customInput, setCustomInput] = useState("");
-  const { theme } = useAppTheme();
+  const { isEmployer } = useAppTheme();
 
   const toggleTag = (tag: string) => {
     if (selectedTags.includes(tag)) {
@@ -57,26 +57,39 @@ export function TagSelector({
   const renderRole = (tag: string, isSelected: boolean, isCustom: boolean) => {
     const Icon = getJobIcon(tag);
     if (isGrid) {
+      /* LA TESSERA (ui/Tessera) con il nome SOTTO — Tommaso, 20 ottobre: al
+         posto dei «rettangolini storti». Erano `.sagoma-tag` stirata a
+         ~100×95 px, dove il disegno mostra i lati dritti; a 56 px quadrati
+         gli angoli si toccano e viene il «sasso» delle schede.
+         Selezionata: pieno chiaro del ruolo con l'icona in inchiostro, come
+         ogni altra tessera. Non selezionata: fondo accent, icona in
+         inchiostro tenue (4,3:1). */
       return (
         <button
           key={tag}
           type="button"
           onClick={() => toggleTag(tag)}
-          className={cn(
-            "flex flex-col items-center gap-1.5 p-3 sagoma-tag rounded-[28px] text-sm font-medium transition-all border-2",
-            // ⚠️ Il selezionato era `bg-primary` fisso, cioe' ARANCIONE anche in
-            // "Crea annuncio", dove tutto il resto e' blu. Non si notava finche'
-            // il non-selezionato usava un accent ambra fisso; da quando `--accent`
-            // segue il ruolo, la tessera scelta stonava con le altre.
-            isSelected
-              ? `${theme.btnFilled} border-transparent`
-              : "bg-accent text-accent-foreground border-transparent hover:bg-accent/70"
-          )}
+          aria-pressed={isSelected}
+          className="group flex flex-col items-center gap-1.5 transition-transform active:scale-95"
         >
-          <Icon className="w-7 h-7 shrink-0" />
-          <span className="text-xs text-center leading-tight flex items-center gap-1">
+          <span
+            className={cn(
+              "sagoma-tag flex h-14 w-14 items-center justify-center rounded-xl transition-colors",
+              isSelected
+                ? cn(isEmployer ? "bg-employer" : "bg-primary", "text-ink")
+                : "bg-accent text-ink-soft"
+            )}
+          >
+            <Icon className="h-8 w-8" />
+          </span>
+          <span
+            className={cn(
+              "flex items-center gap-0.5 text-center text-[12px] leading-tight",
+              isSelected ? "font-medium text-foreground" : "text-muted-foreground"
+            )}
+          >
             {tag}
-            {isCustom && <X className="w-3 h-3 opacity-70" />}
+            {isCustom && <X className="h-3 w-3 shrink-0 opacity-70" />}
           </span>
         </button>
       );
@@ -105,7 +118,7 @@ export function TagSelector({
       {/* Role Tags - Orange */}
       <div>
         <h4 className="text-sm font-semibold text-muted-foreground mb-2">Ruoli</h4>
-        <div className={cn(isGrid ? "grid grid-cols-3 gap-2" : "flex flex-wrap gap-2")}>
+        <div className={cn(isGrid ? "grid grid-cols-4 gap-x-1 gap-y-3" : "flex flex-wrap gap-2")}>
           {ROLE_TAGS.map((tag) => renderRole(tag, selectedTags.includes(tag), false))}
           {customRoles.map((tag) => renderRole(tag, true, true))}
         </div>

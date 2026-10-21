@@ -84,6 +84,10 @@ export type Database = {
           ultimo_controllo: string | null
           updated_at: string
           worker_id: string
+          assunto_il: string | null
+          cuore: boolean | null
+          esito_il: string | null
+          ultimo_controllo: string | null
         }
         Insert: {
           application_id: string
@@ -103,6 +107,10 @@ export type Database = {
           ultimo_controllo?: string | null
           updated_at?: string
           worker_id: string
+          assunto_il?: string | null
+          cuore?: boolean | null
+          esito_il?: string | null
+          ultimo_controllo?: string | null
         }
         Update: {
           application_id?: string
@@ -122,6 +130,10 @@ export type Database = {
           ultimo_controllo?: string | null
           updated_at?: string
           worker_id?: string
+          assunto_il?: string | null
+          cuore?: boolean | null
+          esito_il?: string | null
+          ultimo_controllo?: string | null
         }
         Relationships: [
           {

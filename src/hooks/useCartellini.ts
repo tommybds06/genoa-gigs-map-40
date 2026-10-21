@@ -22,6 +22,7 @@ async function caricaCartellini(employerId: string): Promise<Cartellino[]> {
     .select(`
       id, application_id, worker_id, job_id,
       data_inizio, data_fine, paga_importo, paga_unita, giorni, orari, created_at,
+      assunto_il, ultimo_controllo, cuore, esito_il,
       worker:profiles!cartellini_worker_id_fkey ( full_name, avatar_url, photos ),
       job:jobs!cartellini_job_id_fkey ( title, tags, price ),
       candidatura:applications!cartellini_application_id_fkey ( status, job_title )
@@ -63,6 +64,10 @@ async function caricaCartellini(employerId: string): Promise<Cartellino[]> {
       mestiere: r.job?.title || r.candidatura?.job_title || "Lavoro",
       tags: r.job?.tags || [],
       pagaAnnuncio: r.job?.price ?? null,
+      assuntoIl: r.assunto_il,
+      ultimoControllo: r.ultimo_controllo,
+      cuore: r.cuore,
+      esitoIl: r.esito_il,
     }];
   });
 }

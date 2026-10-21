@@ -40,3 +40,15 @@ export const Puntina3 = (props: PuntinaProps) => (
 );
 
 export const PUNTINE = [Puntina1, Puntina2, Puntina3];
+
+/**
+ * Dove sta la PUNTA dell'ago in ogni disegno, in unità del viewBox. Serve a
+ * far entrare l'ago esattamente nel foro del cartellino. Misurate, non
+ * stimate: punto più basso del tracciato dell'ago (getPointAtLength in
+ * Chrome). Se cambia un disegno, vanno rimisurate.
+ */
+export const PUNTE_PUNTINE = [
+  { larghezza: 34.28158, x: 5.4, y: 46.74 },
+  { larghezza: 29.29031, x: 8.2, y: 46.23 },
+  { larghezza: 34.52648, x: 28.86, y: 46.71 },
+];

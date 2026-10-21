@@ -22,9 +22,10 @@ import {
 } from 'lucide-react';
 import { ROLE_TAGS, TYPE_TAGS } from '@/constants/tags';
 import { getJobIcon } from '@/lib/jobIcons';
-import { PennaIcon, IndietroIcon, DocumentoIcon, OrologioIcon, CalendarioIcon, InvioIcon } from '@/components/icons/uiIcons';
+import { PennaIcon, DocumentoIcon, OrologioIcon, CalendarioIcon, InvioIcon } from '@/components/icons/uiIcons';
 import { GenericoIcon } from '@/components/icons/roleIcons';
 import { isWithinGenovaBounds, GEOFENCING_ERROR_MESSAGE } from '@/constants/geofencing';
+import { TesseraIndietro } from "@/components/ui/Tessera";
 
 const CreateJob = () => {
   const navigate = useNavigate();
@@ -176,12 +177,7 @@ const CreateJob = () => {
           altre, e il colore del ruolo resta sulla freccia e sul bordo. */}
       <div className="bg-background border-b-2 border-border px-6 pt-8 pb-4">
         <div className="flex items-center gap-3 mb-1">
-          <button
-            onClick={() => navigate(-1)}
-            className="p-2 -ml-2 rounded-full hover:bg-employer-50 transition-colors touch-feedback"
-          >
-            <IndietroIcon className="w-5 h-5 text-employer-800" />
-          </button>
+          <TesseraIndietro onClick={() => navigate(-1)} />
           <h1 className="titolo-sezione">Crea Annuncio</h1>
         </div>
         <p className="text-muted-foreground text-sm">

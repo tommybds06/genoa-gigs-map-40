@@ -9,6 +9,8 @@ import { formatData } from "@/lib/bacheca";
 import { CartellinoCard, Iniziali } from "./CartellinoCard";
 import { SchedaCartellino } from "./SchedaCartellino";
 import { AggiungiCartellino } from "./AggiungiCartellino";
+import { SagomaCartellino } from "./SagomaCartellino";
+import { SPAZIO_SOPRA } from "@/lib/formaCartellino";
 
 interface BachecaProps {
   /** La chat si apre nella stessa pagina (Messaggi), non con un cambio di URL. */
@@ -38,7 +40,9 @@ export function Bacheca({ onApriChat }: BachecaProps) {
     return (
       <div className="bacheca" aria-busy="true">
         {[0, 1].map((i) => (
-          <div key={i} className="cartellino-vuoto animate-pulse" />
+          <div key={i} className="cartellino-vuoto animate-pulse">
+            <SagomaCartellino seme={`attesa-${i}`} variante="tratteggiata" />
+          </div>
         ))}
       </div>
     );
@@ -70,12 +74,20 @@ export function Bacheca({ onApriChat }: BachecaProps) {
         <button
           type="button"
           onClick={() => setAggiungi(true)}
-          className="cartellino-vuoto flex flex-col items-center justify-center gap-2 text-muted-foreground touch-feedback focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-2xl"
+          className="cartellino-vuoto block w-full text-muted-foreground touch-feedback focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-2xl"
           style={{ "--storto": attivi.length % 2 === 0 ? "-0.8deg" : "1deg" } as CSSProperties}
         >
-          <PiuIcon className="h-7 w-7" />
-          <span className="font-[Shinjo,Outfit,sans-serif] text-[17px] tracking-[-0.04em] [font-synthesis:none]">
-            Aggiungi
+          {/* Stessa forma a cartellino, tratteggiata, col foro e l'anello ma
+              senza puntina: è un posto libero, non ancora appeso. */}
+          <SagomaCartellino seme="aggiungi" variante="tratteggiata" />
+          <span
+            className="relative flex h-full flex-col items-center justify-center gap-2"
+            style={{ paddingTop: SPAZIO_SOPRA / 2 }}
+          >
+            <PiuIcon className="h-7 w-7" />
+            <span className="font-[Shinjo,Outfit,sans-serif] text-[17px] tracking-[-0.04em] [font-synthesis:none]">
+              Aggiungi
+            </span>
           </span>
         </button>
       </div>

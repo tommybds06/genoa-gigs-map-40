@@ -1,6 +1,7 @@
 import { useState } from "react";
+import { TesseraIcona, TesseraIndietro } from "@/components/ui/Tessera";
 import { useNavigate } from "react-router-dom";
-import { NotificheIcon, IndietroIcon, MailIcon, DocumentoIcon, EsciIcon, BidoneIcon, ProfiloIcon, InfoIcon } from "@/components/icons/uiIcons";
+import { NotificheIcon, MailIcon, DocumentoIcon, EsciIcon, BidoneIcon, ProfiloIcon, InfoIcon } from "@/components/icons/uiIcons";
 import {
   User,
   HelpCircle,
@@ -57,22 +58,12 @@ const Settings = () => {
     window.location.href = "mailto:support@politask.com";
   };
 
-  // Dynamic classes based on role
-  const backButtonClasses = isEmployer
-    ? "text-employer hover:bg-employer-50"
-    : "text-primary hover:bg-accent";
-
   return (
     <div className="flex flex-col min-h-screen bg-background">
       {/* Header */}
       <header className="sticky top-0 z-40 bg-background px-4 pt-8 pb-3 border-b border-border">
         <div className="flex items-center gap-3">
-          <button 
-            onClick={handleBack}
-            className={`p-2 rounded-full transition-colors ${backButtonClasses}`}
-          >
-            <IndietroIcon className="w-5 h-5" />
-          </button>
+          <TesseraIndietro onClick={handleBack} />
           <img
             src={isEmployer ? "/images/logo-employer-v2.svg" : "/images/logo-worker-v2.svg"}
             alt="Politask"
@@ -86,9 +77,7 @@ const Settings = () => {
         {user?.email && (
           <div className="material-card p-4 mb-6">
             <div className="flex items-center gap-3">
-              <div className={`w-10 h-10 ${theme.btnFilled} rounded-full flex items-center justify-center`}>
-                <MailIcon className="w-5 h-5" />
-              </div>
+              <TesseraIcona icona={MailIcon} />
               <div>
                 <p className="text-sm text-muted-foreground">Loggato come</p>
                 <p className="font-medium text-foreground">{user.email}</p>

@@ -9,6 +9,7 @@ import {
   DialogOverlay,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
+import { Tessera } from "@/components/ui/Tessera";
 import { useAppTheme } from "@/hooks/useAppTheme";
 
 interface AvatarPreviewProps {
@@ -73,9 +74,11 @@ export function AvatarPreview({
   return (
     <>
       <Avatar
+        seme={userId}
         className={cn(
           sizeClasses[size],
-          "cursor-pointer transition-transform active:scale-95 ring-offset-2 active:ring-2 active:ring-primary/30",
+          // Niente anello di pressione: il cerchio imperfetto lo taglierebbe.
+          "cursor-pointer transition-transform active:scale-95",
           className
         )}
         onClick={handleAvatarClick}
@@ -145,35 +148,21 @@ export function AvatarPreview({
                 )}
               </div>
 
-              {/* Footer - Action bar */}
-              <div className="bg-card px-6 py-4 border-t border-border flex items-center justify-center gap-12">
-                {/* Message button */}
-                <button
+              {/* Footer - Action bar: le TESSERE (ui/Tessera), le stesse della
+                  scheda del lavoro — erano due cerchi grigi `bg-muted`. */}
+              <div className="bg-card px-6 py-4 border-t border-border flex items-start justify-center gap-12">
+                <Tessera
+                  icona={MessaggiIcon}
+                  etichetta={`Scrivi a ${displayName}`}
+                  didascalia="Messaggio"
                   onClick={handleMessageClick}
-                  className="flex flex-col items-center gap-1.5 group"
-                >
-                  <div className={cn(
-                    "w-12 h-12 rounded-full flex items-center justify-center transition-all",
-                    "bg-muted group-hover:bg-muted/80 group-active:scale-95"
-                  )}>
-                    <MessaggiIcon className={cn("w-6 h-6", primaryColor)} />
-                  </div>
-                  <span className="text-xs text-muted-foreground">Messaggio</span>
-                </button>
-
-                {/* Profile button */}
-                <button
+                />
+                <Tessera
+                  icona={ProfiloIcon}
+                  etichetta={`Profilo di ${displayName}`}
+                  didascalia="Profilo"
                   onClick={handleProfileClick}
-                  className="flex flex-col items-center gap-1.5 group"
-                >
-                  <div className={cn(
-                    "w-12 h-12 rounded-full flex items-center justify-center transition-all",
-                    "bg-muted group-hover:bg-muted/80 group-active:scale-95"
-                  )}>
-                    <ProfiloIcon className={cn("w-6 h-6", primaryColor)} />
-                  </div>
-                  <span className="text-xs text-muted-foreground">Profilo</span>
-                </button>
+                />
               </div>
             </div>
             {/* Il click fuori lo gestisce il contenitore qui sopra: il vecchio

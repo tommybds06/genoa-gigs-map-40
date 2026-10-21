@@ -1,15 +1,22 @@
 import { CSSProperties } from "react";
 import { cn } from "@/lib/utils";
 import { useAppTheme } from "@/hooks/useAppTheme";
-import { PUNTINE } from "@/components/icons/puntine";
+import { PUNTINE, PUNTE_PUNTINE } from "@/components/icons/puntine";
 import { EuroIcon, OrologioIcon } from "@/components/icons/uiIcons";
 import {
   Cartellino,
   GIORNI,
   avvisoScadenza,
+  formatData,
   formatPaga,
+  modoGiorni,
   varieta,
 } from "@/lib/bacheca";
+import { FORO_Y, SPAZIO_SOPRA } from "@/lib/formaCartellino";
+import { SagomaCartellino } from "./SagomaCartellino";
+
+/** Larghezza della puntina: la stessa di prima. */
+const PUNTINA_PX = 21;
 
 /**
  * La fila dei giorni: lo SCHEMA settimanale, non un calendario. Vale uguale
@@ -75,12 +82,21 @@ interface CartellinoCardProps {
  * poi o l'avviso di scadenza (che ha la precedenza, e' l'unica cosa che
  * chiede di fare qualcosa) o i giorni.
  *
- * ⚠️ La puntina sta FUORI dalla card mascherata: la maschera la taglierebbe.
+ * FORMA: cartellino da pacco — angoli in alto smussati, foro con anello di
+ * rinforzo in alto al centro (vedi lib/formaCartellino.ts). La sagoma è
+ * disegnata sotto al contenuto, che parte a 44 px per lasciare libero
+ * l'anello.
+ *
+ * PUNTINA: l'ago entra esattamente nel centro del foro. Le coordinate della
+ * punta di ogni disegno sono misurate (PUNTE_PUNTINE), quindi la puntina si
+ * posiziona da lì; la testa resta a cavallo del bordo alto.
  */
 export function CartellinoCard({ c, onClick }: CartellinoCardProps) {
   const { isEmployer } = useAppTheme();
   const v = varieta(c.id);
   const Puntina = PUNTINE[v.puntina];
+  const punta = PUNTE_PUNTINE[v.puntina];
+  const scala = PUNTINA_PX / punta.larghezza;
   const paga = formatPaga(c.pagaImporto, c.pagaUnita);
   const avviso = c.stato !== "concluso" ? avvisoScadenza(c.dataFine) : null;
 
@@ -94,20 +110,36 @@ export function CartellinoCard({ c, onClick }: CartellinoCardProps) {
     >
       {/* Testa nel colore del ruolo, ago in inchiostro (vedi puntine.tsx).
           Provati a 390px: arancio pastello e employer-700 reggono. */}
+      <SagomaCartellino seme={c.id} variante="piena" />
+
       <Puntina
         className={cn(
-          "absolute -top-[13px] z-10 h-auto w-[21px] drop-shadow-[0_1px_0_hsl(var(--ink)/0.15)]",
+          "absolute z-10 h-auto drop-shadow-[0_1px_0_hsl(var(--ink)/0.15)]",
           isEmployer ? "text-employer-700" : "text-primary"
         )}
-        style={{ left: `calc(50% + ${v.spostamento}% - 10px)` }}
+        style={{
+          width: PUNTINA_PX,
+          left: `calc(50% - ${(punta.x * scala).toFixed(2)}px)`,
+          top: FORO_Y - punta.y * scala,
+        }}
       />
 
-      {/* `pb-4`: il margine tagliato a mano entra di qualche pixel nel
-          cartellino, e con il solo p-2.5 l'ultima riga toccava il bordo. */}
-      <div className="material-card flex h-full w-full flex-col p-2.5 pb-4">
-        <div className="sagoma-foto relative aspect-[4/3] w-full shrink-0 overflow-hidden bg-paper-sunken">
+      {/* `pb-4`: il bordo irregolare entra di qualche pixel, e con meno
+          l'ultima riga lo toccava. Sopra, lo spazio dell'anello. */}
+      <div
+        className="relative flex h-full w-full flex-col px-2.5 pb-4"
+        style={{ paddingTop: SPAZIO_SOPRA }}
+      >
+        {/* ⚠️ La foto PRENDE LO SPAZIO CHE RESTA (`flex-1 min-h-0`), non ha
+            più una proporzione sua. Con 44 px sopra per l'anello e la card a
+            proporzione fissa, una foto 4:3 non lasciava posto ai testi, e il
+            flexbox schiacciava nome e mestiere fino a farli sparire. Ora i
+            testi sono `shrink-0` e la foto si adatta: ~137×70 a 360 px di
+            schermo, ~152×90 a 390. `object-[center_30%]`: i volti stanno di
+            solito nella metà alta, un taglio centrato li decapiterebbe. */}
+        <div className="sagoma-foto relative min-h-0 w-full flex-1 overflow-hidden bg-paper-sunken">
           {c.foto ? (
-            <img src={c.foto} alt="" className="h-full w-full object-cover" loading="lazy" />
+            <img src={c.foto} alt="" className="h-full w-full object-cover object-[center_30%]" loading="lazy" />
           ) : (
             <Iniziali nome={c.nome} className="text-3xl" />
           )}
@@ -122,10 +154,10 @@ export function CartellinoCard({ c, onClick }: CartellinoCardProps) {
           )}
         </div>
 
-        <p className="titolo-mini mt-2 truncate">{c.nome}</p>
-        <p className="truncate text-[12px] leading-tight text-muted-foreground">{c.mestiere}</p>
+        <p className="titolo-mini mt-2 shrink-0 truncate">{c.nome}</p>
+        <p className="shrink-0 truncate text-[12px] leading-tight text-muted-foreground">{c.mestiere}</p>
 
-        <div className="mt-auto space-y-1.5 pt-1.5">
+        <div className="shrink-0 space-y-1.5 pt-1.5">
           <div className="flex min-w-0 items-center gap-1 text-[13px]">
             <EuroIcon className="h-3.5 w-3.5 shrink-0 text-ink-soft" />
             {paga ? (
@@ -137,23 +169,31 @@ export function CartellinoCard({ c, onClick }: CartellinoCardProps) {
             )}
           </div>
 
-          {avviso ? (
-            <p
-              className={cn(
-                "truncate text-[12px] font-medium",
-                avviso.urgente ? "text-danger" : "text-warning"
-              )}
-            >
-              {avviso.testo}
-            </p>
-          ) : c.giorni && c.giorni.length > 0 ? (
-            <FilaGiorni giorni={c.giorni} />
-          ) : c.orari ? (
-            <div className="flex min-w-0 items-center gap-1 text-[12px] text-muted-foreground">
-              <OrologioIcon className="h-3.5 w-3.5 shrink-0" />
-              <span className="truncate">{c.orari}</span>
-            </div>
-          ) : null}
+          {/* Altezza FISSA anche quando è vuota: la foto prende lo spazio che
+              resta, e senza questo le foto di due card vicine avrebbero
+              altezze diverse a seconda che qui ci siano giorni, orari o
+              l'avviso. */}
+          <div className="flex h-4 min-w-0 items-center">
+            {avviso ? (
+              <p
+                className={cn(
+                  "truncate text-[12px] font-medium",
+                  avviso.urgente ? "text-danger" : "text-warning"
+                )}
+              >
+                {avviso.testo}
+              </p>
+            ) : modoGiorni(c.giorni, c.dataInizio, c.dataFine) === "uno" ? (
+              <p className="truncate text-[12px] text-muted-foreground">Il {formatData(c.dataInizio)}</p>
+            ) : c.giorni && c.giorni.length > 0 ? (
+              <FilaGiorni giorni={c.giorni} />
+            ) : c.orari || modoGiorni(c.giorni, c.dataInizio, c.dataFine) === "variabili" ? (
+              <div className="flex min-w-0 items-center gap-1 text-[12px] text-muted-foreground">
+                <OrologioIcon className="h-3.5 w-3.5 shrink-0" />
+                <span className="truncate">{c.orari || "Turni variabili"}</span>
+              </div>
+            ) : null}
+          </div>
         </div>
       </div>
     </button>

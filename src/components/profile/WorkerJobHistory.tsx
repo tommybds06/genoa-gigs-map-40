@@ -1,8 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
+import { useCuoriWorker } from '@/hooks/useCuoriWorker';
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Loader2, ChevronDown } from "lucide-react";
-import { CalendarioIcon, AnnunciIcon, StoricoLavoriIcon } from "@/components/icons/uiIcons";
+import { CalendarioIcon, AnnunciIcon, StoricoLavoriIcon, CuoreIcon } from "@/components/icons/uiIcons";
 import { GenericoIcon } from "@/components/icons/roleIcons";
 import { useNavigate } from "react-router-dom";
 import {
@@ -113,6 +114,7 @@ export const WorkerJobHistory = ({ primaryTextClasses }: WorkerJobHistoryProps) 
   const { user } = useAuth();
   const navigate = useNavigate();
 
+  const { data: cuori } = useCuoriWorker(user?.id);
   const { data: jobs = [], isLoading: loading } = useQuery({
     queryKey: ['worker-job-history', user?.id],
     queryFn: () => caricaStorico(user!.id),
@@ -158,7 +160,17 @@ export const WorkerJobHistory = ({ primaryTextClasses }: WorkerJobHistoryProps) 
                     className="bg-muted/50 rounded-xl p-3 cursor-pointer hover:bg-muted transition-colors"
                     onClick={() => job.employer?.id && navigate(`/profile/${job.employer.id}`)}
                   >
-                    <h4 className="font-medium text-sm">{job.job?.title || job.job_title || 'Lavoro'}</h4>
+                    <div className="flex items-start justify-between gap-2">
+                      <h4 className="font-medium text-sm">{job.job?.title || job.job_title || 'Lavoro'}</h4>
+                      {/* Il cuore dell'attività, se l'ha lasciato. Senza cuore
+                          non si mostra niente: non è un voto negativo. */}
+                      {cuori?.has(job.id) && (
+                        <span className="flex shrink-0 items-center gap-1 text-xs font-medium text-primary-strong">
+                          <CuoreIcon className="h-4 w-4" aria-hidden="true" />
+                          <span className="sr-only">Cuore dall'attività</span>
+                        </span>
+                      )}
+                    </div>
                     
                     <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
                       <AnnunciIcon className="w-3.5 h-3.5" />

@@ -23,13 +23,15 @@ import {
   Camera,
   ChevronRight
 } from "lucide-react";
-import { CalendarioIcon, IndietroIcon, StellaIcon, StellaVuotaIcon, MezzaStellaIcon, DocumentoIcon, FotoIcon, AnnunciAttiviIcon, MappaIcon, StoricoLavoriIcon, AnnunciVuotaIcon } from "@/components/icons/uiIcons";
+import { CalendarioIcon, IndietroIcon, StellaIcon, StellaVuotaIcon, MezzaStellaIcon, DocumentoIcon, FotoIcon, AnnunciAttiviIcon, MappaIcon, StoricoLavoriIcon, AnnunciVuotaIcon, CuoreIcon } from "@/components/icons/uiIcons";
+import { useCuoriWorker } from "@/hooks/useCuoriWorker";
 import { GenericoIcon } from "@/components/icons/roleIcons";
 import { useAppTheme } from "@/hooks/useAppTheme";
 import { useUser } from "@/contexts/UserContext";
 import { getJobIconFromTags } from "@/lib/jobIcons";
 import { formatTempoTrascorso } from "@/lib/dates";
 import { getRoleTag } from "@/constants/tags";
+import { TesseraIndietro } from "@/components/ui/Tessera";
 
 // Tag durata usati prima della rinomina, ancora presenti su annunci vecchi
 
@@ -86,6 +88,7 @@ function formatDate(dateString: string): string {
 
 const PublicProfile = () => {
   const { userId } = useParams<{ userId: string }>();
+  const { data: cuori } = useCuoriWorker(userId);
   const navigate = useNavigate();
   const { theme } = useAppTheme();
   const { isEmployer } = useUser();
@@ -288,22 +291,16 @@ const PublicProfile = () => {
       <main className="flex-1 pb-20 overflow-y-auto">
         {/* Back Button */}
         <div className="px-4 py-2">
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={() => navigate(-1)}
-            className={`rounded-full ${isEmployer ? 'bg-employer-50 text-employer hover:bg-employer-100' : 'bg-accent text-primary hover:bg-accent/80'}`}
-          >
-            <IndietroIcon className="w-4 h-4 mr-2" />
-            Indietro
-          </Button>
+          <TesseraIndietro onClick={() => navigate(-1)} />
         </div>
 
         {/* Profile Header - CV Style */}
         <div className="px-4 pb-6">
           {/* Avatar - Large, Circular, Centered */}
           <div className="flex justify-center mb-4">
-            <Avatar className="w-32 h-32 border-4 border-background shadow-lg">
+            {/* Cerchio imperfetto (ui/avatar): via il bordo bianco e l'ombra,
+                che il ritaglio taglierebbe a tratti. */}
+            <Avatar seme={userId} className="w-32 h-32">
               <AvatarImage src={avatarUrl || undefined} alt={displayName} className="object-cover" />
               <AvatarFallback className={`${isWorkerProfile ? 'bg-accent text-primary' : 'bg-employer-50 text-employer'} text-4xl font-bold`}>
                 {initials}
@@ -472,11 +469,19 @@ const PublicProfile = () => {
                               </span>
                             </div>
                           </div>
-                          <div className="shrink-0">
+                          <div className="flex shrink-0 flex-col items-end gap-1.5">
                             <Badge variant="outline" className="bg-accent text-primary border-primary/30 text-xs">
                               <CheckCircle2 className="w-3 h-3 mr-1" />
                               Concluso
                             </Badge>
+                            {/* Il cuore dell'attività: pubblico, è la reputazione
+                                del worker. Senza cuore non si mostra niente. */}
+                            {cuori?.has(job.applicationId) && (
+                              <span className="flex items-center gap-1 text-xs font-medium text-primary-strong">
+                                <CuoreIcon className="h-4 w-4" aria-hidden="true" />
+                                Cuore
+                              </span>
+                            )}
                           </div>
                         </div>
                       );

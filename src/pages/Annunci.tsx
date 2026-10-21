@@ -5,7 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useAppTheme } from '@/hooks/useAppTheme';
 import { supabase } from '@/integrations/supabase/client';
 import { Briefcase, Users, ChevronRight, ArrowLeft, Loader2, Plus, Pencil, Trash2, Check, X } from 'lucide-react';
-import { IndietroIcon, PennaIcon, BidoneIcon, XIcon, AnnunciVuotaIcon } from '@/components/icons/uiIcons';
+import { PennaIcon, BidoneIcon, XIcon, AnnunciVuotaIcon } from '@/components/icons/uiIcons';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -16,6 +16,7 @@ import { EditJobDialog } from '@/components/jobs/EditJobDialog';
 import { DeleteJobDialog } from '@/components/jobs/DeleteJobDialog';
 import { SwipeNavigator } from '@/components/layout/SwipeNavigator';
 import { formatTempoTrascorso } from "@/lib/dates";
+import { TesseraIndietro } from "@/components/ui/Tessera";
 
 interface Job {
   id: string;
@@ -283,14 +284,7 @@ const Annunci = () => {
         <main className="flex-1 px-4 pb-4 overflow-y-auto">
           {/* Back button and job title */}
           <div className="flex items-center gap-3 mb-4">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleBack}
-              className="rounded-full bg-employer-50 text-employer hover:bg-employer-100 touch-feedback"
-            >
-              <IndietroIcon className="h-5 w-5" />
-            </Button>
+            <TesseraIndietro onClick={handleBack} />
             <div>
               <h2 className="text-lg font-semibold">{selectedJob.title}</h2>
               <p className="text-sm text-muted-foreground">Candidature ricevute</p>
@@ -317,7 +311,7 @@ const Annunci = () => {
                     className="flex items-center gap-4 cursor-pointer touch-feedback"
                     onClick={() => navigate(`/profile/${app.applicant.id}`)}
                   >
-                    <Avatar className="h-14 w-14 border-2 border-employer/20">
+                    <Avatar seme={app.applicant.id} className="h-14 w-14">
                       <AvatarImage src={app.applicant.avatar_url || undefined} />
                       <AvatarFallback className={`${theme.accentBg} ${theme.primaryText} font-semibold`}>
                         {(app.applicant.full_name || 'U')[0].toUpperCase()}

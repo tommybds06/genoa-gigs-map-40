@@ -35,6 +35,14 @@ export interface Cartellino {
   tags: string[];
   /** Il testo libero della paga sull'annuncio: ripiego se gli accordi sono vuoti. */
   pagaAnnuncio: string | null;
+  /** Giorno dell'assunzione (da qui si contano i 3 mesi). Nascosto in interfaccia. */
+  assuntoIl: string | null;
+  /** Ultima risposta «è ancora attivo» al controllo trimestrale. Nascosto. */
+  ultimoControllo: string | null;
+  /** Il cuore dell'employer: true / false (saltato) / null (non ancora chiesto). */
+  cuore: boolean | null;
+  /** Quando ha risposto o saltato la card del cuore. */
+  esitoIl: string | null;
 }
 
 export const STATO_DA_CANDIDATURA: Record<string, StatoCartellino | undefined> = {
@@ -189,8 +197,8 @@ export function varieta(id: string) {
   return {
     puntina: h % 3,
     gradi: INCLINAZIONI[h % INCLINAZIONI.length],
-    /** Spostamento orizzontale della puntina, in % dal centro. */
-    spostamento: ((h >> 3) % 21) - 10,
+    // Niente più spostamento orizzontale della puntina: ora entra nel foro,
+    // che sta sempre al centro (lib/formaCartellino.ts).
   };
 }
 
@@ -304,8 +312,177 @@ export async function salvaAccordi(id: string, a: Partial<Accordi>) {
   if ("dataFine" in a) riga.data_fine = a.dataFine;
   if ("pagaImporto" in a) riga.paga_importo = a.pagaImporto;
   if ("pagaUnita" in a) riga.paga_unita = a.pagaUnita;
-  if ("giorni" in a) riga.giorni = a.giorni && a.giorni.length > 0 ? a.giorni : null;
+  // ⚠️ L'array VUOTO è un valore, non «niente»: vuol dire turni variabili
+  // (vedi `modoGiorni`). Si passa così com'è; NULL = giorni non fissati.
+  if ("giorni" in a) riga.giorni = a.giorni;
   if ("orari" in a) riga.orari = a.orari?.trim() ? a.orari.trim() : null;
   const { error } = await supabase.from("cartellini").update(riga).eq("id", id);
   if (error) throw error;
 }
+
+// ---------------------------------------------------------------------------
+// LATO WORKER — la sua bacheca dei lavori in cui è stato preso.
+// ---------------------------------------------------------------------------
+
+export type StatoLavoro = "prova" | "assunto" | "finito" | "da-recensire" | "concluso";
+
+/**
+ * Lo stato che vede il worker, letto SOLO da dati che esistono già — nessuna
+ * colonna nuova:
+ *
+ *   - candidatura `accepted` (+ cartellino appeso) → In prova
+ *   - candidatura `hired`                          → Assunto
+ *   - uno dei due, ma la `data_fine` del cartellino è passata → Finito
+ *     (i giorni previsti sono finiti, l'employer non ha ancora concluso)
+ *   - `completed` senza recensione                 → Da recensire
+ *   - `completed` con recensione                   → Concluso
+ *
+ * ⚠️ «Recensito» = esiste una riga in `reviews` per quel lavoro e quel worker,
+ * NON `applications.is_reviewed`: quel campo ReviewPrompt lo mette a true
+ * anche quando la finestra viene chiusa o saltata senza recensire. Usarlo
+ * avrebbe mostrato «Concluso» a chi non ha mai recensito, togliendogli la
+ * possibilità di farlo da qui.
+ */
+export function statoLavoro(
+  statoCandidatura: string | null | undefined,
+  recensito: boolean,
+  dataFine: string | null
+): StatoLavoro | null {
+  if (statoCandidatura === "completed") return recensito ? "concluso" : "da-recensire";
+  if (statoCandidatura === "accepted" || statoCandidatura === "hired") {
+    if (dataFine && giorniA(dataFine) < 0) return "finito";
+    return statoCandidatura === "hired" ? "assunto" : "prova";
+  }
+  return null;
+}
+
+/**
+ * «Quanto manca alla fine», per il worker: sempre, non solo nell'ultima
+ * settimana come sul cartellino dell'employer — qui è l'informazione della
+ * card, non un avviso.
+ */
+export function quantoManca(dataFine: string | null): string {
+  if (!dataFine) return "Nessuna data di fine";
+  const n = giorniA(dataFine);
+  if (n < 0) return `Finito il ${formatData(dataFine)}`;
+  if (n === 0) return "Finisce oggi";
+  if (n === 1) return "Finisce domani";
+  return `Finisce tra ${n} giorni`;
+}
+
+// ---------------------------------------------------------------------------
+// IL FLUSSO DELL'ASSUNZIONE (21 ottobre) — vedi la migration
+// `20261021120000_assunzione_cuore.sql` per le regole complete.
+// ---------------------------------------------------------------------------
+
+/** Giorni pieni concessi all'employer dopo la data di fine, prima della chiusura automatica. */
+export const GIORNI_PER_DECIDERE = 5;
+
+/**
+ * Il giorno in cui un lavoro assunto si chiude da solo se l'employer non
+ * sceglie: fine 10 → domanda l'11 → chiusura il 16. La chiusura vera la fa
+ * il server (pg_cron, `chiudi_lavori_scaduti`): qui si calcola solo per dirlo.
+ */
+export function chiusuraAutomatica(dataFine: string): string {
+  return aISO(new Date(daISO(dataFine).getTime() + (GIORNI_PER_DECIDERE + 1) * 86_400_000));
+}
+
+/** «si chiude da solo domani / il 16 ott» — per il promemoria. */
+export function testoChiusuraAutomatica(dataFine: string): string {
+  const quando = chiusuraAutomatica(dataFine);
+  const n = giorniA(quando);
+  if (n <= 0) return "Si chiude da solo oggi";
+  if (n === 1) return "Se non scegli, si chiude da solo domani";
+  return `Se non scegli, si chiude da solo il ${formatData(quando)}`;
+}
+
+/**
+ * CONTROLLO TRIMESTRALE — solo per i lavori assunti SENZA data di fine.
+ * Ogni 3 mesi dalla data di assunzione l'app chiede se il lavoro è ancora
+ * attivo. Restituisce la scadenza del trimestre da confermare, o null se non
+ * c'è niente da chiedere. Senza risposta NON si chiude mai da solo: un
+ * lavoro può durare più di tre mesi (Tommaso).
+ */
+export function controlloDovuto(c: Pick<Cartellino, "stato" | "dataFine" | "assuntoIl" | "ultimoControllo">): string | null {
+  if (c.stato !== "assunto" || c.dataFine || !c.assuntoIl) return null;
+  const oggi = oggiISO();
+  let ultimaScadenza: string | null = null;
+  for (let mesi = 3; mesi < 1200; mesi += 3) {
+    const d = daISO(c.assuntoIl);
+    d.setMonth(d.getMonth() + mesi);
+    const scadenza = aISO(d);
+    if (scadenza > oggi) break;
+    ultimaScadenza = scadenza;
+  }
+  if (!ultimaScadenza) return null;
+  return c.ultimoControllo && c.ultimoControllo >= ultimaScadenza ? null : ultimaScadenza;
+}
+
+/** «Sì, è ancora attivo»: la domanda torna fra tre mesi. */
+export async function confermaAncoraAttivo(id: string) {
+  const { error } = await supabase.from("cartellini").update({ ultimo_controllo: oggiISO() }).eq("id", id);
+  if (error) throw error;
+}
+
+/** La card del cuore, a lavoro concluso: true = cuore, false = salta. */
+export async function segnaEsito(id: string, cuore: boolean) {
+  const { error } = await supabase
+    .from("cartellini")
+    .update({ cuore, esito_il: new Date().toISOString() })
+    .eq("id", id);
+  if (error) throw error;
+}
+
+/** Chiede da conclusi: ha ancora la card del cuore da mostrare? */
+export function cuoreDaChiedere(c: Pick<Cartellino, "stato" | "esitoIl">): boolean {
+  return c.stato === "concluso" && !c.esitoIl;
+}
+
+/** Le candidature di un worker con il cuore — pubblico (funzione SQL `cuori_del_worker`). */
+export async function cuoriDelWorker(workerId: string): Promise<Set<string>> {
+  const { data, error } = await supabase.rpc("cuori_del_worker", { p_worker: workerId });
+  if (error) throw error;
+  return new Set((data as string[] | null) ?? []);
+}
+
+export type TipoPromemoria = "scadenza" | "cuore" | "trimestrale";
+
+/**
+ * Cosa chiedere adesso, UNA cosa alla volta, in quest'ordine:
+ *   1. SCADENZA — data di fine passata: estendi o concludi. Per gli assunti
+ *      c'è il conto alla rovescia: dopo 5 giorni pieni si chiude da solo
+ *      (lo fa il server, `chiudi_lavori_scaduti` via pg_cron).
+ *   2. CUORE — lavoro concluso: «è stato soddisfacente?» ♥ o niente.
+ *   3. TRIMESTRALE — senza data di fine, ogni 3 mesi dall'assunzione:
+ *      «è ancora attivo?». Senza risposta non si chiude da solo.
+ */
+export function prossimoPromemoria(cartellini: Cartellino[], saltati: Set<string>) {
+  const libero = (c: Cartellino, tipo: TipoPromemoria) => !saltati.has(`${tipo}:${c.id}`);
+  const scaduto = cartellini.find((c) => eScaduto(c) && libero(c, "scadenza"));
+  if (scaduto) return { tipo: "scadenza" as const, c: scaduto };
+  const cuore = cartellini.find((c) => cuoreDaChiedere(c) && libero(c, "cuore"));
+  if (cuore) return { tipo: "cuore" as const, c: cuore };
+  const trimestrale = cartellini.find((c) => !!controlloDovuto(c) && libero(c, "trimestrale"));
+  if (trimestrale) return { tipo: "trimestrale" as const, c: trimestrale };
+  return null;
+}
+
+// ---------------------------------------------------------------------------
+// I MODI DEI GIORNI (Tommaso, 21 ottobre) — senza colonne nuove:
+//   fissi     → `giorni` con i giorni della settimana (o NULL: non ancora fissati)
+//   variabili → `giorni` = [] (array VUOTO, diverso da NULL): turni variabili
+//   uno       → data d'inizio = data di fine: un giorno solo
+// ---------------------------------------------------------------------------
+
+export type ModoGiorni = "fissi" | "variabili" | "uno";
+
+export function modoGiorni(
+  giorni: number[] | null,
+  dataInizio: string | null,
+  dataFine: string | null
+): ModoGiorni {
+  if (dataInizio && dataFine && dataInizio === dataFine) return "uno";
+  if (Array.isArray(giorni) && giorni.length === 0) return "variabili";
+  return "fissi";
+}
+

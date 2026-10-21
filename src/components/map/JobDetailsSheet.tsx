@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   Drawer,
@@ -53,15 +53,26 @@ interface JobDetailsSheetProps {
 /**
  * ALTEZZA DI RIPOSO della scheda — quanto se ne vede appena tocchi un pin.
  *
- * Non è un numero a caso: deve contenere tutto il blocco di testa, bottone
- * «Candidati» incluso, se no l'azione principale resterebbe sotto la piega.
- * Conto sul caso peggiore realistico, a 390px di larghezza:
- *   maniglia 24 + titolo su due righe 62 + paga 38 + orario 33 + chip 47 +
- *   bottone (12+56+12) 80  =  284
- * I 36px di margine fanno vedere la divisoria e l'inizio della riga employer,
- * che è l'indizio che sotto c'è dell'altro.
+ * Esattamente il blocco di testa, bottone «Candidati» e il suo spazio sotto
+ * compresi — e NIENTE di quello che segue: Tommaso, 21 ottobre: «nell'anteprima
+ * non si deve intravedere l'employer». Lo spazio sotto il bottone sta quindi
+ * DENTRO la testa (`pb-` del blocco azione, safe area compresa), non è un
+ * margine aggiunto qui. Si MISURA, non si stima: la testa cambia con il
+ * titolo (una o due righe), la paga, l'orario e i tag.
+ *
+ * ⚠️ Era fissa a 320px, contata sul caso peggiore — e il bottone toccava il
+ * bordo anche col titolo su UNA riga. Perché vaul trasla la scheda di
+ * `finestra − aggancio`, ma la scheda è alta 92vh, non 100: quindi se ne vede
+ * `aggancio − 8vh`, cioè 320 − 68 = 252px su un 844. Il conto va fatto
+ * aggiungendo quegli 8vh, ed è `altezzaAggancio` qui sotto.
  */
-const ALTEZZA_MINIMA = "320px";
+const ALTEZZA_SCHEDA = 0.92;
+const RISERVA_PRIMA_DELLA_MISURA = 300;
+
+function altezzaAggancio(visibile: number) {
+  // Per difetto: un pixel in meno di spazio vuoto, mai un pixel di divisoria.
+  return `${Math.floor(visibile + window.innerHeight * (1 - ALTEZZA_SCHEDA))}px`;
+}
 
 /**
  * SCHEDA ANNUNCIO — la gerarchia.
@@ -85,7 +96,7 @@ const ALTEZZA_MINIMA = "320px";
  *
  * ⚠️ DUE ALTEZZE, non una. Prima era `h-[90vh]` fissa con il footer in
  * `absolute`: un annuncio da tre righe occupava comunque il 90% dello schermo,
- * con ~350px di vuoto in fondo. Ora si apre bassa (vedi `ALTEZZA_MINIMA`) e si
+ * con ~350px di vuoto in fondo. Ora si apre bassa (vedi `altezzaAggancio`) e si
  * trascina in su — così ha anche preso il posto della nuvoletta sulla mappa,
  * che mostrava un sottoinsieme di queste stesse cose a un tocco di distanza.
  */
@@ -105,12 +116,33 @@ export function JobDetailsSheet({ job, isOpen, onClose, showMiniMap = false }: J
      interno vive nella Root, che qui non si smonta mai: chi aprisse la scheda,
      la trascinasse in alto e la chiudesse, la ritroverebbe gia' aperta tutta
      al giro dopo. Lo rimettiamo basso a ogni chiusura. */
-  const [aggancio, setAggancio] = useState<number | string | null>(ALTEZZA_MINIMA);
+  const [alta, setAlta] = useState(false);
   const eraAperta = useRef(false);
   useEffect(() => {
-    if (!isOpen && eraAperta.current) setAggancio(ALTEZZA_MINIMA);
+    if (!isOpen && eraAperta.current) setAlta(false);
     eraAperta.current = isOpen;
   }, [isOpen]);
+
+  /* La testa vive nel portal del drawer, che esiste solo a scheda aperta:
+     per questo un ref a callback e non `useMisure` (che misura al montaggio
+     del componente, quando qui il nodo non c'è ancora). `offsetTop` è
+     relativo a DrawerContent (fixed) e, come `offsetHeight`, ignora la
+     traslazione di vaul. */
+  const [fondoTesta, setFondoTesta] = useState<number | null>(null);
+  const osservatoreTesta = useRef<ResizeObserver | null>(null);
+  const refTesta = useCallback((el: HTMLDivElement | null) => {
+    osservatoreTesta.current?.disconnect();
+    osservatoreTesta.current = null;
+    if (!el) return;
+    const leggi = () => setFondoTesta(el.offsetTop + el.offsetHeight);
+    leggi();
+    osservatoreTesta.current = new ResizeObserver(leggi);
+    osservatoreTesta.current.observe(el);
+  }, []);
+  const agganci = [
+    altezzaAggancio(fondoTesta ?? RISERVA_PRIMA_DELLA_MISURA),
+    ALTEZZA_SCHEDA,
+  ];
 
   // Check if worker has already applied when drawer opens
   useEffect(() => {
@@ -220,16 +252,16 @@ export function JobDetailsSheet({ job, isOpen, onClose, showMiniMap = false }: J
          deve essere alta quanto l'aggancio più alto — da qui `h-[92vh]` sul
          contenuto, che con i punti di aggancio non è più un problema (l'altezza
          in eccesso sta sotto la piega, non a schermo). */
-      snapPoints={[ALTEZZA_MINIMA, 0.92]}
-      activeSnapPoint={aggancio}
-      setActiveSnapPoint={setAggancio}
+      snapPoints={agganci}
+      activeSnapPoint={alta ? agganci[1] : agganci[0]}
+      setActiveSnapPoint={(p) => setAlta(p === ALTEZZA_SCHEDA)}
     >
       <DrawerContent className="h-[92vh]">
         <div className="flex flex-col h-full min-h-0">
           {/* ---- TESTA: quello che si vede senza trascinare ----
                  Non scorre. Il titolo resta agganciato in alto anche a scheda
                  aperta tutta, che è il comportamento di Apple Maps. */}
-          <div className="shrink-0 px-4 pt-1">
+          <div ref={refTesta} className="shrink-0 px-4 pt-1">
             {/* ⚠️ `p-0` perché DrawerHeader porta `p-4` suo e qui l'inset lo
                    mette il contenitore: sommandoli si finiva a 40px da
                    sinistra, fuori dalla griglia a 16 del resto dell'app. */}
@@ -293,7 +325,7 @@ export function JobDetailsSheet({ job, isOpen, onClose, showMiniMap = false }: J
                 `size="lg"` invece di `h-14 rounded-xl shadow-material-md`
                 scritto a mano: è la size che accende la sagoma disegnata (vedi
                 compoundVariants in ui/button.tsx). */}
-            <div className="pt-3 pb-3">
+            <div className="pt-3 pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
               {isEmployer ? (
                 <div className="flex items-center justify-center gap-2 py-3 text-muted-foreground">
                   <InfoIcon className="w-[18px] h-[18px] shrink-0" />
@@ -344,7 +376,7 @@ export function JobDetailsSheet({ job, isOpen, onClose, showMiniMap = false }: J
               onClick={handleEmployerClick}
               className="linea-divisoria-sopra w-full flex items-center gap-3 py-3 text-left transition-colors active:bg-accent/40"
             >
-              <Avatar className="w-11 h-11 shrink-0 border border-paper-line">
+              <Avatar seme={job.owner_id || employerName} className="w-11 h-11 shrink-0">
                 <AvatarImage src={employerAvatar || undefined} alt={employerName} />
                 <AvatarFallback className={cn(theme.accentBg, theme.accentText, "text-base")}>
                   {employerInitials}

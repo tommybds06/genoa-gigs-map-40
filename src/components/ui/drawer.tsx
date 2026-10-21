@@ -2,6 +2,8 @@ import * as React from "react";
 import { Drawer as DrawerPrimitive } from "vaul";
 
 import { cn } from "@/lib/utils";
+import { SagomaScheda } from "@/components/ui/SagomaScheda";
+import { TESTA_SCHEDA } from "@/lib/formaScheda";
 
 const Drawer = ({ shouldScaleBackground = true, ...props }: React.ComponentProps<typeof DrawerPrimitive.Root>) => (
   <DrawerPrimitive.Root shouldScaleBackground={shouldScaleBackground} {...props} />
@@ -24,10 +26,13 @@ DrawerOverlay.displayName = DrawerPrimitive.Overlay.displayName;
 
 const DrawerContent = React.forwardRef<
   React.ElementRef<typeof DrawerPrimitive.Content>,
-  React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Content>
->(({ className, children, ...props }, ref) => (
+  React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Content> & {
+    /** Per alzare anche l'overlay, es. `z-[70]` sopra la chat aperta (che è z-[60]). */
+    overlayClassName?: string;
+  }
+>(({ className, children, overlayClassName, ...props }, ref) => (
   <DrawerPortal>
-    <DrawerOverlay />
+    <DrawerOverlay className={overlayClassName} />
     <DrawerPrimitive.Content
       ref={ref}
       className={cn(
@@ -36,12 +41,19 @@ const DrawerContent = React.forwardRef<
         // anello di focus — su Chrome un rettangolo azzurro attorno a tutta la
         // scheda. Non è un bordo nostro, è l'outline di sistema: si vedeva
         // aprendo l'anteprima annuncio.
-        "fixed inset-x-0 bottom-0 z-50 mt-24 flex h-auto flex-col rounded-t-[10px] border bg-background outline-none focus:outline-none focus-visible:outline-none",
+        //
+        // ⚠️ Niente `border`, `rounded-t-*` né `bg-background`: la carta, il
+        // bordo a mano e la fessura li disegna `SagomaScheda`. Il fondo resta
+        // trasparente, se no la fessura non sarebbe un buco.
+        "fixed inset-x-0 bottom-0 z-50 mt-24 flex h-auto flex-col bg-transparent outline-none focus:outline-none focus-visible:outline-none",
         className,
       )}
       {...props}
     >
-      <div className="mx-auto mt-4 h-2 w-[100px] rounded-full bg-muted" />
+      <SagomaScheda />
+      {/* Il posto della fessura (la vecchia maniglia grigia): si trascina da
+          qui come prima, perché l'elemento c'è — è solo il disegno a essere vuoto. */}
+      <div aria-hidden="true" className="shrink-0" style={{ height: TESTA_SCHEDA }} />
       {children}
     </DrawerPrimitive.Content>
   </DrawerPortal>
