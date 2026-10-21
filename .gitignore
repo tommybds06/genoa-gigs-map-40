@@ -27,6 +27,9 @@ dist-ssr
 # brand/_logo/ = prove e anteprime generate
 public/map/
 brand/_logo/
+# supabase/demo/ = annunci e account di ESEMPIO per le presentazioni: mai nel repo.
+# Prima del lancio: supabase/demo/cancella-demo.sql (vedi CLAUDE.md, Da fare).
+supabase/demo/
 
 # Editor directories and files
 .vscode/*

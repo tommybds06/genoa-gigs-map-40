@@ -150,17 +150,21 @@ src/
                   EmployerJobsDrawer, EmployerGroupMarker, LocationMiniMap
     layout/       Header, MainLayout, PageTransition, BottomNav, SwipeNavigator,
                   SplashScreen (§17)
-    bacheca/      Bacheca, CartellinoCard, SchedaCartellino,
-                  AggiungiCartellino, PromemoriaScadenza (§16)
+    bacheca/      employer: Bacheca, CartellinoCard, SchedaCartellino,
+                  AggiungiCartellino, PromemoriaScadenza, SagomaCartellino ·
+                  worker: BachecaWorker, LavoroCard, SagomaNegozio (§16)
     chat/ applications/ jobs/ profile/ onboarding/ reviews/ tags/ skeletons/
     auth/ icons/  ui/ (shadcn)
   hooks/          useAppTheme (dual-theme), useAuth, useChats, useJobs,
-                  useCartellini, useMapboxToken
+                  useCartellini, useLavoriWorker, useMisure, useMapboxToken
   contexts/       UserContext (role: worker | employer) — il profilo dell'utente
                   sta QUI, già in memoria: non rileggerlo nelle pagine (§12)
   lib/            dates.ts, tagColors.ts, percorsoAccesso.ts, jobIcons.ts,
-                  bacheca.ts (azioni e regole della bacheca, §16)
+                  bacheca.ts (azioni e regole della bacheca, §16),
+                  tratto.ts + formaCartellino.ts + formaNegozio.ts (le sagome
+                  calcolate), recensione.ts (aprire la recensione a richiesta)
   integrations/   supabase/ (client, types generati), lovable/ (auto-generato)
+  assets/         politask-logo-animato.json — il Lottie dello splash (§17)
 supabase/
   migrations/     SQL + RLS — le versioni COMMENTATE, scritte da noi
   functions/get-mapbox-token/
@@ -168,7 +172,6 @@ drizzle/
   migrations/     quello che Lovable ha davvero eseguito (§13)
 public/
   images/cornici/ le sagome e i bordi disegnati (§6)
-  splash/         video e fotogrammi dello splash (§17)
   fonts/          shinjo-v1.woff2 / .woff  (§13)
 brand/            audit, specifiche disegni, guide, strumenti HTML
 ```
@@ -331,12 +334,79 @@ niente `rounded-*`, niente ombra.
 griglia della gallery la maschera sta sul div interno e il focus sul bottone
 esterno, se no il bersaglio da tastiera sparisce.
 
-⚠️ **Gli avatar tondi aspettano un disegno** (`sagoma-cerchio.svg`, 120×120,
-spec in `brand/POLITASK-specifiche-disegni.md`): un cerchio **non** si ricava
-dalle sagome esistenti, perché il 9 sezioni tiene gli angoli fissi e stira le
-bande — una pillola stirata in un quadrato resta una pillola. Lì però il 9
-sezioni non serve: un avatar è sempre quadrato, quindi basta `mask-image` con
-`mask-size: 100% 100%` e un file solo copre tutte le misure.
+## Le due forme piccole: il CERCHIO IMPERFETTO e la TESSERA (dal 20 ottobre)
+
+Nate nella scheda del lavoro del worker, piaciute a Tommaso, estese al resto.
+
+**Cerchio imperfetto — TUTTI gli avatar** (`ui/avatar.tsx` →
+`hooks/useCerchioImperfetto` → `lib/formaCerchio.ts`). Un cerchio a mano con
+lo stesso tratto delle sagome della bacheca (vertice ogni ~5,5 px, ±0,5 px;
+lo scarto si riduce sotto i 40 px), calcolato dal diametro vero e applicato
+con `clip-path: path()`. Prop **`seme`** sull'`Avatar`: in una lista ognuno
+il suo (l'id della persona), se no tremolano tutti uguali.
+
+- ⚠️ **Non `.sagoma-foto`**: quella ha angoli da 28 px e su 56 px sembra un
+  cerchio solo perché i quattro angoli si toccano; da 80 px in su diventa un
+  quadrato smussato. Verificato a 16, 44, 56, 80 e 128 px.
+- ⚠️ **Niente `border`, `ring`, `shadow` sugli avatar**: il ritaglio li taglia
+  a tratti. Tolti da Profilo pubblico (bordo bianco + ombra), Annunci, scheda
+  annuncio, drawer dei gruppi, anteprima chat (anello di pressione).
+- Il disegno `sagoma-cerchio.svg` che si aspettava da Tommaso **non serve
+  più**; resta una possibilità se si vuole un tracciato disegnato invece che
+  calcolato.
+
+**Tessera — i contenitori di icone** (`ui/Tessera.tsx`: `Tessera` bottone,
+`TesseraIcona` solo disegno, `TesseraIndietro` la freccia; misure `md` 48 e
+`lg` 56). È `.sagoma-tag` su un quadrato PICCOLO: gli angoli del disegno sono
+da 33 px, su 48–56 non ci stanno (33+33 = 66), il browser li riduce e il
+quadrato diventa un «sasso». ⚠️ Sopra ~66 px compaiono i lati dritti: per
+questo le misure sono solo due.
+
+- ⚠️ **Colori: PIENO CHIARO del ruolo + icona in INCHIOSTRO** (`bg-primary` /
+  `bg-employer` + `text-ink`), come i giorni selezionati nella scheda lavoro.
+  Prima era fondo `accent` con l'icona in `primary-strong` (`#A7531B`):
+  Tommaso ha visto due arancioni nella stessa scheda e ha chiesto «tutto tono
+  worker chiaro». L'arancio chiaro non può stare sull'icona (su accent ~1,6:1,
+  sparisce), quindi va sul fondo. Inchiostro su arancio 6,45, su blu 4,41.
+- **Una sola freccia indietro in tutta l'app**: `TesseraIndietro`, senza
+  scritta. Erano sei diverse (chat, profilo pubblico con «Indietro» a pillola,
+  Impostazioni, Modifica profilo, Crea annuncio, dettaglio Annunci). Resta a
+  parte solo «Torna indietro» nella pagina d'errore del profilo, che è un
+  bottone d'azione, non navigazione.
+- **Invio in chat**: tessera con `InvioIcon` (con `Loader2` +
+  `classeIcona="animate-spin"` durante l'invio), per worker ed employer.
+- **Ruoli in MODIFICA profilo** (`TagSelector` con `roleLayout="grid"`): una
+  tessera da 56 col nome sotto, 4 per riga — al posto dei «rettangolini
+  storti» (la stessa sagoma stirata a ~100×95). Selezionata: pieno chiaro +
+  inchiostro; no: `accent` + `ink-soft`. ⚠️ **In LETTURA i ruoli restano i
+  chip di testo** (`TagBadges`): una prima versione li aveva fatti tessere
+  anche lì, ed era sbagliato — Tommaso voleva la tessera solo in modifica.
+- Altri posti: anteprima profilo in chat (Messaggio/Profilo con didascalia),
+  testa delle schede cartellino e lavoro (Chat/Profilo), ruolo nella scheda
+  lavoro, icona in Impostazioni, icone degli stati vuoti (Lista ×3,
+  Messaggi, bacheca worker). Restano tondi i contatori, i marker della mappa
+  (aspettano il disegno del pin) e la X di chiusura: sono segnali o comandi,
+  non contenitori.
+
+## Le schede dal basso: bordo a mano e FESSURA (dal 21 ottobre)
+
+Ogni `DrawerContent` (scheda annuncio, cartellino, lavoro, gruppo, ricerca…)
+disegna la sua carta con **`ui/SagomaScheda.tsx`** → `lib/formaScheda.ts`:
+bordo in alto e angoli (18 px) con lo stesso tratto delle card
+(`lib/tratto.ts`), e al posto della maniglia grigia una **fessura 56×12
+tagliata nella carta**, come la presa di una scatola di cartone — vuota
+davvero (`evenodd`): ci si vede la mappa sotto. Un'ombra sottile in
+inchiostro sul bordo alto, dentro il buco, la fa leggere come un taglio.
+
+- Il drawer ha `bg-transparent`, niente `border`/`rounded-t`: il disegno sta a
+  `-z-10` dentro DrawerContent (che è `fixed z-50`, quindi fa da contesto).
+- Si trascina dalla fessura come prima: l'elemento c'è, è il disegno a essere
+  vuoto. Lo spazio in testa è `TESTA_SCHEDA` (28 px).
+- ⚠️ Il tremolio spostava i lati fino a 1,1 px dentro lo schermo, e da lì si
+  vedeva la mappa: due fasce piene sui lati (`fasce`) sotto gli angoli.
+- ⚠️ vaul allunga la scheda in basso con un `::after` a `background:
+  inherit`: con la scheda trasparente diventava trasparente anche lui. Regola
+  in fondo a `index.css`, con un attributo in più del selettore di vaul.
 
 ## Il punto che decide tutto: MASCHERA, non bordo
 
@@ -406,6 +476,12 @@ sta nei file e nel token `--paper-edge`, **da tenere in sincrono**.
   da soli: i campi nuovi ereditano tutto senza toccare nulla.
 - `senzaTratto` sull'`Input` toglie il contorno dove l'altezza non è quella
   standard (nessuno lo usa più, ma resta come via d'uscita).
+- **Date → `ui/CampoData.tsx`**, mai `<Input type="date">` nudo. Il calendario
+  «spostato a destra» che si vedeva era l'**indicatore nativo** del browser,
+  non il nostro: `.campo-data::-webkit-calendar-picker-indicator` (in fondo a
+  `index.css`, fuori dai layer) lo rende trasparente ma lo lascia cliccabile,
+  sopra c'è la nostra `CalendarioIcon` a `right-4`, allineata al padding del
+  campo. Su Safari/WebKit l'indicatore nativo non c'è e resta solo la nostra.
 
 ---
 
@@ -435,7 +511,10 @@ Mapbox non arriva.
 
 Aggiunte a ottobre: **`EuroIcon`** (in `uiIcons.tsx`) e le **tre puntine**
 della bacheca in `icons/puntine.tsx` (§16). Le puntine non sono mono: la testa
-è `currentColor`, l'**ago resta in inchiostro**.
+è `currentColor`, l'**ago resta in inchiostro**. Poi **`SalvaIcon`** (il
+dischetto) accanto a ogni «Salva»: Profilo, Modifica profilo, cartellino.
+`CuoreIcon` e `CalendarioIcon` sono già i disegni di Tommaso (confrontati
+con gli SVG che ha mandato il 21 ottobre: identici).
 
 ---
 
@@ -619,10 +698,11 @@ di react-map-gl non lo dichiarano e il typecheck fallisce (successo due volte).
 - ⚠️ **Un tratteggio col ritaglio a 9 sezioni non regge in verticale.** Il
   bordo tratteggiato delle card (360×121) montato su un rettangolo verticale
   176×248: **i lati sparivano**, sia con `stretch` sia con `round`. Provato a
-  390px, non dedotto. Soluzione: disegno alla proporzione vera
-  (`cartellino-tratteggiato.svg`, 176×248) e contenitore con `aspect-ratio`
-  fisso + `background-size: 100% 100%`, così si scala in modo uniforme. Vale
-  per qualunque tratteggio: il 9 sezioni va bene solo per tratti continui.
+  390px, non dedotto. Prima soluzione: un disegno alla proporzione vera
+  (176×248) scalato in modo uniforme. Dal 20 ottobre, con la forma a
+  cartellino da pacco, anche quello è stato sostituito da un tracciato
+  calcolato in pixel (§16). Vale per qualunque tratteggio: il 9 sezioni va
+  bene solo per tratti continui.
 - **Radix `Select` dentro un drawer vaul**: combinazione nota per problemi di
   tocco e scorrimento. Nella scheda del cartellino l'unità di paga è fatta con
   chip, non con un menu.
@@ -632,14 +712,32 @@ di react-map-gl non lo dichiarano e il typecheck fallisce (successo due volte).
   `pointerdown` e dichiarare `pointer-events: auto`, se no il suo tocco
   chiude il dialog sotto, o non arriva affatto.
 - **StrictMode chiama due volte l'inizializzatore di `useState`** (in
-  sviluppo). Niente scritture lì dentro: lo splash scriveva la data di
-  «visto oggi» nell'inizializzatore, e la seconda chiamata leggeva «già
+  sviluppo). Niente scritture lì dentro: lo splash col video (prima del
+  Lottie) scriveva la data di «visto oggi» nell'inizializzatore, e la seconda chiamata leggeva «già
   visto» → in locale non compariva mai. Le scritture vanno in un effetto.
 - **Chromium mette in pausa i video senza audio nelle schede non visibili**
   (`play()` → `AbortError: video-only background media was paused to save
-  power`). Nel pannello browser di Claude, se è nascosto, il video dello
-  splash non parte mai: non è un bug dell'app. Stesso motivo per cui lì
+  power`). Nel pannello browser di Claude, se è nascosto, il video del
+  vecchio splash non partiva mai: non era un bug dell'app. Stesso motivo per cui lì
   `requestAnimationFrame` non scatta: per misurare usare i timer.
+- ⚠️ **Un flexbox a altezza fissa non fa uscire il contenuto: lo SCHIACCIA.**
+  Nel cartellino a proporzione fissa, aggiungendo 44 px sopra, nome e mestiere
+  si sono ristretti fino a sparire, e la misura «l'ultimo elemento sta dentro?»
+  diceva sì. Per sapere se un testo entra si confronta `offsetHeight` con
+  `scrollHeight` di ogni testo, non la posizione dell'ultimo figlio.
+- **Screenshot a misura vera**: Chrome headless su Mac non scende sotto ~500 px
+  di finestra, quindi `--window-size=390,…` non dà 390 — e fissare la
+  larghezza del contenitore non basta per drawer e overlay, che prendono
+  tutta la finestra. Si usa **`node brand/scatta-telefono.mjs <url>
+  <file.png>`**: pilota Chrome via DevTools Protocol ed emula un telefono
+  vero (390×844, 2×, touch). Per pagine dietro login si monta un'anteprima
+  temporanea con dati finti, fuori da `ProtectedRoute`, e poi si toglie.
+  ⚠️ Lanciava Chrome con `--disable-gpu`: niente WebGL, quindi **Mapbox non
+  partiva** e la mappa restava vuota. Ora usa SwiftShader (WebGL software).
+  Opzioni: `POSIZIONE=lat,lng` finge il GPS (la mappa worker si centra
+  sull'utente), `PIZZICO=0.74` fa un pizzico vero col dito per allontanare.
+  Il pannello browser di Claude, se nascosto, non scarica le piastrelle:
+  per la mappa usare questo.
 - **Nel pannello browser con l'emulazione mobile i clic a coordinate
   sbagliano bersaglio** (il viewport emulato viene rimpicciolito per entrare
   nel pannello). Se un clic «non fa niente», riprovare senza emulazione prima
@@ -799,17 +897,41 @@ produzione (successo con lo snapshot di `applications`).
 - **Scheda annuncio (`JobDetailsSheet`) rifatta** — vedi §15.
 - **Bacheca dell'employer** in Messaggi, con migration `cartellini` applicata
   — vedi §16. È una **funzione nuova**, non solo restyling.
-- **Splash d'apertura** col video del logo — vedi §17. Anticipa un pezzo della
-  Fase 5.
+- **Splash d'apertura** col logo animato in Lottie (prima era un video) — vedi
+  §17. Anticipa un pezzo della Fase 5.
 - **Cambio tab più leggero**: istantaneo, Lista e Annunci senza ricaricare a
   ogni visita (§12, Prestazioni).
 
 ## Da fare
 
-1. **Bacheca**: provarla con dati veri (appendere, assumere, terminare,
-   l'avviso di scadenza) — scritta e verificata solo con dati finti. Poi la
-   **versione worker** (la sua bacheca «al contrario»): la tabella è già
-   pronta, il worker può leggere i propri cartellini.
+⚠️ **PRIMA DEL LANCIO: togliere i dati di esempio.** Il 21 ottobre sono stati
+preparati 12 annunci finti (12 account employer senza password, email su
+`@demo.politask.invalid`, tutto `is_demo = true`) per una presentazione.
+Stanno in `supabase/demo/` — **fuori dal repo** di proposito (`.gitignore`):
+`dati-demo.json` (i dati), `genera-demo.mjs` → `carica-demo.sql`, e
+**`cancella-demo.sql`** (toglie account, annunci e tutto ciò che vi è
+collegato a cascata, poi le colonne `is_demo`). Si eseguono incollandoli in
+Lovable: `pbcopy < supabase/demo/cancella-demo.sql`. Provati su PGlite
+(Postgres vero): caricare due volte dà sempre 12 e 12, e la pulizia toglie
+anche la candidatura di un utente vero a un annuncio demo senza toccare
+l'utente. Se la cartella va persa: basta `DELETE FROM auth.users WHERE email
+LIKE '%@demo.politask.invalid'` (cascata) e togliere le colonne `is_demo` da
+`profiles` e `jobs`. ⚠️ Se Lovable ha registrato il caricamento in
+`drizzle/migrations/`, cancellare anche quel file.
+- La mappa mostra solo annunci delle **ultime 48 ore** (`useMapJobs`): i
+  demo hanno date «adesso meno 1–30 ore», e restano visibili ~1–2 giorni.
+  Rieseguire `carica-demo.sql` li rimette freschi.
+- Nomi delle attività cercati sul web: nessuna attività con quei nomi a
+  Genova («Bar Il Gozzo Blu» scartato: esiste «Il Gozzo» al Porto Antico).
+  Coordinate: strade vere geocodificate da Mapbox col solo nome della via.
+
+0. **Applicare in Lovable le due migration del 21 ottobre**
+   (`20261021120000_assunzione_cuore.sql`, poi
+   `20261021120100_cron_chiusura_lavori.sql`) e verificare che pg_cron ci
+   sia (`select * from cron.job`). Poi provare il flusso intero con dati veri.
+1. **Bacheca, employer e worker**: provarle con dati veri (appendere,
+   assumere, terminare, l'avviso di scadenza; lato worker gli stati e la
+   recensione dalla card) — scritte e verificate solo con dati finti.
 2. **Pagine montate una volta sola** invece che a ogni cambio tab (§12,
    Prestazioni): il pezzo grosso rimasto sul lag.
 3. **Revisione schermata per schermata** (in corso): fatte accesso,
@@ -820,7 +942,7 @@ produzione (successo con lo snapshot di `applications`).
    `is_system` su `messages` (ora i messaggi automatici si riconoscono per
    stringa in `dates.ts`), e `lm.is_system` + `j.tags` nella vista
    `chat_overview`.
-5. **Disegni mancanti**: sagoma del pin, cornici di chip e contenitore, eventuali
+5. **Disegni mancanti** (la sagoma degli avatar non più: §6): sagoma del pin, cornici di chip e contenitore, eventuali
    illustrazioni per gli empty state.
 6. **Licenza Shinjo** — mail da mandare.
 7. **Landing/waitlist** su `politask.app`, con privacy e termini (servono anche
@@ -888,19 +1010,33 @@ descrizione e posizione. Era l'anteprima di una cosa che stava a un tocco di
 distanza: **due tocchi per lo stesso contenuto**, più un elemento in più da
 mantenere e da disegnare.
 
-Ora il pin apre direttamente la scheda, che si ferma a **320px** (`ALTEZZA_MINIMA`,
-`snapPoints={[ALTEZZA_MINIMA, 0.92]}`): la mappa resta visibile sopra, il pin non
-viene coperto, e per il resto si trascina in su. È Apple Maps e Google Maps.
+Ora il pin apre direttamente la scheda, che si ferma bassa — **esattamente la
+testa, bottone e il suo spazio sotto compresi, e niente dell'employer**
+(Tommaso: «nell'anteprima non si deve intravedere l'employer») — la mappa resta visibile sopra,
+il pin non viene coperto, e per il resto si trascina in su. È Apple Maps e
+Google Maps.
 
 Conseguenze strutturali, tutte obbligate:
 
 - **Il bottone «Candidati» sta nella testa, non in fondo.** Con gli agganci il
   fondo della scheda è sotto la piega: un footer là sotto sarebbe invisibile
   finché non trascini, e l'azione principale non si merita un trascinamento.
-- **I 320px non sono un numero a caso**: maniglia 24 + titolo su due righe 62 +
-  paga 38 + orario 33 + chip 47 + bottone 80 = **284**. I 36 di margine fanno
-  vedere la divisoria e l'inizio della riga employer — l'indizio che sotto c'è
-  dell'altro.
+- **L'aggancio basso si MISURA** (`refTesta` + ResizeObserver →
+  `altezzaAggancio`), non si stima. Lo spazio sotto il bottone è il `pb-` del
+  blocco azione (24 px + safe area), dentro la misura; l'arrotondamento è
+  per difetto, così non spunta nemmeno un pixel della divisoria. L'indizio
+  che sotto c'è dell'altro lo dà la fessura in testa, non un pezzo di riga.
+  ⚠️ Era fisso a **320px**, contato sul caso peggiore, e il «Candidati» toccava
+  il bordo **anche col titolo su una riga**: vaul trasla la scheda di
+  `finestra − aggancio`, ma la scheda è alta **92vh**, quindi se ne vede
+  `aggancio − 8vh` = 320 − 68 = **252px** su un 844. Qualunque aggancio in px
+  su una scheda non a tutta altezza va sommato a quella differenza.
+  Misurato a 390×844, titolo su una o due righe.
+- ⚠️ Per questo l'aggancio attivo è uno stato **alta / bassa**, non il valore:
+  il valore cambia con la misura e vaul vuole che `activeSnapPoint` sia uno
+  degli `snapPoints`. Il ref è a callback (`useCallback`) perché il contenuto
+  sta nel portal e nasce solo a scheda aperta: `useMisure` misurerebbe al
+  montaggio, quando il nodo non c'è.
 - ⚠️ **Gli agganci vaul si calcolano sull'altezza della FINESTRA**, non su quella
   della scheda: perché a tutta altezza arrivi in fondo, il contenuto deve essere
   `h-[92vh]`. L'altezza in eccesso sta sotto la piega, quindi il vuoto in fondo
@@ -937,6 +1073,24 @@ Conseguenze strutturali, tutte obbligate:
   blu scuro: il bug ricorrente numero uno) e il codice morto `categoryLabels` /
   `categoryColors`, calcolati e mai usati.
 
+## La card in Lista — un indice, non un'anteprima
+
+La card della Lista (`JobsList` in `pages/Lista.tsx`) ripeteva la scheda:
+tag, orario, data, paga in un badge (con un «€» doppio: «€ 9€/h»). Tutto già
+nella scheda che si apre al tocco. Ora: **tessera col mestiere + titolo + una
+riga «zona · paga»**, la paga in `primary-strong`.
+
+⚠️ La paga sta **a destra, in colonna sua**: con titolo e «zona · paga» tutti
+a sinistra la card era piena da un lato e vuota dall'altro (Tommaso:
+«sbilanciato»). A destra è anche dove l'occhio la cerca scorrendo, e i valori
+si confrontano in colonna. Titolo fino a due righe, paga fino a due righe in
+un massimo del 38% della larghezza («150/settimana» ci sta su una).
+
+Perché queste due e non solo il titolo: in una **lista**, senza mappa, il
+«dove» non si vede altrimenti, e la paga è il dato con cui si sceglie se
+aprire o no (Indeed, Subito, InfoJobs la tengono tutti nella riga). L'orario
+e i tag di durata si leggono nella scheda; il mestiere lo dice già l'icona.
+
 ## Ancora da decidere
 
 - **La paga in Shinjo**: è un valore, e la regola dice che i valori stanno in
@@ -951,7 +1105,7 @@ Conseguenze strutturali, tutte obbligate:
 
 ---
 
-# 16. La bacheca dell'employer — ottobre 2026
+# 16. La bacheca — employer e worker, ottobre 2026
 
 **Cos'è.** In Messaggi, per l'employer, due schede **Chat | Bacheca** (le
 stesse linguette di Lista). La bacheca mostra chi lavora con lui, o chi sta
@@ -1011,40 +1165,105 @@ libero.
   non funzionassero per lavori di mesi: valgono uguale per due settimane o sei
   mesi. Il loro vero limite sono i turni variabili, per cui sono facoltativi
   e affiancati dal campo «Orari e turni».
+- **Tre modi dei giorni, senza colonne nuove** (`modoGiorni` in `lib/bacheca.ts`):
+  - **fissi** — i chip L…D (`giorni` = i giorni scelti, `null` se nessuno);
+  - **«Variabili»** — `giorni = []` (array vuoto ≠ null: è una risposta);
+  - **«Un giorno solo»** — `data_inizio = data_fine`: la sezione Date diventa
+    «Il giorno» con un campo solo e spariscono +1 settimana / +1 mese.
+  Lo leggono cartellino («Il 21/10», «Turni variabili») e scheda del worker.
 - **La paga si precompila dal testo dell'annuncio** («9€/h» → 9, ora) con
   `leggiPagaDaTesto`, ma **non si salva** finché l'employer non preme Salva.
 - **Nessun totale della paga**: servirebbero le ore a settimana, che non
   chiediamo. Mostrarlo sarebbe un numero inventato.
 
-## La «notifica» di fine lavoro
+## Il flusso dell'assunzione (deciso da Tommaso il 21 ottobre)
 
-Non ci sono push (arrivano con Despia, Fase 10). `PromemoriaScadenza`,
-montato in `App.tsx` accanto a `ReviewPrompt`: all'avvio, **dal giorno dopo**
-la data di fine (l'ultimo giorno il lavoro c'è ancora), propone +1 settimana,
-+1 mese, Concludi (o «Chiudi la prova»), Più tardi. Più un **pallino** sulla
-scheda «Bacheca» finché c'è qualcosa da decidere.
+annuncio → candidatura → l'employer **accetta** (si apre la chat) → accordi
+in chat → l'employer **assume** → **compila il cartellino** → lavoro →
+fine → recensione del worker + **cuore** dell'employer.
 
-## Il disegno
+- **«Compila il cartellino» subito dopo «Assumi»**, dalla chat
+  (`handleHireWorker` in Messaggi) e dal cartellino in prova. È
+  `SchedaCartellino` con `compila`: titolo, invito, «Salva il cartellino», e
+  in fondo l'interruttore **«Togli l'annuncio dalla mappa»** (acceso di
+  default) — prima era una finestra separata dopo l'assunzione. Dalla chat
+  si apre con `sopraChat` (drawer e overlay a `z-[70]`: la chat è
+  `z-[60]`). ⚠️ L'assunzione dalla chat ora è **aspettata**, non più «fire
+  and forget»: il cartellino lo crea il trigger proprio su quel cambio di
+  stato, e il modulo deve trovarlo.
+- **Data di fine, anche indicativa.** Dal giorno dopo, `PromemoriaScadenza`
+  chiede estendi / concludi. Per gli **assunti** c'è il conto alla rovescia:
+  **5 giorni pieni**, poi il lavoro **si chiude da solo** (fine 10 →
+  domanda l'11 → chiusura il 16). La chiusura la fa il **server**:
+  `chiudi_lavori_scaduti()` ogni giorno alle 03:15 UTC con **pg_cron**
+  (migration `20261021120100_cron_chiusura_lavori.sql`, a parte apposta), e
+  scrive in chat «Il lavoro si è chiuso automaticamente». I cartellini «in
+  prova» non si chiudono da soli: non sono ancora un lavoro.
+- **Senza data di fine: ogni 3 mesi dalla data di ASSUNZIONE** l'app chiede
+  «è ancora attivo?». `assunto_il` lo scrive il trigger all'assunzione, non
+  si vede in interfaccia; `ultimo_controllo` ricorda solo l'ultima risposta.
+  ⚠️ **Senza risposta NON si chiude**: un lavoro può durare più di tre mesi.
+- **Il cuore**: a lavoro concluso (da lui, dalla chat, o automaticamente)
+  l'employer vede «Com'è andata con…?» → **Metti il cuore** o **Salta**.
+  `cuore` true/false + `esito_il`; la card resta finché `esito_il` è NULL. I
+  lavori già conclusi prima della migration non la chiedono (recupero).
+  **Pubblico**: nello storico del worker, nel suo profilo e in quello
+  pubblico, solo quando c'è (nessun cuore ≠ voto negativo). Si legge con la
+  funzione `cuori_del_worker`, che restituisce solo gli id — il cartellino
+  ha anche la paga, e le policy RLS sono per riga, non per colonna.
+- L'employer può **concludere in qualunque momento** (chat, scheda).
+- `PromemoriaScadenza` mostra **una domanda alla volta**: scadenza → cuore
+  → trimestrale (`prossimoPromemoria` in `lib/bacheca.ts`). La finestra è
+  `FinestraPromemoria`, separata per poterla vedere con dati finti.
+- Pallino sulla scheda «Bacheca» finché c'è una scadenza da decidere.
 
-- **Cartellino** = `.material-card` (sagome a–d alternate come nelle liste)
-  con **proporzione fissa 176:248**, foto con `.sagoma-foto`. Dentro: foto,
-  nome, mestiere, poi DUE righe sole — paga, e o l'avviso di scadenza (ha la
-  precedenza) o i giorni. Una terza riga a 360px non entra.
-- ⚠️ **Il chip «In prova» sta in basso al centro della foto**: negli angoli la
-  maschera della foto lo tagliava.
-- ⚠️ **`pb-4` sulla card**: col solo `p-2.5` l'ultima riga toccava il margine
-  tagliato.
+## Il disegno — cartellino da pacco (dal 20 ottobre)
+
+Tommaso: «devono sembrare cartellini da pacco, in cartoncino con il foro e lo
+spago». Cambiati solo contorno, foro e puntina; colori, contenuti, griglia e
+dimensioni restano.
+
+- **Forma**: angoli in alto **smussati in diagonale** (26×26 px), angoli in
+  basso arrotondati (18 px, il raggio del disegno precedente), **foro** in alto
+  al centro (centro a 22 px dal bordo, Ø 12) con **anello di rinforzo** (Ø 26).
+  Costanti in `lib/formaCartellino.ts`.
+- ⚠️ **Non è più `.material-card` né il ritaglio a 9 sezioni**: il 9 sezioni
+  stirerebbe il foro (sta al centro di una banda) e fa sparire i tratteggi sui
+  lati lunghi (§12). Il tracciato è **calcolato in pixel** dalle misure vere
+  della card (`SagomaCartellino.tsx`, `offsetWidth/Height` + ResizeObserver —
+  non `getBoundingClientRect`, che sul cartellino ruotato dà il riquadro
+  ruotato).
+- **L'irregolarità è quella del disegno di Tommaso, misurata** su
+  `sagoma-card-a.svg`: un vertice ogni ~5,5 px spostato di ±0,5 px (dev 0,33).
+  Rumore in pixel lungo il perimetro, **seme dall'id**: stesso disegno a ogni
+  render, e una card più larga ha più vertici, non un tratto più slabbrato.
+- ⚠️ **Il foro è vuoto davvero**: riempimento della card e dell'anello con
+  `fill-rule: evenodd` che include il cerchio del foro. Verificato sui pixel:
+  dentro il foro c'è `#F4EEE2`, la bacheca, non `#FAF6EB` della card.
+- ⚠️ **Tinta dell'anello al 35% foglio / 65% incavo (~`#EEE8DA`)**. Al 60%
+  veniva `#F3EDE1`, cioè il colore della BACHECA: anello e foro identici, il
+  foro si leggeva solo dal tratto.
+- **Contenuto da 44 px** (l'anello finisce a 35). ⚠️ Con la proporzione fissa
+  questo toglie ~34 px all'interno, cioè tutto lo spazio libero che c'era:
+  la **foto non ha più una proporzione sua**, prende lo spazio che resta
+  (`flex-1 min-h-0`, ~137×67 a 360 px, ~152×88 a 390, `object-[center_30%]`
+  per non tagliare i volti). I testi sono `shrink-0`, e la seconda riga ha
+  **altezza fissa** (`h-4`) anche vuota, se no le foto di due card vicine
+  avrebbero altezze diverse.
+- **Puntina**: l'ago entra **esattamente nel centro del foro**. Le punte dei tre
+  disegni sono misurate (`PUNTE_PUNTINE` in `icons/puntine.tsx`: punto più
+  basso dell'ago, getPointAtLength in Chrome) e la puntina si posiziona da lì,
+  larga 21 px come prima. Tolto lo spostamento casuale orizzontale. Testa nel
+  colore del ruolo, ago in inchiostro; provate a 390px: arancio pastello e
+  `employer-700` reggono. Stanno fuori dalla sagoma, sopra il contenuto.
+- **«Aggiungi»**: stessa forma, **tratteggiata** (2,2 px, trattini 11/11, la
+  cadenza del disegno di prima), col foro e l'anello, **senza puntina**: è un
+  posto libero. `cartellino-tratteggiato.svg` è stato cancellato.
 - **Inclinazione** fino a ±1,9°, più delle liste (±0,5°): una bacheca non è un
-  elenco ordinato. Puntina e inclinazione derivano dall'**id** (`varieta`),
+  elenco ordinato. Inclinazione e puntina derivano dall'**id** (`varieta`),
   così riordinare non le rimescola. Rispetta `prefers-reduced-motion`.
-- **Puntine**: tre disegni di Tommaso (`icons/puntine.tsx`). Testa nel colore
-  del ruolo, **ago in inchiostro** (tutto colorato leggeva come un
-  giocattolo). Provate a 390px: **arancio pastello** e **`employer-700`**
-  reggono; l'arancio-ink diventa marrone, il blu pastello sbiadisce. Stanno
-  **fuori** dalla card mascherata, se no la maschera le taglia.
-- **Il «+»**: `cartellino-tratteggiato.svg` (disegno di Tommaso, 176×248),
-  ricolorato da nero a `#9C8B74` (`--paper-edge`): in nero pesava più dei
-  cartellini veri. Perché non il 9 sezioni: vedi §12.
+- **Il chip «In prova» sta in basso al centro della foto**: negli angoli la
+  maschera della foto lo tagliava.
 - **Unità di paga a chip, non un menu**: Radix `Select` dentro vaul, vedi §12.
 
 ## Codice
@@ -1065,39 +1284,134 @@ scheda «Bacheca» finché c'è qualcosa da decidere.
 - La scheda attiva sta nell'URL (`/messaggi?vista=bacheca`): tornando da un
   profilo aperto dal cartellino si ritrova la bacheca.
 
+## La versione worker — «al contrario» (dal 20 ottobre)
+
+In Messaggi anche il worker ha **Chat | Bacheca**. Ci vede i lavori in cui è
+stato preso: **solo** quelli che un employer ha appeso alla sua bacheca. Le
+candidature restano in Lista → Candidature.
+
+- **Legge gli stessi cartellini** dell'employer (`hooks/useLavoriWorker.ts`,
+  RLS: il worker legge, non scrive). Tre query fisse: cartellini con
+  candidatura, annuncio e attività dentro; recensioni; chat.
+- **Gli stati, tutti da dati esistenti** (`statoLavoro` in `lib/bacheca.ts`),
+  nessuna colonna nuova:
+
+  | Stato | Regola | Badge |
+  |---|---|---|
+  | In prova | candidatura `accepted` + cartellino | `warning-soft` |
+  | Assunto | `hired` | `success` pieno |
+  | Finito | `accepted`/`hired` ma `data_fine` passata | `paper-sunken` + ink |
+  | Da recensire | `completed`, nessuna recensione | **pieno di ruolo** (l'unico che chiede un'azione) |
+  | Concluso | `completed`, recensione fatta | `neutral-soft`, card al 60% |
+
+- ⚠️ **«Recensito» = esiste una riga in `reviews`** per quel lavoro e quel
+  worker, **non** `applications.is_reviewed`: quel campo `ReviewPrompt` lo
+  mette a `true` anche quando la finestra viene chiusa o saltata senza
+  recensire. Usarlo avrebbe mostrato «Concluso» a chi non ha mai recensito.
+- **La card dice poco, la scheda dice tutto** (Tommaso, 20 ottobre). Fuori
+  solo foto con lo stato, attività e ruolo. Toccandola si apre
+  **`SchedaLavoro`** (drawer, sola lettura): attività con lo stato, due
+  tessere-icona (**Messaggi** → chat diretta con l'attività, **Profilo** →
+  profilo dell'attività), il **ruolo con l'icona del mestiere** (dai tag
+  dell'annuncio, `getJobIconFromTags`), poi righe con linea disegnata:
+  **Paga**, **Periodo** (dal–al + quanto manca, solo se il lavoro è in
+  corso), **Giorni e orari** (le 7 lettere come chip, quelle concordate piene
+  nel colore del ruolo). In fondo «Recensisci …» se è da recensire, o una
+  nota se è finito o concluso.
+- ⚠️ **Il tocco sulla card NON apre la chat.** Era così nella prima versione:
+  bocciato («non ha senso, è un bottone di distanza»). La chat è la tessera
+  Messaggi dentro la scheda.
+- ⚠️ **Card DRITTE**, non storte come i cartellini: un cartellino è appeso e
+  può pendere, una vetrina no (non si imposta `--storto`).
+- **«Recensisci»** apre la **stessa** finestra di `ReviewPrompt` per quel
+  lavoro (`apriRecensione` in `lib/recensione.ts`, un evento che
+  ReviewPrompt ascolta) — niente seconda schermata di recensione. La scheda
+  si chiude prima, perché la recensione è un Dialog. Dopo l'invio
+  ReviewPrompt invalida `['applications']`, e la chiave della bacheca worker
+  sta lì sotto: la card passa a «Concluso» da sola.
+- **Ordine**: le attive nell'ordine di arrivo, le concluse in fondo.
+- ⚠️ `DrawerDescription asChild` sopra un `<p>` fonde le sue classi
+  (`text-sm text-muted-foreground`) con quelle del figlio: il ruolo usciva
+  piccolo e grigio. La descrizione accessibile è un `sr-only` a parte.
+- **Pallino sulla scheda Bacheca** se c'è almeno un lavoro da recensire.
+- **Vuota**: «Qui troverai i lavori in cui sei stato preso» + «Vai alla mappa».
+
+### La forma a NEGOZIO
+
+È la sagoma di `AnnunciIcon`, il negozio della barra in basso
+(`lib/formaNegozio.ts`, `SagomaNegozio.tsx`): **tenda** con bordo alto dritto
+e angoli arrotondati (8 px), **4 festoni** sotto (3 se la card è sotto i
+150 px), che **sporge di 4 px** oltre i lati; sotto il **corpo**, angoli in
+basso da 18 px. Solo contorno, niente strisce. Stesso tratto delle card
+employer: `lib/tratto.ts`, condiviso col cartellino (stessi numeri casuali:
+verificato che il cartellino è rimasto identico su 16 combinazioni).
+
+- **Due tracciati**: il corpo prima, chiuso; la tenda sopra, riempita, gli
+  copre il lato alto e il pezzo dei fianchi sopra i festoni — così i fianchi
+  «escono» da sotto la tenda senza calcolare gli incroci.
+- ⚠️ **Festoni profondi 12 px, non 9.** A 9 px su archi da ~43 la tenda
+  leggeva come il coperchio di un barattolo; a 12 come una tenda (confronto
+  fatto a 390 px). Fondo della tenda a 32 px, contenuto da **43 px**: la foto
+  parte 11 px sotto i festoni.
+- Il contenuto è lo stesso del cartellino (foto che prende lo spazio che
+  resta, testi `shrink-0`, seconda riga a altezza fissa). Verificato senza
+  testi schiacciati a 360, 390 e 430 px.
+- Niente puntine, niente «Aggiungi»: da qui il worker non appende niente.
+
 ---
 
 # 17. Lo splash d'apertura — ottobre 2026
 
-Il video del logo animato all'apertura, **una volta al giorno**.
-`components/layout/SplashScreen.tsx`, file in `public/splash/`
-(`politask-splash.webm`/`.mp4`, `-inizio.png`, `-finale.png`): 720×1280,
-5,6 s, senza audio, fondo `#F3EFE3`.
+Il **logo animato in Lottie** all'apertura, a **ogni avvio a freddo**.
+`components/layout/SplashScreen.tsx`, file in
+`src/assets/politask-logo-animato.json`: 1080×1920, **16 fps, 64 fotogrammi
+= 4 s**, 74 KB, senza immagini né font né espressioni, fondo `#F3EFE3`. Parte
+da carta **vuota**: le lettere scorrono nelle loro finestre da sinistra a
+destra (l al fotogramma 19 … k al 25, tutte a posto entro il 39), poi la «o» a
+pin cade al suo posto (36 → 44, con un piccolo rimbalzo).
 
+⚠️ **Il 9 ottobre ha sostituito lo splash col video** (`.webm`/`.mp4`,
+cancellati). Cambiato anche il «quando»: prima **una volta al giorno**
+(`localStorage`), ora **a ogni avvio a freddo**, come da richiesta di Tommaso.
+Il parametro `?splash` non c'è più: basta ricaricare.
+
+- **Libreria: `lottie-web`, renderer SVG**, importata come
+  `lottie-web/build/player/lottie_light` — stesso pacchetto, senza motore
+  delle espressioni (il file non ne usa), circa metà del peso. ⚠️ **Verificato
+  che è identico al lottie completo**: su tutti i 64 fotogrammi l'SVG prodotto
+  dalle due versioni coincide. Se un file futuro usasse espressioni, va
+  cambiato l'import con `lottie-web`. **Niente altre librerie Lottie senza
+  chiedere a Tommaso.**
+- **Libreria e JSON in import dinamico**: nella build finiscono in pezzi
+  propri (48 KB e 10 KB compressi) e non pesano sul bundle principale.
 - **È uno strato sopra l'app, non un cancello prima**: montato per ultimo in
-  `App.tsx`, fuori dal router. L'app sotto carica sessione, profilo e mappa
-  mentre il video gira.
-- **Si chiude**: a fine video · al tocco · dopo **1 s d'immagine finale** se il
-  video non parte o dà errore (anche `play()` rifiutato: su iOS in risparmio
-  energetico l'autoplay viene negato senza eventi) · comunque dopo **7 s**.
-  Dissolvenza di 300 ms.
-- **Con «riduci movimento»** solo l'immagine finale per 1 s.
-- **Una volta al giorno**: data in `localStorage`, chiave
-  `politask-splash-visto`, sempre in try/catch. Scritta in un effetto, non
-  nell'inizializzatore di `useState` (StrictMode, §12).
-- **Per rivederlo**: `?splash` nell'indirizzo lo forza; oppure in console
-  `localStorage.removeItem('politask-splash-visto')`.
+  `App.tsx`, fuori dal router, vive una volta per caricamento della pagina —
+  cambiare pagina o tornare indietro non lo rifà comparire (verificato).
+- **Dimensioni**: `preserveAspectRatio: "xMidYMid meet"`, cioè contain. Sui
+  telefoni (più alti di 9:16) occupa tutta la larghezza e resta centrato in
+  verticale, senza tagli. Su schermi più larghi (desktop) si ferma all'altezza
+  invece di uscire.
+- **Si chiude**: fine animazione + **0,5 s** di logo fermo · al **tocco** ·
+  **logo statico per 1 s** se libreria o file non arrivano entro 2,5 s o danno
+  errore · comunque dopo **7 s** (verificato: chiuso a 7,4 s). Dissolvenza di
+  300 ms.
+- **Con «riduci movimento»**: `goToAndStop` sull'ultimo fotogramma, fermo 1 s.
+- **Il ripiego** è `logo-worker-v2.svg` al **79% della larghezza**: misurato,
+  è quanto occupa il logo nell'ultimo fotogramma (852 su 1080, centrato a metà
+  altezza). ⚠️ **L'arancio del Lottie è `#E9A55C`, quello del logo dell'app
+  `#F6A24D`**: un arancio più spento (R 233 contro 246). Da decidere quale è
+  quello giusto.
 - ⚠️ **Il tocco non deve chiudere i dialog sotto**: all'avvio si aprono proprio
   lì il promemoria recensioni e l'avviso di fine lavoro. `stopPropagation` sul
-  `pointerdown` + `pointer-events: auto` esplicito (§12).
+  `pointerdown` + `pointer-events: auto` esplicito (§12). Verificato: si chiude
+  in ~315 ms e il tocco non arriva al document.
 - **`index.html`**: `theme-color` e fondo di `html, body` a `#F3EFE3`, in uno
   `<style>` nell'head, così non c'è lampo bianco prima del primo fotogramma.
   Dopo, `index.css` riporta il `body` su `--paper` (`#F4EEE2`): una unità per
   canale, invisibile. **`--paper` non è stato toccato.**
-- ⚠️ **Nomi dei file in minuscolo col trattino.** Erano arrivati come
-  `Politask_splash.webm`: sul Mac le maiuscole non contano, online sì — un nome
-  scritto con la maiuscola sbagliata funziona in locale e dà 404 in produzione.
-- **Non ancora visto girare fino in fondo** dal pannello browser di Claude (lì
-  Chromium blocca i video quando il pannello è nascosto, §12). Verificati:
-  tocco (si chiude in 315 ms senza arrivare al document), regola del giorno,
-  ripiego sull'immagine.
+- **Schermata nativa di Despia**: deve avere lo **stesso fondo `#F3EFE3` e
+  nessun logo**, perché il Lottie parte vuoto. ⚠️ La configurazione di Despia
+  **non sta nel repo** (vive nel suo pannello): va impostata e controllata lì.
+- **Nel pannello browser di Claude**, se è nascosto, `requestAnimationFrame` non
+  scatta e l'animazione resta al primo fotogramma fino alla rete di sicurezza
+  (§12): non è un bug dell'app.
