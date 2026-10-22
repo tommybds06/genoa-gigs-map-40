@@ -215,6 +215,8 @@ export type Database = {
           neighborhood: string | null
           owner_id: string
           price: string | null
+          scade_il: string
+          scadenza_vista: boolean
           schedule: string | null
           status: string
           tags: string[] | null
@@ -232,6 +234,8 @@ export type Database = {
           neighborhood?: string | null
           owner_id: string
           price?: string | null
+          scade_il?: string
+          scadenza_vista?: boolean
           schedule?: string | null
           status?: string
           tags?: string[] | null
@@ -249,6 +253,8 @@ export type Database = {
           neighborhood?: string | null
           owner_id?: string
           price?: string | null
+          scade_il?: string
+          scadenza_vista?: boolean
           schedule?: string | null
           status?: string
           tags?: string[] | null
