@@ -197,6 +197,7 @@ export type Database = {
           created_at: string
           description: string | null
           id: string
+          is_demo: boolean
           lat: number | null
           lng: number | null
           neighborhood: string | null
@@ -213,6 +214,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          is_demo?: boolean
           lat?: number | null
           lng?: number | null
           neighborhood?: string | null
@@ -229,6 +231,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          is_demo?: boolean
           lat?: number | null
           lng?: number | null
           neighborhood?: string | null
@@ -324,6 +327,7 @@ export type Database = {
           experience: string | null
           full_name: string | null
           id: string
+          is_demo: boolean
           is_onboarded: boolean | null
           lat: number | null
           level: number
@@ -346,6 +350,7 @@ export type Database = {
           experience?: string | null
           full_name?: string | null
           id: string
+          is_demo?: boolean
           is_onboarded?: boolean | null
           lat?: number | null
           level?: number
@@ -368,6 +373,7 @@ export type Database = {
           experience?: string | null
           full_name?: string | null
           id?: string
+          is_demo?: boolean
           is_onboarded?: boolean | null
           lat?: number | null
           level?: number
