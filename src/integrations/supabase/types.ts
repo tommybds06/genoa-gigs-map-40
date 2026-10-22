@@ -68,46 +68,58 @@ export type Database = {
       cartellini: {
         Row: {
           application_id: string
+          assunto_il: string | null
           created_at: string
+          cuore: boolean | null
           data_fine: string | null
           data_inizio: string | null
           employer_id: string
+          esito_il: string | null
           giorni: number[] | null
           id: string
           job_id: string
           orari: string | null
           paga_importo: number | null
           paga_unita: string | null
+          ultimo_controllo: string | null
           updated_at: string
           worker_id: string
         }
         Insert: {
           application_id: string
+          assunto_il?: string | null
           created_at?: string
+          cuore?: boolean | null
           data_fine?: string | null
           data_inizio?: string | null
           employer_id: string
+          esito_il?: string | null
           giorni?: number[] | null
           id?: string
           job_id: string
           orari?: string | null
           paga_importo?: number | null
           paga_unita?: string | null
+          ultimo_controllo?: string | null
           updated_at?: string
           worker_id: string
         }
         Update: {
           application_id?: string
+          assunto_il?: string | null
           created_at?: string
+          cuore?: boolean | null
           data_fine?: string | null
           data_inizio?: string | null
           employer_id?: string
+          esito_il?: string | null
           giorni?: number[] | null
           id?: string
           job_id?: string
           orari?: string | null
           paga_importo?: number | null
           paga_unita?: string | null
+          ultimo_controllo?: string | null
           updated_at?: string
           worker_id?: string
         }
@@ -500,6 +512,8 @@ export type Database = {
       }
     }
     Functions: {
+      chiudi_lavori_scaduti: { Args: never; Returns: number }
+      cuori_del_worker: { Args: { p_worker: string }; Returns: string[] }
       get_user_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["user_role"]
