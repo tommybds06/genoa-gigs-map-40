@@ -1,5 +1,5 @@
 // Screenshot a misura di telefono vera via Chrome DevTools Protocol.
-// uso: [POSIZIONE=lat,lng] [PIZZICO=0.75] node brand/scatta-telefono.mjs <url> <file.png> [larghezza=390] [altezza=844] [attesaMs=7000]
+// uso: [POSIZIONE=lat,lng] [PIZZICO=0.75] [ESEGUI=js] node brand/scatta-telefono.mjs <url> <file.png> [larghezza=390] [altezza=844] [attesaMs=7000]
 // Chrome headless su Mac non scende sotto ~500 px di finestra: qui la misura
 // la impone Emulation.setDeviceMetricsOverride (telefono vero, 2×, touch),
 // quindi vale anche per drawer e overlay a tutta larghezza. Serve Node ≥ 22
@@ -29,10 +29,38 @@ if (process.env.POSIZIONE) {
 }
 await cdp("Page.navigate", { url });
 await pausa(+attesa);
-// PIZZICO=0.75 fa un pizzico vero col dito al centro (sotto 1 = allontana), poi aspetta.
+// PRIMA="js" esegue del codice nella pagina PRIMA dei pizzichi (es. un registratore).
+if (process.env.PRIMA) await cdp("Runtime.evaluate", { expression: process.env.PRIMA });
+// PIZZICO=0.75 fa un pizzico vero col dito al centro (sotto 1 = allontana), poi aspetta
+// ATTESA_DOPO ms. Più pizzichi in fila: PIZZICO=0.55,1.9 ATTESA_DOPO=6000,40.
 if (process.env.PIZZICO) {
-  await cdp("Input.synthesizePinchGesture", { x: +w / 2, y: +h / 2, scaleFactor: +process.env.PIZZICO, gestureSourceType: "touch" });
-  await pausa(+(process.env.ATTESA_DOPO ?? 6000));
+  const scale = process.env.PIZZICO.split(",").map(Number);
+  const attese = String(process.env.ATTESA_DOPO ?? 6000).split(",").map(Number);
+  for (let k = 0; k < scale.length; k++) {
+    await cdp("Input.synthesizePinchGesture", { x: +w / 2, y: +h / 2, scaleFactor: scale[k], gestureSourceType: "touch" });
+    await pausa(attese[k] ?? attese.at(-1));
+  }
+}
+// TRASCINA="x,y,x2,y2" trascina col dito (touch) da un punto a un altro, poi aspetta.
+// Più tratti in fila separati da «;».
+if (process.env.TRASCINA) {
+  for (const tratto of process.env.TRASCINA.split(";")) {
+  const [x0, y0, x1, y1] = tratto.split(",").map(Number);
+  const passi = 12;
+  await cdp("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x: x0, y: y0 }] });
+  for (let k = 1; k <= passi; k++) {
+    await cdp("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ x: x0 + ((x1 - x0) * k) / passi, y: y0 + ((y1 - y0) * k) / passi }] });
+    await pausa(16);
+  }
+  await cdp("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+  await pausa(+(process.env.ATTESA_TRASCINA ?? 1200));
+  }
+}
+// ESEGUI="js" esegue del codice nella pagina prima della foto (es. un clic), poi aspetta.
+if (process.env.ESEGUI) {
+  const r = await cdp("Runtime.evaluate", { expression: process.env.ESEGUI, returnByValue: true, awaitPromise: true });
+  if (r.result?.result?.value !== undefined) console.log("ESEGUI →", JSON.stringify(r.result.result.value));
+  await pausa(+(process.env.ATTESA_ESEGUI ?? 1500));
 }
 const shot = await cdp("Page.captureScreenshot", { format: "png" });
 writeFileSync(out, Buffer.from(shot.result.data, "base64"));

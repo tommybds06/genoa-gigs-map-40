@@ -31,8 +31,17 @@ const MISURE = {
   lg: { box: "h-14 w-14", icona: "h-8 w-8" },
 };
 
-function useColoriTessera() {
+/**
+ * `evidenziata`: l'annuncio corrisponde alla ricerca o ai filtri della mappa
+ * (Tommaso, 22 ottobre). Prende i colori del pin EVIDENZIATO sulla mappa —
+ * l'inchiostro del ruolo (`primary-strong` #A7531B / `employer-800`) — pieno,
+ * con l'icona color carta: così il legame «questo è quello che hai cercato»
+ * si vede tra mappa e lista. Carta su #A7531B ≈ 4,7:1. Token e non `white`,
+ * così in tema scuro si rovescia da sé.
+ */
+function useColoriTessera(evidenziata = false) {
   const { isEmployer } = useAppTheme();
+  if (evidenziata) return cn(isEmployer ? "bg-employer-800" : "bg-primary-strong", "text-paper-sheet");
   return cn(isEmployer ? "bg-employer" : "bg-primary", "text-ink");
 }
 
@@ -40,13 +49,15 @@ function useColoriTessera() {
 export function TesseraIcona({
   icona: I,
   misura = "md",
+  evidenziata = false,
   className,
 }: {
   icona: Icona;
   misura?: keyof typeof MISURE;
+  evidenziata?: boolean;
   className?: string;
 }) {
-  const colori = useColoriTessera();
+  const colori = useColoriTessera(evidenziata);
   return (
     <div
       aria-hidden="true"
@@ -71,6 +82,7 @@ export function Tessera({
   misura = "md",
   classeIcona,
   type = "button",
+  spenta = false,
 }: {
   icona: Icona;
   etichetta: string;
@@ -81,8 +93,15 @@ export function Tessera({
   /** Per esempio `animate-spin` sull'icona di caricamento. */
   classeIcona?: string;
   type?: "button" | "submit";
+  /**
+   * SPENTA: carta incavata e icona tenue, invece del pieno del ruolo al 40%.
+   * Per il bottone d'invio a campo vuoto: l'arancio slavato sembrava un
+   * bottone rotto, non uno che aspetta (Tommaso, 22 ottobre).
+   */
+  spenta?: boolean;
 }) {
-  const colori = useColoriTessera();
+  const coloriRuolo = useColoriTessera();
+  const colori = spenta ? "bg-paper-sunken text-ink-soft" : coloriRuolo;
   const disegno = (
     <span className={cn("sagoma-tag flex shrink-0 items-center justify-center rounded-xl", MISURE[misura].box, colori)}>
       <I className={cn(MISURE[misura].icona, classeIcona)} />
@@ -95,7 +114,10 @@ export function Tessera({
       disabled={disabled}
       aria-label={didascalia ? undefined : etichetta}
       title={etichetta}
-      className="group flex shrink-0 flex-col items-center gap-1.5 transition-transform active:scale-95 disabled:opacity-40"
+      className={cn(
+        "group flex shrink-0 flex-col items-center gap-1.5 transition-transform active:scale-95",
+        !spenta && "disabled:opacity-40"
+      )}
     >
       {disegno}
       {didascalia && <span className="text-xs text-muted-foreground">{didascalia}</span>}

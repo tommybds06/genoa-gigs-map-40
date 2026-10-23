@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/drawer";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { useUser } from "@/contexts/UserContext";
+import { TesseraIcona } from "@/components/ui/Tessera";
 import { useAppTheme } from "@/hooks/useAppTheme";
 import { getJobIconFromTags } from "@/lib/jobIcons";
 import { getTagClasses } from "@/lib/tagColors";
@@ -21,15 +21,17 @@ interface EmployerJobsDrawerProps {
   onClose: () => void;
   jobs: Job[];
   onJobSelect: (job: Job) => void;
+  /** Annunci che corrispondono alla ricerca della mappa: in cima, tessera evidenziata. */
+  evidenziati?: Set<string>;
 }
 
 export function EmployerJobsDrawer({ 
   isOpen, 
   onClose, 
   jobs, 
-  onJobSelect 
+  onJobSelect,
+  evidenziati,
 }: EmployerJobsDrawerProps) {
-  const { isEmployer } = useUser();
   const { theme } = useAppTheme();
   const navigate = useNavigate();
   
@@ -95,7 +97,12 @@ export function EmployerJobsDrawer({
           {/* Scrollable Job List */}
           <div className="flex-1 overflow-y-auto px-4 pb-6">
             <div className="space-y-3">
-              {jobs.map((job) => {
+              {/* Prima chi corrisponde alla ricerca (sort stabile: il resto
+                  dell'ordine non cambia), come nella lista di una zona. */}
+              {(evidenziati && evidenziati.size > 0
+                ? [...jobs].sort((a, b) => Number(evidenziati.has(b.id)) - Number(evidenziati.has(a.id)))
+                : jobs
+              ).map((job) => {
                 const Icon = getJobIconFromTags(job.tags || []);
                 
                 return (
@@ -104,13 +111,10 @@ export function EmployerJobsDrawer({
                     onClick={() => handleJobClick(job)}
                     className="w-full flex items-center gap-3 p-4 material-card active:scale-[0.98] transition-all text-left"
                   >
-                    {/* Icon */}
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
-                      isEmployer ? "bg-employer-50 text-employer" : "bg-accent text-primary"
-                    }`}>
-                      <Icon className="w-5 h-5" />
-                    </div>
-                    
+                    {/* La tessera delle altre liste (Lista, zona della mappa).
+                        ⚠️ Prima: icona pastello su `accent`, ~1,6:1. */}
+                    <TesseraIcona icona={Icon} evidenziata={evidenziati?.has(job.id)} />
+
                     {/* Content */}
                     <div className="flex-1 min-w-0">
                       <h3 className="font-semibold text-foreground truncate">

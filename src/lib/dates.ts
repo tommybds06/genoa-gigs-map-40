@@ -1,3 +1,4 @@
+import { eMessaggioDiSistema, testoDiSistema, type Lettore } from "@/lib/messaggiSistema";
 /**
  * Formattazione date — sorgente unica per tutta l'app.
  *
@@ -85,17 +86,12 @@ export function formatOrarioChat(dateString: string | null | undefined): string 
 }
 
 /**
- * Testi generati dall'app, non scritti da una persona.
- *
- * NOTA: riconoscerli per stringa è una toppa. La soluzione giusta è una colonna
- * `is_system` sulla tabella `messages` (serve una migration). Finché non c'è,
- * questa lista evita almeno che l'anteprima dica «Tu: 🎉 Complimenti! Sei stato
- * assunto» a chi quel messaggio non l'ha scritto.
+ * I messaggi generati dall'app: vedi `lib/messaggiSistema.ts`. L'anteprima li
+ * riconosce dal testo perché la vista `chat_overview` non porta `is_system`
+ * (migration rimandata, CLAUDE.md §14): così non dice «Tu: …» a chi quel
+ * messaggio non l'ha scritto, e lo scrive per chi legge.
  */
 const SEGNAPOSTO_ALLEGATO = "📷 Foto";
-const MESSAGGI_DI_SISTEMA = [
-  "🎉 Complimenti! Sei stato assunto per questo incarico.",
-];
 
 /**
  * Anteprima dell'ultimo messaggio in lista.
@@ -105,7 +101,8 @@ const MESSAGGI_DI_SISTEMA = [
 export function anteprimaMessaggio(
   contenuto: string | null | undefined,
   haAllegato: boolean,
-  inviatoDaMe: boolean
+  inviatoDaMe: boolean,
+  lettore: Lettore = { isEmployer: false }
 ): string {
   const testo = (contenuto || "").trim();
 
@@ -116,11 +113,42 @@ export function anteprimaMessaggio(
   }
 
   // I messaggi automatici non sono "tuoi", anche se risultano inviati da te.
-  if (MESSAGGI_DI_SISTEMA.includes(testo)) {
-    return testo.replace(/^\p{Extended_Pictographic}️?\s*/u, "");
+  if (eMessaggioDiSistema(testo)) {
+    return testoDiSistema(testo, lettore);
   }
 
   const corpo = testo || (haAllegato ? "Foto" : "");
   if (!corpo) return "";
   return inviatoDaMe ? `Tu: ${corpo}` : corpo;
+}
+
+/** Il giorno locale di una data, per confrontare due messaggi («stesso giorno?»). */
+export function chiaveGiorno(iso: string): string {
+  const d = new Date(iso);
+  return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+}
+
+/**
+ * L'etichetta del SEPARATORE di giornata in chat: «Oggi», «Ieri», il giorno
+ * della settimana entro sei giorni («lunedì»), poi la data («26 settembre»,
+ * con l'anno solo se non è quest'anno). Le bolle portano solo l'ora: prima
+ * ognuna aveva «26/09 23:12», tre bolle tre date (Tommaso, 22 ottobre).
+ */
+export function etichettaGiorno(iso: string, adesso: Date = new Date()): string {
+  const d = new Date(iso);
+  const inizio = (x: Date) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+  const giorni = Math.round((inizio(adesso) - inizio(d)) / 86400000);
+  if (giorni === 0) return "Oggi";
+  if (giorni === 1) return "Ieri";
+  if (giorni > 1 && giorni < 7) return d.toLocaleDateString("it-IT", { weekday: "long" });
+  return d.toLocaleDateString("it-IT", {
+    day: "numeric",
+    month: "long",
+    ...(d.getFullYear() !== adesso.getFullYear() ? { year: "numeric" } : {}),
+  });
+}
+
+/** Solo l'ora, per le bolle («23:12»): la data la dice il separatore. */
+export function oraMessaggio(iso: string): string {
+  return new Date(iso).toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" });
 }

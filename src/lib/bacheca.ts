@@ -1,3 +1,4 @@
+import { MESSAGGIO_ASSUNZIONE } from "@/lib/messaggiSistema";
 import { supabase } from "@/integrations/supabase/client";
 
 /**
@@ -206,7 +207,6 @@ export function varieta(id: string) {
 // AZIONI — sorgente unica. Le usano sia la bacheca sia la chat.
 // ---------------------------------------------------------------------------
 
-const MESSAGGIO_ASSUNZIONE = "🎉 Complimenti! Sei stato assunto per questo incarico.";
 
 /**
  * Chiude l'annuncio SOLO se non resta nessuno al lavoro su quell'annuncio.

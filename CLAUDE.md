@@ -88,7 +88,21 @@ Sono qui perché sono costate ore, non per completezza.
    indirizzi.
 7. **Un valore di ripiego può essere una scrittura distruttiva.** `?? "worker"`
    sembrava innocuo e sovrascriveva il ruolo vero (§9).
-8. **`git pull --rebase` prima di ogni push.** Lovable committa da solo sullo
+8. ⚠️ **Un'anteprima con dati finti non deve MAI toccare oggetti globali.**
+   Il 22–23 ottobre le anteprime della chat e del profilo sostituivano
+   `window.fetch` per rispondere con dati finti, e lo facevano **al livello
+   del modulo**. Ma l'anteprima era importata in `App.tsx`, quindi quel codice
+   girava appena si apriva l'app, su qualunque pagina: per Tommaso, entrato
+   col suo account worker, il profilo era «Masetto», gli annunci veri erano
+   spariti dalla mappa, le recensioni pure. Il database non è mai stato
+   toccato (la sostituzione inghiottiva anche le scritture) e cancellare i
+   file non bastava: nelle schede già aperte la sostituzione restava in
+   memoria fino a un ricaricamento completo. Regola: i dati finti si mettono
+   nella **cache di react-query** o in un **Provider** dentro il componente
+   dell'anteprima, mai in `window`, `fetch`, `localStorage` o simili; e se
+   proprio serve intercettare la rete, dentro un `useEffect` del componente,
+   rimettendo l'originale nel cleanup.
+9. **`git pull --rebase` prima di ogni push.** Lovable committa da solo sullo
    stesso `main` (§12): pushare senza prima riallinearsi vuol dire farsi
    rifiutare il push, o peggio fare un merge che riporta indietro un suo fix.
    ⚠️ Fino a settembre la regola era «niente comandi git da parte di Claude»,
@@ -105,7 +119,7 @@ Sono qui perché sono costate ore, non per completezza.
   con le icone custom)
 - **Animazioni**: `framer-motion`, `canvas-confetti`
 - **Mappa**: `mapbox-gl` + `react-map-gl`, token via edge function
-  `get-mapbox-token`
+  `get-mapbox-token`; `supercluster` per le zone (§6)
 - **Backend**: Supabase (auth, Postgres, RLS, edge functions, Storage)
 - **Data**: `@tanstack/react-query` · **Form**: `react-hook-form` + `zod`
 - **Routing**: `react-router-dom` v6
@@ -153,7 +167,8 @@ src/
     bacheca/      employer: Bacheca, CartellinoCard, SchedaCartellino,
                   AggiungiCartellino, PromemoriaScadenza, SagomaCartellino ·
                   worker: BachecaWorker, LavoroCard, SagomaNegozio (§16)
-    chat/ applications/ jobs/ profile/ onboarding/ reviews/ tags/ skeletons/
+    chat/         MessageBubble (§18)
+    applications/ jobs/ profile/ onboarding/ reviews/ tags/ skeletons/
     auth/ icons/  ui/ (shadcn)
   hooks/          useAppTheme (dual-theme), useAuth, useChats, useJobs,
                   useCartellini, useLavoriWorker, useMisure, useMapboxToken
@@ -384,9 +399,89 @@ questo le misure sono solo due.
 - Altri posti: anteprima profilo in chat (Messaggio/Profilo con didascalia),
   testa delle schede cartellino e lavoro (Chat/Profilo), ruolo nella scheda
   lavoro, icona in Impostazioni, icone degli stati vuoti (Lista ×3,
-  Messaggi, bacheca worker). Restano tondi i contatori, i marker della mappa
-  (aspettano il disegno del pin) e la X di chiusura: sono segnali o comandi,
-  non contenitori.
+  Messaggi, bacheca worker). Restano tondi i contatori e la X di chiusura:
+  sono segnali o comandi, non contenitori.
+
+## Il PIN della mappa — disegnato (dal 22 ottobre)
+
+`pinmappa2.svg` di Tommaso (la seconda versione, più tonda: la prima,
+`pinmappa.svg`, era 48×64) al posto del cerchio + triangolo CSS, su **tutti e
+quattro** i pin: annuncio, gruppo (`EmployerGroupMarker`), selettore di
+posizione (`LocationPicker`) e minimappa della scheda (`LocationMiniMap`).
+Forma in `lib/formaPin.ts`, componente `map/PinMappa.tsx` (la minimappa crea
+il marker senza React e usa `pinSvg()`).
+
+- **Solo la forma è cambiata**: colori, larghezze (48 / 40) e stati sono
+  quelli di prima, tradotti da `bg-`/`border-` a `fill-`/`stroke-`. Alto 59,5
+  su 48 (la proporzione della tavola, 447×554).
+- **L'icona sta nel centro del cerchio superiore, calcolato**: il cerchio più
+  grande inscritto nella forma, campionando il tracciato → (224, 220), raggio
+  219. Non il centro della tavola, che cadrebbe più in basso. Se il disegno
+  cambia, va ricalcolato (lo script è nella storia della sessione: campiona
+  le curve e cerca il punto più lontano dal contorno).
+
+## Le ZONE della mappa — annunci vicini in un pin solo (dal 22 ottobre)
+
+Tommaso: «quando si fa dezoom… si sovrappongono creando un brutto effetto».
+`lib/zoneMappa.ts` + `map/ZonaMarker.tsx` + `map/ZonaAnnunciDrawer.tsx`.
+
+- **Due livelli.** Gli annunci dello stesso LOCALE restano un gruppo
+  (`groupJobsByEmployer`, `EmployerGroupMarker`): hanno le stesse coordinate,
+  nessuno zoom li separerebbe. I gruppi VICINI si uniscono in ZONE con
+  **supercluster** (la libreria di Mapbox, 8.0.1 — era già dentro
+  mapbox-gl, ora dichiarata con `@types/supercluster`).
+- **Raggio 48 px = la larghezza di un pin**, sullo zoom INTERO per difetto.
+  Oltre lo zoom 17 niente zone.
+- ⚠️ **Il raggio da solo NON basta**: è un cerchio, il pin no (48 × 60, più
+  6 px di numero in alto e a destra). Due pin uno sopra l'altro a 50–60 px
+  si accavallavano (screenshot di Tommaso). Dopo supercluster c'è
+  `separaSovrapposti`: confronta i RETTANGOLI veri a coppie (il numero solo
+  dove c'è — darlo a tutti univa pin singoli a 55 px che non si toccavano) e
+  unisce chi si toccherebbe, con 3 px d'aria. Misurato allo zoom intero per
+  difetto, dove i pin sono più vicini: avvicinando le distanze crescono, quindi
+  vale a ogni zoom. Verificato misurando i rettangoli a schermo su 14 livelli
+  di zoom: zero coppie che si toccano, aria minima 4 px.
+- **Pin di zona**: la VALIGETTA (`GenericoIcon`: dentro ci sono mestieri
+  diversi) + il numero di ANNUNCI (non di locali). Toccandolo: la lista della
+  zona, con le card della Lista (`JobsList`); se il quartiere è uno solo è il
+  titolo, e sotto ogni annuncio c'è l'attività (`sottoTitolo="attivita"`)
+  invece del quartiere ripetuto.
+- **Con una ricerca o un filtro attivo**, nelle due liste che si aprono dalla
+  mappa (zona e locale con più annunci) chi corrisponde va **in cima** (sort
+  stabile: dentro i due gruppi resta l'ordine dal più recente) e la sua
+  tessera è **evidenziata**: pieno `primary-strong` / `employer-800` con
+  l'icona `paper-sheet` — i colori del pin evidenziato sulla mappa, così il
+  legame tra mappa e lista si vede. `TesseraIcona evidenziata`. Il drawer del
+  locale usava ancora l'icona pastello su `accent` (~1,6:1): ora è la tessera.
+- **Il numero** è `NumeroPin`, in **Shinjo**, uguale per zone e gruppi di un
+  locale: un numero sopra un pin vuol dire sempre «N annunci». Cifra a 18 px
+  (la regola: Shinjo mai sotto i ~18), tondo da 26.
+- **La chiave di un marker dipende dagli annunci che contiene** (primo id +
+  numero), non dall'id di supercluster, che cambia a ogni livello di zoom:
+  una zona con gli stessi annunci resta lo stesso marker e non si rianima.
+- **Animazione: due metà che si incrociano**, 240 ms, curva ease-out
+  «quint» (`DURATA_PIN`, `CURVA_PIN`), rispetta «riduci movimento».
+  - chi ENTRA (`IngressoPin`) parte trasparente: zoom avanti → dal punto
+    della zona da cui esce; zoom indietro → la zona nuova si gonfia da 0,8;
+  - chi ESCE (`PinUscente`) resta per la durata dell'animazione: se si unisce
+    scivola dentro la zona sfumando, se si divide sfuma sul posto.
+  ⚠️ La prima versione animava solo chi entrava: i pin vecchi sparivano di
+  colpo («scattosa», Tommaso). Gli uscenti nascono in un `useLayoutEffect`,
+  non `useEffect`: così compaiono nello stesso fotogramma in cui spariscono
+  quelli veri, mai un fotogramma vuoto. Da dove
+  veniva un annuncio lo dice `posizioniPrima`, aggiornato in un EFFETTO e non
+  nel `useMemo` (StrictMode calcola i memo due volte: al secondo giro il ref
+  sarebbe già aggiornato). Verificato misurando le animazioni attive sui pin
+  appena nati durante un pizzico vero, non a occhio.
+- **Evidenziato** = `stroke` da 6 px con `vector-effect: non-scaling-stroke`,
+  tagliato sulla forma con un `clipPath`: ne resta la metà interna, 3 px
+  DENTRO il pin, come il `border` del cerchio di prima.
+- L'ombra era un `box-shadow` sul cerchio: sulla forma è un `drop-shadow`.
+- La punta è in basso al centro: l'`anchor="bottom"` dei Marker resta giusto
+  senza spostamenti.
+- ⚠️ La **minimappa** ha colori suoi, non toccati: arancio scritto a mano
+  (`hsl(30,90%,63%)`) e icona **bianca** — 2,07:1, la regola di §5 violata —
+  e arancione anche per l'employer. Da correggere quando si decide.
 
 ## Le schede dal basso: bordo a mano e FESSURA (dal 21 ottobre)
 
@@ -630,6 +725,23 @@ di react-map-gl non lo dichiarano e il typecheck fallisce (successo due volte).
   Ora c'è un `easeTo` quando la posizione arriva, **una volta sola** — se
   l'utente ha già trascinato, un secondo aggiornamento non deve riportarlo
   indietro sotto le dita.
+- **Tornando sulla mappa si riparte da DOVE SI ERA** (`vistaRicordata` in
+  `InteractiveMap.tsx`, 23 ottobre). Ogni cambio di pagina rimonta la mappa:
+  tornando dalla scheda o dal profilo di chi aveva pubblicato, ripartiva dal
+  centro di default e saltava sul GPS — chi esplorava un'altra zona si
+  ritrovava a casa. Ora a ogni `onMoveEnd` si salvano centro e zoom in una
+  variabile del modulo (non `window`, §2 lezione 8), e al ritorno si parte da
+  lì senza il salto sul GPS. Solo la prima apertura della sessione si centra
+  sull'utente. Verificato rimontando la mappa: il punto «tu sei qui» torna
+  allo stesso pixel, ferma, trascinata e allontanata col pizzico.
+  - ⚠️ Anche `zoomIntero` nasce dalla vista di partenza: partendo da
+    `initialZoom` (13) con una vista ricordata a 14, le zone erano calcolate
+    come a 13 finché non si toccava la mappa.
+  - ⚠️ Il centramento sul GPS si tenta anche in `onLoad`: se il GPS
+    rispondeva PRIMA che la mappa esistesse (prima apertura, token ancora in
+    arrivo), lo spostamento non trovava la mappa e nessuno lo ritentava.
+  - `reuseMaps` riapplica `initialViewState` quando riusa la mappa: letto nel
+    sorgente di react-map-gl 7.1.9 (`mapbox.js`, `static reuse`).
 - **L'attribuzione Mapbox non va spostata**: `PageTransition` riserva già `pb-16`,
   quindi la nav non la copre. Provato due volte a compensare e ogni volta il logo
   finiva a metà schermo.
@@ -735,9 +847,20 @@ di react-map-gl non lo dichiarano e il typecheck fallisce (successo due volte).
   ⚠️ Lanciava Chrome con `--disable-gpu`: niente WebGL, quindi **Mapbox non
   partiva** e la mappa restava vuota. Ora usa SwiftShader (WebGL software).
   Opzioni: `POSIZIONE=lat,lng` finge il GPS (la mappa worker si centra
-  sull'utente), `PIZZICO=0.74` fa un pizzico vero col dito per allontanare.
+  sull'utente), `PIZZICO=0.74` fa un pizzico vero col dito (anche in fila:
+  `PIZZICO=0.55,1.9 ATTESA_DOPO=5000,600`), `PRIMA="js"` esegue codice prima
+  dei pizzichi (es. un registratore di eventi), `ESEGUI="js"` dopo, e ne
+  stampa il risultato (anche una Promise).
   Il pannello browser di Claude, se nascosto, non scarica le piastrelle:
   per la mappa usare questo.
+- ⚠️ **`<AnimatePresence initial={false}>` in App.tsx spegne le animazioni
+  d'ingresso di TUTTI i `motion.*` dentro le pagine.** Serve a non animare
+  la pagina al primo caricamento, ma framer passa quell'`initial={false}`
+  per contesto a ogni discendente: un `motion.div` con `initial`/`animate`
+  nasce già alla fine. Successo coi pin della mappa: componente montato, zero
+  animazioni, `transform: none`. Per animare un ingresso dentro una pagina:
+  `element.animate()` nativo in un `useLayoutEffect` (vedi `IngressoPin`),
+  o un `AnimatePresence` nuovo attorno.
 - **Nel pannello browser con l'emulazione mobile i clic a coordinate
   sbagliano bersaglio** (il viewport emulato viene rimpicciolito per entrare
   nel pannello). Se un clic «non fa niente», riprovare senza emulazione prima
@@ -911,38 +1034,43 @@ Stanno in `supabase/demo/` — **fuori dal repo** di proposito (`.gitignore`):
 `dati-demo.json` (i dati), `genera-demo.mjs` → `carica-demo.sql`, e
 **`cancella-demo.sql`** (toglie account, annunci e tutto ciò che vi è
 collegato a cascata, poi le colonne `is_demo`). Si eseguono incollandoli in
-Lovable: `pbcopy < supabase/demo/cancella-demo.sql`. Provati su PGlite
+Lovable: `LC_ALL=en_US.UTF-8 pbcopy < supabase/demo/cancella-demo.sql` (⚠️ senza `LC_ALL` pbcopy legge il file come MacRoman e «Caffè» arriva a Lovable come «Caff√®»: successo il 22 ottobre). Provati su PGlite
 (Postgres vero): caricare due volte dà sempre 12 e 12, e la pulizia toglie
 anche la candidatura di un utente vero a un annuncio demo senza toccare
 l'utente. Se la cartella va persa: basta `DELETE FROM auth.users WHERE email
 LIKE '%@demo.politask.invalid'` (cascata) e togliere le colonne `is_demo` da
 `profiles` e `jobs`. ⚠️ Se Lovable ha registrato il caricamento in
 `drizzle/migrations/`, cancellare anche quel file.
-- La mappa mostra solo annunci delle **ultime 48 ore** (`useMapJobs`): i
-  demo hanno date «adesso meno 1–30 ore», e restano visibili ~1–2 giorni.
-  Rieseguire `carica-demo.sql` li rimette freschi.
+- La mappa mostra solo annunci **non scaduti** (`scade_il > adesso`, §19).
+  Prima della migration della scadenza i demo duravano ~1–2 giorni (48 ore
+  da `created_at`, che è «adesso meno 1–30 ore»); dopo, `carica-demo.sql`
+  non scrive `scade_il`, quindi prende il default: **48 ore dal
+  caricamento**. Rieseguirlo li rimette freschi.
 - Nomi delle attività cercati sul web: nessuna attività con quei nomi a
   Genova («Bar Il Gozzo Blu» scartato: esiste «Il Gozzo» al Porto Antico).
   Coordinate: strade vere geocodificate da Mapbox col solo nome della via.
 
-0. **Applicare in Lovable le due migration del 21 ottobre**
-   (`20261021120000_assunzione_cuore.sql`, poi
-   `20261021120100_cron_chiusura_lavori.sql`) e verificare che pg_cron ci
-   sia (`select * from cron.job`). Poi provare il flusso intero con dati veri.
+0. **Applicare in Lovable, PRIMA del push**: `20261021120100_cron_chiusura_lavori.sql`
+   (la `assunzione_cuore` è già applicata e verificata) e verificare che
+   pg_cron ci sia (`select * from cron.job`); poi
+   `20261023120000_scadenza_annunci.sql` (§19) — ⚠️ il codice nuovo filtra
+   su `scade_il`: pushato prima, mappa e Lista restano VUOTE. Verifica: GET
+   `/rest/v1/jobs?select=scade_il&limit=0` → 200, non 400/42703. Poi provare
+   il flusso intero con dati veri.
 1. **Bacheca, employer e worker**: provarle con dati veri (appendere,
    assumere, terminare, l'avviso di scadenza; lato worker gli stati e la
    recensione dalla card) — scritte e verificate solo con dati finti.
 2. **Pagine montate una volta sola** invece che a ogni cambio tab (§12,
    Prestazioni): il pezzo grosso rimasto sul lag.
 3. **Revisione schermata per schermata** (in corso): fatte accesso,
-   registrazione, onboarding, home, scheda annuncio. Restano lista, messaggi,
-   chat, annunci, crea annuncio, profilo, profilo pubblico, modifica profilo,
+   registrazione, onboarding, home, scheda annuncio, messaggi e chat (§18).
+   Restano lista, annunci, crea annuncio, profilo, profilo pubblico, modifica profilo,
    impostazioni.
-4. **Tre migration rimandate**: trigger su `chats.updated_at`, colonna
-   `is_system` su `messages` (ora i messaggi automatici si riconoscono per
-   stringa in `dates.ts`), e `lm.is_system` + `j.tags` nella vista
-   `chat_overview`.
-5. **Disegni mancanti** (la sagoma degli avatar non più: §6): sagoma del pin, cornici di chip e contenitore, eventuali
+4. **Due migration rimandate**: trigger su `chats.updated_at`, e
+   `lm.is_system` + `j.tags` nella vista `chat_overview`. (`is_system` su
+   `messages` invece C'È già e la chat lo usa: è l'anteprima in lista, che
+   legge dalla vista, a riconoscere i messaggi automatici dal testo.)
+5. **Disegni mancanti** (avatar e pin non più: §6): cornici di chip e contenitore, eventuali
    illustrazioni per gli empty state.
 6. **Licenza Shinjo** — mail da mandare.
 7. **Landing/waitlist** su `politask.app`, con privacy e termini (servono anche
@@ -1038,9 +1166,21 @@ Conseguenze strutturali, tutte obbligate:
   sta nel portal e nasce solo a scheda aperta: `useMisure` misurerebbe al
   montaggio, quando il nodo non c'è.
 - ⚠️ **Gli agganci vaul si calcolano sull'altezza della FINESTRA**, non su quella
-  della scheda: perché a tutta altezza arrivi in fondo, il contenuto deve essere
-  `h-[92vh]`. L'altezza in eccesso sta sotto la piega, quindi il vuoto in fondo
-  non si vede più.
+  della scheda: vaul trasla di `finestra × (1 − aggancio)`. La scheda è
+  `h-[92vh]` (in cima resta un po' di mappa), quindi **l'aggancio alto è 1**,
+  non 0,92 (`AGGANCIO_ALTO`). Con 0,92 la scheda «aperta tutta» scendeva
+  dell'8%: fondo a 912 su 844, e negli annunci corti l'ultima parte era fuori
+  schermo e non scorreva, perché entrava giusto nell'area (Tommaso, 22
+  ottobre). Era lo stesso errore di conto dell'aggancio basso, corretto lì due
+  giorni prima e non qui. Verificato trascinando col dito: scheda da 68 a 844,
+  e il contenuto lungo scorre fino in fondo.
+- **Anche l'aggancio alto si MISURA** (`refContenuto` → `fondoContenuto`):
+  se il contenuto finisce prima della scheda, l'aggancio alto si ferma lì
+  (con la stessa correzione degli 8vh); se è più lungo resta 1 e scorre. Un
+  annuncio corto tirato su lasciava mezza scheda di carta vuota (Tommaso, 22
+  ottobre). Misurato: annuncio corto → fine contenuto esattamente sul bordo,
+  0 px di vuoto; medio e lungo → aperta tutta, scorre. ⚠️ `setActiveSnapPoint`
+  confronta col valore dell'aggancio alto di quel giro, non con la costante.
 - ⚠️ **L'aggancio va CONTROLLATO** (`activeSnapPoint` + `setActiveSnapPoint`).
   Lo stato interno di vaul vive nella Root, che qui non si smonta mai: chi
   apriva la scheda, la trascinava in alto e la chiudeva, la ritrovava già aperta
@@ -1086,6 +1226,13 @@ a sinistra la card era piena da un lato e vuota dall'altro (Tommaso:
 si confrontano in colonna. Titolo fino a due righe, paga fino a due righe in
 un massimo del 38% della larghezza («150/settimana» ci sta su una).
 
+La stessa riga sta negli **Annunci attivi del profilo pubblico** (23
+ottobre): prima erano card grigie con un bordo CSS da 1 px DENTRO la card
+disegnata, l'icona in un quadratino pastello e «€ 9€/h». Lì la riga sotto il
+titolo è l'orario (la zona è quella del locale, uguale per tutti), e le righe
+sono divise dalla linea sottile — anche le recensioni sopra, che avevano un
+`border-b` liscio: due separatori diversi nella stessa schermata non vanno.
+
 Perché queste due e non solo il titolo: in una **lista**, senza mappa, il
 «dove» non si vede altrimenti, e la paga è il dato con cui si sceglie se
 aprire o no (Indeed, Subito, InfoJobs la tengono tutti nella riga). L'orario
@@ -1096,9 +1243,6 @@ e i tag di durata si leggono nella scheda; il mestiere lo dice già l'icona.
 - **La paga in Shinjo**: è un valore, e la regola dice che i valori stanno in
   Outfit (il select del quartiere). Qui è però un uso da *display* a 28px, che è
   esattamente ciò per cui Shinjo esiste. Se stona, è una riga da cambiare.
-- All'aggancio alto, un annuncio corto lascia carta vuota sotto il contenuto.
-  Non è più il difetto di prima (lo stato di riposo ora è giusto), ma se dà
-  fastidio serve un secondo aggancio misurato sul contenuto.
 - Manca la **distanza** («a 800 m da te»), che su un'app centrata sulla mappa
   sarebbe il secondo dato più utile dopo la paga. Servono le coordinate
   dell'utente nella scheda: oggi non ci arrivano.
@@ -1212,6 +1356,17 @@ fine → recensione del worker + **cuore** dell'employer.
   funzione `cuori_del_worker`, che restituisce solo gli id — il cartellino
   ha anche la paga, e le policy RLS sono per riga, non per colonna.
 - L'employer può **concludere in qualunque momento** (chat, scheda).
+- ⚠️ **I messaggi automatici si scrivono PER CHI LEGGE**
+  (`lib/messaggiSistema.ts`). Quello d'assunzione era salvato con la voce
+  del worker («🎉 Complimenti! Sei stato assunto…») e la chat lo stampava
+  uguale per tutti: l'employer leggeva i complimenti per un'assunzione fatta
+  da lui (Tommaso, 22 ottobre). Ora nel database va un testo NEUTRO
+  («Assunzione confermata per questo incarico.») e chat e anteprima lo
+  riscrivono: worker «Complimenti! Hai ottenuto questo lavoro.» (niente
+  «assunto» al maschile), employer «Hai assunto {nome} per questo lavoro.».
+  I vecchi con l'emoji si riconoscono e si mostrano uguale. Niente emoji nei
+  messaggi automatici né nella finestra di recensione (Tommaso: via i
+  coriandoli).
 - `PromemoriaScadenza` mostra **una domanda alla volta**: scadenza → cuore
   → trimestrale (`prossimoPromemoria` in `lib/bacheca.ts`). La finestra è
   `FinestraPromemoria`, separata per poterla vedere con dati finti.
@@ -1360,6 +1515,68 @@ verificato che il cartellino è rimasto identico su 16 combinazioni).
 
 ---
 
+# 18. I messaggi — ottobre 2026
+
+Tommaso (22 ottobre): «poco responsiva e poco caratteristica», lista e chat.
+Rifatti in tre fasi, tutte e tre approvate.
+
+## Reattività
+- **Invio istantaneo** (`handleSendMessage` in `Messaggi.tsx`). Prima il
+  messaggio compariva dopo DUE viaggi di rete (salvataggio + ritorno col tempo
+  reale), col testo fermo nel campo e la rotellina. Ora compare subito,
+  il campo si svuota, l'orologio sulla bolla dice «in invio». ⚠️ **L'id lo
+  genera il client** (`crypto.randomUUID()`): quando il messaggio torna col
+  tempo reale ha lo stesso id e prende il posto di quello istantaneo invece di
+  raddoppiarlo (`inserisciMessaggio`). La policy di insert controlla solo
+  mittente e partecipanti, quindi l'id scelto da noi passa. Se fallisce:
+  «Non inviato · Tocca per riprovare»; un 23505 al secondo tentativo vuol dire
+  che il primo era arrivato, e conta come riuscito.
+- **Messaggi in react-query** (`hooks/useMessaggi.ts`), il tempo reale scrive
+  nella cache. Prima la chat si svuotava e si ricaricava a ogni apertura.
+- ⚠️ Riga che torna dal database senza `stato`: lo spread lascerebbe il
+  vecchio «in invio» appiccicato, quindi `stato` si riscrive esplicito.
+- **La chat è un pannello SOPRA la lista** (che resta montata), entra da
+  destra (280 ms, decelera) ed esce dallo stesso lato (200 ms, accelera).
+  Animazione nativa: framer qui non anima gli ingressi (§12). Misurato: 390 →
+  0 px in entrata, 0 → 339 in uscita, lista ancora lì sotto.
+- **Conversazione in fondo** (`mt-auto`), non in alto con mezzo schermo vuoto.
+  Si scorre in fondo anche quando l'ultimo messaggio NON parte, se no la riga
+  «Non inviato» restava sotto il bordo.
+
+## Struttura
+- **Lista: righe piatte, non card**, divise dalla linea disegnata in versione
+  SOTTILE (`.linea-divisoria-sottile`, 2,5 px invece di 4: a 4 px, ripetuta
+  ogni riga, era «cicciona»). Il disegno si stira libero in altezza, quindi
+  schiacciarlo assottiglia il tratto senza cambiarlo. Tre righe:
+  nome + stato + ora · **titolo dell'annuncio** (l'unica cosa che distingue
+  due chat con la stessa persona) · ultimo messaggio + non letti. Ora dei non
+  letti nell'inchiostro del ruolo; il contatore era `text-white` sull'arancio
+  pastello (2,07:1), ora inchiostro.
+- **In chat: separatori di giornata** («Oggi», «Ieri», giorno della settimana,
+  poi la data: `etichettaGiorno`) e **solo l'ora** sulle bolle. **Gruppi**:
+  stessa persona, stesso giorno, meno di 5 minuti → bolle strette.
+- **Testata**: il titolo dell'annuncio sotto il nome riapre la scheda
+  (`JobDetailsSheet sopraChat`, a `z-[70]`: la chat è `z-[60]`).
+
+## Carattere
+- **Bolle a mano** (`lib/formaBolla.ts`): rettangolo arrotondato col tratto
+  delle card, come RITAGLIO (`clip-path`), niente filo (§6). Scarto dimezzato
+  (±0,3 px): sulle bolle piccole quello delle card si leggeva come sporco.
+  Angolo dal lato di chi parla piccolo sull'ultima del gruppo, e in alto su
+  quelle che lo continuano. La citazione di una risposta sta DENTRO la bolla.
+- **Messaggi automatici = timbri**, non bolle (`tipoDiSistema`): l'assunzione
+  nel verde di «Assunto» con la valigetta, la chiusura con l'orologio. Testo
+  scritto per chi legge (§16).
+- **Doppia spunta «letto» nel colore dell'ALTRO ruolo** (Tommaso): blu sulla
+  bolla arancione del worker, arancio su quella blu dell'employer. Tinte
+  scelte sul contrasto da icona (3:1): `employer-800` sull'arancio fa 3,29,
+  il blu pastello 1,46; sul blu `employer-700` l'arancio di brand fa solo
+  2,30, quindi c'è un token nuovo, `--brand-orange-chiaro` (#FBCB94, 3,18).
+  Non letto: la spunta tenue nel colore del testo.
+- **Allegato e invio, due tessere gemelle** ai lati del campo. L'invio a campo
+  vuoto è `Tessera spenta` (carta incavata + icona tenue), non il pastello al
+  40% che sembrava rotto.
+
 # 17. Lo splash d'apertura — ottobre 2026
 
 Il **logo animato in Lottie** all'apertura, a **ogni avvio a freddo**.
@@ -1415,3 +1632,53 @@ Il parametro `?splash` non c'è più: basta ricaricare.
 - **Nel pannello browser di Claude**, se è nascosto, `requestAnimationFrame` non
   scatta e l'animazione resta al primo fotogramma fino alla rete di sicurezza
   (§12): non è un bug dell'app.
+
+---
+
+# 19. La scadenza degli annunci — 23 ottobre 2026
+
+Decisa da Tommaso: **48 ore gratis, nessuna ripubblicazione gratuita**. Allo
+scadere l'employer riceve l'avviso e gli si chiede di **pagare per estendere
+a 7 giorni** (Fase 8, Stripe), altrimenti l'annuncio resta scaduto. Proposta
+mia «48+48 con un tocco», bocciata: «rende un annuncio pubblicabile per 4
+giorni».
+
+- **Colonna `jobs.scade_il`** (migration `20261023120000_scadenza_annunci.sql`).
+  Prima la scadenza era `created_at` + 48 ore calcolata in ogni query: per
+  estendere bisognava falsificare la data di creazione. Ora l'estensione sarà
+  solo spostare `scade_il`.
+- ⚠️ **La scadenza la decide il DATABASE**: trigger
+  `proteggi_scadenza_annuncio`. Alla creazione da utente `scade_il` = adesso
+  + 48 h qualunque cosa mandi il client; in modifica da utente non cambia.
+  Senza, la policy «Owners can update» permetteva di ripubblicare gratis da
+  sé. Il server (auth.uid() NULL: SECURITY DEFINER, pg_cron, il pagamento)
+  può spostarla.
+- **Candidature rifiutate dal database** su un annuncio scaduto o chiuso
+  (trigger `candidatura_su_annuncio_attivo`, errore `annuncio_non_attivo`):
+  la scheda si apre ancora da chat e profili, e il bottone si potrebbe
+  chiamare a mano.
+- **`lib/scadenzaAnnunci.ts` è la sorgente unica**: `annuncioScaduto`,
+  `testoScadenza` («Scade tra 5 ore»), `adessoISO` per le query,
+  `ORE_GRATUITE`, `GIORNI_A_PAGAMENTO`. Un oggetto senza `scade_il` né
+  `created_at` (select parziale) NON è dato per scaduto.
+- **Dove si vede**:
+  - mappa, Lista, profilo pubblico → filtrano `scade_il > adesso`;
+  - **Annunci** (chi l'ha pubblicato) → TUTTI i suoi annunci, con
+    `StatusBadge` «Scaduto» (`warning-soft`) o «Chiuso» (`neutral-soft`),
+    oppure «· scade tra N ore» accanto a quelli attivi;
+  - **scheda annuncio** → al posto di «Candidati», «Annuncio scaduto»;
+  - **Crea annuncio** → «Resta visibile sulla mappa per 48 ore» sotto
+    «Pubblica»: detto prima, non scoperto dopo;
+  - **l'avviso** → in `PromemoriaScadenza`, PRIMA dei promemoria della
+    bacheca: «"X" è scaduto», «Estendi a 7 giorni · presto» SPENTO (la
+    scelta che verrà si vede già) e «Ho capito», che scrive
+    `scadenza_vista = true`. Chiuso col tocco fuori = rimandato a questa
+    sessione. Gli annunci già scaduti prima della migration hanno
+    `scadenza_vista = true`: niente raffica di avvisi vecchi.
+- ⚠️ **I bottoni di STATO** nella scheda (verifica, «Candidatura inviata»,
+  «Annuncio scaduto») sono `STATO_SPENTO`: incavo + inchiostro pieno,
+  `disabled:opacity-100`. Col grigio e l'opacità 50% del `disabled` il
+  testo stava a ~2:1 — difetto che c'era già su «Candidatura inviata».
+- Quando arriva Stripe: una funzione SECURITY DEFINER (o un webhook) che
+  porta `scade_il` a adesso + 7 giorni e rimette `scadenza_vista = false`;
+  il bottone spento diventa vero. Niente altro da cambiare.

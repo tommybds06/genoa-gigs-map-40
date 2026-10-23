@@ -271,7 +271,7 @@ export function ReviewPrompt() {
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader className="text-center">
-          <DialogTitle className="text-2xl">Complimenti! 🎉</DialogTitle>
+          <DialogTitle className="text-2xl">Complimenti!</DialogTitle>
           <DialogDescription className="text-base pt-2">
             Hai completato il tuo impiego con{" "}
             <span className="font-semibold text-foreground">

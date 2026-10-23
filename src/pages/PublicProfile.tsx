@@ -15,23 +15,20 @@ import {
   MapPin, 
   Star, 
   Briefcase, 
-  Clock, 
-  Euro,
   MessageCircle,
   CheckCircle2,
   FileText,
   Camera,
-  ChevronRight
 } from "lucide-react";
-import { CalendarioIcon, IndietroIcon, StellaIcon, StellaVuotaIcon, MezzaStellaIcon, DocumentoIcon, FotoIcon, AnnunciAttiviIcon, MappaIcon, StoricoLavoriIcon, AnnunciVuotaIcon, CuoreIcon } from "@/components/icons/uiIcons";
+import { OrologioIcon, CalendarioIcon, IndietroIcon, StellaIcon, StellaVuotaIcon, MezzaStellaIcon, DocumentoIcon, FotoIcon, AnnunciAttiviIcon, MappaIcon, StoricoLavoriIcon, AnnunciVuotaIcon, CuoreIcon } from "@/components/icons/uiIcons";
 import { useCuoriWorker } from "@/hooks/useCuoriWorker";
 import { GenericoIcon } from "@/components/icons/roleIcons";
 import { useAppTheme } from "@/hooks/useAppTheme";
 import { useUser } from "@/contexts/UserContext";
 import { getJobIconFromTags } from "@/lib/jobIcons";
 import { formatTempoTrascorso } from "@/lib/dates";
-import { getRoleTag } from "@/constants/tags";
-import { TesseraIndietro } from "@/components/ui/Tessera";
+import { adessoISO } from "@/lib/scadenzaAnnunci";
+import { TesseraIcona, TesseraIndietro } from "@/components/ui/Tessera";
 
 // Tag durata usati prima della rinomina, ancora presenti su annunci vecchi
 
@@ -161,15 +158,13 @@ const PublicProfile = () => {
               }
             }
 
-            // Fetch active jobs (last 48 hours) for employers
-            const fortyEightHoursAgo = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
-            
+            // Gli annunci attivi: aperti e non scaduti (lib/scadenzaAnnunci.ts).
             const { data: jobsData, error: jobsError } = await supabase
               .from("jobs")
               .select("*")
               .eq("owner_id", userId)
               .eq("status", "open")
-              .gte("created_at", fortyEightHoursAgo)
+              .gt("scade_il", adessoISO())
               .order("created_at", { ascending: false });
             
             if (!jobsError) {
@@ -535,9 +530,11 @@ const PublicProfile = () => {
                     <p className="text-muted-foreground text-sm">Nessuna recensione ancora</p>
                   </div>
                 ) : (
-                  <div className="space-y-4">
-                    {reviews.map((review) => (
-                      <div key={review.id} className="border-b border-border pb-4 last:border-0 last:pb-0">
+                  <div>
+                    {/* La linea disegnata sottile, come gli annunci qui sotto: due
+                        separatori diversi nella stessa schermata non vanno. */}
+                    {reviews.map((review, i) => (
+                      <div key={review.id} className={cn("pb-4 last:pb-0", i > 0 && "linea-divisoria-sottile pt-4")}>
                         <div className="flex items-center justify-between mb-2">
                           <span className="font-medium text-sm">{review.worker_name}</span>
                           <div className="flex items-center gap-1">
@@ -575,54 +572,52 @@ const PublicProfile = () => {
                 
                 {jobs.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-8 text-center">
-                    <AnnunciAttiviIcon className="w-10 h-10 text-muted-foreground/30 mb-2" />
+                    <TesseraIcona icona={AnnunciVuotaIcon} misura="lg" className="mb-3" />
                     <p className="text-muted-foreground text-sm">Nessun annuncio attivo</p>
                   </div>
                 ) : (
-                  <div className="space-y-3">
-                    {jobs.map((job) => {
+                  /* RIGHE, non card dentro la card (Tommaso, 23 ottobre: «brutto»).
+                     Prima: un riquadro grigio con un bordo CSS da 1 px dentro la
+                     card disegnata, l'icona in un quadratino CSS pastello e la
+                     paga «€ 9€/h» col doppio euro. Ora la stessa riga della Lista
+                     — tessera col mestiere, titolo, orario, paga a destra in
+                     inchiostro — divise dalla linea sottile come la lista chat. */
+                  <div className="-mb-2">
+                    {jobs.map((job, i) => {
                       const Icon = getJobIconFromTags(job.tags);
-                      const roleTag = getRoleTag(job.tags);
-                      
                       return (
-                        <button 
-                          key={job.id} 
+                        <button
+                          key={job.id}
                           onClick={() => {
                             setSelectedJob(job);
                             setIsJobDetailsOpen(true);
                           }}
-                          className="w-full p-3 rounded-xl bg-muted/50 border border-border hover:border-employer/30 hover:shadow-md active:scale-[0.98] transition-all text-left"
+                          className={cn(
+                            "flex w-full items-center gap-3 py-3 text-left transition-colors active:bg-accent/40",
+                            i > 0 && "linea-divisoria-sottile"
+                          )}
                         >
-                          <div className="flex items-start gap-3">
-                            <div className="w-10 h-10 bg-employer-50 text-employer rounded-xl flex items-center justify-center shrink-0">
-                              <Icon className="w-5 h-5" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <h4 className="font-semibold truncate">{job.title}</h4>
-                              <p className="text-sm text-muted-foreground">{roleTag || "Generale"}</p>
-                              
-                              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-sm">
-                                {job.schedule && (
-                                  <span className="inline-flex items-center gap-1 text-muted-foreground">
-                                    <Clock className="w-3.5 h-3.5" />
-                                    {job.schedule}
-                                  </span>
-                                )}
-                                {job.price && (
-                                  <span className="inline-flex items-center gap-1 text-employer font-semibold">
-                                    <Euro className="w-3.5 h-3.5" />
-                                    {job.price}
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                            <div className="flex flex-col items-end gap-2 shrink-0">
-                              <span className="text-xs text-muted-foreground">
-                                {formatTempoTrascorso(job.created_at)}
-                              </span>
-                              <ChevronRight className="w-5 h-5 text-muted-foreground" />
-                            </div>
+                          <TesseraIcona icona={Icon} />
+                          <div className="min-w-0 flex-1">
+                            <h4 className="line-clamp-2 text-[15px] font-semibold leading-snug">{job.title}</h4>
+                            {job.schedule && (
+                              <p className="mt-0.5 flex items-center gap-1.5 truncate text-[13px] text-muted-foreground">
+                                <OrologioIcon className="h-3.5 w-3.5 shrink-0" />
+                                <span className="truncate">{job.schedule}</span>
+                              </p>
+                            )}
                           </div>
+                          {job.price && (
+                            <p
+                              className={cn(
+                                "line-clamp-2 max-w-[38%] shrink-0 text-right text-[15px] font-semibold leading-snug",
+                                // L'inchiostro del ruolo di chi guarda, come in Lista: mai il pastello.
+                                isEmployer ? "text-employer-800" : "text-primary-strong"
+                              )}
+                            >
+                              {job.price}
+                            </p>
+                          )}
                         </button>
                       );
                     })}

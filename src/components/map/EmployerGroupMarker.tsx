@@ -1,9 +1,11 @@
 import { memo, useMemo } from "react";
 import { Marker } from "react-map-gl";
 import { cn } from "@/lib/utils";
-import { getJobIconFromTags } from "@/lib/jobIcons";
-import { GenericoIcon } from "@/components/icons/roleIcons";
+import { iconaComune } from "@/lib/jobIcons";
 import { Job } from "@/hooks/useJobs";
+import { PinMappa } from "./PinMappa";
+import { NumeroPin } from "./NumeroPin";
+import { IngressoPin, type Ingresso } from "./IngressoPin";
 
 interface EmployerGroupMarkerProps {
   employerId: string;
@@ -14,6 +16,8 @@ interface EmployerGroupMarkerProps {
   isHighlighted?: boolean;
   isDimmed?: boolean;
   isSearchActive?: boolean;
+  /** Da dove arriva quando compare cambiando zoom (vedi IngressoPin). */
+  ingresso?: Ingresso;
   onMarkerClick: (employerId: string, jobs: Job[]) => void;
 }
 
@@ -26,6 +30,7 @@ export const EmployerGroupMarker = memo(function EmployerGroupMarker({
   isHighlighted = false,
   isDimmed = false,
   isSearchActive = false,
+  ingresso,
   onMarkerClick,
 }: EmployerGroupMarkerProps) {
   const count = jobs.length;
@@ -40,10 +45,7 @@ export const EmployerGroupMarker = memo(function EmployerGroupMarker({
    * icona (due turni da cameriere restano «cameriere»); se sono mischiati si
    * usa il generico, perché sceglierne una a caso direbbe una cosa falsa.
    */
-  const Icona = useMemo(() => {
-    const icone = jobs.map((job) => getJobIconFromTags(job.tags));
-    return icone.every((i) => i === icone[0]) ? icone[0] : GenericoIcon;
-  }, [jobs]);
+  const Icona = useMemo(() => iconaComune(jobs), [jobs]);
 
   return (
     <Marker
@@ -55,6 +57,7 @@ export const EmployerGroupMarker = memo(function EmployerGroupMarker({
         onMarkerClick(employerId, jobs);
       }}
     >
+      <IngressoPin da={ingresso}>
       <button 
         className={cn(
           "group flex flex-col items-center cursor-pointer transition-all duration-300 ease-out touch-feedback relative",
@@ -63,52 +66,25 @@ export const EmployerGroupMarker = memo(function EmployerGroupMarker({
           !isSearchActive && "hover:scale-110"
         )}
       >
-        {/* Badge counter - uses primary color */}
-        <div 
-          className={cn(
-            "absolute -top-1 -right-1 z-10 min-w-[20px] h-[20px] rounded-full flex items-center justify-center shadow-md border-2 border-white",
-            isEmployer ? "bg-employer-700" : "bg-primary"
-          )}
-        >
-          <span className={cn("text-xs font-bold px-1", isEmployer ? "text-employer-foreground" : "text-primary-foreground")}>{count}</span>
-        </div>
-        
-        {/* Main marker - same size as single markers (w-12 h-12) */}
-        <div
-          className={cn(
-            "w-12 h-12 rounded-full flex items-center justify-center shadow-material-md relative transition-all duration-300",
-            isHighlighted
-              ? cn("bg-card border-3", isEmployer ? "border-employer-800" : "border-primary-strong")
-              : isEmployer
-                ? "bg-employer-700"
-                : "bg-primary"
-          )}
-          style={isHighlighted ? { borderWidth: '3px' } : undefined}
-        >
-          <Icona
-            className={cn(
-              "w-6 h-6 transition-colors duration-300",
-              isHighlighted
-                ? (isEmployer ? "text-employer-800" : "text-primary-strong")
-                : isEmployer
-                  ? "text-employer-foreground"
-                  : "text-primary-foreground"
-            )}
-          />
-        </div>
+        {/* Il numero in Shinjo, lo stesso delle zone: un numero sopra un pin
+            vuol dire sempre «N annunci». */}
+        <NumeroPin n={count} isEmployer={isEmployer} />
 
-        {/* Pointer triangle */}
-        <div
-          className={cn(
-            "w-0 h-0 border-l-[9px] border-r-[9px] border-t-[12px] border-l-transparent border-r-transparent -mt-1 transition-all duration-300",
+        {/* Stesso pin disegnato dei marker singoli (lib/formaPin.ts), stessi colori. */}
+        <PinMappa
+          icona={Icona}
+          classeFondo={isHighlighted ? "fill-card" : isEmployer ? "fill-employer-700" : "fill-primary"}
+          classeContorno={isHighlighted ? (isEmployer ? "stroke-employer-800" : "stroke-primary-strong") : undefined}
+          classeIcona={
             isHighlighted
-              ? (isEmployer ? "border-t-employer-800" : "border-t-primary-strong")
+              ? (isEmployer ? "text-employer-800" : "text-primary-strong")
               : isEmployer
-                ? "border-t-employer-700"
-                : "border-t-primary"
-          )}
+                ? "text-employer-foreground"
+                : "text-primary-foreground"
+          }
         />
       </button>
+      </IngressoPin>
     </Marker>
   );
 });

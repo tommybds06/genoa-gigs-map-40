@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { Fragment, useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { MessageCircle, ArrowLeft, Send, Loader2, ImagePlus, X, CheckCircle, Check } from "lucide-react";
 import { InvioIcon, ImmaginiIcon, MessaggiVuotaIcon } from "@/components/icons/uiIcons";
 import { useAppTheme } from "@/hooks/useAppTheme";
@@ -34,34 +34,18 @@ import { BachecaWorker } from "@/components/bacheca/BachecaWorker";
 import { useLavoriWorker } from "@/hooks/useLavoriWorker";
 import { useCartellini, CHIAVE_CARTELLINI } from "@/hooks/useCartellini";
 import { eScaduto, chiudiAnnuncioSeNessunoResta } from "@/lib/bacheca";
-import { formatOrarioChat, anteprimaMessaggio } from "@/lib/dates";
+import { formatOrarioChat, anteprimaMessaggio, chiaveGiorno, etichettaGiorno } from "@/lib/dates";
+import { MESSAGGIO_ASSUNZIONE, testoDiSistema, tipoDiSistema } from "@/lib/messaggiSistema";
+import { JobDetailsSheet } from "@/components/map/JobDetailsSheet";
+import type { Job } from "@/hooks/useJobs";
+import { GenericoIcon } from "@/components/icons/roleIcons";
+import { OrologioIcon, InfoIcon } from "@/components/icons/uiIcons";
+import { ChevronRight } from "lucide-react";
 import { useAttachmentUrl } from "@/hooks/useAttachmentUrl";
+import { useMessaggi, inserisciMessaggio, aggiornaMessaggio, type Messaggio } from "@/hooks/useMessaggi";
 
-interface Message {
-  id: string;
-  chat_id: string;
-  sender_id: string;
-  content: string;
-  created_at: string;
-  is_read: boolean;
-  reply_to_id: string | null;
-  attachment_url: string | null;
-  is_system?: boolean;
-  reply_to?: Message | null;
-}
-
-// Smart timestamp formatting
-const formatMessageTime = (dateString: string): string => {
-  const date = new Date(dateString);
-  const now = new Date();
-  const isToday = date.toDateString() === now.toDateString();
-  
-  if (isToday) {
-    return date.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
-  } else {
-    return `${date.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' })} ${date.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}`;
-  }
-};
+/** Il messaggio di una chat: vedi `hooks/useMessaggi.ts`. */
+type Message = Messaggio;
 
 const Messaggi = () => {
   const { theme, isEmployer } = useAppTheme();
@@ -74,9 +58,10 @@ const Messaggi = () => {
   const { data: chats = [], isLoading: loading, refetch: refetchChats } = useChats(user?.id);
   
   const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
+  /* I messaggi della chat aperta, dalla cache (useMessaggi): riaprendo una
+     chat ci sono al primo fotogramma, niente più lista vuota e poi il salto. */
+  const { data: messages = [], isFetched: messaggiCaricati } = useMessaggi(selectedChat?.id);
   const [newMessage, setNewMessage] = useState('');
-  const [sending, setSending] = useState(false);
   const [replyingTo, setReplyingTo] = useState<Message | null>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [pendingAttachment, setPendingAttachment] = useState<string | null>(null);
@@ -171,116 +156,46 @@ const Messaggi = () => {
     };
   }, [user?.id, queryClient]);
 
-  // Load messages for selected chat and mark as read
+  // Chat aperta: stato della candidatura + messaggi in tempo reale, scritti
+  // direttamente nella cache di useMessaggi.
   useEffect(() => {
     const chatId = selectedChat?.id;
     const workerId = selectedChat?.worker_id;
     const jobId = selectedChat?.job_id;
     const userId = user?.id;
-    
+
     if (!chatId || !userId) {
-      setMessages([]);
       setApplicationStatus(null);
       return;
     }
 
     let isMounted = true;
 
-    const fetchMessages = async () => {
-      const { data, error } = await supabase
-        .from('messages')
-        .select('*')
-        .eq('chat_id', chatId)
-        .order('created_at', { ascending: true });
-
-      if (error || !isMounted) {
-        if (error) console.error('Error fetching messages:', error);
-        return;
-      }
-
-      // Fetch reply_to messages
-      const messagesWithReplies = (data || []).map((msg) => {
-        if (msg.reply_to_id) {
-          const replyMsg = data?.find(m => m.id === msg.reply_to_id);
-          return { ...msg, reply_to: replyMsg || null };
-        }
-        return { ...msg, reply_to: null };
-      });
-
-      if (isMounted) {
-        setMessages(messagesWithReplies);
-      }
-
-      // Mark received messages as read
-      const unreadMessageIds = data
-        ?.filter(msg => !msg.is_read && msg.sender_id !== userId)
-        .map(msg => msg.id) || [];
-
-      if (unreadMessageIds.length > 0) {
-        await supabase
-          .from('messages')
-          .update({ is_read: true })
-          .in('id', unreadMessageIds);
-        
-        // Invalidate cache to update badge
-        queryClient.invalidateQueries({ queryKey: ['chats'] });
-      }
-    };
-
-    // Fetch application status for this chat
     const fetchApplicationStatus = async () => {
       if (!jobId || !workerId) return;
-      
+      // ⚠️ maybeSingle e non single: con zero righe single() dà 406 (§12).
       const { data: applicationData } = await supabase
         .from('applications')
         .select('status')
         .eq('job_id', jobId)
         .eq('applicant_id', workerId)
-        .single();
-      
-      if (isMounted) {
-        setApplicationStatus(applicationData?.status || null);
-      }
+        .maybeSingle();
+      if (isMounted) setApplicationStatus(applicationData?.status || null);
     };
-
-    fetchMessages();
     fetchApplicationStatus();
 
-    // Subscribe to new messages and updates - use primitive chatId
     const channel = supabase
       .channel(`messages-${chatId}`)
       .on(
         'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'messages',
-          filter: `chat_id=eq.${chatId}`,
-        },
-        async (payload) => {
+        { event: '*', schema: 'public', table: 'messages', filter: `chat_id=eq.${chatId}` },
+        (payload) => {
           if (!isMounted) return;
-          
           if (payload.eventType === 'INSERT') {
-            const newMsg = payload.new as Message;
-            // Use functional update to avoid stale closure
-            setMessages(prev => {
-              const existingReply = newMsg.reply_to_id 
-                ? prev.find(m => m.id === newMsg.reply_to_id) 
-                : null;
-              return [...prev, { ...newMsg, reply_to: existingReply || null }];
-            });
-            
-            // Mark as read if not from current user
-            if (newMsg.sender_id !== userId) {
-              await supabase
-                .from('messages')
-                .update({ is_read: true })
-                .eq('id', newMsg.id);
-            }
+            // Se è un mio messaggio già comparso (stesso id), lo conferma.
+            inserisciMessaggio(queryClient, chatId, { ...(payload.new as Messaggio), stato: undefined });
           } else if (payload.eventType === 'UPDATE') {
-            setMessages(prev => prev.map(msg => 
-              msg.id === payload.new.id ? { ...msg, ...payload.new } : msg
-            ));
+            aggiornaMessaggio(queryClient, chatId, payload.new.id as string, payload.new as Partial<Messaggio>);
           }
         }
       )
@@ -292,11 +207,31 @@ const Messaggi = () => {
     };
   }, [selectedChat?.id, selectedChat?.job_id, selectedChat?.worker_id, user?.id, queryClient]);
 
+  // Letti: i messaggi ricevuti nella chat aperta, una volta sola ciascuno —
+  // all'apertura e quando ne arrivano di nuovi.
+  const giaSegnatiLetti = useRef(new Set<string>());
+  useEffect(() => {
+    if (!selectedChat?.id || !user?.id) return;
+    const ids = messages
+      .filter((m) => !m.is_read && m.sender_id !== user.id && !giaSegnatiLetti.current.has(m.id))
+      .map((m) => m.id);
+    if (ids.length === 0) return;
+    ids.forEach((id) => giaSegnatiLetti.current.add(id));
+    supabase
+      .from('messages')
+      .update({ is_read: true })
+      .in('id', ids)
+      .then(({ error }) => {
+        if (!error) queryClient.invalidateQueries({ queryKey: ['chats'] });
+      });
+  }, [messages, selectedChat?.id, user?.id, queryClient]);
+
   // Scroll management (stile WhatsApp): all'apertura la chat va in fondo (messaggio
   // più recente) senza animazione; sui nuovi messaggi scrolla in fondo in modo fluido.
   // Con pochi messaggi il contenuto non riempie l'area, quindi restano in alto (nessuno
   // scroll necessario) — esattamente come WhatsApp.
   const prevMessagesCountRef = useRef(0);
+  const statoUltimo = messages[messages.length - 1]?.stato;
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (messages.length === 0) {
@@ -314,11 +249,14 @@ const Messaggi = () => {
       requestAnimationFrame(() => {
         container.scrollTo({ top: container.scrollHeight });
       });
-    } else if (hasNewMessages) {
+    } else if (hasNewMessages || statoUltimo === 'errore') {
+      // Anche quando l'ultimo messaggio NON PARTE: sotto la bolla compare
+      // «Non inviato · Tocca per riprovare», e senza questo restava sotto il
+      // bordo, invisibile (visto in anteprima).
       container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
     }
     prevMessagesCountRef.current = messages.length;
-  }, [messages.length]);
+  }, [messages.length, statoUltimo]);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -360,31 +298,55 @@ const Messaggi = () => {
     }
   };
 
-  const handleSendMessage = async () => {
-    if ((!newMessage.trim() && !pendingAttachment) || !selectedChat || !user) return;
-
-    setSending(true);
-    try {
-      const { error } = await supabase
-        .from('messages')
-        .insert({
-          chat_id: selectedChat.id,
-          sender_id: user.id,
-          content: newMessage.trim() || (pendingAttachment ? '📷 Foto' : ''),
-          reply_to_id: replyingTo?.id || null,
-          attachment_url: pendingAttachment,
-        });
-
-      if (error) throw error;
-      setNewMessage('');
-      setReplyingTo(null);
-      setPendingAttachment(null);
-    } catch (error) {
+  /* INVIO ISTANTANEO (Tommaso, 22 ottobre: «poco responsiva»). Prima il
+     messaggio compariva solo dopo DUE viaggi di rete — il salvataggio e il
+     ritorno col tempo reale — col testo fermo nel campo e la rotellina sul
+     bottone. Ora compare subito, il campo si svuota subito, e l'orologio
+     sulla bolla dice «in invio» finché il database non conferma. L'id lo
+     generiamo noi: quando il messaggio torna col tempo reale ha lo stesso
+     id, e prende il posto di quello istantaneo invece di raddoppiarlo. */
+  const inviaAlDatabase = async (m: Messaggio) => {
+    const { error } = await supabase.from('messages').insert({
+      id: m.id,
+      chat_id: m.chat_id,
+      sender_id: m.sender_id,
+      content: m.content,
+      reply_to_id: m.reply_to_id,
+      attachment_url: m.attachment_url,
+    });
+    // 23505 = c'è già: il primo tentativo era arrivato, si era perso solo la risposta.
+    if (error && error.code !== '23505') {
       console.error('Error sending message:', error);
-      toast.error('Errore nell\'invio del messaggio', { duration: 2000 });
-    } finally {
-      setSending(false);
+      aggiornaMessaggio(queryClient, m.chat_id, m.id, { stato: 'errore' });
+      return;
     }
+    aggiornaMessaggio(queryClient, m.chat_id, m.id, { stato: undefined });
+  };
+
+  const handleSendMessage = () => {
+    if ((!newMessage.trim() && !pendingAttachment) || !selectedChat || !user) return;
+    const m: Messaggio = {
+      id: crypto.randomUUID(),
+      chat_id: selectedChat.id,
+      sender_id: user.id,
+      content: newMessage.trim() || (pendingAttachment ? '📷 Foto' : ''),
+      created_at: new Date().toISOString(),
+      is_read: false,
+      reply_to_id: replyingTo?.id || null,
+      attachment_url: pendingAttachment,
+      reply_to: replyingTo,
+      stato: 'invio',
+    };
+    inserisciMessaggio(queryClient, m.chat_id, m);
+    setNewMessage('');
+    setReplyingTo(null);
+    setPendingAttachment(null);
+    void inviaAlDatabase(m);
+  };
+
+  const riprovaMessaggio = (m: Messaggio) => {
+    aggiornaMessaggio(queryClient, m.chat_id, m.id, { stato: 'invio' });
+    void inviaAlDatabase(m);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -430,7 +392,8 @@ const Messaggi = () => {
       await supabase.from('messages').insert({
         chat_id: chatId,
         sender_id: userId,
-        content: '🎉 Complimenti! Sei stato assunto per questo incarico.',
+        // Testo NEUTRO: in chat si riscrive per chi legge (lib/messaggiSistema.ts).
+        content: MESSAGGIO_ASSUNZIONE,
         // Va marcato in SCRITTURA. La migration ha riempito le righe esistenti
         // confrontando il testo, ma quello e' un backfill una tantum: senza
         // questa riga ogni nuova assunzione tornerebbe indistinguibile da un
@@ -503,47 +466,109 @@ const Messaggi = () => {
     }, 1000);
   };
 
+  /* ---- LA CHAT ENTRA DA DESTRA ----
+     Prima `if (selectedChat) return …` sostituiva lo schermo di colpo. Ora la
+     chat è un pannello SOPRA la lista (che resta montata sotto): entra
+     scorrendo da destra e al ritorno esce dallo stesso lato, come in ogni app
+     di messaggi. È un'animazione che accompagna un gesto (§12). Animazione
+     nativa e non framer: dentro le pagine `AnimatePresence initial={false}`
+     spegne gli ingressi (§12). */
+  const pannelloChat = useRef<HTMLDivElement>(null);
+  const chiusuraInCorso = useRef(false);
+  const movimentoRidotto = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  useLayoutEffect(() => {
+    const el = pannelloChat.current;
+    if (!el || !selectedChat?.id || movimentoRidotto()) return;
+    el.animate([{ transform: 'translateX(100%)' }, { transform: 'none' }], {
+      duration: 280,
+      easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+    });
+  }, [selectedChat?.id]);
+
+  const chiudiChat = () => {
+    const fine = () => {
+      chiusuraInCorso.current = false;
+      setSelectedChat(null);
+      setReplyingTo(null);
+      setPendingAttachment(null);
+      setApplicationStatus(null);
+      navigate('/messaggi', { replace: true });
+    };
+    const el = pannelloChat.current;
+    if (!el || movimentoRidotto()) return fine();
+    if (chiusuraInCorso.current) return;
+    chiusuraInCorso.current = true;
+    const uscita = el.animate([{ transform: 'none' }, { transform: 'translateX(100%)' }], {
+      duration: 200,
+      easing: 'cubic-bezier(0.4, 0, 1, 1)',
+      fill: 'forwards',
+    });
+    uscita.onfinish = fine;
+  };
+
+  // L'annuncio di cui si parla, riaperto dal titolo in testa alla chat.
+  const [annuncioChat, setAnnuncioChat] = useState<Job | null>(null);
+  const apriAnnuncio = async () => {
+    if (!selectedChat?.job_id) return;
+    const { data, error } = await supabase
+      .from('jobs')
+      .select('*, profiles(full_name, avatar_url, address_text, photos)')
+      .eq('id', selectedChat.job_id)
+      .maybeSingle();
+    if (error || !data) {
+      toast.error('Annuncio non più disponibile', { duration: 2000 });
+      return;
+    }
+    setAnnuncioChat({ ...data, tags: data.tags || [] } as unknown as Job);
+  };
+
   // Chat detail view
-  if (selectedChat) {
-    return (
+  const vistaChat = selectedChat ? (
       // Fullscreen chat container - covers entire viewport including navbar
       // z-[60] to be ABOVE the BottomNav which is z-50
-      <div 
+      <div
+        ref={pannelloChat}
         className="fixed inset-0 flex flex-col bg-background z-[60]"
         style={{ height: '100dvh' }}
       >
         {/* Chat header - shrink-0 so it doesn't compress */}
-        <header className="shrink-0 z-40 bg-background px-4 pt-8 pb-3 border-b">
+        <header className="shrink-0 z-40 bg-background px-4 pt-8 pb-3">
           <div className="flex items-center gap-2">
-            <TesseraIndietro
-              onClick={() => {
-                setSelectedChat(null);
-                setReplyingTo(null);
-                setPendingAttachment(null);
-                setApplicationStatus(null);
-                navigate('/messaggi', { replace: true });
-              }}
-            />
-            <div 
-              className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer"
+            <TesseraIndietro onClick={chiudiChat} />
+            <button
+              type="button"
+              className="shrink-0"
               onClick={() => navigate(`/profile/${selectedChat.other_user?.id}`)}
+              aria-label={`Profilo di ${selectedChat.other_user?.full_name || 'utente'}`}
             >
-              <Avatar seme={selectedChat.other_user?.id} className="h-10 w-10 shrink-0">
+              <Avatar seme={selectedChat.other_user?.id} className="h-10 w-10">
                 <AvatarImage src={selectedChat.other_user?.avatar_url || undefined} />
                 <AvatarFallback className={`${theme.accentBg} ${theme.primaryText}`}>
                   {(selectedChat.other_user?.full_name || 'U')[0].toUpperCase()}
                 </AvatarFallback>
               </Avatar>
-              <div className="flex-1 min-w-0">
-                <h2 className="font-semibold truncate text-sm">
-                  {selectedChat.other_user?.full_name || 'Utente'}
-                </h2>
-                <p className="text-xs text-muted-foreground truncate">
-                  {selectedChat.job?.title}
-                </p>
-              </div>
+            </button>
+            <div className="flex-1 min-w-0">
+              <button
+                type="button"
+                className="block max-w-full truncate text-left font-semibold text-[15px] leading-tight"
+                onClick={() => navigate(`/profile/${selectedChat.other_user?.id}`)}
+              >
+                {selectedChat.other_user?.full_name || 'Utente'}
+              </button>
+              {/* Di che lavoro si parla: toccandolo si riapre la scheda. */}
+              {selectedChat.job?.title && (
+                <button
+                  type="button"
+                  onClick={apriAnnuncio}
+                  className="mt-0.5 flex max-w-full items-center gap-0.5 text-left text-xs text-muted-foreground active:opacity-70"
+                >
+                  <span className="truncate">{selectedChat.job.title}</span>
+                  <ChevronRight className="h-3.5 w-3.5 shrink-0" />
+                </button>
+              )}
             </div>
-            
+
             {/* HIRE button for Employer when status is 'accepted' (in colloquio) */}
             {isEmployer && applicationStatus === 'accepted' && (
               <Button
@@ -577,6 +602,8 @@ const Messaggi = () => {
             {applicationStatus === 'completed' && <StatusBadge stato="completed" />}
           </div>
         </header>
+        {/* La linea disegnata al posto del bordo CSS da 1 px. */}
+        <div aria-hidden="true" className="linea-divisoria-sopra shrink-0" />
 
         {/* Messages area - stile WhatsApp: i messaggi partono dall'alto; lo scroll
             va in fondo (messaggio più recente) all'apertura e sui nuovi messaggi via JS */}
@@ -587,35 +614,82 @@ const Messaggi = () => {
             WebkitOverflowScrolling: 'touch'
           }}
         >
-          {messages.length === 0 ? (
+          {messaggiCaricati && messages.length === 0 ? (
             <div className="flex items-center justify-center h-full">
               <p className="text-muted-foreground text-sm">
                 Inizia la conversazione...
               </p>
             </div>
           ) : (
-            <div className="space-y-3 py-4">
-              {messages.map((msg) =>
-                // I messaggi generati dall'app non sono scritti da nessuno:
-                // renderli come bolle li faceva sembrare parole dell'altra
-                // persona. Riga centrata, niente avatar, niente risposta.
-                msg.is_system ? (
-                  <div key={msg.id} className="flex justify-center py-1">
-                    <span className="max-w-[80%] text-center text-xs text-muted-foreground bg-muted border border-border rounded-full px-3 py-1.5">
-                      {msg.content}
+            /* `mt-auto`: la conversazione sta IN FONDO, vicino a dove si
+               scrive, e lo spazio vuoto va sopra — come in ogni app di chat.
+               Prima partiva dall'alto e lasciava mezzo schermo vuoto in mezzo. */
+            <div className="mt-auto pb-3 pt-1">
+              {messages.map((msg, i) => {
+                const prec = messages[i - 1];
+                const succ = messages[i + 1];
+                const nuovoGiorno = !prec || chiaveGiorno(prec.created_at) !== chiaveGiorno(msg.created_at);
+                /* Stesso gruppo = stessa persona, stesso giorno, a meno di
+                   5 minuti: le bolle si stringono e solo l'ultima ha l'angolo
+                   dal lato di chi parla. */
+                const stessoGruppo = (a?: Message, b?: Message) =>
+                  !!a && !!b && !a.is_system && !b.is_system &&
+                  a.sender_id === b.sender_id &&
+                  chiaveGiorno(a.created_at) === chiaveGiorno(b.created_at) &&
+                  Math.abs(new Date(b.created_at).getTime() - new Date(a.created_at).getTime()) < 5 * 60_000;
+
+                const separatore = nuovoGiorno && (
+                  <div role="separator" className="flex items-center gap-3 pb-1 pt-4">
+                    <span aria-hidden="true" className="linea-divisoria-sopra h-0 flex-1" />
+                    <span className="text-xs font-medium text-ink-soft first-letter:uppercase">
+                      {etichettaGiorno(msg.created_at)}
                     </span>
+                    <span aria-hidden="true" className="linea-divisoria-sopra h-0 flex-1" />
                   </div>
-                ) : (
-                  <MessageBubble
-                    key={msg.id}
-                    message={msg}
-                    isOwn={msg.sender_id === user?.id}
-                    isEmployer={isEmployer}
-                    onReply={handleReply}
-                    formatTime={formatMessageTime}
-                  />
-                )
-              )}
+                );
+
+                if (msg.is_system) {
+                  /* I messaggi dell'app come TIMBRO, non come bolla: non li ha
+                     scritti nessuno dei due. L'assunzione nel verde di
+                     «Assunto», con la valigetta: è il momento da ritrovare
+                     scorrendo. Il testo è scritto per chi legge. */
+                  const tipo = tipoDiSistema(msg.content);
+                  const Icona = tipo === 'assunzione' ? GenericoIcon : tipo === 'chiusura' ? OrologioIcon : InfoIcon;
+                  return (
+                    <Fragment key={msg.id}>
+                      {separatore}
+                      <div className="flex justify-center py-2">
+                        <span
+                          className={cn(
+                            'sagoma-chip inline-flex max-w-[88%] items-center gap-2 rounded-full px-4 py-2 text-[13px] font-medium',
+                            tipo === 'assunzione'
+                              ? 'bg-success-soft text-success-soft-foreground'
+                              : 'bg-paper-sunken text-ink-soft'
+                          )}
+                        >
+                          <Icona className="h-4 w-4 shrink-0" />
+                          <span>{testoDiSistema(msg.content, { isEmployer, nomeAltro: selectedChat.other_user?.full_name })}</span>
+                        </span>
+                      </div>
+                    </Fragment>
+                  );
+                }
+
+                return (
+                  <Fragment key={msg.id}>
+                    {separatore}
+                    <MessageBubble
+                      message={msg}
+                      isOwn={msg.sender_id === user?.id}
+                      isEmployer={isEmployer}
+                      onReply={handleReply}
+                      continuaGruppo={!nuovoGiorno && stessoGruppo(prec, msg)}
+                      chiudeGruppo={!stessoGruppo(msg, succ)}
+                      onRiprova={riprovaMessaggio}
+                    />
+                  </Fragment>
+                );
+              })}
             </div>
           )}
         </main>
@@ -655,8 +729,8 @@ const Messaggi = () => {
         )}
 
         {/* Message input - shrink-0 stays at bottom, never compressed */}
-        <div 
-          className="shrink-0 bg-background border-t px-4 pt-3"
+        <div
+          className="linea-divisoria-sopra shrink-0 bg-background px-4 pt-3"
           style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 16px)' }}
         >
           <div className="flex items-center gap-2">
@@ -668,19 +742,14 @@ const Messaggi = () => {
               onChange={handleImageUpload}
               className="hidden"
             />
-            <Button
-              variant="ghost"
-              size="icon"
+            {/* Allegato e invio sono due tessere gemelle ai lati del campo. */}
+            <Tessera
+              icona={uploadingImage ? Loader2 : ImmaginiIcon}
+              classeIcona={uploadingImage ? "animate-spin" : undefined}
+              etichetta="Allega una foto"
               onClick={() => fileInputRef.current?.click()}
               disabled={uploadingImage}
-              className="shrink-0 rounded-full h-12 w-12"
-            >
-              {uploadingImage ? (
-                <Loader2 className="h-6 w-6 animate-spin" />
-              ) : (
-                <ImmaginiIcon className={`!h-9 !w-9 ${isEmployer ? 'text-employer' : 'text-primary'}`} />
-              )}
-            </Button>
+            />
 
             <Input
               value={newMessage}
@@ -688,18 +757,20 @@ const Messaggi = () => {
               onKeyPress={handleKeyPress}
               placeholder="Scrivi un messaggio..."
               className="flex-1 rounded-full h-12 text-base"
-              disabled={sending}
             />
             {/* L'invio è una TESSERA (ui/Tessera), come la freccia indietro in
                 alto: pieno chiaro del ruolo e icona in inchiostro, per worker
                 ed employer. La coppia fondo+icona la decide la tessera —
                 niente più `bg-` scritti a mano (il bug ricorrente numero uno). */}
+            {/* Niente rotellina: il messaggio compare subito (vedi
+                handleSendMessage). A campo vuoto la tessera è SPENTA, non
+                slavata. */}
             <Tessera
-              icona={sending ? Loader2 : InvioIcon}
-              classeIcona={sending ? "animate-spin" : undefined}
+              icona={InvioIcon}
               etichetta="Invia"
               onClick={handleSendMessage}
-              disabled={(!newMessage.trim() && !pendingAttachment) || sending}
+              disabled={!newMessage.trim() && !pendingAttachment}
+              spenta={!newMessage.trim() && !pendingAttachment}
             />
           </div>
         </div>
@@ -750,6 +821,14 @@ const Messaggi = () => {
           </DialogContent>
         </Dialog>
 
+        <JobDetailsSheet
+          job={annuncioChat}
+          isOpen={!!annuncioChat}
+          onClose={() => setAnnuncioChat(null)}
+          showMiniMap
+          sopraChat
+        />
+
         {/* Dopo l'assunzione: «Compila il cartellino», sopra la chat. */}
         {cartellinoDaCompilare && (
           <SchedaCartellino
@@ -761,8 +840,7 @@ const Messaggi = () => {
           />
         )}
       </div>
-    );
-  }
+  ) : null;
 
   // Chats list view
   const listaChat = (
@@ -780,8 +858,13 @@ const Messaggi = () => {
               </div>
             </div>
            ) : (
-             <div className="space-y-2 card-tilt">
-               {chats.map((chat) => {
+             /* RIGHE PIATTE, non card (Tommaso, 22 ottobre). Le card sono per
+                gli OGGETTI da scegliere (annunci, cartellini); le chat sono
+                conversazioni da ritrovare scorrendo in fretta: la cornice
+                ripetuta pesava più del contenuto, e ne stavano 5 per schermo.
+                Divise dalla linea disegnata, come la scheda annuncio. */
+             <div>
+               {chats.map((chat, i) => {
                  const isCompleted = chat.application_status === 'completed';
                  const isHired = chat.application_status === 'hired';
                  const nonLetti = chat.unread_count ?? 0;
@@ -790,64 +873,85 @@ const Messaggi = () => {
                    ? anteprimaMessaggio(
                        ultimo.content,
                        ultimo.has_attachment,
-                       ultimo.sender_id === user?.id
+                       ultimo.sender_id === user?.id,
+                       { isEmployer, nomeAltro: chat.other_user?.full_name }
                      )
                    : '';
+                 const apri = () => setSelectedChat(chat);
 
                  return (
-                    <div
-                      key={chat.id}
-                      onClick={() => setSelectedChat(chat)}
-                      className={`material-card flex items-center gap-3 cursor-pointer touch-feedback ${
-                        // Le concluse si comprimono, non si sbiadiscono: prima
-                        // l'opacità le faceva sembrare disabilitate.
-                        isCompleted ? 'p-3' : 'p-4'
-                      }`}
-                   >
-                      <AvatarPreview
-                        imageUrl={chat.other_user?.avatar_url}
-                        userName={chat.other_user?.full_name}
-                        userId={chat.other_user?.id || ""}
-                        onMessageClick={() => setSelectedChat(chat)}
-                        chatId={chat.id}
-                      />
-                     <div className="flex-1 min-w-0">
-                       <div className="flex items-center gap-2">
-                         <h3 className={`truncate ${nonLetti > 0 ? 'font-bold' : 'font-semibold'}`}>
-                           {chat.other_user?.full_name || 'Utente'}
-                         </h3>
-                         {isHired && <StatusBadge stato="hired" />}
-                         {isCompleted && <StatusBadge stato="completed" />}
-                         {ultimo && (
-                           <span className="ml-auto shrink-0 text-xs text-muted-foreground">
-                             {formatOrarioChat(ultimo.created_at)}
-                           </span>
+                   <div key={chat.id} className={cn(i > 0 && 'linea-divisoria-sottile')}>
+                     <div
+                       role="button"
+                       tabIndex={0}
+                       onClick={apri}
+                       onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && apri()}
+                       className="-mx-2 flex cursor-pointer items-center gap-3 rounded-xl px-2 py-3 transition-colors active:bg-accent/50"
+                     >
+                       <AvatarPreview
+                         imageUrl={chat.other_user?.avatar_url}
+                         userName={chat.other_user?.full_name}
+                         userId={chat.other_user?.id || ""}
+                         onMessageClick={apri}
+                         chatId={chat.id}
+                       />
+                       <div className="min-w-0 flex-1">
+                         <div className="flex items-center gap-2">
+                           <h3 className={cn('truncate text-[15px]', nonLetti > 0 ? 'font-bold' : 'font-semibold')}>
+                             {chat.other_user?.full_name || 'Utente'}
+                           </h3>
+                           {isHired && <StatusBadge stato="hired" />}
+                           {isCompleted && <StatusBadge stato="completed" />}
+                           {ultimo && (
+                             <span
+                               className={cn(
+                                 'ml-auto shrink-0 text-xs',
+                                 // Non letti: l'ora nell'INCHIOSTRO del ruolo, mai il pastello.
+                                 nonLetti > 0
+                                   ? cn('font-semibold', isEmployer ? 'text-employer-800' : 'text-primary-strong')
+                                   : 'text-muted-foreground'
+                               )}
+                             >
+                               {formatOrarioChat(ultimo.created_at)}
+                             </span>
+                           )}
+                         </div>
+
+                         {/* Di che lavoro si parla: è l'unica cosa che distingue
+                             due chat con la stessa persona (una per annuncio). */}
+                         {chat.job?.title && (
+                           <p className="mt-0.5 truncate text-[13px] text-ink-soft">{chat.job.title}</p>
                          )}
-                       </div>
 
-                       {/* L'anteprima è l'informazione per cui si apre questa lista. */}
-                       {anteprima ? (
-                         <p className={`text-sm truncate ${
-                           nonLetti > 0 ? 'text-foreground font-medium' : 'text-muted-foreground'
-                         }`}>
-                           {anteprima}
-                         </p>
-                       ) : (
-                         <p className="text-sm text-muted-foreground italic truncate">
-                           Nessun messaggio
-                         </p>
-                       )}
-
-                    </div>
-                     {/* nonLetti > 0 e non `nonLetti &&`: con 0 React stampava lo zero. */}
-                     {nonLetti > 0 && (
-                       <div className={`shrink-0 w-6 h-6 rounded-full flex items-center justify-center ${isEmployer ? 'bg-employer-700' : 'bg-primary'}`}>
-                         <span className="text-xs text-white font-bold">
-                           {nonLetti > 9 ? '9+' : nonLetti}
-                         </span>
+                         <div className="mt-0.5 flex items-center gap-2">
+                           <p
+                             className={cn(
+                               'min-w-0 flex-1 truncate text-sm',
+                               anteprima
+                                 ? nonLetti > 0
+                                   ? 'font-medium text-foreground'
+                                   : 'text-muted-foreground'
+                                 : 'italic text-muted-foreground'
+                             )}
+                           >
+                             {anteprima || 'Nessun messaggio'}
+                           </p>
+                           {/* nonLetti > 0 e non `nonLetti &&`: con 0 React stampava lo zero.
+                               ⚠️ Prima `text-white` sull'arancio pastello: 2,07:1 (§5). */}
+                           {nonLetti > 0 && (
+                             <span
+                               className={cn(
+                                 'flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full px-1.5 text-[11px] font-bold',
+                                 isEmployer ? 'bg-employer-700 text-employer-foreground' : 'bg-primary text-primary-foreground'
+                               )}
+                             >
+                               {nonLetti > 9 ? '9+' : nonLetti}
+                             </span>
+                           )}
+                         </div>
                        </div>
-                     )}
-                  </div>
+                     </div>
+                   </div>
                  );
                })}
              </div>
@@ -856,6 +960,7 @@ const Messaggi = () => {
   );
 
   return (
+    <>
      <SwipeNavigator>
        <div className="flex flex-col h-full bg-background">
          {/* Simple Header with safe area */}
@@ -902,6 +1007,8 @@ const Messaggi = () => {
          </main>
        </div>
      </SwipeNavigator>
+     {vistaChat}
+    </>
   );
 };
 

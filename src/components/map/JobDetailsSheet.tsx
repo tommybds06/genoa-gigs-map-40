@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ChevronRight, Loader2, Check } from "lucide-react";
 import { MappaIcon, OrologioIcon, InfoIcon } from "@/components/icons/uiIcons";
+import { annuncioScaduto } from "@/lib/scadenzaAnnunci";
 import { useUser } from "@/contexts/UserContext";
 import { useAppTheme } from "@/hooks/useAppTheme";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -40,14 +41,26 @@ interface Job {
   lng: number;
   owner_id?: string;
   status?: string;
+  created_at?: string | null;
+  scade_il?: string | null;
   profiles?: JobProfile | null;
 }
+
+/**
+ * I bottoni che dicono uno STATO e non si premono (verifica, già candidato,
+ * scaduto). Fondo incavo, che non sembra premibile; testo in inchiostro PIENO:
+ * l'opacità 50% del `disabled` portava il grigio su incavo a ~2:1, e qui il
+ * testo è un'informazione, non un comando spento.
+ */
+const STATO_SPENTO = "w-full bg-paper-sunken text-ink disabled:opacity-100";
 
 interface JobDetailsSheetProps {
   job: Job | null;
   isOpen: boolean;
   onClose: () => void;
   showMiniMap?: boolean;
+  /** Aperta dalla chat, che sta a z-[60]: la scheda deve stare sopra. */
+  sopraChat?: boolean;
 }
 
 /**
@@ -68,6 +81,28 @@ interface JobDetailsSheetProps {
  */
 const ALTEZZA_SCHEDA = 0.92;
 const RISERVA_PRIMA_DELLA_MISURA = 300;
+
+/**
+ * L'AGGANCIO ALTO è 1, non 0,92. Stesso conto dell'aggancio basso: vaul
+ * trasla la scheda di `finestra × (1 − aggancio)`. Con 0,92 la spostava giù
+ * dell'8% della finestra, ma la scheda è già alta 92vh: il suo fondo finiva
+ * 68 px SOTTO lo schermo (misurato: scheda da 776 px, fondo a 912 su 844), e
+ * con lui la fine dell'area che scorre. Negli annunci corti il contenuto
+ * entrava giusto nell'area, quindi non c'era niente da scorrere, ma l'ultima
+ * parte era fuori schermo (Tommaso, 22 ottobre: «tagliate e non si può
+ * scorrere»). Con 1 la traslazione è zero: la scheda sta tutta a schermo,
+ * con la cima all'8% e il fondo sul bordo.
+ */
+const AGGANCIO_ALTO = 1;
+
+/*
+ * …ma solo se il contenuto la riempie. Un annuncio corto, tirato su, lasciava
+ * mezza scheda di carta vuota sotto il «Dove» (Tommaso, 22 ottobre: «troppo
+ * spazio bianco sotto»). Ora anche l'aggancio alto si MISURA: si ferma dove
+ * finisce il contenuto (`fondoContenuto`); se il contenuto è più alto della
+ * scheda resta 1, tutta aperta, e scorre. È lo stesso conto dell'aggancio
+ * basso (`altezzaAggancio`), con la stessa correzione degli 8vh.
+ */
 
 function altezzaAggancio(visibile: number) {
   // Per difetto: un pixel in meno di spazio vuoto, mai un pixel di divisoria.
@@ -100,7 +135,7 @@ function altezzaAggancio(visibile: number) {
  * trascina in su — così ha anche preso il posto della nuvoletta sulla mappa,
  * che mostrava un sottoinsieme di queste stesse cose a un tocco di distanza.
  */
-export function JobDetailsSheet({ job, isOpen, onClose, showMiniMap = false }: JobDetailsSheetProps) {
+export function JobDetailsSheet({ job, isOpen, onClose, showMiniMap = false, sopraChat = false }: JobDetailsSheetProps) {
   const { isEmployer } = useUser();
   const { theme } = useAppTheme();
   const { user } = useAuth();
@@ -139,9 +174,27 @@ export function JobDetailsSheet({ job, isOpen, onClose, showMiniMap = false }: J
     osservatoreTesta.current = new ResizeObserver(leggi);
     osservatoreTesta.current.observe(el);
   }, []);
+  /* Dove finisce il CONTENUTO della scheda (dalla sua cima): stesso metodo
+     della testa — ref a callback, ResizeObserver (la minimappa arriva dopo e
+     allunga il contenuto), `offsetTop` relativo a DrawerContent. */
+  const [fondoContenuto, setFondoContenuto] = useState<number | null>(null);
+  const osservatoreContenuto = useRef<ResizeObserver | null>(null);
+  const refContenuto = useCallback((el: HTMLDivElement | null) => {
+    osservatoreContenuto.current?.disconnect();
+    osservatoreContenuto.current = null;
+    if (!el) return;
+    const leggi = () => setFondoContenuto(el.offsetTop + el.offsetHeight);
+    leggi();
+    osservatoreContenuto.current = new ResizeObserver(leggi);
+    osservatoreContenuto.current.observe(el);
+  }, []);
+
+  const bassa = fondoTesta ?? RISERVA_PRIMA_DELLA_MISURA;
+  const altezzaScheda = typeof window === "undefined" ? 0 : window.innerHeight * ALTEZZA_SCHEDA;
+  const contenutoCorto = fondoContenuto != null && fondoContenuto < altezzaScheda && fondoContenuto > bassa;
   const agganci = [
-    altezzaAggancio(fondoTesta ?? RISERVA_PRIMA_DELLA_MISURA),
-    ALTEZZA_SCHEDA,
+    altezzaAggancio(bassa),
+    contenutoCorto ? altezzaAggancio(fondoContenuto) : AGGANCIO_ALTO,
   ];
 
   // Check if worker has already applied when drawer opens
@@ -206,6 +259,8 @@ export function JobDetailsSheet({ job, isOpen, onClose, showMiniMap = false }: J
     }
   };
 
+  const scaduto = annuncioScaduto(job);
+
   const handleApply = async () => {
     if (!user || !job || hasApplied || isApplying) return;
 
@@ -225,7 +280,11 @@ export function JobDetailsSheet({ job, isOpen, onClose, showMiniMap = false }: J
         if (error.code === '23505') {
           // Duplicate - already applied
           setHasApplied(true);
-          toast.info('Ti sei già candidato a questo lavoro', { duration: 2000 });
+          toast.info('Hai già inviato la candidatura per questo lavoro', { duration: 2000 });
+        } else if (error.message?.includes('annuncio_non_attivo')) {
+          // Il database rifiuta le candidature agli annunci scaduti o chiusi
+          // (migration 20261023120000): capita se scade mentre lo si guarda.
+          toast.error('Questo annuncio non accetta più candidature', { duration: 2500 });
         } else {
           throw error;
         }
@@ -248,15 +307,16 @@ export function JobDetailsSheet({ job, isOpen, onClose, showMiniMap = false }: J
       open={isOpen}
       onOpenChange={(open) => !open && onClose()}
       /* ⚠️ Gli agganci li calcola vaul sull'altezza della FINESTRA, non su
-         quella della scheda: perché a tutta altezza la scheda arrivi in fondo,
-         deve essere alta quanto l'aggancio più alto — da qui `h-[92vh]` sul
-         contenuto, che con i punti di aggancio non è più un problema (l'altezza
-         in eccesso sta sotto la piega, non a schermo). */
+         quella della scheda (alta 92vh, per lasciare in cima un po' di mappa):
+         vedi `altezzaAggancio` per il basso, `AGGANCIO_ALTO` e
+         `fondoContenuto` per l'alto. */
       snapPoints={agganci}
       activeSnapPoint={alta ? agganci[1] : agganci[0]}
-      setActiveSnapPoint={(p) => setAlta(p === ALTEZZA_SCHEDA)}
+      // ⚠️ Confronto col valore DI QUESTO giro: l'aggancio alto ora cambia
+      // con la misura (px o 1), non è più una costante.
+      setActiveSnapPoint={(p) => setAlta(p === agganci[1])}
     >
-      <DrawerContent className="h-[92vh]">
+      <DrawerContent className={cn("h-[92vh]", sopraChat && "z-[70]")} overlayClassName={sopraChat ? "z-[70]" : undefined}>
         <div className="flex flex-col h-full min-h-0">
           {/* ---- TESTA: quello che si vede senza trascinare ----
                  Non scorre. Il titolo resta agganciato in alto anche a scheda
@@ -329,17 +389,27 @@ export function JobDetailsSheet({ job, isOpen, onClose, showMiniMap = false }: J
               {isEmployer ? (
                 <div className="flex items-center justify-center gap-2 py-3 text-muted-foreground">
                   <InfoIcon className="w-[18px] h-[18px] shrink-0" />
-                  <span className="text-[13px]">Stai vedendo l'anteprima del tuo annuncio</span>
+                  <span className="text-[13px]">
+                    {scaduto ? "Questo annuncio è scaduto: non è più sulla mappa" : "Stai vedendo l'anteprima del tuo annuncio"}
+                  </span>
                 </div>
               ) : checkingStatus ? (
-                <Button size="lg" className="w-full bg-paper-sunken text-muted-foreground" disabled>
+                <Button size="lg" className={STATO_SPENTO} disabled>
                   <Loader2 className="w-5 h-5 animate-spin" />
                   Verifica...
                 </Button>
               ) : hasApplied ? (
-                <Button size="lg" className="w-full bg-paper-sunken text-muted-foreground" disabled>
+                <Button size="lg" className={STATO_SPENTO} disabled>
                   <Check className="w-5 h-5" />
                   Candidatura inviata
+                </Button>
+              ) : scaduto ? (
+                /* Scaduto (lib/scadenzaAnnunci.ts): si arriva qui solo da un
+                   link diretto, una chat o un profilo — dalla mappa è sparito.
+                   Il bottone dice perché non si può, invece di sparire. */
+                <Button size="lg" className={STATO_SPENTO} disabled>
+                  <OrologioIcon className="w-5 h-5" />
+                  Annuncio scaduto
                 </Button>
               ) : (
                 /* ⚠️ `theme.btnFilled` nel className: `variant="default"` è
@@ -367,6 +437,10 @@ export function JobDetailsSheet({ job, isOpen, onClose, showMiniMap = false }: J
 
           {/* ---- IL RESTO: scorre ---- */}
           <div className="flex-1 min-h-0 overflow-y-auto px-4">
+            {/* Un contenitore solo, per misurare dove finisce il contenuto
+                (vedi `fondoContenuto`). Il fondo ha l'aria e la safe area,
+                così l'ultima riga non tocca il bordo. */}
+            <div ref={refContenuto} className="pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
             {/* 2. CHI LO OFFRE — una riga, non un blocco.
                    Nessuna superficie sotto: le divisorie sopra e sotto la
                    delimitano gia', e una campitura in piu' su una schermata di
@@ -435,6 +509,7 @@ export function JobDetailsSheet({ job, isOpen, onClose, showMiniMap = false }: J
                   </div>
                 </div>
               )}
+            </div>
             </div>
           </div>
         </div>

@@ -162,9 +162,17 @@ interface JobsListProps {
   isEmployer: boolean;
   hasTags: boolean;
   onJobClick: (job: Job) => void;
+  /**
+   * Cosa dire sotto il titolo: la ZONA (in Lista, dove la mappa non c'è) o
+   * l'ATTIVITÀ (nella lista di una zona della mappa, dove il quartiere è già
+   * nel titolo e ripeterlo su ogni card non direbbe niente).
+   */
+  sottoTitolo?: "zona" | "attivita";
+  /** Annunci che corrispondono alla ricerca della mappa: tessera nei colori del pin evidenziato. */
+  evidenziati?: Set<string>;
 }
 
-export function JobsList({ jobs, loading, isEmployer, hasTags, onJobClick }: JobsListProps) {
+export function JobsList({ jobs, loading, isEmployer, hasTags, onJobClick, sottoTitolo = "zona", evidenziati }: JobsListProps) {
   if (loading) {
     return <JobCardSkeletonList count={5} />;
   }
@@ -191,7 +199,10 @@ export function JobsList({ jobs, loading, isEmployer, hasTags, onJobClick }: Job
     <div className="space-y-3 card-tilt">
       {jobs.map((job) => {
         const Icon = getJobIconFromTags(job.tags);
-        const zona = job.neighborhood || ((job.lat && job.lng) ? "Genova" : null);
+        const zona =
+          sottoTitolo === "attivita"
+            ? job.profiles?.full_name || null
+            : job.neighborhood || ((job.lat && job.lng) ? "Genova" : null);
 
         return (
           <div
@@ -199,7 +210,7 @@ export function JobsList({ jobs, loading, isEmployer, hasTags, onJobClick }: Job
             className="material-card flex cursor-pointer items-center gap-3 p-3.5 touch-feedback"
             onClick={() => onJobClick(job)}
           >
-            <TesseraIcona icona={Icon} />
+            <TesseraIcona icona={Icon} evidenziata={evidenziati?.has(job.id)} />
             <div className="min-w-0 flex-1">
               <h3 className="line-clamp-2 text-[15px] font-semibold leading-snug">{job.title}</h3>
               {zona && <p className="mt-0.5 truncate text-[13px] text-muted-foreground">{zona}</p>}

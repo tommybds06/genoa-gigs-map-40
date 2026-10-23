@@ -49,6 +49,10 @@
     /* Versioni INCHIOSTRO: per testo, icone piccole e tratti sottili. */
     --brand-orange-ink: 24 72% 38%;  /* #A7531B — 4,66 su carta */
     --brand-blue-ink: 213 45% 38%;   /* #355D8D — 5,86 su carta */
+    /* Arancio CHIARO, per segni piccoli sul blu employer-700: l'arancio di
+       brand lì fa 2,30:1, questo 3,18 (serve 3:1 per un'icona). Nato per la
+       doppia spunta «letto» sulle bolle dell'employer (22 ottobre). */
+    --brand-orange-chiaro: 28 93% 78%; /* #FBCB94 */
 
     /* ---- Carta ---- */
     /* ⚠️ NON abbassare questo valore per far risaltare le card. Provato ad
@@ -730,6 +734,19 @@
       background-position: center top;
       background-size: 241px 4px;
       padding-top: 4px;
+    }
+
+    /* La stessa linea più SOTTILE (2,5 px invece di 4), per separare le righe
+       della lista chat: a 4 px, ripetuta ogni 76 px, pesava («cicciona»,
+       Tommaso, 22 ottobre). Il disegno si stira libero in altezza
+       (preserveAspectRatio="none"), quindi schiacciarlo assottiglia il tratto. */
+    .linea-divisoria-sottile {
+      border: 0;
+      background-image: url("/images/cornici/linea-divisoria.svg");
+      background-repeat: repeat-x;
+      background-position: center top;
+      background-size: 241px 2.5px;
+      padding-top: 2.5px;
     }
 
     /* ---- LINGUETTA ATTIVA della barra a schede ----

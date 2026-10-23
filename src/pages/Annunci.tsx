@@ -16,7 +16,8 @@ import { EditJobDialog } from '@/components/jobs/EditJobDialog';
 import { DeleteJobDialog } from '@/components/jobs/DeleteJobDialog';
 import { SwipeNavigator } from '@/components/layout/SwipeNavigator';
 import { formatTempoTrascorso } from "@/lib/dates";
-import { TesseraIndietro } from "@/components/ui/Tessera";
+import { annuncioScaduto, testoScadenza } from "@/lib/scadenzaAnnunci";
+import { TesseraIcona, TesseraIndietro } from "@/components/ui/Tessera";
 
 interface Job {
   id: string;
@@ -80,14 +81,14 @@ const Annunci = () => {
     // scheletro), invece di aspettare che scada il minuto di staleTime.
     refetchOnMount: 'always',
     queryFn: async (): Promise<JobWithCount[]> => {
-      // Annunci delle ultime 48 ore
-      const fortyEightHoursAgo = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
-
+      /* TUTTI i suoi annunci, scaduti compresi (Tommaso, 23 ottobre). Prima
+         solo quelli delle ultime 48 ore: un annuncio ancora aperto, con
+         candidature in attesa, spariva dalla pagina di chi l'aveva
+         pubblicato. Ora lo scaduto resta, con l'etichetta. */
       const { data, error } = await supabase
         .from('jobs')
         .select('*, applications(count)')
         .eq('owner_id', user!.id)
-        .gte('created_at', fortyEightHoursAgo)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -414,7 +415,8 @@ const Annunci = () => {
           </div>
         ) : jobs.length === 0 ? (
           <div className="text-center py-12">
-            <AnnunciVuotaIcon className={`h-12 w-12 ${theme.primaryText} mx-auto mb-3`} />
+            {/* La tessera, come gli altri stati vuoti (Lista, Messaggi, bacheca). */}
+            <TesseraIcona icona={AnnunciVuotaIcon} misura="lg" className="mx-auto mb-4" />
             <h3 className="titolo-vuoto mb-1">Nessun annuncio</h3>
             <p className="text-sm text-muted-foreground">
               Non hai ancora creato annunci di lavoro
@@ -430,10 +432,23 @@ const Annunci = () => {
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-bold text-base truncate">{job.title}</h3>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-bold text-base truncate">{job.title}</h3>
+                      {/* Stato dell'annuncio: chiuso (assunto o chiuso a mano)
+                          o scaduto (passate le 48 ore). Attivo = nessuna
+                          etichetta, solo quanto manca, qui sotto. */}
+                      {job.status !== 'open' ? (
+                        <StatusBadge stato="chiuso" />
+                      ) : annuncioScaduto(job) ? (
+                        <StatusBadge stato="scaduto" />
+                      ) : null}
+                    </div>
                     <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1">
                       <Users className="h-4 w-4" />
                       {job.applicationCount} candidatur{job.applicationCount === 1 ? 'a' : 'e'}
+                      {job.status === 'open' && !annuncioScaduto(job) && (
+                        <span> · {testoScadenza(job).toLowerCase()}</span>
+                      )}
                     </p>
                   </div>
 

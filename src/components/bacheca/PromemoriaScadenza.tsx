@@ -10,7 +10,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { CuoreIcon } from "@/components/icons/uiIcons";
+import { CuoreIcon, OrologioIcon } from "@/components/icons/uiIcons";
+import { supabase } from "@/integrations/supabase/client";
+import { useAnnunciScadutiDaVedere } from "@/hooks/useJobs";
+import { GIORNI_A_PAGAMENTO, ORE_GRATUITE } from "@/lib/scadenzaAnnunci";
 import { useAuth } from "@/hooks/useAuth";
 import { useUser } from "@/contexts/UserContext";
 import { useAppTheme } from "@/hooks/useAppTheme";
@@ -176,6 +179,54 @@ export function FinestraPromemoria({ tipo, c, fai, inCorso, rimanda }: FinestraP
 }
 
 /**
+ * L'AVVISO DI ANNUNCIO SCADUTO (Tommaso, 23 ottobre): «quando scade un annuncio
+ * arriva l'avviso all'employer e gli si chiede di pagare per estenderlo,
+ * oppure l'annuncio scade». Nessuna ripubblicazione gratuita.
+ *
+ * Il pagamento arriva con Stripe (Fase 8): fino ad allora il bottone c'è ma è
+ * spento, così la scelta che verrà si vede già e nessuno pensa che manchi.
+ */
+export function FinestraAnnuncioScaduto({
+  titolo,
+  occupato,
+  onCapito,
+}: {
+  titolo: string;
+  occupato: boolean;
+  onCapito: () => void;
+}) {
+  const { theme } = useAppTheme();
+  return (
+    <>
+      <DialogHeader>
+        {/* `px-6`: il titolo è centrato e la X del Dialog sta in alto a destra;
+            con un titolo lungo ci finiva sopra. */}
+        <DialogTitle className="titolo-sezione px-6 font-normal">«{titolo}» è scaduto</DialogTitle>
+        <DialogDescription>
+          Dopo {ORE_GRATUITE} ore l'annuncio è uscito dalla mappa e non riceve più candidature. Quelle già
+          arrivate restano in Annunci.
+        </DialogDescription>
+      </DialogHeader>
+      <div className="mt-2 space-y-2">
+        <Button size="lg" variant="outline" className="w-full" disabled>
+          <OrologioIcon className="h-5 w-5" />
+          Estendi a {GIORNI_A_PAGAMENTO} giorni · presto
+        </Button>
+        <Button
+          size="lg"
+          className={cn("w-full", theme.btnFilled, theme.btnFilledHover)}
+          disabled={occupato}
+          onClick={onCapito}
+        >
+          {occupato && <Loader2 className="animate-spin" />}
+          Ho capito
+        </Button>
+      </div>
+    </>
+  );
+}
+
+/**
  * LE DOMANDE DELL'APP ALL'EMPLOYER, all'avvio — montato in App.tsx accanto a
  * ReviewPrompt. Non ci sono push (arrivano con Despia, Fase 10): questa è la
  * versione dentro l'app. Vedi `prossimoPromemoria` per cosa chiede e quando.
@@ -185,8 +236,39 @@ export function PromemoriaScadenza() {
   const { isEmployer, hasLoaded } = useUser();
   const queryClient = useQueryClient();
   const { data: cartellini = [] } = useCartellini(hasLoaded && isEmployer ? user?.id : undefined);
+  const { data: scaduti = [] } = useAnnunciScadutiDaVedere(hasLoaded && isEmployer ? user?.id : undefined);
   const [, ridisegna] = useState(0);
   const [inCorso, setInCorso] = useState<string | null>(null);
+
+  // Prima gli annunci scaduti: sono la notizia più fresca (le scadenze dei
+  // lavori aspettano giorni, un annuncio scade in 48 ore).
+  const annuncio = scaduti.find((j) => !rimandati.has(`annuncio:${j.id}`));
+  if (annuncio && user) {
+    const segnaVisto = async () => {
+      setInCorso("annuncio");
+      const { error } = await supabase.from("jobs").update({ scadenza_vista: true }).eq("id", annuncio.id);
+      setInCorso(null);
+      if (error) console.error("Avviso scadenza:", error);
+      // Anche se il salvataggio fallisce, in questa sessione non si ripropone.
+      rimandati.add(`annuncio:${annuncio.id}`);
+      queryClient.invalidateQueries({ queryKey: ["jobs", "scaduti-da-vedere"] });
+      ridisegna((n) => n + 1);
+    };
+    return (
+      <Dialog
+        open
+        onOpenChange={(o) => {
+          if (o || inCorso) return;
+          rimandati.add(`annuncio:${annuncio.id}`);
+          ridisegna((n) => n + 1);
+        }}
+      >
+        <DialogContent>
+          <FinestraAnnuncioScaduto titolo={annuncio.title} occupato={!!inCorso} onCapito={segnaVisto} />
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   const prossimo = prossimoPromemoria(cartellini, rimandati);
   if (!prossimo || !user) return null;

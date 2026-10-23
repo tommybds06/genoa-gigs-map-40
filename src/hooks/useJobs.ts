@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { adessoISO } from "@/lib/scadenzaAnnunci";
 
 interface JobProfile {
   full_name: string | null;
@@ -22,6 +23,8 @@ export interface Job {
   owner_id: string;
   status: string;
   neighborhood: string | null;
+  /** Quando smette di essere visibile (vedi lib/scadenzaAnnunci.ts). */
+  scade_il?: string | null;
   profiles?: JobProfile | null;
 }
 
@@ -32,13 +35,12 @@ export function useOpenJobs(userTags?: string[]) {
   return useQuery({
     queryKey: ["jobs", "open", userTags],
     queryFn: async () => {
-      const fortyEightHoursAgo = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
-
       let query = supabase
         .from("jobs")
         .select("*, profiles(full_name, avatar_url, address_text, photos)")
         .eq("status", "open")
-        .gte("created_at", fortyEightHoursAgo)
+        // Visibili = non ancora scaduti (lib/scadenzaAnnunci.ts).
+        .gt("scade_il", adessoISO())
         .order("created_at", { ascending: false });
 
       // If user has tags, filter by overlap
@@ -63,13 +65,11 @@ export function useEmployerJobs(userId: string | undefined) {
     queryFn: async () => {
       if (!userId) return [];
 
-      const fortyEightHoursAgo = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
-
       const { data, error } = await supabase
         .from("jobs")
         .select("*, profiles(full_name, avatar_url, address_text)")
         .eq("owner_id", userId)
-        .gte("created_at", fortyEightHoursAgo)
+        .gt("scade_il", adessoISO())
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -86,13 +86,11 @@ export function useMapJobs() {
   return useQuery({
     queryKey: ["jobs", "map"],
     queryFn: async () => {
-      const fortyEightHoursAgo = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
-
       const { data, error } = await supabase
         .from("jobs")
         .select("*, profiles(full_name, avatar_url, address_text, photos)")
         .eq("status", "open")
-        .gte("created_at", fortyEightHoursAgo);
+        .gt("scade_il", adessoISO());
 
       if (error) throw error;
 
@@ -104,5 +102,29 @@ export function useMapJobs() {
       return validJobs.map((j) => ({ ...j, tags: j.tags || [] })) as Job[];
     },
     staleTime: STALE_TIME,
+  });
+}
+
+/**
+ * Gli annunci dell'employer appena SCADUTI di cui non ha ancora visto l'avviso
+ * (`scadenza_vista`). Li mostra `PromemoriaScadenza`, uno alla volta.
+ * Sotto `['jobs', …]`: si rilegge con tutto il resto quando cambia un annuncio.
+ */
+export function useAnnunciScadutiDaVedere(userId: string | undefined) {
+  return useQuery({
+    queryKey: ["jobs", "scaduti-da-vedere", userId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("jobs")
+        .select("id, title, scade_il")
+        .eq("owner_id", userId!)
+        .eq("status", "open")
+        .eq("scadenza_vista", false)
+        .lte("scade_il", adessoISO())
+        .order("scade_il", { ascending: true });
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!userId,
   });
 }

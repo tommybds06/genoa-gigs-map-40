@@ -1,3 +1,4 @@
+import { PinMappa } from "@/components/map/PinMappa";
 import { useState, useEffect, useCallback } from "react";
 import Map, { Marker, NavigationControl } from "react-map-gl";
 import { Loader2, AlertTriangle } from "lucide-react";
@@ -121,12 +122,14 @@ export function LocationPicker({ lat, lng, onLocationChange }: LocationPickerPro
               handleLocationUpdate(event.lngLat.lat, event.lngLat.lng);
             }}
           >
-            <div className="flex flex-col items-center">
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center shadow-lg ${isOutOfBounds ? 'bg-destructive' : 'bg-employer-700'}`}>
-                <MappaIcon className="w-5 h-5 text-employer-foreground" />
-              </div>
-              <div className={`w-0 h-0 border-l-[8px] border-r-[8px] border-t-[10px] border-l-transparent border-r-transparent -mt-1 ${isOutOfBounds ? 'border-t-destructive' : 'border-t-employer-700'}`} />
-            </div>
+            {/* Il pin disegnato (lib/formaPin.ts), a 40 px come prima. */}
+            <PinMappa
+              icona={MappaIcon}
+              larghezza={40}
+              latoIcona={20}
+              classeFondo={isOutOfBounds ? 'fill-destructive' : 'fill-employer-700'}
+              classeIcona="text-employer-foreground"
+            />
           </Marker>
         </Map>
       </div>

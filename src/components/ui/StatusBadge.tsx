@@ -24,7 +24,11 @@ export type StatoCandidatura =
   | "accepted"
   | "hired"
   | "rejected"
-  | "completed";
+  | "completed"
+  // Stati di un ANNUNCIO (Annunci dell'employer, 23 ottobre): stessa regola,
+  // pieno tenue = non più attivo.
+  | "scaduto"
+  | "chiuso";
 
 const CONFIG: Record<
   StatoCandidatura,
@@ -46,12 +50,20 @@ const CONFIG: Record<
     icon: Check,
   },
   pending: {
-    label: "In Attesa",
+    label: "In attesa",
     className: "bg-warning-soft text-warning-soft-foreground border-transparent",
   },
   rejected: {
     label: "Rifiutato",
     className: "bg-danger-soft text-danger-soft-foreground border-transparent",
+  },
+  scaduto: {
+    label: "Scaduto",
+    className: "bg-warning-soft text-warning-soft-foreground border-transparent",
+  },
+  chiuso: {
+    label: "Chiuso",
+    className: "bg-neutral-soft text-neutral-soft-foreground border-transparent",
   },
 };
 

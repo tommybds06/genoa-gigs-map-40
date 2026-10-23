@@ -36,12 +36,23 @@ export interface AppTheme {
   roleLabel: string;
 }
 
+/*
+ * ⚠️ I TESTI DEL TEMA SONO INCHIOSTRI, NON PASTELLI (23 ottobre).
+ * `primaryText` era `text-primary` / `text-employer`, cioè l'arancio e il blu
+ * pastello: 1,9:1 sulla carta. Usato in 13 punti — iniziali degli avatar,
+ * icone di Impostazioni, Profilo, Onboarding, Annunci, e testo vero come
+ * «Modifica» e «Worker» nel profilo — rimetteva il pastello dove i singoli
+ * componenti lo avevano già tolto. E `accentText` era asimmetrico: inchiostro
+ * per il worker, pastello per l'employer. Ora tutti e due sono l'inchiostro
+ * del ruolo (`primary-strong` 4,66 · `employer-800` 5,86), e così `btnOutline`.
+ * Tutti gli usi stanno su fondi chiari (carta, `accent`): verificato uno per uno.
+ */
 export const workerTheme: AppTheme = {
   primary: "bg-primary",
   primaryHover: "hover:bg-primary/90",
   primaryBg: "bg-accent",
   primaryBgHover: "hover:bg-accent",
-  primaryText: "text-primary",
+  primaryText: "text-primary-strong",
   primaryBorder: "border-primary",
   primaryRing: "ring-primary",
   
@@ -59,7 +70,7 @@ export const workerTheme: AppTheme = {
   
   btnFilled: "bg-primary text-primary-foreground",
   btnFilledHover: "hover:bg-primary/90",
-  btnOutline: "border-primary text-primary",
+  btnOutline: "border-primary text-primary-strong",
   btnOutlineHover: "hover:bg-accent",
   
   roleLabel: "Worker",
@@ -73,7 +84,7 @@ export const employerTheme: AppTheme = {
   primaryHover: "hover:bg-employer-800",
   primaryBg: "bg-employer-50",
   primaryBgHover: "hover:bg-employer-100",
-  primaryText: "text-employer",
+  primaryText: "text-employer-800",
   primaryBorder: "border-employer",
   primaryRing: "ring-employer",
 
@@ -84,14 +95,14 @@ export const employerTheme: AppTheme = {
   navActiveBg: "bg-employer-50",
 
   accentBg: "bg-employer-50",
-  accentText: "text-employer",
+  accentText: "text-employer-800",
 
   headerBg: "bg-employer-700",
   headerText: "text-white",
 
   btnFilled: "bg-employer-700 text-employer-foreground",
   btnFilledHover: "hover:bg-employer-800",
-  btnOutline: "border-employer text-employer",
+  btnOutline: "border-employer text-employer-800",
   btnOutlineHover: "hover:bg-employer-50",
 
   roleLabel: "Employer",

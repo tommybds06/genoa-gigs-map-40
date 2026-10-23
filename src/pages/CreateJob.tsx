@@ -26,6 +26,7 @@ import { PennaIcon, DocumentoIcon, OrologioIcon, CalendarioIcon, InvioIcon } fro
 import { GenericoIcon } from '@/components/icons/roleIcons';
 import { isWithinGenovaBounds, GEOFENCING_ERROR_MESSAGE } from '@/constants/geofencing';
 import { TesseraIndietro } from "@/components/ui/Tessera";
+import { ORE_GRATUITE } from "@/lib/scadenzaAnnunci";
 
 const CreateJob = () => {
   const navigate = useNavigate();
@@ -358,6 +359,11 @@ const CreateJob = () => {
             </>
           )}
         </Button>
+        {/* Detto PRIMA di pubblicare: dopo 48 ore l'annuncio esce dalla mappa
+            e non si ripubblica gratis (lib/scadenzaAnnunci.ts). */}
+        <p className="mt-2 text-center text-[13px] text-muted-foreground">
+          Resta visibile sulla mappa per {ORE_GRATUITE} ore.
+        </p>
       </div>
     </div>
   );

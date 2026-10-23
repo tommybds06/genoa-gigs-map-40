@@ -1,3 +1,4 @@
+import { PIN_CENTRO, PIN_PROPORZIONE, pinSvg } from "@/lib/formaPin";
 import { useEffect, useRef } from "react";
 import { MappaIcon } from "@/components/icons/uiIcons";
 import mapboxgl from "mapbox-gl";
@@ -54,12 +55,14 @@ export function LocationMiniMap({ lat, lng, neighborhood, address, tags }: Locat
     );
     const pinColor = "hsl(30, 90%, 63%)";
     const markerEl = document.createElement("div");
+    // Il pin disegnato (lib/formaPin.ts), 40 px di larghezza come prima;
+    // l'icona al centro del cerchio superiore.
     markerEl.innerHTML = `
-      <div style="display:flex;flex-direction:column;align-items:center;filter:drop-shadow(0 4px 6px rgba(0,0,0,0.15));">
-        <div style="width:40px;height:40px;background-color:${pinColor};border-radius:50%;display:flex;align-items:center;justify-content:center;">
+      <div style="position:relative;width:40px;height:${Math.round(40 * PIN_PROPORZIONE)}px;filter:drop-shadow(0 4px 6px rgba(0,0,0,0.15));">
+        ${pinSvg(40, pinColor)}
+        <div style="position:absolute;left:${PIN_CENTRO.x}%;top:${PIN_CENTRO.y}%;transform:translate(-50%,-50%);display:flex;">
           ${iconMarkup}
         </div>
-        <div style="width:0;height:0;border-left:8px solid transparent;border-right:8px solid transparent;border-top:10px solid ${pinColor};margin-top:-1px;"></div>
       </div>
     `;
 
