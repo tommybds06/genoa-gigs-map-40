@@ -29,6 +29,13 @@
       "when": 1792711791145,
       "tag": "0003_scadenza_annunci_protetta",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1792751244683,
+      "tag": "0004_titolo_chat_annunci_chiusi",
+      "breakpoints": true
     }
   ]
 }
