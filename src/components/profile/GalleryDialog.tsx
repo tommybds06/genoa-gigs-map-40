@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useRef } from "react";
+import { XIcon } from "@/components/icons/uiIcons";
 import { useSwipeable } from "react-swipeable";
 import { motion, AnimatePresence } from "framer-motion";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface GalleryDialogProps {
   isOpen: boolean;
@@ -73,7 +74,7 @@ export function GalleryDialog({
             onClick={onClose}
             className="absolute top-2 right-2 z-10 text-white hover:bg-white/20 rounded-full"
           >
-            <X className="w-6 h-6" />
+            <XIcon className="w-6 h-6" />
           </Button>
 
           {/* Previous button */}

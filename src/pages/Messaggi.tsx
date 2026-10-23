@@ -583,14 +583,17 @@ const Messaggi = () => {
             
             {/* COMPLETE JOB button for Employer when status is 'hired' */}
             {isEmployer && applicationStatus === 'hired' && (
+              /* Gemello di «Assumi»: stesso chip ritagliato. Prima era un
+                 contorno CSS verde da 1 px accanto a un chip disegnato. Pieno
+                 TENUE nel verde di «Assunto»: chiude un lavoro, non è l'azione
+                 principale (§5, stati). */
               <Button
-                variant="outline"
                 size="sm"
-                className="shrink-0 text-success border-success hover:bg-success-soft"
+                className="shrink-0 bg-success-soft text-success-soft-foreground hover:bg-success-soft/80"
                 onClick={() => setShowCompleteDialog(true)}
               >
                 <Check className="h-4 w-4 mr-1" />
-                <span className="hidden sm:inline">Concludi Lavoro</span>
+                <span className="hidden sm:inline">Concludi lavoro</span>
                 <span className="sm:hidden">Concludi</span>
               </Button>
             )}
@@ -779,7 +782,7 @@ const Messaggi = () => {
         <Dialog open={showHireDialog} onOpenChange={setShowHireDialog}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Assumere Candidato</DialogTitle>
+              <DialogTitle>Assumere candidato</DialogTitle>
               <DialogDescription>
                 Confermi di voler assumere questo candidato per l'incarico?
               </DialogDescription>
@@ -792,7 +795,7 @@ const Messaggi = () => {
                 onClick={handleHireWorker}
                 className={isEmployer ? "bg-employer-700 hover:bg-employer-800 text-employer-foreground" : "bg-primary hover:bg-primary/90 text-primary-foreground"}
               >
-                Conferma Assunzione
+                Conferma assunzione
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -802,7 +805,7 @@ const Messaggi = () => {
         <Dialog open={showCompleteDialog} onOpenChange={setShowCompleteDialog}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Concludi Lavoro</DialogTitle>
+              <DialogTitle>Concludi lavoro</DialogTitle>
               <DialogDescription>
                 Confermi che il lavoro è stato svolto? Questo aggiornerà lo storico del lavoratore.
               </DialogDescription>
@@ -851,7 +854,7 @@ const Messaggi = () => {
              <div className="flex flex-col items-center justify-center py-12">
                <div className="material-card-elevated p-8 text-center max-w-sm animate-scale-in">
                  <TesseraIcona icona={MessaggiVuotaIcon} misura="lg" className="mx-auto mb-4" />
-                 <h2 className="titolo-vuoto mb-2">Nessun Messaggio</h2>
+                 <h2 className="titolo-vuoto mb-2">Nessun messaggio</h2>
                  <p className="text-muted-foreground text-sm">
                    Quando contatterai un employer o riceverai messaggi, appariranno qui.
                  </p>

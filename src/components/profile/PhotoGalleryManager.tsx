@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
-import { Plus, X, Loader2, GripVertical, User } from "lucide-react";
+import { PiuIcon, ProfiloIcon, XIcon } from "@/components/icons/uiIcons";
+import { Loader2, GripVertical } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -203,7 +204,7 @@ export function PhotoGalleryManager({
               onClick={() => handleRemove(index)}
               className="absolute bottom-1 right-1 p-1.5 rounded-full bg-destructive text-destructive-foreground opacity-0 group-hover:opacity-100 transition-opacity shadow-md"
             >
-              <X className="w-3.5 h-3.5" />
+              <XIcon className="w-3.5 h-3.5" />
             </button>
           </div>
         ))}
@@ -223,7 +224,7 @@ export function PhotoGalleryManager({
               <Loader2 className={cn("w-6 h-6 animate-spin", primaryColor)} />
             ) : (
               <>
-                <Plus className={cn("w-6 h-6", primaryColor)} />
+                <PiuIcon className={cn("w-6 h-6", primaryColor)} />
                 <span className={cn("text-xs font-medium", primaryColor)}>
                   Aggiungi
                 </span>
@@ -236,7 +237,7 @@ export function PhotoGalleryManager({
       {/* Empty state */}
       {photos.length === 0 && !isUploading && (
         <div className={cn("text-center py-4 rounded-xl", primaryBgLight)}>
-          <User className={cn("w-8 h-8 mx-auto mb-2", primaryColor)} />
+          <ProfiloIcon className={cn("w-8 h-8 mx-auto mb-2", primaryColor)} />
           <p className="text-sm text-muted-foreground">
             Aggiungi almeno una foto profilo
           </p>

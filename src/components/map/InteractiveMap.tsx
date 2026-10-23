@@ -1,7 +1,7 @@
 import { memo, useState, useCallback, useEffect, useLayoutEffect, useMemo, useRef } from "react";
+import { OrologioIcon } from "@/components/icons/uiIcons";
 import { useLocation, useNavigate } from "react-router-dom";
 import Map, { Marker, MapRef } from "react-map-gl";
-import { Clock } from "lucide-react";
 import { JobDetailsSheet } from "./JobDetailsSheet";
 import { PinMappa } from "./PinMappa";
 import { EmployerGroupMarker } from "./EmployerGroupMarker";
@@ -428,7 +428,7 @@ function InteractiveMapInner({
       <div className="relative w-full h-full bg-muted overflow-hidden rounded-3xl flex items-center justify-center">
         <div className="text-center p-6">
           <div className={`w-12 h-12 ${loadingBgClass} rounded-full flex items-center justify-center mx-auto mb-4`}>
-            <Clock className={`w-6 h-6 ${loadingIconClass} animate-pulse`} />
+            <OrologioIcon className={`w-6 h-6 ${loadingIconClass} animate-pulse`} />
           </div>
           <p className="text-muted-foreground">Caricamento mappa...</p>
         </div>

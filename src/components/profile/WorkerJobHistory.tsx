@@ -126,7 +126,7 @@ export const WorkerJobHistory = ({ primaryTextClasses }: WorkerJobHistoryProps) 
       <div className="material-card p-4 mb-4 animate-fade-in">
         <h3 className="titolo-mini mb-3 flex items-center gap-2">
           <StoricoLavoriIcon className={`w-4 h-4 ${primaryTextClasses}`} />
-          Storico Lavori Completati
+          Storico lavori completati
         </h3>
         <div className="flex items-center justify-center py-6">
           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -142,7 +142,7 @@ export const WorkerJobHistory = ({ primaryTextClasses }: WorkerJobHistoryProps) 
           <AccordionTrigger className="py-0 hover:no-underline">
             <h3 className="titolo-mini flex items-center gap-2">
               <StoricoLavoriIcon className={`w-4 h-4 ${primaryTextClasses}`} />
-              Storico Lavori Completati ({jobs.length})
+              Storico lavori completati ({jobs.length})
             </h3>
           </AccordionTrigger>
           <AccordionContent className="pt-3">

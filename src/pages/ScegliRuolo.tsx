@@ -168,8 +168,8 @@ const ScegliRuolo = () => {
               <label className="text-sm font-medium text-foreground">Chi sei?</label>
               {errori.ruolo && <p className="text-xs text-destructive">{errori.ruolo}</p>}
               <div className="grid grid-cols-2 gap-3">
-                {tessera("worker", GenericoIcon, "Cerco Impiego", "Sono uno Studente")}
-                {tessera("employer", AnnunciIcon, "Offro Impiego", "Privato o Attività")}
+                {tessera("worker", GenericoIcon, "Cerco impiego", "Sono uno studente")}
+                {tessera("employer", AnnunciIcon, "Offro impiego", "Privato o attività")}
               </div>
             </div>
 

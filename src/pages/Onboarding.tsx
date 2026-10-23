@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { leggiSocial } from "@/lib/social";
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useUser } from '@/contexts/UserContext';
@@ -41,10 +42,12 @@ const Onboarding = () => {
   const [locationLng, setLocationLng] = useState<number | null>(null);
   
   
-  const [errors, setErrors] = useState<{ bio?: string; tags?: string; lookingFor?: string; location?: string }>({});
+  type Errori = { bio?: string; tags?: string; lookingFor?: string; location?: string; instagram?: string; website?: string };
+  const [errors, setErrors] = useState<Errori>({});
 
   const validateForm = (): boolean => {
-    const newErrors: { bio?: string; tags?: string; lookingFor?: string; location?: string } = {};
+    // I link social sono facoltativi, ma se ci sono devono essere leggibili.
+    const newErrors: Errori = { ...leggiSocial(instagram, website).errori };
     
     if (!bio.trim()) {
       newErrors.bio = isEmployer ? 'La descrizione attività è obbligatoria' : 'La presentazione è obbligatoria';
@@ -80,10 +83,8 @@ const Onboarding = () => {
     setLoading(true);
 
     try {
-      const socialLinks = {
-        instagram: instagram.trim() || null,
-        website: website.trim() || null,
-      };
+      // Puliti (lib/social.ts): «@mario» → «mario», «barmario.it» → «https://barmario.it».
+      const socialLinks = leggiSocial(instagram, website).valori;
 
       const updateData: Record<string, unknown> = {
         bio: bio.trim(),
@@ -165,7 +166,7 @@ const Onboarding = () => {
           extra dopo i tag durata, che qui non ci sono: la durata si sceglie
           creando un annuncio, non compilando il profilo. */}
       <div className="px-6 py-6 space-y-8 pb-28">
-        {/* Section A: Chi sei / Descrizione Attività */}
+        {/* Section A: Chi sei / Descrizione attività */}
         <section className="space-y-4">
           <div className="flex items-center gap-2 text-lg font-semibold">
             {isEmployer ? (
@@ -179,7 +180,7 @@ const Onboarding = () => {
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="bio" className="text-base font-medium">
-                {isEmployer ? 'Descrizione Attività' : 'Presentazione'} <span className="text-destructive">*</span>
+                {isEmployer ? 'Descrizione attività' : 'Presentazione'} <span className="text-destructive">*</span>
               </Label>
               <Textarea
                 id="bio"
@@ -262,7 +263,7 @@ const Onboarding = () => {
         <section className="space-y-4">
           <div className="flex items-center gap-2 text-lg font-semibold">
             <FotoIcon className={`h-5 w-5 shrink-0 ${iconColorClass}`} />
-            <span className="titolo-mini">{isEmployer ? 'Foto Attività / Logo' : 'La tua Vetrina'}</span>
+            <span className="titolo-mini">{isEmployer ? 'Foto attività / logo' : 'La tua Vetrina'}</span>
           </div>
           
           <p className="text-sm text-muted-foreground">
@@ -297,20 +298,27 @@ const Onboarding = () => {
                 placeholder="@tuousername"
                 value={instagram}
                 onChange={(e) => setInstagram(e.target.value)}
+                autoCapitalize="none"
+                autoCorrect="off"
               />
+              {errors.instagram && <p className="text-sm text-destructive">{errors.instagram}</p>}
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="website" className="flex items-center gap-2">
                 <GloboIcon className="h-4 w-4 shrink-0" />
-                Sito Web
+                Sito web
               </Label>
               <Input
                 id="website"
                 placeholder="https://tuosito.com"
                 value={website}
                 onChange={(e) => setWebsite(e.target.value)}
+                inputMode="url"
+                autoCapitalize="none"
+                autoCorrect="off"
               />
+              {errors.website && <p className="text-sm text-destructive">{errors.website}</p>}
             </div>
           </div>
         </section>
@@ -349,7 +357,7 @@ const Onboarding = () => {
               Salvataggio...
             </>
           ) : (
-            isEmployer ? 'Configura Attività' : 'Completa Profilo'
+            isEmployer ? 'Configura attività' : 'Completa profilo'
           )}
         </Button>
       </div>

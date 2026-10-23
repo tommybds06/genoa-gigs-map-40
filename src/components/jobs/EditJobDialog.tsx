@@ -71,7 +71,7 @@ export function EditJobDialog({ job, isOpen, onClose, onSuccess }: EditJobDialog
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-md material-card border-0">
         <DialogHeader>
-          <DialogTitle>Modifica Annuncio</DialogTitle>
+          <DialogTitle>Modifica annuncio</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
@@ -132,7 +132,7 @@ export function EditJobDialog({ job, isOpen, onClose, onSuccess }: EditJobDialog
                 Salvataggio...
               </>
             ) : (
-              'Salva Modifiche'
+              'Salva modifiche'
             )}
           </Button>
         </div>

@@ -10,19 +10,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 
 import { toast } from 'sonner';
-import { 
-  ArrowLeft, 
-  Briefcase, 
-  Clock, 
-  Euro, 
-  FileText, 
-  Loader2,
-  Send,
-  Pencil
-} from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { ROLE_TAGS, TYPE_TAGS } from '@/constants/tags';
 import { getJobIcon } from '@/lib/jobIcons';
-import { PennaIcon, DocumentoIcon, OrologioIcon, CalendarioIcon, InvioIcon } from '@/components/icons/uiIcons';
+import { PennaIcon, DocumentoIcon, OrologioIcon, CalendarioIcon, InvioIcon, EuroIcon } from "@/components/icons/uiIcons";
 import { GenericoIcon } from '@/components/icons/roleIcons';
 import { isWithinGenovaBounds, GEOFENCING_ERROR_MESSAGE } from '@/constants/geofencing';
 import { TesseraIndietro } from "@/components/ui/Tessera";
@@ -179,7 +170,7 @@ const CreateJob = () => {
       <div className="bg-background border-b-2 border-border px-6 pt-8 pb-4">
         <div className="flex items-center gap-3 mb-1">
           <TesseraIndietro onClick={() => navigate(-1)} />
-          <h1 className="titolo-sezione">Crea Annuncio</h1>
+          <h1 className="titolo-sezione">Crea annuncio</h1>
         </div>
         <p className="text-muted-foreground text-sm">
           Pubblica un nuovo annuncio di lavoro
@@ -205,7 +196,7 @@ const CreateJob = () => {
         {/* Description */}
         <div className="space-y-2">
           <Label htmlFor="description" className="text-base font-medium flex items-center gap-2">
-            <DocumentoIcon className="h-4 w-4 text-employer" />
+            <DocumentoIcon className="h-4 w-4 text-employer-800" />
             Descrizione <span className="text-destructive">*</span>
           </Label>
           <Textarea
@@ -221,7 +212,7 @@ const CreateJob = () => {
         {/* Schedule */}
         <div className="space-y-2">
           <Label htmlFor="schedule" className="text-base font-medium flex items-center gap-2">
-            <OrologioIcon className="h-4 w-4 text-employer" />
+            <OrologioIcon className="h-4 w-4 text-employer-800" />
             Orario
           </Label>
           <Input
@@ -235,7 +226,7 @@ const CreateJob = () => {
         {/* Price */}
         <div className="space-y-2">
           <Label htmlFor="price" className="text-base font-medium flex items-center gap-2">
-            <Euro className="h-4 w-4 text-employer" />
+            <EuroIcon className="h-4 w-4 text-employer-800" />
             Paga
           </Label>
           <Input
@@ -249,7 +240,7 @@ const CreateJob = () => {
         {/* Type Tag (Modalità) - Single Selection Required */}
         <div className="space-y-3">
           <Label className="text-base font-medium flex items-center gap-2">
-            <CalendarioIcon className="h-4 w-4 text-employer" />
+            <CalendarioIcon className="h-4 w-4 text-employer-800" />
             Durata <span className="text-destructive">*</span>
           </Label>
           <p className="text-sm text-muted-foreground">
@@ -278,7 +269,7 @@ const CreateJob = () => {
         <div className="space-y-3">
           <Label className="text-base font-medium flex items-center gap-2">
             {/* era arancione: unica icona della schermata a non seguire il ruolo */}
-            <GenericoIcon className="h-4 w-4 text-employer" />
+            <GenericoIcon className="h-4 w-4 text-employer-800" />
             Ruolo <span className="text-destructive">*</span>
           </Label>
           <p className="text-sm text-muted-foreground">
@@ -355,7 +346,7 @@ const CreateJob = () => {
           ) : (
             <>
               <InvioIcon className="h-5 w-5 mr-2" />
-              Pubblica Annuncio
+              Pubblica annuncio
             </>
           )}
         </Button>

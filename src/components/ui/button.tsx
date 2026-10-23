@@ -52,6 +52,14 @@ const buttonVariants = cva(
       { variant: "default", size: "sm", className: "sagoma-chip rounded-full" },
       { variant: "destructive", size: "default", className: "sagoma-btn sagoma-btn-md rounded-full" },
       { variant: "destructive", size: "lg", className: "sagoma-btn sagoma-btn-lg rounded-full" },
+      /* VUOTI: il contorno disegnato (`bordo-bottone.svg`, `.bordo-btn` in
+         index.css). ⚠️ Fino al 23 ottobre ce l'avevano solo i due bottoni di
+         Auth, scritto a mano: gli altri `outline` avevano il bordo CSS da 1 px,
+         la cosa più «fatta col CSS» accanto a un bottone pieno ritagliato.
+         `relative` serve al `::after` che porta il disegno. Su `sm` no: il
+         disegno è tarato su 44–56 px di altezza, su 36 il tratto sparisce. */
+      { variant: "outline", size: "default", className: "relative border-transparent sagoma-btn sagoma-btn-md bordo-btn bordo-btn-md rounded-full" },
+      { variant: "outline", size: "lg", className: "relative border-transparent sagoma-btn sagoma-btn-lg bordo-btn rounded-full" },
     ],
     defaultVariants: {
       variant: "default",

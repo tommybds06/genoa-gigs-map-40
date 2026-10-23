@@ -113,7 +113,7 @@ const Lista = () => {
 
               <TabsContent value="applications" className="mt-0 focus-visible:outline-none">
                 <h2 className="titolo-sezione mb-3">
-                  Stato Candidature
+                  Stato candidature
                 </h2>
                 <ApplicationsList 
                   applications={applications} 
@@ -296,7 +296,7 @@ function EmptyState({ isEmployer, hasTags }: { isEmployer: boolean; hasTags: boo
         to="/profilo" 
         className="px-4 py-2 bg-primary text-primary-foreground sagoma-chip rounded-full text-sm font-medium touch-feedback"
       >
-        {hasTags ? "Modifica Tag" : "Vai al Profilo"}
+        {hasTags ? "Modifica tag" : "Vai al profilo"}
       </Link>
     </div>
   );

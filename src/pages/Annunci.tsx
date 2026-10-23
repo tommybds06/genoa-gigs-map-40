@@ -4,8 +4,8 @@ import { Header } from '@/components/layout/Header';
 import { useAuth } from '@/hooks/useAuth';
 import { useAppTheme } from '@/hooks/useAppTheme';
 import { supabase } from '@/integrations/supabase/client';
-import { Briefcase, Users, ChevronRight, ArrowLeft, Loader2, Plus, Pencil, Trash2, Check, X } from 'lucide-react';
-import { PennaIcon, BidoneIcon, XIcon, AnnunciVuotaIcon } from '@/components/icons/uiIcons';
+import { Users, ChevronRight, Loader2, Check } from 'lucide-react';
+import { PennaIcon, BidoneIcon, XIcon, AnnunciVuotaIcon, PiuIcon } from "@/components/icons/uiIcons";
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -339,13 +339,13 @@ const Annunci = () => {
                           onClick={() => handleReject(app)}
                           disabled={processingAppId === app.id}
                           variant="outline"
-                          className="flex-1 border-border text-muted-foreground hover:bg-muted touch-feedback"
+                          className="flex-1 text-muted-foreground hover:bg-muted touch-feedback"
                         >
                           {processingAppId === app.id ? (
                             <Loader2 className="h-4 w-4 animate-spin" />
                           ) : (
                             <>
-                              <X className="h-4 w-4 mr-1" />
+                              <XIcon className="h-4 w-4 mr-1" />
                               Rifiuta
                             </>
                           )}
@@ -394,7 +394,7 @@ const Annunci = () => {
             className="bg-employer-700 hover:bg-employer-800 text-employer-foreground rounded-full px-4 touch-feedback"
             size="sm"
           >
-            <Plus className="h-4 w-4 mr-1" />
+            <PiuIcon className="h-4 w-4 mr-1" />
             Crea
           </Button>
         </div>

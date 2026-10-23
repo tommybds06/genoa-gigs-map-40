@@ -4,6 +4,7 @@ import { MappaIcon } from "@/components/icons/uiIcons";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { useMapboxToken } from "@/hooks/useMapboxToken";
+import { useUser } from "@/contexts/UserContext";
 
 import { getJobIconFromTags } from "@/lib/jobIcons";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -23,6 +24,7 @@ export function LocationMiniMap({ lat, lng, neighborhood, address, tags }: Locat
   /* Stessa cache di InteractiveMap: la minimappa non rifà il giro di rete. */
   const mapboxToken = useMapboxToken();
   const isLoading = mapboxToken === null;
+  const { isEmployer } = useUser();
 
   // Initialize map
   useEffect(() => {
@@ -48,17 +50,25 @@ export function LocationMiniMap({ lat, lng, neighborhood, address, tags }: Locat
       }
     });
 
-    // Custom pin marker: arancione politask + icona del ruolo del lavoro
+    // I colori del pin dell'annuncio sulla mappa grande (InteractiveMap):
+    // arancio pieno + icona in inchiostro (6,45:1), oppure employer-700 +
+    // icona bianca (4,74:1). ⚠️ Prima erano scritti a mano: arancio con
+    // l'icona BIANCA (2,07:1, la regola di §5) e arancione anche per l'employer.
+    // Il marker nasce fuori da React, quindi i colori vanno come variabili CSS.
     const Icon = getJobIconFromTags(tags);
     const iconMarkup = renderToStaticMarkup(
-      <Icon width={22} height={22} style={{ color: "white" }} />
+      <Icon
+        width={22}
+        height={22}
+        style={{ color: isEmployer ? "hsl(var(--employer-foreground))" : "hsl(var(--primary-foreground))" }}
+      />
     );
-    const pinColor = "hsl(30, 90%, 63%)";
+    const pinColor = isEmployer ? "hsl(var(--employer-700))" : "hsl(var(--primary))";
     const markerEl = document.createElement("div");
     // Il pin disegnato (lib/formaPin.ts), 40 px di larghezza come prima;
     // l'icona al centro del cerchio superiore.
     markerEl.innerHTML = `
-      <div style="position:relative;width:40px;height:${Math.round(40 * PIN_PROPORZIONE)}px;filter:drop-shadow(0 4px 6px rgba(0,0,0,0.15));">
+      <div style="position:relative;width:40px;height:${Math.round(40 * PIN_PROPORZIONE)}px;filter:drop-shadow(0 1.5px 0 rgb(56 45 36 / 0.10)) drop-shadow(0 2px 2px rgb(56 45 36 / 0.13));">
         ${pinSvg(40, pinColor)}
         <div style="position:absolute;left:${PIN_CENTRO.x}%;top:${PIN_CENTRO.y}%;transform:translate(-50%,-50%);display:flex;">
           ${iconMarkup}
@@ -73,7 +83,7 @@ export function LocationMiniMap({ lat, lng, neighborhood, address, tags }: Locat
     return () => {
       map.current?.remove();
     };
-  }, [mapboxToken, lat, lng, tagsKey]);
+  }, [mapboxToken, lat, lng, tagsKey, isEmployer]);
 
   if (isLoading) {
     return (
@@ -91,7 +101,9 @@ export function LocationMiniMap({ lat, lng, neighborhood, address, tags }: Locat
     <div className="space-y-2">
       <div 
         ref={mapContainer} 
-        className="w-full h-40 rounded-2xl overflow-hidden border border-border [&_.mapboxgl-ctrl-logo]:hidden [&_.mapboxgl-ctrl-attrib]:hidden"
+        /* Ritagliata come le foto (`.sagoma-foto`, §6): la maschera È il
+           contenitore, quindi niente bordo CSS né `rounded`. */
+        className="sagoma-foto w-full h-40 overflow-hidden [&_.mapboxgl-ctrl-logo]:hidden [&_.mapboxgl-ctrl-attrib]:hidden"
       />
       {(neighborhood || address) && (
         <div className="text-center space-y-0.5">

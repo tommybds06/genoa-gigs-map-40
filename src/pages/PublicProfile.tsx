@@ -10,17 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { GalleryDialog } from "@/components/profile/GalleryDialog";
 import { JobDetailsSheet } from "@/components/map/JobDetailsSheet";
-import { 
-  ArrowLeft, 
-  MapPin, 
-  Star, 
-  Briefcase, 
-  MessageCircle,
-  CheckCircle2,
-  FileText,
-  Camera,
-} from "lucide-react";
-import { OrologioIcon, CalendarioIcon, IndietroIcon, StellaIcon, StellaVuotaIcon, MezzaStellaIcon, DocumentoIcon, FotoIcon, AnnunciAttiviIcon, MappaIcon, StoricoLavoriIcon, AnnunciVuotaIcon, CuoreIcon } from "@/components/icons/uiIcons";
+import { MessaggiIcon, OrologioIcon, CalendarioIcon, IndietroIcon, StellaIcon, StellaVuotaIcon, MezzaStellaIcon, DocumentoIcon, FotoIcon, AnnunciAttiviIcon, MappaIcon, StoricoLavoriIcon, AnnunciVuotaIcon, CuoreIcon } from "@/components/icons/uiIcons";
 import { useCuoriWorker } from "@/hooks/useCuoriWorker";
 import { GenericoIcon } from "@/components/icons/roleIcons";
 import { useAppTheme } from "@/hooks/useAppTheme";
@@ -29,6 +19,9 @@ import { getJobIconFromTags } from "@/lib/jobIcons";
 import { formatTempoTrascorso } from "@/lib/dates";
 import { adessoISO } from "@/lib/scadenzaAnnunci";
 import { TesseraIcona, TesseraIndietro } from "@/components/ui/Tessera";
+import { LinkSocial } from "@/components/profile/LinkSocial";
+import { StatusBadge } from "@/components/ui/StatusBadge";
+import type { SocialLinks } from "@/contexts/UserContext";
 
 // Tag durata usati prima della rinomina, ancora presenti su annunci vecchi
 
@@ -43,6 +36,7 @@ interface Profile {
   photos: string[];
   looking_for: string | null;
   experience: string | null;
+  social_links?: SocialLinks | null;
 }
 
 interface CompletedJob {
@@ -122,6 +116,7 @@ const PublicProfile = () => {
           setProfile({
             ...profileData,
             photos: profileData.photos || [],
+            social_links: profileData.social_links as SocialLinks | null,
           });
 
           // If employer profile, fetch reviews
@@ -297,7 +292,7 @@ const PublicProfile = () => {
                 che il ritaglio taglierebbe a tratti. */}
             <Avatar seme={userId} className="w-32 h-32">
               <AvatarImage src={avatarUrl || undefined} alt={displayName} className="object-cover" />
-              <AvatarFallback className={`${isWorkerProfile ? 'bg-accent text-primary' : 'bg-employer-50 text-employer'} text-4xl font-bold`}>
+              <AvatarFallback className={`${isWorkerProfile ? 'bg-accent text-primary-strong' : 'bg-employer-50 text-employer-800'} text-4xl font-bold`}>
                 {initials}
               </AvatarFallback>
             </Avatar>
@@ -310,7 +305,7 @@ const PublicProfile = () => {
             {/* Role Badge */}
             <Badge 
               variant="outline" 
-              className={`mb-2 ${isWorkerProfile ? 'bg-accent text-primary border-primary/30' : 'bg-employer-50 text-employer border-employer/20'}`}
+              className={`mb-2 ${isWorkerProfile ? 'bg-accent text-primary-strong border-primary/30' : 'bg-employer-50 text-employer-800 border-employer/20'}`}
             >
               {isWorkerProfile ? "Worker" : "Employer"}
             </Badge>
@@ -325,6 +320,11 @@ const PublicProfile = () => {
                 }
               </p>
             )}
+
+            {/* Prima qui non c'erano: si scrivevano nell'onboarding e li vedeva
+                solo il proprietario. Per un'attività il sito e l'Instagram sono
+                il modo di capire chi è prima di candidarsi. */}
+            <LinkSocial social={profile.social_links} employer={!isWorkerProfile} className="mt-1" />
           </div>
 
           {/* Rating Display (Employers only with reviews) */}
@@ -338,7 +338,7 @@ const PublicProfile = () => {
                       : reviewStats.avg >= star - 0.5
                       ? MezzaStellaIcon
                       : StellaVuotaIcon;
-                  return <StarComp key={star} className="w-5 h-5 text-employer" />;
+                  return <StarComp key={star} className="w-5 h-5 text-employer-800" />;
                 })}
               </div>
               <span className="font-semibold">{reviewStats.avg}</span>
@@ -352,7 +352,7 @@ const PublicProfile = () => {
           <div className="px-4 pb-6">
             <div className="material-card p-5">
               <div className="flex items-center gap-2 mb-4">
-                <FotoIcon className={`w-5 h-5 ${isWorkerProfile ? 'text-primary' : 'text-employer'}`} />
+                <FotoIcon className={`w-5 h-5 ${isWorkerProfile ? 'text-primary-strong' : 'text-employer-800'}`} />
                 <h3 className="font-bold text-lg">Foto</h3>
                 <span className="text-muted-foreground text-sm">({profile.photos.length})</span>
               </div>
@@ -406,7 +406,7 @@ const PublicProfile = () => {
             <div className="px-4 pb-6">
               <div className="material-card p-5">
                 <div className="flex items-center gap-2 mb-3">
-                  <DocumentoIcon className="w-5 h-5 text-primary" />
+                  <DocumentoIcon className="w-5 h-5 text-primary-strong" />
                   <h3 className="font-bold text-lg">Presentazione</h3>
                 </div>
                 <p className="text-foreground leading-relaxed">
@@ -420,7 +420,7 @@ const PublicProfile = () => {
               <div className="px-4 pb-6">
                 <div className="material-card p-5">
                   <div className="flex items-center gap-2 mb-3">
-                    <GenericoIcon className="w-5 h-5 text-primary" />
+                    <GenericoIcon className="w-5 h-5 text-primary-strong" />
                     <h3 className="font-bold text-lg">Esperienze</h3>
                   </div>
                   <p className="text-foreground leading-relaxed">{profile.experience}</p>
@@ -428,12 +428,12 @@ const PublicProfile = () => {
               </div>
             )}
 
-            {/* Sezione 3: Storico Lavori Completati */}
+            {/* Sezione 3: Storico lavori Completati */}
             <div className="px-4 pb-6">
               <div className="material-card p-5">
                 <div className="flex items-center gap-2 mb-4">
-                  <StoricoLavoriIcon className="w-5 h-5 text-primary" />
-                  <h3 className="font-bold text-lg">Storico Lavori</h3>
+                  <StoricoLavoriIcon className="w-5 h-5 text-primary-strong" />
+                  <h3 className="font-bold text-lg">Storico lavori</h3>
                 </div>
                 
                 {completedJobs.length === 0 ? (
@@ -452,7 +452,7 @@ const PublicProfile = () => {
                           className="flex items-start gap-3 p-3 rounded-xl bg-card border-2 border-primary/30"
                         >
                           <div className="flex items-center justify-center shrink-0">
-                            <Icon className="w-11 h-11 text-primary" />
+                            <Icon className="w-11 h-11 text-primary-strong" />
                           </div>
                           <div className="flex-1 min-w-0">
                             <h4 className="font-semibold text-sm truncate">{job.title}</h4>
@@ -465,10 +465,9 @@ const PublicProfile = () => {
                             </div>
                           </div>
                           <div className="flex shrink-0 flex-col items-end gap-1.5">
-                            <Badge variant="outline" className="bg-accent text-primary border-primary/30 text-xs">
-                              <CheckCircle2 className="w-3 h-3 mr-1" />
-                              Concluso
-                            </Badge>
+                            {/* Era un badge a contorno con testo in arancio pastello
+                                (1,8:1): lo stato «Concluso» ha la sua sorgente unica. */}
+                            <StatusBadge stato="completed" />
                             {/* Il cuore dell'attività: pubblico, è la reputazione
                                 del worker. Senza cuore non si mostra niente. */}
                             {cuori?.has(job.applicationId) && (
@@ -496,7 +495,7 @@ const PublicProfile = () => {
               <div className="px-4 pb-6">
                 <div className="material-card p-5">
                   <div className="flex items-center gap-2 mb-3">
-                    <DocumentoIcon className="w-5 h-5 text-employer" />
+                    <DocumentoIcon className="w-5 h-5 text-employer-800" />
                     <h3 className="font-bold text-lg">Chi siamo</h3>
                   </div>
                   <p className="text-foreground leading-relaxed">{profile.bio}</p>
@@ -509,7 +508,7 @@ const PublicProfile = () => {
               <div className="px-4 pb-6">
                 <div className="material-card p-5">
                   <div className="flex items-center gap-2 mb-3">
-                    <GenericoIcon className="w-5 h-5 text-employer" />
+                    <GenericoIcon className="w-5 h-5 text-employer-800" />
                     <h3 className="font-bold text-lg">Chi cerchiamo</h3>
                   </div>
                   <p className="text-foreground leading-relaxed">{profile.looking_for}</p>
@@ -521,12 +520,12 @@ const PublicProfile = () => {
             <div className="px-4 pb-6">
               <div className="material-card p-5">
                 <div className="flex items-center gap-2 mb-3">
-                  <StellaIcon className="w-5 h-5 text-employer" />
+                  <StellaIcon className="w-5 h-5 text-employer-800" />
                   <h3 className="font-bold text-lg">Recensioni</h3>
                 </div>
                 {reviews.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-8 text-center">
-                    <MessageCircle className="w-10 h-10 text-muted-foreground/30 mb-2" />
+                    <MessaggiIcon className="w-10 h-10 text-muted-foreground/30 mb-2" />
                     <p className="text-muted-foreground text-sm">Nessuna recensione ancora</p>
                   </div>
                 ) : (
@@ -545,7 +544,7 @@ const PublicProfile = () => {
                                   : review.rating >= star - 0.5
                                   ? MezzaStellaIcon
                                   : StellaVuotaIcon;
-                              return <StarComp key={star} className="w-3.5 h-3.5 text-employer" />;
+                              return <StarComp key={star} className="w-3.5 h-3.5 text-employer-800" />;
                             })}
                           </div>
                         </div>
@@ -566,8 +565,8 @@ const PublicProfile = () => {
             <div className="px-4 pb-6">
               <div className="material-card p-5">
                 <div className="flex items-center gap-2 mb-4">
-                  <AnnunciAttiviIcon className="w-5 h-5 text-employer" />
-                  <h3 className="font-bold text-lg">Annunci Attivi</h3>
+                  <AnnunciAttiviIcon className="w-5 h-5 text-employer-800" />
+                  <h3 className="font-bold text-lg">Annunci attivi</h3>
                 </div>
                 
                 {jobs.length === 0 ? (

@@ -1,6 +1,6 @@
 // ChevronLeft/Right rimossi: erano le frecce sul carosello foto, che su mobile
 // coprivano la foto per un gesto che si fa gia' con lo swipe. Restano i pallini.
-import { User, MapPin, Briefcase, Instagram, Globe } from "lucide-react";
+import { LinkSocial } from "@/components/profile/LinkSocial";
 import { SalvaIcon } from "@/components/icons/uiIcons";
 import { ImpostazioniIcon, ProfiloIcon, CuoreIcon, InfoIcon, StellaIcon, MappaIcon } from "@/components/icons/uiIcons";
 import { GenericoIcon } from "@/components/icons/roleIcons";
@@ -147,7 +147,7 @@ const Profilo = () => {
             <Avatar seme={profile?.id} className="w-20 h-20">
               <AvatarImage src={profile?.photos?.[0] || undefined} alt="Avatar" />
               <AvatarFallback className={theme.btnFilled}>
-                <User className="w-10 h-10" />
+                <ProfiloIcon className="w-10 h-10" />
               </AvatarFallback>
             </Avatar>
             <div>
@@ -169,20 +169,9 @@ const Profilo = () => {
             </div>
           </div>
 
-          {profile?.social_links && (profile.social_links.instagram || profile.social_links.website) && (
-            <div className="flex gap-3 mt-4 pt-4 border-t border-border">
-              {profile.social_links.instagram && (
-                <a href={`https://instagram.com/${profile.social_links.instagram.replace('@', '')}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
-                  <Instagram className="w-4 h-4" /><span>{profile.social_links.instagram}</span>
-                </a>
-              )}
-              {profile.social_links.website && (
-                <a href={profile.social_links.website.startsWith('http') ? profile.social_links.website : `https://${profile.social_links.website}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
-                  <Globe className="w-4 h-4" /><span>Sito Web</span>
-                </a>
-              )}
-            </div>
-          )}
+          {/* Allineati a sinistra come il resto della card; `-ml-2` compensa
+              il padding del primo link, che c'è per il bersaglio di tocco. */}
+          <LinkSocial social={profile?.social_links} employer={isEmployer} className="mt-3 -ml-2 justify-start" />
         </div>
 
         {profile?.bio && (

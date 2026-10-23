@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
-import { MessageCircle, ChevronRight } from "lucide-react";
+import { MessaggiIcon } from "@/components/icons/uiIcons";
+import { ChevronRight } from "lucide-react";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Application, useChatForApplication } from "@/hooks/useApplications";
@@ -91,7 +92,7 @@ export function ApplicationCard({ application, userId }: ApplicationCardProps) {
         <div className="flex items-center gap-1.5 shrink-0">
           <StatusBadge stato={application.status} />
           {hasChat && (
-            <MessageCircle className="w-4 h-4 text-primary" aria-label="Conversazione attiva" />
+            <MessaggiIcon className="w-4 h-4 text-primary-strong" aria-label="Conversazione attiva" />
           )}
           {canOpen && <ChevronRight className="w-4 h-4 text-muted-foreground" />}
         </div>

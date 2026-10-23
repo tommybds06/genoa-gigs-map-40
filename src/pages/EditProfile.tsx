@@ -15,6 +15,8 @@ import { PhotoGalleryManager } from "@/components/profile/PhotoGalleryManager";
 import { toast } from "sonner";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { TesseraIndietro } from "@/components/ui/Tessera";
+import type { SocialLinks } from "@/contexts/UserContext";
+import { etichettaInstagram, leggiSocial } from "@/lib/social";
 
 const EditProfile = () => {
   const navigate = useNavigate();
@@ -31,6 +33,9 @@ const EditProfile = () => {
   const [experience, setExperience] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [photos, setPhotos] = useState<string[]>([]);
+  const [instagram, setInstagram] = useState("");
+  const [website, setWebsite] = useState("");
+  const [erroriSocial, setErroriSocial] = useState<{ instagram?: string; website?: string }>({});
 
   // Fetch current profile data with reduced stale time
   const { data: profileData, isLoading } = useQuery({
@@ -61,6 +66,9 @@ const EditProfile = () => {
       setLookingFor(profileData.looking_for || "");
       setExperience(profileData.experience || "");
       setPhotos(profileData.photos || []);
+      const social = profileData.social_links as SocialLinks | null;
+      setInstagram(social?.instagram ? etichettaInstagram(social.instagram) : "");
+      setWebsite(social?.website || "");
     }
   }, [profileData]);
 
@@ -70,7 +78,14 @@ const EditProfile = () => {
 
   const handleSave = async () => {
     if (!user?.id) return;
-    
+
+    const social = leggiSocial(instagram, website);
+    setErroriSocial(social.errori);
+    if (!social.valido) {
+      toast.error("Controlla i link social");
+      return;
+    }
+
     setIsSaving(true);
     
     try {
@@ -80,6 +95,7 @@ const EditProfile = () => {
         address_text: addressText.trim(),
         neighborhood: neighborhood || null,
         photos: photos,
+        social_links: social.valori,
       };
 
       // Add role-specific fields
@@ -114,10 +130,6 @@ const EditProfile = () => {
     ? "focus-visible:ring-employer border-employer/20"
     : "focus-visible:ring-primary border-primary/20";
 
-  const buttonClasses = isEmployer
-    ? "bg-employer hover:bg-employer-700 text-employer-foreground"
-    : "bg-primary hover:bg-primary/90 text-primary-foreground";
-
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -137,7 +149,7 @@ const EditProfile = () => {
       <header className="sticky top-0 z-40 bg-background px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-3 border-b border-border">
         <div className="flex items-center gap-3">
           <TesseraIndietro onClick={handleBack} />
-          <h1 className="text-xl font-bold text-foreground">Modifica Profilo</h1>
+          <h1 className="text-xl font-bold text-foreground">Modifica profilo</h1>
         </div>
       </header>
       <main className="flex-1 px-4 py-6 pb-24 overflow-y-auto">
@@ -159,7 +171,7 @@ const EditProfile = () => {
           {/* Name Field */}
           <div className="space-y-2">
             <Label htmlFor="fullName" className="text-sm font-medium">
-              {isEmployer ? "Nome" : "Nome e Cognome"}
+              {isEmployer ? "Nome" : "Nome e cognome"}
             </Label>
               <Input
               id="fullName"
@@ -248,15 +260,56 @@ const EditProfile = () => {
               />
             </div>
           )}
+
+          {/* Social: prima si scrivevano solo nell'onboarding, e da lì non si
+              potevano più cambiare. Puliti e controllati da `lib/social.ts`. */}
+          <div className="space-y-2">
+            <Label htmlFor="instagram" className="text-sm font-medium">
+              Instagram
+            </Label>
+            <Input
+              id="instagram"
+              value={instagram}
+              onChange={(e) => setInstagram(e.target.value)}
+              placeholder="@tuonome"
+              autoCapitalize="none"
+              autoCorrect="off"
+              className={inputBorderClasses}
+            />
+            {erroriSocial.instagram && <p className="text-sm text-destructive">{erroriSocial.instagram}</p>}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="website" className="text-sm font-medium">
+              Sito web
+            </Label>
+            <Input
+              id="website"
+              type="url"
+              inputMode="url"
+              value={website}
+              onChange={(e) => setWebsite(e.target.value)}
+              placeholder={isEmployer ? "barmario.it" : "iltuosito.it"}
+              autoCapitalize="none"
+              autoCorrect="off"
+              className={inputBorderClasses}
+            />
+            {erroriSocial.website && <p className="text-sm text-destructive">{erroriSocial.website}</p>}
+          </div>
         </div>
       </main>
 
       {/* Sticky Save Button */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-background border-t border-border safe-bottom">
+      {/* ⚠️ Era `bg-employer` (il blu PASTELLO) col testo bianco: 3,03:1, la
+          regola di §5. `theme.btnFilled` porta fondo e testo in coppia, e
+          `size="lg"` accende la sagoma disegnata. Niente `safe-bottom`, che
+          azzera il padding dove l'inset vale 0 (§15). */}
+      <div className="fixed bottom-0 left-0 right-0 bg-background px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
         <Button
           onClick={handleSave}
           disabled={isSaving}
-          className={`w-full h-12 text-base font-semibold ${buttonClasses}`}
+          size="lg"
+          className={`w-full text-base ${theme.btnFilled} ${theme.btnFilledHover}`}
         >
           {isSaving ? (
             <>
@@ -266,7 +319,7 @@ const EditProfile = () => {
           ) : (
             <>
               <SalvaIcon className="w-5 h-5 mr-2" />
-              Salva Modifiche
+              Salva le modifiche
             </>
           )}
         </Button>

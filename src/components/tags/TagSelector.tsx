@@ -4,10 +4,9 @@ import { cn } from "@/lib/utils";
 import { getTagClasses, getTagSelectedClasses, isBlueTag } from "@/lib/tagColors";
 import { getJobIcon } from "@/lib/jobIcons";
 import { useAppTheme } from "@/hooks/useAppTheme";
-import { X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { PiuIcon } from "@/components/icons/uiIcons";
+import { PiuIcon, XIcon } from "@/components/icons/uiIcons";
 
 interface TagSelectorProps {
   selectedTags: string[];
@@ -89,7 +88,7 @@ export function TagSelector({
             )}
           >
             {tag}
-            {isCustom && <X className="h-3 w-3 shrink-0 opacity-70" />}
+            {isCustom && <XIcon className="h-3 w-3 shrink-0 opacity-70" />}
           </span>
         </button>
       );
@@ -108,7 +107,7 @@ export function TagSelector({
       >
         <Icon className="w-4 h-4 shrink-0" />
         {tag}
-        {isCustom && <X className="w-3.5 h-3.5 opacity-70" />}
+        {isCustom && <XIcon className="w-3.5 h-3.5 opacity-70" />}
       </button>
     );
   };

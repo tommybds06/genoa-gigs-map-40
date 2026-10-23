@@ -1,8 +1,8 @@
 import { useState, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { X, Loader2 } from 'lucide-react';
-import { PiuIcon } from '@/components/icons/uiIcons';
+import { Loader2 } from 'lucide-react';
+import { PiuIcon, XIcon } from "@/components/icons/uiIcons";
 
 interface PhotoUploaderProps {
   photos: string[];
@@ -117,7 +117,7 @@ export const PhotoUploader = ({
               onClick={() => handleRemove(index)}
               className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full p-1 shadow-md"
             >
-              <X className="h-4 w-4" />
+              <XIcon className="h-4 w-4" />
             </button>
           </div>
         ))}

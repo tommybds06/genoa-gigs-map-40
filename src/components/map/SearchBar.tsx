@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { X, Check } from "lucide-react";
-import { SearchIcon, FiltriIcon, CalendarioIcon, MappaIcon } from "@/components/icons/uiIcons";
+import { Check } from "lucide-react";
+import { SearchIcon, FiltriIcon, CalendarioIcon, MappaIcon, XIcon } from "@/components/icons/uiIcons";
 import { GenericoIcon } from "@/components/icons/roleIcons";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -94,7 +94,7 @@ export function SearchBar({
               onClick={() => onSearchChange("")}
               className="absolute right-3 top-1/2 -translate-y-1/2 z-10 text-muted-foreground hover:text-foreground"
             >
-              <X className="w-4 h-4" />
+              <XIcon className="w-4 h-4" />
             </button>
           )}
         </div>
@@ -151,7 +151,7 @@ export function SearchBar({
                   onClick={() => setIsFilterOpen(false)}
                   className="p-2 rounded-full hover:bg-muted transition-colors"
                 >
-                  <X className="w-5 h-5" />
+                  <XIcon className="w-5 h-5" />
                 </button>
               </div>
             </div>

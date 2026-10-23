@@ -107,7 +107,7 @@ const Auth = () => {
   /* Qui il ruolo non arriva ancora da UserContext — il profilo non esiste —
      quindi lo scriviamo noi sull'elemento radice appena viene scelto. Cosi'
      seguono anche i token che non passano dal tema JS: fondo dei campi,
-     anello di focus, hover dei bottoni. Senza, scegliendo "Offro Impiego" la
+     anello di focus, hover dei bottoni. Senza, scegliendo "Offro impiego" la
      pagina diventava blu ma i campi restavano arancioni. */
   useEffect(() => {
     if (selectedRole) {
@@ -411,8 +411,8 @@ const Auth = () => {
                     )}>
                       <GenericoIcon className="w-6 h-6" />
                     </div>
-                    <h3 className="font-semibold text-sm text-foreground">Cerco Impiego</h3>
-                    <p className="text-xs text-muted-foreground mt-1">Sono uno Studente</p>
+                    <h3 className="font-semibold text-sm text-foreground">Cerco impiego</h3>
+                    <p className="text-xs text-muted-foreground mt-1">Sono uno studente</p>
                     {selectedRole === 'worker' && (
                       <div className="absolute top-2 right-2 w-3 h-3 bg-primary rounded-full animate-scale-in" />
                     )}
@@ -435,8 +435,8 @@ const Auth = () => {
                     )}>
                       <AnnunciIcon className="w-6 h-6" />
                     </div>
-                    <h3 className="font-semibold text-sm text-foreground">Offro Impiego</h3>
-                    <p className="text-xs text-muted-foreground mt-1">Privato o Attività</p>
+                    <h3 className="font-semibold text-sm text-foreground">Offro impiego</h3>
+                    <p className="text-xs text-muted-foreground mt-1">Privato o attività</p>
                     {selectedRole === 'employer' && (
                       <div className="absolute top-2 right-2 w-3 h-3 bg-employer rounded-full animate-scale-in" />
                     )}

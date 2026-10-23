@@ -707,6 +707,11 @@
       border-width: 27px 30px;
       border-image-width: 27px 30px;
     }
+    /* Sul bottone da 44 px: le stesse misure della sua maschera (21+21). */
+    .bordo-btn-md::after {
+      border-width: 21px 24px;
+      border-image-width: 21px 24px;
+    }
 
       /* ---- LINEA DIVISORIA DISEGNATA ----
        Sostituisce i bordi da 1px sotto l'header e sopra la nav. Il tracciato

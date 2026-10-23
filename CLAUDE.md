@@ -479,9 +479,11 @@ Tommaso: «quando si fa dezoom… si sovrappongono creando un brutto effetto».
 - L'ombra era un `box-shadow` sul cerchio: sulla forma è un `drop-shadow`.
 - La punta è in basso al centro: l'`anchor="bottom"` dei Marker resta giusto
   senza spostamenti.
-- ⚠️ La **minimappa** ha colori suoi, non toccati: arancio scritto a mano
-  (`hsl(30,90%,63%)`) e icona **bianca** — 2,07:1, la regola di §5 violata —
-  e arancione anche per l'employer. Da correggere quando si decide.
+- La **minimappa** (23 ottobre) ha i colori del pin della mappa grande, per
+  ruolo, passati come variabili CSS perché il marker nasce fuori da React.
+  Prima: arancio scritto a mano con l'icona BIANCA (2,07:1) e arancione
+  anche per l'employer. Il riquadro è ritagliato come le foto
+  (`.sagoma-foto`), senza bordo CSS.
 
 ## Le schede dal basso: bordo a mano e FESSURA (dal 21 ottobre)
 
@@ -565,6 +567,14 @@ sta nei file e nel token `--paper-edge`, **da tenere in sincrono**.
 - Sagoma solo su `default` e `destructive` — i pieni. Su `ghost` e `link` non
   c'è niente da ritagliare; su `outline` c'è invece il **contorno disegnato**
   (`bordo-bottone.svg`), perché senza linea un bottone vuoto non esisterebbe.
+  ⚠️ **Fino al 23 ottobre questo era vero solo sulla carta**: il contorno
+  ce l'avevano i due bottoni di Auth, con le classi scritte a mano; gli
+  altri 15 `outline` avevano il bordo CSS da 1 px. Ora sta nei
+  `compoundVariants` (`default` → `bordo-btn-md`, 21 px; `lg` →
+  `bordo-btn`, 27 px). Su `sm` no: su 36 px il tratto sparisce. Un
+  `border-*` passato nel `className` rimette il bordo CSS SOTTO il disegno:
+  non passarlo. Fuori da `@supports` (Firefox desktop) il bottone vuoto
+  resta senza contorno: accettato, l'app gira su WebKit.
 - **Cancellate `.material-btn*` e `.material-input`**: non le usava nessuno ed
   erano un secondo sistema con raggi diversi, pronto a essere ripreso per errore.
 - I campi usano `Input` / `Textarea` / `SelectTrigger`, che si generano il guscio
@@ -1057,6 +1067,10 @@ LIKE '%@demo.politask.invalid'` (cascata) e togliere le colonne `is_demo` da
    su `scade_il`: pushato prima, mappa e Lista restano VUOTE. Verifica: GET
    `/rest/v1/jobs?select=scade_il&limit=0` → 200, non 400/42703. Poi provare
    il flusso intero con dati veri.
+   **Applicata il 23 ottobre** la scadenza (verificata via REST, pushato il
+   codice). Restano: il cron, e `20261023130000_titolo_chat_annunci_chiusi.sql`
+   (solo la vista, nessun codice dipende da lei: si può applicare quando si
+   vuole).
 1. **Bacheca, employer e worker**: provarle con dati veri (appendere,
    assumere, terminare, l'avviso di scadenza; lato worker gli stati e la
    recensione dalla card) — scritte e verificate solo con dati finti.
@@ -1555,6 +1569,13 @@ Rifatti in tre fasi, tutte e tre approvate.
 - **In chat: separatori di giornata** («Oggi», «Ieri», giorno della settimana,
   poi la data: `etichettaGiorno`) e **solo l'ora** sulle bolle. **Gruppi**:
   stessa persona, stesso giorno, meno di 5 minuti → bolle strette.
+- ⚠️ **Il titolo in lista viene dalla vista `chat_overview`, che legge coi
+  permessi di chi guarda** (`security_invoker`). Il worker non legge gli
+  annunci CHIUSI (la policy che glielo permetteva è stata tolta ad aprile
+  per una ricorsione RLS fra `jobs` e `applications`), quindi nelle chat dei
+  lavori conclusi la riga del titolo era vuota. Migration
+  `20261023130000_titolo_chat_annunci_chiusi.sql`: `COALESCE(j.title,
+  a.job_title)`, il titolo salvato nella candidatura. Provata su PGlite.
 - **Testata**: il titolo dell'annuncio sotto il nome riapre la scheda
   (`JobDetailsSheet sopraChat`, a `z-[70]`: la chat è `z-[60]`).
 
@@ -1682,3 +1703,58 @@ giorni».
 - Quando arriva Stripe: una funzione SECURITY DEFINER (o un webhook) che
   porta `scade_il` a adesso + 7 giorni e rimette `scadenza_vista = false`;
   il bottone spento diventa vero. Niente altro da cambiare.
+
+---
+
+# 20. I link social del profilo — 23 ottobre 2026
+
+Prima si scrivevano **solo nell'onboarding** (poi non si potevano più
+cambiare), si vedevano **solo nel proprio Profilo** (icone lucide, «Sito
+Web» generico) e il profilo pubblico non li mostrava affatto — proprio dove
+servono: per un'attività sito e Instagram sono il modo di capire chi è
+prima di candidarsi.
+
+- **`lib/social.ts` è la sorgente unica**: `leggiSocial` pulisce e controlla
+  i due campi; nel database va la forma pulita — Instagram solo il nome
+  («@mario», «instagram.com/mario/?igsh=…» → «mario»), il sito con
+  `https://`. ⚠️ Prima si salvava il testo così com'era e il profilo apriva
+  `instagram.com/` + quel testo: chi incollava il link intero finiva su un
+  indirizzo rotto. `linkInstagram` / `etichettaSito` reggono anche i dati
+  vecchi non puliti.
+- Un sito senza punto nel dominio («ciao») o con un altro protocollo
+  (`javascript:`) è un errore sotto il campo, non viene salvato in silenzio.
+- **`components/profile/LinkSocial.tsx`**: icone nostre, testo
+  nell'INCHIOSTRO del ruolo del profilo mostrato (non di chi guarda), il
+  sito col suo dominio, bersagli da 44 px. In Profilo allineati a sinistra,
+  nel profilo pubblico centrati sotto l'indirizzo.
+- **Modifica profilo**: i due campi in fondo. Nello stesso giro il bottone
+  «Salva» era `bg-employer` (blu PASTELLO) con testo bianco, 3,03:1: ora
+  `theme.btnFilled` + `size="lg"`, e via `safe-bottom` (§15).
+
+---
+
+# 21. La pulizia del 23 ottobre — cosa è cambiato e perché
+
+Dall'audit «difetti evidenti» (punti 5–8), dopo scadenza, titolo in chat e
+link social.
+
+- **Icone lucide → nostre** dove il disegno c'è: orologio del caricamento
+  mappa, euro in Crea annuncio, fumetto in candidature e recensioni vuote,
+  profilo e «+» nella galleria, «+» in Annunci, e tutte le X (`XIcon`).
+  Restano lucide di proposito: rotelline (`Loader2`), frecce di navigazione
+  (`Chevron*`), spunte (`Check`, `CheckCheck`), `Reply`, la maniglia della
+  galleria, `AlertTriangle`, `Users`: non abbiamo un disegno per loro.
+- **Pastelli come testo o icona → inchiostri del ruolo**: le icone delle
+  etichette di Crea annuncio (blu pastello, 2,6:1 sulla carta, sotto il 3:1
+  di un'icona) e tutto il profilo pubblico (badge del ruolo, iniziali,
+  stelle, icone delle sezioni: 1,8 e 2,6:1). Il badge «Concluso» del
+  profilo pubblico ora è `StatusBadge`.
+- **Maiuscole all'italiana**: 37 scritte in «Title Case» all'inglese
+  («Pubblica Annuncio», «Storico Lavori», «Sono uno Studente») → maiuscola
+  solo all'inizio. In italiano la maiuscola a ogni parola non si usa.
+- **Via i coriandoli** da `ReviewPrompt` (Tommaso li aveva bocciati; usavano
+  i colori Tailwind grezzi). ⚠️ Il pacchetto `canvas-confetti` resta in
+  `package.json`: toglierlo cambia anche `bun.lock`, che aggiorna Lovable.
+- **«Concludi» in chat** gemello di «Assumi»: chip ritagliato, pieno tenue
+  nel verde di «Assunto». Era un contorno CSS verde accanto a un chip
+  disegnato.

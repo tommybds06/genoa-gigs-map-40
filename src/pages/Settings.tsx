@@ -99,7 +99,7 @@ const Settings = () => {
             >
               <div className="flex items-center gap-3">
                 <ProfiloIcon className={`w-5 h-5 ${theme.primaryText}`} />
-                <span className="titolo-mini">Modifica Profilo</span>
+                <span className="titolo-mini">Modifica profilo</span>
               </div>
               <ChevronRight className="w-5 h-5 text-muted-foreground" />
             </button>
@@ -139,19 +139,19 @@ const Settings = () => {
 
             {/* Terms & Privacy */}
             <button 
-              onClick={() => toast.info("Termini e Privacy", { description: "Pagina in arrivo..." })}
+              onClick={() => toast.info("Termini e privacy", { description: "Pagina in arrivo..." })}
               className="w-full flex items-center justify-between p-4 hover:bg-muted/50 transition-colors"
             >
               <div className="flex items-center gap-3">
                 <DocumentoIcon className={`w-5 h-5 ${theme.primaryText}`} />
-                <span className="titolo-mini">Termini e Privacy</span>
+                <span className="titolo-mini">Termini e privacy</span>
               </div>
               <ChevronRight className="w-5 h-5 text-muted-foreground" />
             </button>
           </div>
         </div>
 
-        {/* "Zona Pericolo" era la traduzione letterale di Danger Zone, che e'
+        {/* "Zona pericolo" era la traduzione letterale di Danger Zone, che e'
             una convenzione da pannello di amministrazione: in un'app consumer
             suona minacciosa per un logout. Il rosso sulle voci basta a
             segnalare che sono azioni serie. */}
@@ -183,7 +183,7 @@ const Settings = () => {
             >
               <div className="flex items-center gap-3">
                 <BidoneIcon className="w-5 h-5 text-destructive" />
-                <span className="titolo-mini text-destructive">Elimina Account</span>
+                <span className="titolo-mini text-destructive">Elimina account</span>
               </div>
             </button>
           </div>
@@ -210,7 +210,7 @@ const Settings = () => {
               onClick={handleDeleteAccount}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Elimina Account
+              Elimina account
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

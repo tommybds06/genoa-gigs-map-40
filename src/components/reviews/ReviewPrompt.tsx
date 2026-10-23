@@ -16,7 +16,6 @@ import { Loader2 } from "lucide-react";
 import { StellaIcon, StellaVuotaIcon } from "@/components/icons/uiIcons";
 import { toast } from "sonner";
 import { EVENTO_RECENSIONE, type PendingReview } from "@/lib/recensione";
-import confetti from "canvas-confetti";
 
 
 // Session-level tracking to prevent re-showing after skip/close
@@ -119,16 +118,9 @@ export function ReviewPrompt() {
         employerName,
         jobTitle,
       });
+      // Niente coriandoli (Tommaso, 22 ottobre): una richiesta di recensione
+      // non è una festa, e i colori erano quelli Tailwind grezzi di prima.
       setIsOpen(true);
-
-      setTimeout(() => {
-        confetti({
-          particleCount: 100,
-          spread: 70,
-          origin: { y: 0.6 },
-          colors: ["#f97316", "#3b82f6", "#22c55e", "#eab308"],
-        });
-      }, 300);
     } catch (error) {
       console.error("Error checking pending reviews:", error);
     } finally {
@@ -362,7 +354,7 @@ export function ReviewPrompt() {
                   Invio...
                 </>
               ) : (
-                "Invia Recensione"
+                "Invia recensione"
               )}
             </Button>
           </div>
