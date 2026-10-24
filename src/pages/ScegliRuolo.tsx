@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { srcLogo } from "@/lib/gerarchia";
 import { useNavigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -93,7 +94,7 @@ const ScegliRuolo = () => {
       navigate("/onboarding", { replace: true });
     } catch (err) {
       console.error("Errore creazione profilo:", err);
-      toast.error("Non sono riuscito a salvare. Riprova.", { duration: 3000 });
+      toast.error("Non sono riuscito a salvare. Riprova.", { duration: 2300 });
       setSalvataggio(false);
     }
   };
@@ -155,7 +156,7 @@ const ScegliRuolo = () => {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <img
-            src={ruolo === "employer" ? "/images/logo-employer-v2.svg" : "/images/logo-worker-v2.svg"}
+            src={srcLogo(ruolo === "employer")}
             alt="Politask"
             className="h-20 w-auto mx-auto mb-3 transition-all duration-500"
           />

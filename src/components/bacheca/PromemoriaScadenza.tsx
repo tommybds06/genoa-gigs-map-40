@@ -283,7 +283,7 @@ export function PromemoriaScadenza() {
         queryClient.invalidateQueries({ queryKey: ["chats"] });
         queryClient.invalidateQueries({ queryKey: ["jobs"] });
       }
-      toast.success(messaggio, { duration: 2000 });
+      toast.success(messaggio, { duration: 1500 });
     } catch (e) {
       console.error("Promemoria:", e);
       toast.error("Qualcosa è andato storto, riprova");

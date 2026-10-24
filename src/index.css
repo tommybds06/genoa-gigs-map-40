@@ -65,6 +65,10 @@
     /* Il foglio era a 96,5%: troppo vicino al bianco, leggeva come "card bianca".
        Abbassato a 95% e reso piu' caldo — resta carta, non diventa foglio A4. */
     --paper-sheet: 44 58% 95%;       /* #FAF5E9 */
+    /* La carta della FOTO STAMPATA (ui/FotoStampata): più bianca del foglio,
+       perché le foto stanno anche DENTRO le card e lì, col colore del
+       foglio, la cornice si leggerebbe solo dal filo. */
+    --carta-foto: 45 70% 98%;        /* #FDFBF5 */
     --paper-sunken: 42 33% 86.5%;    /* #E8E1D1 — incavi, campi, tab inattive */
     --paper-line: 40 32% 79%;        /* #DACFB8 — bordi CSS sottili (1px) */
     /* Il filo DISEGNATO delle card. Ci sono voluti quattro giri, e la lezione
@@ -225,10 +229,49 @@
     --field: 213 45% 92%;            /* #E4EBF5 — velatura fredda, employer */
   }
 
+  /* ---- LA GERARCHIA DEI COLORI DI RUOLO — esperimento del 23 ottobre ----
+     Tommaso: «se provassimo a invertire la gerarchia? […] per vedere».
+     Di serie i PIENI di ruolo sono i pastelli (arancio #F6A24D, blu #6E97CC)
+     con l'inchiostro sopra, e gli scuri (#A7531B, #355D8D) fanno da accento
+     per testi e icone. Con `data-gerarchia="scura"` su <html> (index.html)
+     i pieni diventano gli scuri, col foglio sopra (4,95 e 6,22:1).
+     ⚠️ Non è un'inversione PURA: i testi e le icone su carta restano scuri,
+     perché il pastello come testo non si legge (1,78 e 2,61:1). Il pastello
+     passa a fare l'EVIDENZA (le tessere dei risultati di ricerca), che prima
+     era scura.
+     Per tornare indietro: togliere l'attributo da index.html. Basta quello.
+     ⚠️ I profili NON sono esclusi: «tieni i profili così» voleva dire che lì
+     gli scuri sono già i colori principali (escluderli lasciava pastello la
+     rotellina e la freccia del profilo pubblico). Il LOGO è un file: lo
+     sceglie `srcLogo` (lib/gerarchia.ts). */
+  :root {
+    --su-ruolo: var(--ink);                 /* contenuto su un pieno di ruolo */
+    --evidenza-worker: var(--brand-orange-ink);
+    --evidenza-employer: var(--brand-blue-ink);
+    --su-evidenza: var(--paper-sheet);
+    --letto-su-worker: var(--brand-blue-ink);   /* doppia spunta sulla bolla arancio */
+  }
+  :root[data-gerarchia="scura"] {
+    --primary: var(--brand-orange-ink);
+    --primary-foreground: var(--paper-sheet);
+    --employer: var(--brand-blue-ink);
+    --employer-700: var(--brand-blue-ink);
+    --employer-foreground: var(--paper-sheet);
+    --su-ruolo: var(--paper-sheet);
+    --evidenza-worker: var(--brand-orange);
+    --evidenza-employer: var(--brand-blue);
+    --su-evidenza: var(--ink);
+    --letto-su-worker: 214 52% 82%;          /* #B8CDE8 — 3,32 sull'arancio scuro */
+    /* L'ambra: voce attiva della barra (worker), «Registrati», rotelline. */
+    --secondary: var(--brand-orange-ink);
+    --secondary-foreground: var(--paper-sheet);
+  }
+
   .dark {
     /* "Carta bagnata": stessa famiglia calda, ribaltata. Non grigi neutri. */
     --paper: 30 10% 11%;
     --paper-sheet: 32 9% 15%;
+    --carta-foto: 32 9% 18%;
     --paper-sunken: 30 8% 18%;
     --paper-line: 32 8% 24%;
     --ink: 42 30% 94%;
@@ -1122,6 +1165,17 @@ button.campo-guscio:focus::after {
   border-image-source: url("/images/cornici/bordo-campo-attivo-blu.svg");
 }
 
+/* Gerarchia scura (vedi «la gerarchia» in alto): il tratto del campo attivo
+   è un file col colore dentro, quindi serve la sua copia scura. */
+[data-gerarchia="scura"] .campo-guscio:focus-within::after,
+[data-gerarchia="scura"] button.campo-guscio:focus::after {
+  border-image-source: url("/images/cornici/bordo-campo-attivo-scuro-v1.svg");
+}
+[data-gerarchia="scura"][data-ruolo="employer"] .campo-guscio:focus-within::after,
+[data-gerarchia="scura"][data-ruolo="employer"] button.campo-guscio:focus::after {
+  border-image-source: url("/images/cornici/bordo-campo-attivo-blu-scuro-v1.svg");
+}
+
 /* ---- CAMPO DATA: l'indicatore nativo, invisibile sopra la nostra icona ----
    Vedi ui/CampoData.tsx. Fuori da ogni @layer di proposito: è uno
    pseudo-elemento del browser, e così vince senza !important (§12). */
@@ -1142,4 +1196,60 @@ button.campo-guscio:focus::after {
    attributo in più di quello di vaul, che arriva dopo nel documento. */
 [data-vaul-drawer][data-vaul-drawer-direction="bottom"]:not([data-vaul-custom-container="true"])::after {
   background: hsl(var(--background));
+}
+
+/* ---- I TOAST: un pezzo di SCOTCH lungo, allungato (Tommaso, 24 ottobre) ----
+   Il disegno è il `lungo` di Tommaso (brand/scotch/scotch3.svg), usato come
+   MASCHERA a 9 sezioni: le due estremità strappate restano in scala (fetta di
+   12 unità su 87, rese a 28 px), si allunga solo il nastro in mezzo. Sopra e
+   sotto la fetta è 0: il bordo lungo è quasi dritto, stirarlo non si vede.
+   - Il colore è quello dello scotch sulle card (il pastello del ruolo al 55%),
+     ma su un fondo di FOGLIO, cioè opaco: un toast passa sopra la mappa e le
+     foto, e il testo deve reggere ovunque. Inchiostro sopra: 8,7 su arancio,
+     7,3 su blu. Gli errori sono terracotta per tutti (§5): 7,8.
+   - «Disegnato»: il contorno non può stare sul toast (la maschera lo
+     taglierebbe), quindi è sul contenitore dei toast — quattro ombre senza
+     sfocatura spostate di 0,8 px, cioè un filo nell'inchiostro del ruolo che
+     segue la forma.
+   - Fuori da ogni @layer: lo stile di sonner arriva a runtime e vincerebbe. */
+:root {
+  --toast-scotch: var(--brand-orange);
+  --toast-tratto: var(--brand-orange-ink);
+}
+[data-ruolo="employer"] {
+  --toast-scotch: var(--brand-blue);
+  --toast-tratto: var(--brand-blue-ink);
+}
+[data-sonner-toaster] [data-sonner-toast].toast-scotch {
+  --velo: hsl(var(--toast-scotch) / 0.55);
+  background: linear-gradient(var(--velo), var(--velo)), hsl(var(--paper-sheet));
+  color: hsl(var(--ink));
+  border: 0;
+  border-radius: 12px;
+  box-shadow: none;
+  padding: 14px 30px;
+}
+/* sonner impone il carattere di sistema sul contenitore: si torna a Outfit.
+   `body` davanti per battere il suo selettore, che arriva dopo a runtime. */
+body [data-sonner-toaster] {
+  font-family: inherit;
+}
+[data-sonner-toaster] [data-sonner-toast].toast-scotch[data-type="error"] {
+  --velo: hsl(var(--danger) / 0.3);
+}
+@supports (-webkit-mask-box-image: url("/images/cornici/scotch-lungo-v1.svg")) or
+          (mask-border: url("/images/cornici/scotch-lungo-v1.svg")) {
+  [data-sonner-toaster] [data-sonner-toast].toast-scotch {
+    border-radius: 0;
+    -webkit-mask-box-image: url("/images/cornici/scotch-lungo-v1.svg") 0 48 fill / 0 28px stretch;
+    mask-border: url("/images/cornici/scotch-lungo-v1.svg") 0 48 fill / 0 28px stretch;
+  }
+  [data-sonner-toaster] {
+    filter:
+      drop-shadow(0.8px 0 0 hsl(var(--toast-tratto) / 0.7))
+      drop-shadow(-0.8px 0 0 hsl(var(--toast-tratto) / 0.7))
+      drop-shadow(0 0.8px 0 hsl(var(--toast-tratto) / 0.7))
+      drop-shadow(0 -0.8px 0 hsl(var(--toast-tratto) / 0.7))
+      drop-shadow(0 2px 3px rgb(56 45 36 / 0.14));
+  }
 }

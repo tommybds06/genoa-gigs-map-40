@@ -1,4 +1,5 @@
 import { useUser } from "@/contexts/UserContext";
+import { srcLogo } from "@/lib/gerarchia";
 
 interface HeaderProps {
   title?: string;
@@ -11,9 +12,7 @@ export function Header({
 }: HeaderProps) {
   const { isEmployer } = useUser();
 
-  const logoSrc = isEmployer
-    ? "/images/logo-employer-v2.svg"
-    : "/images/logo-worker-v2.svg";
+  const logoSrc = srcLogo(isEmployer);
 
   return (
     <header className="sticky top-0 z-40 bg-background px-4 pt-8 pb-3">

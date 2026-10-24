@@ -1,4 +1,5 @@
 import { Fragment, useState, useEffect, useLayoutEffect, useRef } from 'react';
+import { srcLogo } from "@/lib/gerarchia";
 import { MessageCircle, ArrowLeft, Send, Loader2, ImagePlus, X, CheckCircle, Check } from "lucide-react";
 import { InvioIcon, ImmaginiIcon, MessaggiVuotaIcon } from "@/components/icons/uiIcons";
 import { useAppTheme } from "@/hooks/useAppTheme";
@@ -145,7 +146,7 @@ const Messaggi = () => {
               .eq('id', newMsg.sender_id)
               .maybeSingle();
 
-            toast.info(`Nuovo messaggio da ${sender?.full_name || 'Utente'}`, { duration: 3000 });
+            toast.info(`Nuovo messaggio da ${sender?.full_name || 'Utente'}`, { duration: 2300 });
           }
         }
       )
@@ -264,13 +265,13 @@ const Messaggi = () => {
 
     // Validate file type
     if (!file.type.startsWith('image/')) {
-      toast.error('Solo immagini sono permesse', { duration: 2000 });
+      toast.error('Solo immagini sono permesse', { duration: 1500 });
       return;
     }
 
     // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
-      toast.error('Immagine troppo grande (max 5MB)', { duration: 2000 });
+      toast.error('Immagine troppo grande (max 5MB)', { duration: 1500 });
       return;
     }
 
@@ -286,10 +287,10 @@ const Messaggi = () => {
       if (uploadError) throw uploadError;
 
       setPendingAttachment(filePath);
-      toast.success('Immagine pronta per l\'invio', { duration: 2000 });
+      toast.success('Immagine pronta per l\'invio', { duration: 1500 });
     } catch (error) {
       console.error('Error uploading image:', error);
-      toast.error('Errore nel caricamento', { duration: 2000 });
+      toast.error('Errore nel caricamento', { duration: 1500 });
     } finally {
       setUploadingImage(false);
       if (fileInputRef.current) {
@@ -406,7 +407,7 @@ const Messaggi = () => {
          togliere l'annuncio dalla mappa: ora quella domanda sta nel modulo. */
       await queryClient.invalidateQueries({ queryKey: [CHIAVE_CARTELLINI] });
       setCompilaPer({ jobId, workerId });
-      toast.success('Assunzione fatta: compila il cartellino', { duration: 2500 });
+      toast.success('Assunzione fatta: compila il cartellino', { duration: 1900 });
     } catch (e) {
       console.error('Error hiring:', e);
       setApplicationStatus('accepted');
@@ -437,7 +438,7 @@ const Messaggi = () => {
     
     // 3. Now safe to update UI
     setApplicationStatus('completed');
-    toast.success('Lavoro concluso!', { duration: 2000 });
+    toast.success('Lavoro concluso!', { duration: 1500 });
     
     // 4. DB operations in background
     supabase
@@ -516,7 +517,7 @@ const Messaggi = () => {
       .eq('id', selectedChat.job_id)
       .maybeSingle();
     if (error || !data) {
-      toast.error('Annuncio non più disponibile', { duration: 2000 });
+      toast.error('Annuncio non più disponibile', { duration: 1500 });
       return;
     }
     setAnnuncioChat({ ...data, tags: data.tags || [] } as unknown as Job);
@@ -867,7 +868,7 @@ const Messaggi = () => {
                 ripetuta pesava più del contenuto, e ne stavano 5 per schermo.
                 Divise dalla linea disegnata, come la scheda annuncio. */
              <div>
-               {chats.map((chat, i) => {
+               {chats.map((chat) => {
                  const isCompleted = chat.application_status === 'completed';
                  const isHired = chat.application_status === 'hired';
                  const nonLetti = chat.unread_count ?? 0;
@@ -883,7 +884,10 @@ const Messaggi = () => {
                  const apri = () => setSelectedChat(chat);
 
                  return (
-                   <div key={chat.id} className={cn(i > 0 && 'linea-divisoria-sottile')}>
+                   /* Niente linee fra le chat (Tommaso, 23 ottobre: «come WhatsApp»):
+                      le righe si separano con lo spazio, avatar e nome fanno già
+                      da inizio riga. Era la linea disegnata sottile. */
+                   <div key={chat.id}>
                      <div
                        role="button"
                        tabIndex={0}
@@ -969,7 +973,7 @@ const Messaggi = () => {
          {/* Simple Header with safe area */}
          <header className="sticky top-0 z-40 bg-background px-4 pt-8 pb-3">
            <img
-             src={isEmployer ? "/images/logo-employer-v2.svg" : "/images/logo-worker-v2.svg"}
+             src={srcLogo(isEmployer)}
              alt="Politask"
              className="h-14 w-auto -ml-1"
            />

@@ -151,7 +151,7 @@ export const MessageBubble = ({
                     message.is_read
                       ? isEmployer
                         ? "text-[hsl(var(--brand-orange-chiaro))]"
-                        : "text-employer-800"
+                        : "text-[hsl(var(--letto-su-worker))]"
                       : "opacity-60"
                   )}
                   aria-label={message.is_read ? "Letto" : "Inviato"}

@@ -242,10 +242,10 @@ export function SchedaCartellino({ cartellino: c, onClose, onApriChat, compila =
       }
       await aggiorna();
       if (modoCompila) {
-        toast.success("Cartellino in bacheca", { duration: 2000 });
+        toast.success("Cartellino in bacheca", { duration: 1500 });
         onClose();
       } else {
-        toast.success("Salvato", { duration: 1500 });
+        toast.success("Salvato", { duration: 1100 });
       }
     } catch (e) {
       console.error("Salvataggio accordi:", e);
@@ -261,16 +261,16 @@ export function SchedaCartellino({ cartellino: c, onClose, onApriChat, compila =
     try {
       if (conferma === "assumi") {
         await assumi(c, user.id);
-        toast.success("Assunzione fatta: compila il cartellino", { duration: 2500 });
+        toast.success("Assunzione fatta: compila il cartellino", { duration: 1900 });
         // Come dalla chat: dopo l'assunzione si compila il cartellino.
         setModoCompila(true);
       } else if (conferma === "stacca") {
         await stacca(c.id);
-        toast.success("Tolto dalla bacheca", { duration: 2000 });
+        toast.success("Tolto dalla bacheca", { duration: 1500 });
         onClose();
       } else if (conferma === "termina") {
         await terminaLavoro(c.jobId, c.workerId);
-        toast.success("Lavoro concluso", { duration: 2000 });
+        toast.success("Lavoro concluso", { duration: 1500 });
         onClose();
       }
       await aggiorna();

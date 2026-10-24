@@ -25,7 +25,7 @@ export const PhotoUploader = ({
     if (!files || files.length === 0) return;
 
     if (photos.length + files.length > maxPhotos) {
-      toast.error(`Puoi caricare massimo ${maxPhotos} foto`, { duration: 2000 });
+      toast.error(`Puoi caricare massimo ${maxPhotos} foto`, { duration: 1500 });
       return;
     }
 
@@ -37,13 +37,13 @@ export const PhotoUploader = ({
       for (const file of Array.from(files)) {
         // Validate file type
         if (!file.type.startsWith('image/')) {
-          toast.error(`${file.name} non è un'immagine valida`, { duration: 2000 });
+          toast.error(`${file.name} non è un'immagine valida`, { duration: 1500 });
           continue;
         }
 
         // Validate file size (max 5MB)
         if (file.size > 5 * 1024 * 1024) {
-          toast.error(`${file.name} è troppo grande (max 5MB)`, { duration: 2000 });
+          toast.error(`${file.name} è troppo grande (max 5MB)`, { duration: 1500 });
           continue;
         }
 
@@ -56,7 +56,7 @@ export const PhotoUploader = ({
 
         if (uploadError) {
           console.error('Upload error:', uploadError);
-          toast.error(`Errore nel caricamento di ${file.name}`, { duration: 2000 });
+          toast.error(`Errore nel caricamento di ${file.name}`, { duration: 1500 });
           continue;
         }
 
@@ -69,11 +69,11 @@ export const PhotoUploader = ({
 
       if (newPhotos.length > 0) {
         onPhotosChange([...photos, ...newPhotos]);
-        toast.success(`${newPhotos.length} foto caricate!`, { duration: 2000 });
+        toast.success(`${newPhotos.length} foto caricate!`, { duration: 1500 });
       }
     } catch (error) {
       console.error('Error uploading photos:', error);
-      toast.error('Errore nel caricamento delle foto', { duration: 2000 });
+      toast.error('Errore nel caricamento delle foto', { duration: 1500 });
     } finally {
       setUploading(false);
       // Reset input

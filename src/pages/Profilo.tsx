@@ -1,6 +1,12 @@
 // ChevronLeft/Right rimossi: erano le frecce sul carosello foto, che su mobile
 // coprivano la foto per un gesto che si fa gia' con lo swipe. Restano i pallini.
 import { LinkSocial } from "@/components/profile/LinkSocial";
+import { Foglietto } from "@/components/ui/Foglietto";
+import { FotoStampata } from "@/components/ui/FotoStampata";
+import { RecensioniRicevute } from "@/components/reviews/RecensioniRicevute";
+import { mediaRecensioni, useRecensioniRicevute } from "@/hooks/useRecensioni";
+import { CaroselloFoto } from "@/components/profile/CaroselloFoto";
+import { srcLogo } from "@/lib/gerarchia";
 import { SalvaIcon } from "@/components/icons/uiIcons";
 import { ImpostazioniIcon, ProfiloIcon, CuoreIcon, InfoIcon, StellaIcon, MappaIcon } from "@/components/icons/uiIcons";
 import { GenericoIcon } from "@/components/icons/roleIcons";
@@ -12,10 +18,8 @@ import { TagSelector, TagBadges } from "@/components/tags/TagSelector";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { soloRuoli } from "@/constants/tags";
 import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { WorkerJobHistory } from "@/components/profile/WorkerJobHistory";
-import { supabase } from "@/integrations/supabase/client";
  import { SwipeNavigator } from "@/components/layout/SwipeNavigator";
 
 const Profilo = () => {
@@ -31,20 +35,8 @@ const Profilo = () => {
      di tab, quindi senza cache la media delle recensioni la si andava a
      ricalcolare da capo ogni volta, e il numero compariva a scoppio ritardato
      spostando la riga sotto il nome. */
-  const { data: reviewStats = null } = useQuery({
-    queryKey: ["review-stats", profile?.id],
-    enabled: !!profile?.id && isEmployer,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("reviews")
-        .select("rating")
-        .eq("employer_id", profile!.id);
-      if (error) throw error;
-      if (!data || data.length === 0) return null;
-      const avg = data.reduce((sum, r) => sum + r.rating, 0) / data.length;
-      return { avg: Math.round(avg * 10) / 10, count: data.length };
-    },
-  });
+  const { data: recensioni = [] } = useRecensioniRicevute(isEmployer ? profile?.id : undefined);
+  const reviewStats = mediaRecensioni(recensioni);
 
   useEffect(() => {
     if (profile?.tags) setSelectedTags(profile.tags);
@@ -60,11 +52,11 @@ const Profilo = () => {
   const handleSaveTags = async () => {
     try {
       await updateTags(selectedTags);
-      toast.success("Tag aggiornati!", { duration: 2000 });
+      toast.success("Tag aggiornati!", { duration: 1500 });
       setHasChanges(false);
       setEditMode(false);
     } catch (error) {
-      toast.error("Errore aggiornamento", { duration: 2000 });
+      toast.error("Errore aggiornamento", { duration: 1500 });
     }
   };
 
@@ -90,7 +82,7 @@ const Profilo = () => {
          <header className="sticky top-0 z-40 bg-background px-4 pt-8 pb-3">
            <div className="flex items-center justify-between">
              <img
-               src={isEmployer ? "/images/logo-employer-v2.svg" : "/images/logo-worker-v2.svg"}
+               src={srcLogo(isEmployer)}
                alt="Politask"
                className="h-14 w-auto -ml-1"
              />
@@ -104,42 +96,47 @@ const Profilo = () => {
          </header>
 
          <main className="flex-1 px-4 py-4 pb-4 overflow-y-auto">
-        {/* Photo Carousel */}
+        {/* Photo Carousel — una foto STAMPATA (ui/FotoStampata, 23 ottobre):
+            cornice di carta col tratto delle card, tenuta dal pezzo lungo
+            di scotch in alto, i pallini nel margine basso come la scritta di una
+            Polaroid. Le foto sono in fila
+            in una striscia che segue il dito (CaroselloFoto). */}
         {profile?.photos && profile.photos.length > 0 && (
-          <div className="relative mb-4">
-            {/* All photos rendered stacked — browser preloads them all, only current is visible */}
-            {/* ⚠️ Il ritaglio disegnato E' il contenitore: niente `rounded-*`
-                nè `border`. `overflow-hidden` resta solo per le foto in
-                `absolute` del carosello, ma il taglio vero lo fa la maschera. */}
-            <div className="aspect-[4/3] sagoma-foto rounded-2xl overflow-hidden bg-muted relative">
-              {profile.photos.map((photo, index) => (
-                <img
-                  key={photo}
-                  src={photo}
-                  alt={`Foto ${index + 1}`}
-                  className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${
-                    index === currentPhotoIndex ? "opacity-100" : "opacity-0"
-                  }`}
-                />
-              ))}
-            </div>
-            {profile.photos.length > 1 && (
-              <>
-                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
+          <FotoStampata
+            seme={`carosello-${profile.id}`}
+            misura="grande"
+            // Quadrata, come una Polaroid (Tommaso). Era 4:3.
+            formato="1 / 1"
+            className="mb-6 mt-2"
+            scotch={[{ pezzo: "lungo", lato: "centro" }]}
+            fondo={
+              profile.photos.length > 1 ? (
+                <div className="flex gap-1.5">
                   {profile.photos.map((_, index) => (
                     <button
                       key={index}
                       onClick={() => setCurrentPhotoIndex(index)}
-                      className={`w-2 h-2 rounded-full transition-all touch-feedback ${index === currentPhotoIndex ? `${theme.primary} w-4` : "bg-background/60"}`}
+                      aria-label={`Foto ${index + 1}`}
+                      className={`h-2 rounded-full transition-all touch-feedback ${
+                        index === currentPhotoIndex ? `${theme.primary} w-4` : "w-2 bg-paper-line"
+                      }`}
                     />
                   ))}
                 </div>
-              </>
-            )}
-          </div>
+              ) : undefined
+            }
+          >
+            {/* Le foto scorrono sotto il dito; i pallini restano per chi tocca. */}
+            <CaroselloFoto foto={profile.photos} indice={currentPhotoIndex} onIndice={setCurrentPhotoIndex} />
+          </FotoStampata>
         )}
 
         {/* Profile Card */}
+        {/* Lo scotch: UN pezzo per oggetto, sul bordo alto. Le foto il lungo
+            al centro, le card il corto alternato sinistra/destra scendendo
+            (Tommaso, 23 ottobre: «troppo incasinato»). Le sezioni con
+            bottoni dentro (Interessi) e lo storico ne restano senza. */}
+        <Foglietto seme="intestazione" scotch={[{ pezzo: "corto", lato: "sopraSx" }]}>
         <div className="material-card-elevated p-6 mb-4">
           <div className="flex items-center gap-4">
             {/* Cerchio imperfetto (ui/avatar). Via l'ombra: il ritaglio la
@@ -160,7 +157,7 @@ const Profilo = () => {
                     <span className="text-muted-foreground text-sm">•</span>
                     <div className={`flex items-center gap-1 ${primaryTextClasses}`}>
                       <StellaIcon className="w-4 h-4" />
-                      <span className="font-semibold text-sm">{reviewStats.avg}</span>
+                      <span className="font-semibold text-sm">{reviewStats.avg.toLocaleString("it-IT", { maximumFractionDigits: 1 })}</span>
                       <span className="text-muted-foreground text-sm">({reviewStats.count})</span>
                     </div>
                   </>
@@ -173,32 +170,57 @@ const Profilo = () => {
               il padding del primo link, che c'è per il bersaglio di tocco. */}
           <LinkSocial social={profile?.social_links} employer={isEmployer} className="mt-3 -ml-2 justify-start" />
         </div>
+        </Foglietto>
 
         {profile?.bio && (
+          /* L'unica card con lo scotch sull'ANGOLO (Tommaso): in alto a destra. */
+          <Foglietto seme="bio" scotch={[{ pezzo: "cortoB", lato: "dx" }]}>
           <div className="material-card tilt-l p-4 mb-4">
             <h3 className="titolo-mini mb-2 flex items-center gap-2">
               <ProfiloIcon className={`w-4 h-4 ${primaryTextClasses}`} />{isEmployer ? "Descrizione" : "Presentazione"}
             </h3>
             <p className="text-sm text-muted-foreground leading-relaxed">{profile.bio}</p>
           </div>
+          </Foglietto>
         )}
 
         {isEmployer && profile?.looking_for && (
+          <Foglietto seme="cerco" scotch={[{ pezzo: "corto", lato: "sopraSx" }]}>
           <div className="material-card tilt-r p-4 mb-4">
             <h3 className="titolo-mini mb-2 flex items-center gap-2">
               <GenericoIcon className={`w-4 h-4 ${primaryTextClasses}`} />Chi cerco
             </h3>
             <p className="text-sm text-muted-foreground leading-relaxed">{profile.looking_for}</p>
           </div>
+          </Foglietto>
+        )}
+
+        {/* Le recensioni ricevute: prima l'employer non poteva vederle
+            (Tommaso, 24 ottobre). Stesso elenco del profilo pubblico, tre
+            alla volta. I worker ricevono i cuori, non le recensioni. */}
+        {isEmployer && (
+          <Foglietto seme="recensioni" scotch={[{ pezzo: "cortoB", lato: "sopraDx" }]}>
+          <div className="material-card tilt-r p-4 mb-4">
+            <h3 className="titolo-mini mb-3 flex items-center gap-2">
+              <StellaIcon className={`w-4 h-4 ${primaryTextClasses}`} />Le tue recensioni
+            </h3>
+            <RecensioniRicevute
+              recensioni={recensioni}
+              vuoto="Ancora nessuna. Arrivano quando un lavoro si conclude."
+            />
+          </div>
+          </Foglietto>
         )}
 
         {!isEmployer && profile?.experience && (
+          <Foglietto seme="esperienze" scotch={[{ pezzo: "corto", lato: "sopraSx" }]}>
           <div className="material-card tilt-l p-4 mb-4">
             <h3 className="titolo-mini mb-2 flex items-center gap-2">
               <GenericoIcon className={`w-4 h-4 ${primaryTextClasses}`} />Esperienze
             </h3>
             <p className="text-sm text-muted-foreground leading-relaxed">{profile.experience}</p>
           </div>
+          </Foglietto>
         )}
 
         {!isEmployer && (
@@ -232,6 +254,9 @@ const Profilo = () => {
 
         {!isEmployer && <WorkerJobHistory primaryTextClasses={primaryTextClasses} />}
 
+        {/* A sinistra: per l'employer il pezzo prima (Recensioni) è a destra;
+            per il worker in mezzo ci sono Interessi e storico, senza scotch. */}
+        <Foglietto seme="informazioni" scotch={[{ pezzo: "corto", lato: "sopraSx" }]}>
         <div className="material-card tilt-l p-4 mb-4">
           <h3 className="titolo-mini mb-3 flex items-center gap-2"><InfoIcon className={`w-4 h-4 ${primaryTextClasses}`} />Informazioni</h3>
           <div className="space-y-3">
@@ -246,6 +271,7 @@ const Profilo = () => {
             </div>
           </div>
         </div>
+        </Foglietto>
 
            {/* "Esci" vive solo in Impostazioni: era duplicato qui e lì, e le
                azioni distruttive non vanno offerte in due posti diversi. */}

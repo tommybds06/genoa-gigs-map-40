@@ -50,7 +50,7 @@ export function AggiungiCartellino({ aperto, onClose }: AggiungiCartellinoProps)
         queryClient.invalidateQueries({ queryKey: [CHIAVE_CARTELLINI] }),
         queryClient.invalidateQueries({ queryKey: [CHIAVE_CANDIDATI] }),
       ]);
-      toast.success(`${candidato.nome} è in bacheca, in prova`, { duration: 2000 });
+      toast.success(`${candidato.nome} è in bacheca, in prova`, { duration: 1500 });
       onClose();
     } catch (e) {
       console.error("Appendi cartellino:", e);

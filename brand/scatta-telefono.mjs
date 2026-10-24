@@ -20,6 +20,9 @@ ws.onmessage = (m) => { const d = JSON.parse(m.data); if (d.id && attese.has(d.i
 const cdp = (method, params = {}) => new Promise((r) => { const n = ++id; attese.set(n, r); ws.send(JSON.stringify({ id: n, method, params })); });
 await cdp("Emulation.setDeviceMetricsOverride", { width: +w, height: +h, deviceScaleFactor: 2, mobile: true });
 await cdp("Emulation.setTouchEmulationEnabled", { enabled: true });
+// IPHONE=1 si presenta come Safari su iPhone: alcune librerie (vaul) fanno
+// cose diverse su Safari, e qui si possono provare senza un iPhone.
+if (process.env.IPHONE) await cdp("Emulation.setUserAgentOverride", { userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1" });
 await cdp("Page.enable");
 // POSIZIONE=lat,lng finge il GPS (la mappa worker si centra sull'utente).
 if (process.env.POSIZIONE) {
@@ -29,6 +32,9 @@ if (process.env.POSIZIONE) {
 }
 await cdp("Page.navigate", { url });
 await pausa(+attesa);
+// CPU=4 rallenta il processore di 4 volte, come un telefono di fascia media:
+// per misurare i rallentamenti, che su questo Mac non si vedono.
+if (process.env.CPU) await cdp("Emulation.setCPUThrottlingRate", { rate: +process.env.CPU });
 // PRIMA="js" esegue del codice nella pagina PRIMA dei pizzichi (es. un registratore).
 if (process.env.PRIMA) await cdp("Runtime.evaluate", { expression: process.env.PRIMA });
 // PIZZICO=0.75 fa un pizzico vero col dito al centro (sotto 1 = allontana), poi aspetta

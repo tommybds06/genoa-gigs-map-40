@@ -5,25 +5,32 @@ import { cn } from "@/lib/utils";
 import { Header } from "@/components/layout/Header";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { GalleryDialog } from "@/components/profile/GalleryDialog";
 import { JobDetailsSheet } from "@/components/map/JobDetailsSheet";
-import { MessaggiIcon, OrologioIcon, CalendarioIcon, IndietroIcon, StellaIcon, StellaVuotaIcon, MezzaStellaIcon, DocumentoIcon, FotoIcon, AnnunciAttiviIcon, MappaIcon, StoricoLavoriIcon, AnnunciVuotaIcon, CuoreIcon } from "@/components/icons/uiIcons";
+import { OrologioIcon, CalendarioIcon, IndietroIcon, StellaIcon, DocumentoIcon, FotoIcon, AnnunciAttiviIcon, MappaIcon, StoricoLavoriIcon, AnnunciVuotaIcon, CuoreIcon } from "@/components/icons/uiIcons";
 import { useCuoriWorker } from "@/hooks/useCuoriWorker";
 import { GenericoIcon } from "@/components/icons/roleIcons";
 import { useAppTheme } from "@/hooks/useAppTheme";
 import { useUser } from "@/contexts/UserContext";
 import { getJobIconFromTags } from "@/lib/jobIcons";
-import { formatTempoTrascorso } from "@/lib/dates";
 import { adessoISO } from "@/lib/scadenzaAnnunci";
 import { TesseraIcona, TesseraIndietro } from "@/components/ui/Tessera";
 import { LinkSocial } from "@/components/profile/LinkSocial";
+import { Foglietto } from "@/components/ui/Foglietto";
+import { RecensioniRicevute } from "@/components/reviews/RecensioniRicevute";
+import { mediaRecensioni, useRecensioniRicevute } from "@/hooks/useRecensioni";
+import { FotoStampata } from "@/components/ui/FotoStampata";
+import { numeroDa, Scotch, type StrisciaScotch } from "@/components/ui/Scotch";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import type { SocialLinks } from "@/contexts/UserContext";
 
 // Tag durata usati prima della rinomina, ancora presenti su annunci vecchi
+
+/* Le foto: il pezzo lungo in alto al centro, uno solo (Tommaso). Il
+   disordine lo davano i pezzi in diagonale sugli angoli. */
+const SCOTCH_FOTO: StrisciaScotch[] = [{ pezzo: "lungo", lato: "centro" }];
 
 interface Profile {
   id: string;
@@ -60,14 +67,9 @@ interface Job {
   tags: string[];
 }
 
-interface Review {
-  id: string;
-  rating: number;
-  comment: string | null;
-  created_at: string;
-  worker_name: string | null;
-}
 
+/** «3,5», non «3.5»: la virgola dei decimali, in italiano. */
+const votoItaliano = (n: number) => n.toLocaleString("it-IT", { maximumFractionDigits: 1 });
 
 function formatDate(dateString: string): string {
   return new Date(dateString).toLocaleDateString('it-IT', {
@@ -87,9 +89,9 @@ const PublicProfile = () => {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [completedJobs, setCompletedJobs] = useState<CompletedJob[]>([]);
-  const [reviews, setReviews] = useState<Review[]>([]);
-  const [reviewStats, setReviewStats] = useState<{ avg: number; count: number } | null>(null);
   const [loading, setLoading] = useState(true);
+  const { data: reviews = [] } = useRecensioniRicevute(profile?.role === "employer" ? userId : undefined);
+  const reviewStats = mediaRecensioni(reviews);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
   const [galleryIndex, setGalleryIndex] = useState(0);
@@ -121,37 +123,7 @@ const PublicProfile = () => {
 
           // If employer profile, fetch reviews
           if (profileData.role === "employer") {
-            const { data: reviewsData, error: reviewsError } = await supabase
-              .from("reviews")
-              .select(`
-                id,
-                rating,
-                comment,
-                created_at,
-                worker_id,
-                profiles!reviews_worker_id_fkey (
-                  full_name
-                )
-              `)
-              .eq("employer_id", userId)
-              .order("created_at", { ascending: false })
-              .limit(10);
-
-            if (!reviewsError && reviewsData) {
-              const formattedReviews = reviewsData.map(r => ({
-                id: r.id,
-                rating: r.rating,
-                comment: r.comment,
-                created_at: r.created_at,
-                worker_name: (r.profiles as unknown as { full_name: string | null })?.full_name || "Utente",
-              }));
-              setReviews(formattedReviews);
-
-              if (reviewsData.length > 0) {
-                const avg = reviewsData.reduce((sum, r) => sum + r.rating, 0) / reviewsData.length;
-                setReviewStats({ avg: Math.round(avg * 10) / 10, count: reviewsData.length });
-              }
-            }
+            // Le recensioni le legge `useRecensioniRicevute` (tutte, in cache).
 
             // Gli annunci attivi: aperti e non scaduti (lib/scadenzaAnnunci.ts).
             const { data: jobsData, error: jobsError } = await supabase
@@ -273,6 +245,8 @@ const PublicProfile = () => {
 
   // Determine if viewing a worker or employer profile
   const isWorkerProfile = profile.role === "worker";
+  // I worker mostrano solo il quartiere, le attività l'indirizzo.
+  const luogo = isWorkerProfile ? profile.neighborhood : profile.address_text;
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
@@ -290,34 +264,51 @@ const PublicProfile = () => {
           <div className="flex justify-center mb-4">
             {/* Cerchio imperfetto (ui/avatar): via il bordo bianco e l'ombra,
                 che il ritaglio taglierebbe a tratti. */}
-            <Avatar seme={userId} className="w-32 h-32">
-              <AvatarImage src={avatarUrl || undefined} alt={displayName} className="object-cover" />
-              <AvatarFallback className={`${isWorkerProfile ? 'bg-accent text-primary-strong' : 'bg-employer-50 text-employer-800'} text-4xl font-bold`}>
-                {initials}
-              </AvatarFallback>
-            </Avatar>
+            {/* Lo scotch è un FRATELLO dell'avatar: il cerchio imperfetto è un
+                ritaglio, e lo taglierebbe. Un pezzettino piccolo, al centro. */}
+            <div className="relative">
+              <Avatar seme={userId} className="w-32 h-32">
+                <AvatarImage src={avatarUrl || undefined} alt={displayName} className="object-cover" />
+                <AvatarFallback className={`${isWorkerProfile ? 'bg-accent text-primary-strong' : 'bg-employer-50 text-employer-800'} text-4xl font-bold`}>
+                  {initials}
+                </AvatarFallback>
+              </Avatar>
+              <Scotch pezzo="strappato" lato="centro" seme={numeroDa(userId || "avatar")} employer={!isWorkerProfile} scala={0.8} />
+            </div>
           </div>
 
-          {/* Name and Role */}
+          {/* L'INTESTAZIONE: tre righe, non cinque (Tommaso, 24 ottobre). Erano
+              nome, pillola del ruolo, indirizzo, sito e una fila di stelle,
+              ognuno su una riga sua e centrato: un elenco, non un'intestazione.
+              - Via la pillola «Employer»/«Worker»: a un profilo ci si arriva da
+                un annuncio o da una candidatura, il ruolo lo si sa già (e lo
+                dice il colore).
+              - Voto e zona in UNA riga, come Airbnb e Google Maps: «★ 3,5 (6) ·
+                piazza delle erbe». Una stella sola: col numero scritto, la fila
+                di cinque ripeteva lo stesso dato. Toccandolo si va alle recensioni. */}
           <div className="text-center mb-4">
-            <h1 className="text-2xl font-bold mb-2">{displayName}</h1>
-            
-            {/* Role Badge */}
-            <Badge 
-              variant="outline" 
-              className={`mb-2 ${isWorkerProfile ? 'bg-accent text-primary-strong border-primary/30' : 'bg-employer-50 text-employer-800 border-employer/20'}`}
-            >
-              {isWorkerProfile ? "Worker" : "Employer"}
-            </Badge>
-            
-            {/* Location - Workers show only neighborhood, Employers show full address */}
-            {(isWorkerProfile ? profile.neighborhood : profile.address_text) && (
-              <p className="text-muted-foreground flex items-center justify-center gap-1 mt-2">
-                <MappaIcon className="w-4 h-4" />
-                {isWorkerProfile
-                  ? profile.neighborhood
-                  : profile.address_text
-                }
+            <h1 className="text-2xl font-bold">{displayName}</h1>
+            {(reviewStats || luogo) && (
+              <p className="mt-2 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-muted-foreground">
+                {reviewStats && !isWorkerProfile && (
+                  <button
+                    type="button"
+                    onClick={() => document.getElementById("recensioni")?.scrollIntoView({ behavior: "smooth", block: "start" })}
+                    aria-label={`${votoItaliano(reviewStats.avg)} su 5, ${reviewStats.count} recensioni: vai alle recensioni`}
+                    className="inline-flex items-center gap-1"
+                  >
+                    <StellaIcon className="h-4 w-4 text-employer-800" />
+                    <span className="font-semibold text-foreground">{votoItaliano(reviewStats.avg)}</span>
+                    <span>({reviewStats.count})</span>
+                  </button>
+                )}
+                {reviewStats && !isWorkerProfile && luogo && <span aria-hidden="true">·</span>}
+                {luogo && (
+                  <span className="inline-flex items-center gap-1">
+                    <MappaIcon className="h-4 w-4 shrink-0" />
+                    {luogo}
+                  </span>
+                )}
               </p>
             )}
 
@@ -326,30 +317,12 @@ const PublicProfile = () => {
                 il modo di capire chi è prima di candidarsi. */}
             <LinkSocial social={profile.social_links} employer={!isWorkerProfile} className="mt-1" />
           </div>
-
-          {/* Rating Display (Employers only with reviews) */}
-          {!isWorkerProfile && reviewStats && (
-            <div className="flex items-center justify-center gap-2 mb-4">
-              <div className="flex items-center gap-1">
-                {[1, 2, 3, 4, 5].map((star) => {
-                  const StarComp =
-                    star <= reviewStats.avg
-                      ? StellaIcon
-                      : reviewStats.avg >= star - 0.5
-                      ? MezzaStellaIcon
-                      : StellaVuotaIcon;
-                  return <StarComp key={star} className="w-5 h-5 text-employer-800" />;
-                })}
-              </div>
-              <span className="font-semibold">{reviewStats.avg}</span>
-              <span className="text-muted-foreground text-sm">({reviewStats.count} recensioni)</span>
-            </div>
-          )}
         </div>
 
         {/* Photo Gallery */}
         {profile.photos && profile.photos.length > 1 && (
           <div className="px-4 pb-6">
+            <Foglietto seme="riquadro-foto" employer={!isWorkerProfile} scotch={[{ pezzo: "corto", lato: "sopraSx" }]}>
             <div className="material-card p-5">
               <div className="flex items-center gap-2 mb-4">
                 <FotoIcon className={`w-5 h-5 ${isWorkerProfile ? 'text-primary-strong' : 'text-employer-800'}`} />
@@ -357,7 +330,11 @@ const PublicProfile = () => {
                 <span className="text-muted-foreground text-sm">({profile.photos.length})</span>
               </div>
               
-              <div className="grid grid-cols-3 gap-2">
+              {/* Foto STAMPATE (ui/FotoStampata): ognuna storta a modo suo e
+                  tenuta da un pezzo di scotch diverso. Più spazio fra le
+                  righe: lo scotch esce sopra la foto. ⚠️ Il fuoco da tastiera
+                  resta sul bottone, fuori dalla stampa. */}
+              <div className="grid grid-cols-3 gap-x-3 gap-y-5 pt-2">
                 {profile.photos.map((photo, index) => (
                   <button
                     key={index}
@@ -365,29 +342,21 @@ const PublicProfile = () => {
                       setGalleryIndex(index);
                       setIsGalleryOpen(true);
                     }}
-                    className="aspect-square rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    aria-label={`Apri la foto ${index + 1}`}
+                    className="block w-full rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                   >
-                    {/* ⚠️ La maschera sta sul div INTERNO, non sul bottone: la
-                        maschera taglia anche l'anello di focus (che è un
-                        box-shadow), e il bersaglio da tastiera sparirebbe.
-                        Il contorno `border-border` è stato tolto: qui il
-                        contenitore è il margine tagliato, non una linea. */}
-                    <div
-                      className={cn(
-                        "w-full h-full overflow-hidden sagoma-foto",
-                        index % 2 === 1 && "sagoma-foto-b"
-                      )}
+                    <FotoStampata
+                      seme={photo}
+                      employer={!isWorkerProfile}
+                      scotch={SCOTCH_FOTO}
                     >
-                      <img
-                        src={photo}
-                        alt={`Foto ${index + 1}`}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
+                      <img src={photo} alt={`Foto ${index + 1}`} className="h-full w-full object-cover" />
+                    </FotoStampata>
                   </button>
                 ))}
               </div>
             </div>
+            </Foglietto>
           </div>
         )}
 
@@ -398,12 +367,14 @@ const PublicProfile = () => {
           photos={profile.photos || []}
           currentIndex={galleryIndex}
           onIndexChange={setGalleryIndex}
+          employer={!isWorkerProfile}
         />
 
         {isWorkerProfile && (
           <>
             {/* Sezione 1: Presentazione (Bio) */}
             <div className="px-4 pb-6">
+              <Foglietto seme="presentazione" employer={false} scotch={[{ pezzo: "cortoB", lato: "sopraDx" }]}>
               <div className="material-card p-5">
                 <div className="flex items-center gap-2 mb-3">
                   <DocumentoIcon className="w-5 h-5 text-primary-strong" />
@@ -413,11 +384,13 @@ const PublicProfile = () => {
                   {profile.bio || "Nessuna presentazione inserita."}
                 </p>
               </div>
+              </Foglietto>
             </div>
 
             {/* Sezione 2: Esperienze (if available) */}
             {profile.experience && (
               <div className="px-4 pb-6">
+                <Foglietto seme="esperienze" employer={false} scotch={[{ pezzo: "corto", lato: "sopraSx" }]}>
                 <div className="material-card p-5">
                   <div className="flex items-center gap-2 mb-3">
                     <GenericoIcon className="w-5 h-5 text-primary-strong" />
@@ -425,6 +398,7 @@ const PublicProfile = () => {
                   </div>
                   <p className="text-foreground leading-relaxed">{profile.experience}</p>
                 </div>
+                </Foglietto>
               </div>
             )}
 
@@ -493,6 +467,7 @@ const PublicProfile = () => {
             {/* Bio Section */}
             {profile.bio && (
               <div className="px-4 pb-6">
+                <Foglietto seme="chi-siamo" employer scotch={[{ pezzo: "cortoB", lato: "sopraDx" }]}>
                 <div className="material-card p-5">
                   <div className="flex items-center gap-2 mb-3">
                     <DocumentoIcon className="w-5 h-5 text-employer-800" />
@@ -500,12 +475,14 @@ const PublicProfile = () => {
                   </div>
                   <p className="text-foreground leading-relaxed">{profile.bio}</p>
                 </div>
+                </Foglietto>
               </div>
             )}
 
             {/* Looking For Section */}
             {profile.looking_for && (
               <div className="px-4 pb-6">
+                <Foglietto seme="chi-cerchiamo" employer scotch={[{ pezzo: "corto", lato: "sopraSx" }]}>
                 <div className="material-card p-5">
                   <div className="flex items-center gap-2 mb-3">
                     <GenericoIcon className="w-5 h-5 text-employer-800" />
@@ -513,52 +490,22 @@ const PublicProfile = () => {
                   </div>
                   <p className="text-foreground leading-relaxed">{profile.looking_for}</p>
                 </div>
+                </Foglietto>
               </div>
             )}
 
-            {/* Reviews Section */}
-            <div className="px-4 pb-6">
+            {/* Reviews Section — `id`: ci porta il voto in testa al profilo.
+                `scroll-mt` perché lo scotch sopra la card resti in vista. */}
+            <div id="recensioni" className="scroll-mt-6 px-4 pb-6">
+              <Foglietto seme="recensioni" employer scotch={[{ pezzo: "cortoB", lato: "sopraDx" }]}>
               <div className="material-card p-5">
                 <div className="flex items-center gap-2 mb-3">
                   <StellaIcon className="w-5 h-5 text-employer-800" />
                   <h3 className="font-bold text-lg">Recensioni</h3>
                 </div>
-                {reviews.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-8 text-center">
-                    <MessaggiIcon className="w-10 h-10 text-muted-foreground/30 mb-2" />
-                    <p className="text-muted-foreground text-sm">Nessuna recensione ancora</p>
-                  </div>
-                ) : (
-                  <div>
-                    {/* La linea disegnata sottile, come gli annunci qui sotto: due
-                        separatori diversi nella stessa schermata non vanno. */}
-                    {reviews.map((review, i) => (
-                      <div key={review.id} className={cn("pb-4 last:pb-0", i > 0 && "linea-divisoria-sottile pt-4")}>
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="font-medium text-sm">{review.worker_name}</span>
-                          <div className="flex items-center gap-1">
-                            {[1, 2, 3, 4, 5].map((star) => {
-                              const StarComp =
-                                star <= review.rating
-                                  ? StellaIcon
-                                  : review.rating >= star - 0.5
-                                  ? MezzaStellaIcon
-                                  : StellaVuotaIcon;
-                              return <StarComp key={star} className="w-3.5 h-3.5 text-employer-800" />;
-                            })}
-                          </div>
-                        </div>
-                        {review.comment && (
-                          <p className="text-sm text-muted-foreground">{review.comment}</p>
-                        )}
-                        <p className="text-xs text-muted-foreground/60 mt-1">
-                          {formatTempoTrascorso(review.created_at)}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                <RecensioniRicevute recensioni={reviews} />
               </div>
+              </Foglietto>
             </div>
 
             {/* Active Jobs Section */}

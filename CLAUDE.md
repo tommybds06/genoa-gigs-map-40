@@ -240,6 +240,30 @@ margine tagliato delle card si vedeva, ma la carta si avvicinava in luminanza
 all'arancione e i due si impastavano. È la luminanza dei colori di brand.
 **`--paper` non si tocca.**
 
+## 🧪 Esperimento in corso: la gerarchia SCURA (23 ottobre)
+
+Tommaso: gli piacciono gli inchiostri di ruolo (`#A7531B`, `#355D8D`) e ha
+chiesto di provare a **invertire la gerarchia**: pieni scuri col foglio
+sopra (4,95 e 6,22:1), pastello come evidenza. Un interruttore solo:
+`data-gerarchia="scura"` su `<html>` in `index.html` (toglierlo = si torna
+com'era). Token in `index.css` («la gerarchia»): `--su-ruolo`,
+`--evidenza-*`, `--su-evidenza`, `--letto-su-worker`, e `--secondary`
+(l'ambra: barra in basso, «Registrati»). Ciò che è un FILE col colore
+dentro ha la sua copia scura: il logo (`logo-*-scuro-v1.svg`, scelto da
+`srcLogo` in `lib/gerarchia.ts`) e il tratto del campo attivo
+(`bordo-campo-attivo*-scuro-v1.svg`, girato nel CSS). ⚠️ Avevo escluso i
+profili leggendo «tieni i profili così» come «lasciali chiari»: voleva dire
+che lì gli scuri sono GIÀ i colori principali. Rotellina e freccia del
+profilo pubblico restavano pastello. Esclusione tolta. ⚠️ Non è
+un'inversione pura: testi e icone su carta restano scuri, il pastello come
+testo non si legge. Resta pastello il Lottie dello splash (file di Tommaso).
+**Non committato** finché Tommaso non decide.
+
+⚠️ **Google e Apple in Auth sono `ghost`, SENZA contorno**: a schermo non
+l'hanno mai avuto (la classe c'era, ma senza `relative` il disegno non si
+vedeva). Quando il contorno è diventato di serie sugli `outline` è comparso
+anche lì, e Tommaso non l'aveva chiesto.
+
 ## Il bug ricorrente numero uno
 
 **Il fondo segue il ruolo, il testo no.** Successo su: pulsante indietro, icona
@@ -861,6 +885,11 @@ di react-map-gl non lo dichiarano e il typecheck fallisce (successo due volte).
   `PIZZICO=0.55,1.9 ATTESA_DOPO=5000,600`), `PRIMA="js"` esegue codice prima
   dei pizzichi (es. un registratore di eventi), `ESEGUI="js"` dopo, e ne
   stampa il risultato (anche una Promise).
+  `CPU=4` rallenta il processore come un telefono di fascia media;
+  `IPHONE=1` si presenta come Safari su iPhone (per le librerie che si
+  comportano diversamente lì). Per misurare un'animazione: in `PRIMA` un
+  ciclo `requestAnimationFrame` che registra posizione o durata di ogni
+  fotogramma, in `ESEGUI` la lettura.
   Il pannello browser di Claude, se nascosto, non scarica le piastrelle:
   per la mappa usare questo.
 - ⚠️ **`<AnimatePresence initial={false}>` in App.tsx spegne le animazioni
@@ -1055,7 +1084,10 @@ LIKE '%@demo.politask.invalid'` (cascata) e togliere le colonne `is_demo` da
   Prima della migration della scadenza i demo duravano ~1–2 giorni (48 ore
   da `created_at`, che è «adesso meno 1–30 ore»); dopo, `carica-demo.sql`
   non scrive `scade_il`, quindi prende il default: **48 ore dal
-  caricamento**. Rieseguirlo li rimette freschi.
+  caricamento**. ⚠️ Per rimetterli freschi usare **`rinfresca-demo.sql`**
+  (24 ottobre): aggiorna solo date e stato. `carica-demo.sql` invece
+  cancella e ricrea, e porta via in cascata candidature e chat fatte sugli
+  annunci demo.
 - Nomi delle attività cercati sul web: nessuna attività con quei nomi a
   Genova («Bar Il Gozzo Blu» scartato: esiste «Il Gozzo» al Porto Antico).
   Coordinate: strade vere geocodificate da Mapbox col solo nome della via.
@@ -1195,6 +1227,15 @@ Conseguenze strutturali, tutte obbligate:
   ottobre). Misurato: annuncio corto → fine contenuto esattamente sul bordo,
   0 px di vuoto; medio e lungo → aperta tutta, scorre. ⚠️ `setActiveSnapPoint`
   confronta col valore dell'aggancio alto di quel giro, non con la costante.
+- ⚠️ **Gli agganci vanno passati come LO STESSO array** (`useMemo` sui due
+  valori). vaul, a ogni ridisegno con un array nuovo, rimette la scheda
+  sull'aggancio corrente: alla chiusura la pagina ridisegna la scheda, e la
+  scheda trascinata giù a 823 px saltava indietro a 568 in un fotogramma
+  prima di scendere (Tommaso, 24 ottobre: «c'è un lag»). Misurato
+  registrando la posizione a ogni fotogramma; ora scende dritta.
+  Scartata prima un'altra ipotesi: su Safari vaul fissa il `body` in
+  `position: fixed`, ma solo per le schede aperte da un SUO trigger
+  (`hasBeenOpened`): le nostre le apre il codice, quindi non succede.
 - ⚠️ **L'aggancio va CONTROLLATO** (`activeSnapPoint` + `setActiveSnapPoint`).
   Lo stato interno di vaul vive nella Root, che qui non si smonta mai: chi
   apriva la scheda, la trascinava in alto e la chiudeva, la ritrovava già aperta
@@ -1758,3 +1799,167 @@ link social.
 - **«Concludi» in chat** gemello di «Assumi»: chip ritagliato, pieno tenue
   nel verde di «Assunto». Era un contorno CSS verde accanto a un chip
   disegnato.
+
+---
+
+# 22. Lo scotch — 23 ottobre 2026 (prototipo, non committato)
+
+Idea di Tommaso: pezzetti di scotch disegnati sulle card che NON si toccano,
+come se tenessero su dei foglietti, con un easter egg al tocco.
+
+- **Il significato**: puntina = appeso, si stacca, interattivo (cartellini
+  della bacheca); scotch = attaccato fisso, da leggere (sezioni del
+  profilo). Per questo non va sulle card cliccabili.
+- **Disegni di Tommaso**, quattro (originali in `brand/scotch/`, tracciati in
+  `icons/scotch.tsx`): `corto`, `cortoB`, `lungo`, `strappato`, disegnati a
+  grandezza reale. **Semitrasparente ma disegnato** (Tommaso): il pastello
+  del ruolo al 50% con il contorno nel suo inchiostro al 75%, 1,1 px. Si
+  vede il bordo della card sotto, come su uno scotch vero. Il colore segue
+  il ruolo del PROFILO mostrato, non di chi guarda.
+- **`ui/Foglietto.tsx`**: avvolge UNA card e restituisce due fratelli, uno
+  `span` alto zero con lo scotch e la card. ⚠️ Non dentro la card (la
+  maschera lo taglierebbe proprio dove esce dal bordo) e non un contenitore
+  attorno (le sagome si alternano con `nth-of-type` fra i `div` fratelli:
+  tornerebbero tutte uguali; uno `span` non conta).
+- **Posizioni**: `centro` (in alto, quasi dritto) o `sx`/`dx` (in diagonale
+  a ±38°, centro a 18 px dentro e 6 px giù). ⚠️ Misurato a 390 px: conta
+  l'ingombro del pezzo ruotato (~55 px), non il centro. A 10 px dentro
+  arrivava al bordo dello schermo.
+- **L'oscillazione**: attorno allo scotch (`transform-origin` lì), spinta
+  dal lato in cui si tocca. Con uno scotch è un pendolo (2,4° → −1,8° → …,
+  7 pose); con due il foglio non può girare e si solleva dal basso (scala
+  verticale 0,972 → …). **Stop motion vero**: 12 fps, ogni posa ferma per un
+  fotogramma (`steps(1, end)` su ogni chiave), 500 ms in tutto. Anima le
+  proprietà `rotate`/`scale`, separate da `transform`: si sommano
+  all'inclinazione `.tilt-l`/`.tilt-r` invece di cancellarla.
+- **Cautele, verificate**: niente effetto «premuto»; non parte se il dito
+  si sposta oltre 8 px, su `pointercancel` (lo scorrimento sul telefono),
+  su link e bottoni dentro la card, con del testo selezionato, con «riduci
+  movimento».
+- **Dove**: Profilo (la card con nome e foto a sinistra, Presentazione/
+  Descrizione al centro, Esperienze/Chi cerco sugli angoli, Informazioni lo
+  strappato a destra), Profilo pubblico (Presentazione, Esperienze, Chi
+  siamo, Chi cerchiamo, il riquadro delle foto, le recensioni, un
+  pezzettino al centro sull'avatar), Impostazioni (il riquadro della mail).
+- ⚠️ **LE REGOLE DELL'ORDINE** (Tommaso, 23 ottobre: con due pezzi per
+  card e le diagonali sugli angoli il profilo era «troppo incasinato»):
+  - **UN pezzo per oggetto**, sempre sul bordo ALTO e quasi dritto (±4°);
+  - **foto** → il pezzo `lungo`, al centro (sulle miniature a scala 0,6);
+  - **card** → `corto`/`cortoB` alternati `sopraSx` / `sopraDx` (al 22% e al
+    78% del bordo) scendendo la pagina: il ritmo della bacheca, ma ordinato;
+  - **oggetti piccoli** (avatar, riquadro della mail) → lo `strappato`, al centro;
+  - **niente diagonali sugli angoli**: escono dalla sagoma e pesano più di
+    tutto il resto. Le posizioni `sx`/`dx`/`…Basso` restano nel codice ma
+    non le usa nessuno;
+  - le sezioni con bottoni dentro (Interessi) e lo storico: niente scotch;
+  - **un'eccezione voluta**: la card Descrizione/Presentazione del Profilo
+    ha il pezzo sull'ANGOLO in alto a destra (`dx`), su richiesta di Tommaso.
+- **`ui/Scotch.tsx`** è il pezzo da solo (va in un genitore `relative`),
+  con gli angoli anche in basso (`sxBasso`, `dxBasso`) e una `scala` per le
+  foto piccole. `Foglietto` lo usa per le card. ⚠️ Sull'avatar è un fratello
+  del cerchio: il cerchio imperfetto è un ritaglio e lo taglierebbe.
+
+## Le FOTO STAMPATE (23 ottobre)
+
+Tommaso: le foto come stampe fisiche, stile Polaroid (reference: polaroid
+con due pezzi di scotch agli angoli), angoli arrotondati come le card e il
+bordo con lo stesso tratto. **`ui/FotoStampata.tsx`** + `lib/formaStampa.ts`.
+
+- Cornice di carta `--carta-foto` (#FDFCF6, più bianca del foglio: le foto
+  stanno anche DENTRO le card, e col colore del foglio la cornice si
+  leggerebbe solo dal filo), margine basso più alto. Lì vanno la didascalia
+  («Foto profilo» in Modifica profilo), i pallini del carosello, «1 / 5»
+  nella galleria.
+- ⚠️ La cornice è un SVG calcolato SOTTO il contenuto, non una maschera né il
+  9 sezioni: gli angoli delle card (28 px) su una miniatura da ~110 px
+  taglierebbero la foto, che sta a 5 px dal bordo; e una maschera
+  taglierebbe lo scotch. Raggio 9 px sulle miniature, 16 sulle grandi.
+- La finestra della foto ha gli angoli vivi, con un filo appena più scuro:
+  in una stampa vera è la carta ad essere arrotondata.
+- Storte dal seme (±1,8° piccole, ±0,8° grandi), con `rotate` e non
+  `transform`, così dentro un `Foglietto` le oscillazioni si sommano.
+- **Tutte QUADRATE**, come una Polaroid (Tommaso): il carosello del Profilo
+  era 4:3, la galleria a tutto schermo mostrava la foto intera. Ora la
+  galleria la RITAGLIA al centro (`object-cover`): il prezzo della
+  Polaroid, una foto molto larga o molto alta perde i bordi.
+- Dove: carosello del Profilo, griglia del profilo pubblico, galleria a
+  tutto schermo, Modifica profilo («Aggiungi» è una stampa VUOTA
+  tratteggiata). Su tutte il pezzo lungo in alto al centro.
+- ⚠️ Modifica profilo: la X per togliere una foto era `opacity-0
+  group-hover:opacity-100`, cioè sul telefono non si vedeva. Ora è sempre
+  visibile. (Il riordino col trascinamento è HTML5 drag and drop, che sul
+  telefono non va: da rifare con i tocchi, se serve.)
+- ⚠️ Galleria: il `DialogContent` di shadcn aggiunge sempre la sua X, e la
+  galleria ne disegnava un'altra: se ne vedevano due sovrapposte. Ora
+  `DialogContent` ha `senzaChiudi`.
+
+## I TOAST — lo scotch lungo, allungato (24 ottobre)
+
+- Il riquadro di ogni toast è il pezzo `lungo` come MASCHERA a 9 sezioni
+  (`public/images/cornici/scotch-lungo-v1.svg`, fette `0 48`, rese `0 28px`):
+  le estremità strappate restano in scala, si allunga solo il nastro. Regole
+  in fondo a `index.css` («I TOAST»), fuori dai layer: lo stile di sonner
+  arriva a runtime e vincerebbe.
+- Colore dello scotch delle card (pastello del ruolo al 55%) ma su fondo di
+  FOGLIO, opaco: il toast passa sopra mappa e foto. Inchiostro sopra (8,7 /
+  7,3), anche la descrizione (in grigio stava a ~3:1). Errori in terracotta
+  per tutti (7,8).
+- Il filo disegnato sta sul CONTENITORE dei toast (quattro `drop-shadow`
+  senza sfocatura a 0,8 px): sul toast la maschera lo taglierebbe.
+- ⚠️ sonner impone il carattere di sistema: `body [data-sonner-toaster] {
+  font-family: inherit }` rimette Outfit.
+- **Durate −25%** (Tommaso: «leggermente» più brevi): di serie 3 s invece di
+  4; nelle chiamate 2000 → 1500, 2500 → 1900, 3000 → 2300, 4000 → 3000.
+- L'unico toast dell'altra libreria (Radix, in `ApplicationCard`) è passato a
+  sonner: tutti i toast hanno lo stesso nastro. `ui/toaster.tsx` resta
+  montato in App ma non lo usa più nessuno.
+
+## Scorrere le foto col dito (24 ottobre)
+
+Tommaso: «non c'è un movimento naturale per scorrere», si cambiava foto solo
+coi pallini (Profilo) o con le frecce (galleria del profilo pubblico).
+
+- **`profile/CaroselloFoto.tsx`** (Profilo): una striscia che segue il
+  dito; al rilascio va alla foto accanto se spinta oltre un quinto della
+  larghezza o con un colpo veloce (400 px/s), se no torna. A molla, fluida:
+  è un gesto. `touch-action: pan-y`, quindi la pagina scorre ancora in
+  verticale. Verificato con tocchi veri: un trascinamento → foto 2, due →
+  foto 3, uno da 40 px → resta.
+- **Galleria**: la stampa intera si trascina e, lasciata oltre 80 px, vola
+  via e arriva la prossima. Prima c'era uno swipe a soglia senza che la foto
+  si muovesse.
+- ⚠️ **Lo swipe fra le schede** (`SwipeNavigator`) ascolta i tocchi di tutta
+  la pagina con listener NATIVI: uno `stopPropagation` di React arriverebbe
+  tardi. Ignora i gesti che partono dentro `[data-senza-swipe-tab]`, che il
+  carosello mette su di sé. Chiunque aggiunga un gesto orizzontale in una
+  pagina con le schede deve mettere quell'attributo.
+- I colori di card e campi NON sono cambiati con la gerarchia scura
+  (misurati: card `#FAF5EC`, campo `#F3EADD`): sembrano più bianchi per
+  contrasto con i pieni scuri. La Polaroid invece è davvero più chiara
+  (`--carta-foto` `#FDFCF6`), scelta apposta.
+
+## Le recensioni dell'attività (24 ottobre)
+
+- **Tre alla volta** (Tommaso): `reviews/RecensioniRicevute.tsx` mostra le
+  ultime tre, «Mostra altre N recensioni» ne aggiunge tre, alla fine «Mostra
+  meno». Prima il profilo pubblico di un'attività recensita era un lungo
+  scorrimento.
+- **Anche nel proprio profilo dell'employer** («Le tue recensioni», dopo
+  «Chi cerco»): prima non poteva vederle. I worker no: ricevono i cuori.
+- **`hooks/useRecensioni.ts`**, una lettura sola per i due profili (chiave
+  `['recensioni', id]`, invalidata da ReviewPrompt dopo l'invio).
+  ⚠️ Prende TUTTE le recensioni: il profilo pubblico ne leggeva 10 e da
+  quelle calcolava media e numero in testa al profilo, sbagliati oltre la
+  decima. Quante se ne mostrano lo decide l'elenco.
+
+## L'intestazione del profilo pubblico: tre righe (24 ottobre)
+
+Erano cinque righe centrate, una per dato (nome, pillola del ruolo,
+indirizzo, sito, cinque stelle): un elenco, non un'intestazione (Tommaso).
+Ora: **nome** · **«★ 3,5 (6) · zona»** in una riga (come Airbnb e Google
+Maps) · **i link**.
+- Via la pillola «Employer»/«Worker»: a un profilo si arriva da un annuncio
+  o da una candidatura, il ruolo lo si sa già, e lo dice il colore.
+- Una stella sola col numero: la fila di cinque ripeteva il dato. Il voto è
+  un bottone che scorre alle recensioni (`#recensioni`).
+- Decimali con la virgola («3,5»), anche nel proprio profilo.

@@ -57,7 +57,7 @@ export function LocationPicker({ lat, lng, onLocationChange }: LocationPickerPro
     // Check geofencing
     if (!isWithinGenovaBounds(newLat, newLng)) {
       setIsOutOfBounds(true);
-      toast.error(GEOFENCING_ERROR_MESSAGE, { duration: 4000 });
+      toast.error(GEOFENCING_ERROR_MESSAGE, { duration: 3000 });
       return;
     }
     

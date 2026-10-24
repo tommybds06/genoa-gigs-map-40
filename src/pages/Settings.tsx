@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { Foglietto } from "@/components/ui/Foglietto";
+import { srcLogo } from "@/lib/gerarchia";
 import { TesseraIcona, TesseraIndietro } from "@/components/ui/Tessera";
 import { useNavigate } from "react-router-dom";
 import { NotificheIcon, MailIcon, DocumentoIcon, EsciIcon, BidoneIcon, ProfiloIcon, InfoIcon } from "@/components/icons/uiIcons";
@@ -65,7 +67,7 @@ const Settings = () => {
         <div className="flex items-center gap-3">
           <TesseraIndietro onClick={handleBack} />
           <img
-            src={isEmployer ? "/images/logo-employer-v2.svg" : "/images/logo-worker-v2.svg"}
+            src={srcLogo(isEmployer)}
             alt="Politask"
             className="h-14 w-auto"
           />
@@ -75,6 +77,7 @@ const Settings = () => {
       <main className="flex-1 px-4 py-4 overflow-y-auto">
         {/* User Info Card */}
         {user?.email && (
+          <Foglietto seme="impostazioni-mail" scotch={[{ pezzo: "strappato", lato: "centro" }]}>
           <div className="material-card p-4 mb-6">
             <div className="flex items-center gap-3">
               <TesseraIcona icona={MailIcon} />
@@ -84,6 +87,7 @@ const Settings = () => {
               </div>
             </div>
           </div>
+          </Foglietto>
         )}
 
         {/* Account Section */}

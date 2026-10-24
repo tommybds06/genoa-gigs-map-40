@@ -4,6 +4,7 @@ import { Loader2, GripVertical } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { FotoStampata } from "@/components/ui/FotoStampata";
 
 interface PhotoGalleryManagerProps {
   photos: string[];
@@ -25,10 +26,9 @@ export function PhotoGalleryManager({
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const primaryColor = isEmployer ? "text-employer" : "text-primary";
-  const primaryBg = isEmployer ? "bg-employer-700" : "bg-primary";
+  // Inchiostri, non pastelli: sono testo e icone su carta (§5).
+  const primaryColor = isEmployer ? "text-employer-800" : "text-primary-strong";
   const primaryBgLight = isEmployer ? "bg-employer-50" : "bg-accent";
-  const primaryBorder = isEmployer ? "border-employer/20" : "border-primary/20";
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -157,8 +157,11 @@ export function PhotoGalleryManager({
         )}
       </div>
 
-      <div className="grid grid-cols-3 gap-2">
-        {/* Photo Grid */}
+      {/* Foto STAMPATE (ui/FotoStampata), come nel profilo: cornice di carta
+          col tratto delle card, scotch, la prima con «Foto profilo» scritto
+          nel margine basso come su una Polaroid — al posto dell'etichetta
+          colorata e dell'anello, che la distinguevano «col CSS». */}
+      <div className="grid grid-cols-3 gap-x-3 gap-y-5 pt-2">
         {photos.map((photo, index) => (
           <div
             key={photo}
@@ -169,67 +172,69 @@ export function PhotoGalleryManager({
             onDrop={(e) => handleDrop(e, index)}
             onDragEnd={handleDragEnd}
             className={cn(
-              "relative aspect-square rounded-xl overflow-hidden border-2 transition-all cursor-grab active:cursor-grabbing group",
-              draggedIndex === index && "opacity-50 scale-95",
-              dragOverIndex === index && draggedIndex !== index && `${primaryBorder} border-dashed`,
-              index === 0 ? `ring-2 ${isEmployer ? 'ring-employer' : 'ring-primary'} ring-offset-2` : "border-border"
+              "group relative cursor-grab transition-transform active:cursor-grabbing",
+              draggedIndex === index && "scale-95 opacity-50",
+              dragOverIndex === index && draggedIndex !== index && "scale-105"
             )}
           >
-            <img
-              src={photo}
-              alt={`Foto ${index + 1}`}
-              className="w-full h-full object-cover"
-              draggable={false}
-            />
-            
-            {/* Profile photo badge */}
-            {index === 0 && (
-              <div className={cn(
-                "absolute top-1 left-1 px-1.5 py-0.5 rounded text-[10px] font-medium text-white",
-                primaryBg
-              )}>
-                Profilo
-              </div>
-            )}
-
-            {/* Drag handle indicator */}
-            <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity">
-              <div className="p-1 rounded bg-black/50">
-                <GripVertical className="w-3 h-3 text-white" />
-              </div>
-            </div>
-
-            {/* Delete button */}
-            <button
-              onClick={() => handleRemove(index)}
-              className="absolute bottom-1 right-1 p-1.5 rounded-full bg-destructive text-destructive-foreground opacity-0 group-hover:opacity-100 transition-opacity shadow-md"
+            <FotoStampata
+              seme={photo}
+              employer={isEmployer}
+              scotch={[{ pezzo: "lungo", lato: "centro" }]}
+              fondo={
+                index === 0 ? (
+                  <span className="text-[11px] font-medium text-ink-soft">Foto profilo</span>
+                ) : undefined
+              }
             >
-              <XIcon className="w-3.5 h-3.5" />
-            </button>
+              <img
+                src={photo}
+                alt={`Foto ${index + 1}`}
+                className="h-full w-full object-cover"
+                draggable={false}
+              />
+
+              {/* Maniglia: solo col mouse, dove il trascinamento c'è davvero. */}
+              <div className="absolute left-1 top-1 opacity-0 transition-opacity group-hover:opacity-100">
+                <div className="rounded bg-ink/50 p-1">
+                  <GripVertical className="h-3 w-3 text-paper-sheet" />
+                </div>
+              </div>
+
+              {/* ⚠️ SEMPRE visibile: era `opacity-0 group-hover:opacity-100`,
+                  cioè sul telefono la foto non si poteva togliere. */}
+              <button
+                type="button"
+                onClick={() => handleRemove(index)}
+                aria-label={`Togli la foto ${index + 1}`}
+                className="absolute right-1 top-1 flex h-7 w-7 items-center justify-center rounded-full bg-ink/60 text-paper-sheet"
+              >
+                <XIcon className="h-3 w-3" />
+              </button>
+            </FotoStampata>
           </div>
         ))}
 
-        {/* Add Photo Button */}
+        {/* Il posto libero: una stampa vuota, tratteggiata, dritta. */}
         {photos.length < maxPhotos && (
           <button
+            type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={isUploading}
-            className={cn(
-              "aspect-square rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-1 transition-colors",
-              primaryBorder,
-              isUploading ? "opacity-50 cursor-not-allowed" : `hover:${primaryBgLight}`
-            )}
+            className="block w-full disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {isUploading ? (
-              <Loader2 className={cn("w-6 h-6 animate-spin", primaryColor)} />
-            ) : (
-              <>
-                <PiuIcon className={cn("w-6 h-6", primaryColor)} />
-                <span className={cn("text-xs font-medium", primaryColor)}>
-                  Aggiungi
-                </span>
-              </>
-            )}
+            <FotoStampata seme="aggiungi" vuota storta={false}>
+              <div className="flex h-full w-full flex-col items-center justify-center gap-1">
+                {isUploading ? (
+                  <Loader2 className={cn("h-6 w-6 animate-spin", primaryColor)} />
+                ) : (
+                  <>
+                    <PiuIcon className={cn("h-6 w-6", primaryColor)} />
+                    <span className={cn("text-xs font-medium", primaryColor)}>Aggiungi</span>
+                  </>
+                )}
+              </div>
+            </FotoStampata>
           </button>
         )}
       </div>

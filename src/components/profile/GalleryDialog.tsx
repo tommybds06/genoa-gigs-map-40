@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useRef } from "react";
 import { XIcon } from "@/components/icons/uiIcons";
-import { useSwipeable } from "react-swipeable";
-import { motion, AnimatePresence } from "framer-motion";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import { motion, AnimatePresence, type PanInfo } from "framer-motion";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { FotoStampata } from "@/components/ui/FotoStampata";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface GalleryDialogProps {
@@ -12,6 +11,8 @@ interface GalleryDialogProps {
   photos: string[];
   currentIndex: number;
   onIndexChange: (index: number) => void;
+  /** Il ruolo del PROFILO mostrato (colore dello scotch). */
+  employer?: boolean;
 }
 
 const slideVariants = {
@@ -20,12 +21,29 @@ const slideVariants = {
   exit: (dir: number) => ({ x: dir < 0 ? "55%" : "-55%", opacity: 0 }),
 };
 
+/* I comandi sopra lo sfondo scuro: tondi di carta con l'icona in inchiostro.
+   Erano icone bianche su `bg-black/95`. */
+const COMANDO =
+  "absolute z-10 flex h-11 w-11 items-center justify-center rounded-full bg-paper-sheet/90 text-ink active:scale-95";
+
+/**
+ * LA GALLERIA A TUTTO SCHERMO (23 ottobre): sfogliare le foto come stampe
+ * vere. Ogni foto è una `FotoStampata` grande e QUADRATA come una Polaroid
+ * (Tommaso: la foto si ritaglia al centro) — cornice di carta, scotch,
+ * storta a modo suo — sopra lo sfondo scurito, e il numero «1 / 5» sta nel
+ * margine basso come la scritta di una Polaroid. Prima era un rettangolo
+ * nero con la foto dentro.
+ *
+ * Scorrere resta FLUIDO (è un gesto, §stop motion: fluido per i comandi,
+ * a scatti solo per i momenti). Toccare lo sfondo fuori dalla foto chiude.
+ */
 export function GalleryDialog({
   isOpen,
   onClose,
   photos,
   currentIndex,
   onIndexChange,
+  employer,
 }: GalleryDialogProps) {
   const photosCount = photos.length;
   const directionRef = useRef(0);
@@ -49,49 +67,46 @@ export function GalleryDialog({
     onIndexChange((currentIndex + 1) % photosCount);
   }, [currentIndex, photosCount, onIndexChange]);
 
-  const swipeHandlers = useSwipeable({
-    onSwipedLeft: goToNext,
-    onSwipedRight: goToPrevious,
-    preventScrollOnSwipe: true,
-    trackMouse: false,
-    delta: 30,
-    swipeDuration: 500,
-  });
+  // La stampa segue il dito (Tommaso, 24 ottobre: «non c'è un movimento
+  // naturale»). Prima c'era uno swipe a soglia, senza che la foto si
+  // muovesse: sembrava di dover usare le frecce. Lasciata oltre 80 px, o con
+  // un colpo veloce, se ne va e arriva la prossima; se no torna al centro.
+  const rilascia = (_: unknown, info: PanInfo) => {
+    if (photosCount < 2) return;
+    if (info.offset.x < -80 || info.velocity.x < -500) goToNext();
+    else if (info.offset.x > 80 || info.velocity.x > 500) goToPrevious();
+  };
 
   if (photosCount === 0) return null;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 bg-black/95 border-none overflow-hidden">
+      <DialogContent
+        senzaChiudi
+        className="h-[100dvh] w-screen max-w-none gap-0 border-0 bg-transparent p-0 shadow-none"
+      >
+        <DialogTitle className="sr-only">Foto</DialogTitle>
         <div
-          {...swipeHandlers}
-          className="relative w-full h-full flex items-center justify-center min-h-[60vh] touch-pan-y"
+          onClick={(e) => e.target === e.currentTarget && onClose()}
+          className="relative flex h-full w-full items-center justify-center overflow-hidden"
         >
-          {/* Close button */}
-          <Button
-            variant="ghost"
-            size="icon"
+          <button
+            type="button"
             onClick={onClose}
-            className="absolute top-2 right-2 z-10 text-white hover:bg-white/20 rounded-full"
+            aria-label="Chiudi"
+            className={`${COMANDO} right-4 top-[max(1rem,env(safe-area-inset-top))]`}
           >
-            <XIcon className="w-6 h-6" />
-          </Button>
+            <XIcon className="h-4 w-4" />
+          </button>
 
-          {/* Previous button */}
           {photosCount > 1 && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={goToPrevious}
-              className="absolute left-2 z-10 text-white hover:bg-white/20 rounded-full"
-            >
-              <ChevronLeft className="w-8 h-8" />
-            </Button>
+            <button type="button" onClick={goToPrevious} aria-label="Foto precedente" className={`${COMANDO} left-2`}>
+              <ChevronLeft className="h-6 w-6" />
+            </button>
           )}
 
-          {/* Animated image */}
           <AnimatePresence initial={false} custom={directionRef.current} mode="popLayout">
-            <motion.img
+            <motion.div
               key={currentIndex}
               custom={directionRef.current}
               variants={slideVariants}
@@ -99,29 +114,40 @@ export function GalleryDialog({
               animate="center"
               exit="exit"
               transition={{ duration: 0.22, ease: "easeInOut" }}
-              src={photos[currentIndex]}
-              alt={`Foto ${currentIndex + 1}`}
-              className="max-w-full max-h-[85vh] object-contain select-none pointer-events-none"
-              draggable={false}
-            />
+              drag={photosCount > 1 ? "x" : false}
+              dragSnapToOrigin
+              dragElastic={0.7}
+              onDragEnd={rilascia}
+              className="cursor-grab touch-pan-y active:cursor-grabbing"
+            >
+              <FotoStampata
+                seme={photos[currentIndex]}
+                misura="grande"
+                formato="1 / 1"
+                employer={employer}
+                className="w-[min(calc(100vw-7rem),62vh)]"
+                scotch={[{ pezzo: "lungo", lato: "centro" }]}
+                fondo={
+                  <span className="text-sm tabular-nums text-ink-soft">
+                    {currentIndex + 1} / {photosCount}
+                  </span>
+                }
+              >
+                <img
+                  src={photos[currentIndex]}
+                  alt={`Foto ${currentIndex + 1}`}
+                  className="pointer-events-none h-full w-full select-none object-cover"
+                  draggable={false}
+                />
+              </FotoStampata>
+            </motion.div>
           </AnimatePresence>
 
-          {/* Next button */}
           {photosCount > 1 && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={goToNext}
-              className="absolute right-2 z-10 text-white hover:bg-white/20 rounded-full"
-            >
-              <ChevronRight className="w-8 h-8" />
-            </Button>
+            <button type="button" onClick={goToNext} aria-label="Foto successiva" className={`${COMANDO} right-2`}>
+              <ChevronRight className="h-6 w-6" />
+            </button>
           )}
-
-          {/* Counter */}
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white text-sm bg-black/50 px-3 py-1 rounded-full z-10">
-            {currentIndex + 1} / {photosCount}
-          </div>
         </div>
       </DialogContent>
     </Dialog>

@@ -103,7 +103,7 @@ export function SchedaLavoro({ lavoro: l, onClose, onApriChat, onRecensisci }: S
               <AvatarFallback className="bg-transparent p-0">
                 {/* Pieno chiaro + inchiostro, come le tessere: in questa scheda
                     un solo arancio, quello chiaro (Tommaso, 20 ottobre). */}
-                <Iniziali nome={l.attivita} className={cn("text-lg text-ink", isEmployer ? "bg-employer" : "bg-primary")} />
+                <Iniziali nome={l.attivita} className={cn("text-lg text-[hsl(var(--su-ruolo))]", isEmployer ? "bg-employer" : "bg-primary")} />
               </AvatarFallback>
             </Avatar>
             <div className="min-w-0 flex-1">

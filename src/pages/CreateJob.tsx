@@ -83,24 +83,24 @@ const CreateJob = () => {
 
   const handleSubmit = async () => {
     if (!validateForm()) {
-      toast.error('Compila i campi obbligatori', { duration: 2000 });
+      toast.error('Compila i campi obbligatori', { duration: 1500 });
       return;
     }
 
     if (!user || !profile) {
-      toast.error('Devi essere autenticato', { duration: 2000 });
+      toast.error('Devi essere autenticato', { duration: 1500 });
       return;
     }
 
     // Check if employer has set their location
     if (!profile.lat || !profile.lng) {
-      toast.error('Imposta la posizione della tua attività nel Profilo', { duration: 3000 });
+      toast.error('Imposta la posizione della tua attività nel Profilo', { duration: 2300 });
       return;
     }
 
     // Geofencing check
     if (!isWithinGenovaBounds(profile.lat, profile.lng)) {
-      toast.error(GEOFENCING_ERROR_MESSAGE, { duration: 4000 });
+      toast.error(GEOFENCING_ERROR_MESSAGE, { duration: 3000 });
       return;
     }
 
@@ -140,11 +140,11 @@ const CreateJob = () => {
         queryClient.invalidateQueries({ queryKey: ['my-jobs'] }),
       ]);
 
-      toast.success('Annuncio pubblicato!', { duration: 2000 });
+      toast.success('Annuncio pubblicato!', { duration: 1500 });
       navigate('/annunci');
     } catch (error) {
       console.error('Error creating job:', error);
-      toast.error('Errore nella pubblicazione', { duration: 2000 });
+      toast.error('Errore nella pubblicazione', { duration: 1500 });
     } finally {
       setLoading(false);
     }

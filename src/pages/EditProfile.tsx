@@ -116,7 +116,7 @@ const EditProfile = () => {
       await queryClient.invalidateQueries({ queryKey: ["profile"] });
       await refetch();
       
-      toast.success("Profilo aggiornato con successo!", { duration: 2000 });
+      toast.success("Profilo aggiornato con successo!", { duration: 1500 });
       navigate(-1);
     } catch (error) {
       console.error("Save error:", error);

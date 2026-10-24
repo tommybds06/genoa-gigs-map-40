@@ -41,8 +41,14 @@ const MISURE = {
  */
 function useColoriTessera(evidenziata = false) {
   const { isEmployer } = useAppTheme();
-  if (evidenziata) return cn(isEmployer ? "bg-employer-800" : "bg-primary-strong", "text-paper-sheet");
-  return cn(isEmployer ? "bg-employer" : "bg-primary", "text-ink");
+  // Colori come variabili (index.css, «la gerarchia»): con la gerarchia
+  // scura il pieno di ruolo diventa scuro e l'evidenza pastello.
+  if (evidenziata)
+    return cn(
+      isEmployer ? "bg-[hsl(var(--evidenza-employer))]" : "bg-[hsl(var(--evidenza-worker))]",
+      "text-[hsl(var(--su-evidenza))]"
+    );
+  return cn(isEmployer ? "bg-employer" : "bg-primary", "text-[hsl(var(--su-ruolo))]");
 }
 
 /** Solo il disegno, senza azione (es. l'icona del ruolo). */

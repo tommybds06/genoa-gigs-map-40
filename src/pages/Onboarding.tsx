@@ -110,7 +110,7 @@ const Onboarding = () => {
 
       if (error) throw error;
 
-      toast.success('Profilo completato!', { duration: 1000 });
+      toast.success('Profilo completato!', { duration: 800 });
       
       // HARD RELOAD to ensure fresh data is loaded from DB
       setTimeout(() => {

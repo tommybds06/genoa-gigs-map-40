@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { CHIAVE_RECENSIONI } from "@/hooks/useRecensioni";
 import { useAuth } from "@/hooks/useAuth";
 import { useUser } from "@/contexts/UserContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -243,13 +244,15 @@ export function ReviewPrompt() {
       
       // Invalidate cache
       await queryClient.invalidateQueries({ queryKey: ["applications"] });
+      // La recensione nuova deve comparire nei profili dell'attività.
+      queryClient.invalidateQueries({ queryKey: [CHIAVE_RECENSIONI] });
       
-      toast.success("Grazie per il feedback!", { duration: 2000 });
+      toast.success("Grazie per il feedback!", { duration: 1500 });
       setIsOpen(false);
       setPendingReview(null);
     } catch (error) {
       console.error("Error submitting review:", error);
-      toast.error("Errore nell'invio della recensione", { duration: 2000 });
+      toast.error("Errore nell'invio della recensione", { duration: 1500 });
     } finally {
       setIsSubmitting(false);
     }

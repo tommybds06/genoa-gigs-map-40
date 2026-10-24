@@ -8,6 +8,17 @@
  const WORKER_TAB_ORDER = ["/", "/lista", "/messaggi", "/profilo"];
  const EMPLOYER_TAB_ORDER = ["/", "/annunci", "/messaggi", "/profilo"];
 
+ /**
+  * Un elemento con `data-senza-swipe-tab` ha un gesto orizzontale SUO (il
+  * carosello delle foto): lì lo swipe non cambia scheda. Le schede ascoltano
+  * i tocchi su tutta la pagina con listener nativi, quindi uno
+  * `stopPropagation` di React non basterebbe: si guarda da dove parte il gesto.
+  */
+ function gestoProprio(evento: { target: EventTarget | null }): boolean {
+   const t = evento.target;
+   return t instanceof Element && !!t.closest("[data-senza-swipe-tab]");
+ }
+
  interface SwipeNavigatorProps {
    children: ReactNode;
    /** Only trigger swipe in a specific zone (for map page) */
@@ -54,8 +65,8 @@
    }, [currentIndex, navigate, tabOrder]);
 
    const swipeHandlers = useSwipeable({
-     onSwipedLeft: () => handleSwipe("LEFT"),
-     onSwipedRight: () => handleSwipe("RIGHT"),
+     onSwipedLeft: (e) => !gestoProprio(e.event) && handleSwipe("LEFT"),
+     onSwipedRight: (e) => !gestoProprio(e.event) && handleSwipe("RIGHT"),
      preventScrollOnSwipe: false,
      trackMouse: false,
      delta: 50,

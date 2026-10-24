@@ -75,7 +75,7 @@ export function TagSelector({
             className={cn(
               "sagoma-tag flex h-14 w-14 items-center justify-center rounded-xl transition-colors",
               isSelected
-                ? cn(isEmployer ? "bg-employer" : "bg-primary", "text-ink")
+                ? cn(isEmployer ? "bg-employer" : "bg-primary", "text-[hsl(var(--su-ruolo))]")
                 : "bg-accent text-ink-soft"
             )}
           >

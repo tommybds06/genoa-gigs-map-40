@@ -186,10 +186,10 @@ const Annunci = () => {
       // Invalidate cache
       await queryClient.invalidateQueries({ queryKey: ['applications'] });
       
-      toast.success('Candidatura rifiutata', { duration: 2000 });
+      toast.success('Candidatura rifiutata', { duration: 1500 });
     } catch (error) {
       console.error('Error rejecting application:', error);
-      toast.error('Errore nel rifiutare la candidatura', { duration: 2000 });
+      toast.error('Errore nel rifiutare la candidatura', { duration: 1500 });
     } finally {
       setProcessingAppId(null);
     }
@@ -240,13 +240,13 @@ const Annunci = () => {
         queryClient.invalidateQueries({ queryKey: ['chats'] }),
       ]);
 
-      toast.success('Candidatura accettata! Apri la chat...', { duration: 2000 });
+      toast.success('Candidatura accettata! Apri la chat...', { duration: 1500 });
       
       // Navigate AFTER cache invalidation (in onSuccess equivalent)
       navigate(`/messaggi?chat=${chatId}`);
     } catch (error) {
       console.error('Error accepting application:', error);
-      toast.error('Errore nell\'accettare la candidatura', { duration: 2000 });
+      toast.error('Errore nell\'accettare la candidatura', { duration: 1500 });
     } finally {
       setProcessingAppId(null);
     }
@@ -265,13 +265,13 @@ const Annunci = () => {
   const handleEditSuccess = () => {
     setEditingJob(null);
     fetchJobs();
-    toast.success('Annuncio aggiornato!', { duration: 2000 });
+    toast.success('Annuncio aggiornato!', { duration: 1500 });
   };
 
   const handleDeleteSuccess = () => {
     setDeletingJob(null);
     fetchJobs();
-    toast.success('Annuncio eliminato!', { duration: 2000 });
+    toast.success('Annuncio eliminato!', { duration: 1500 });
   };
 
   // Un solo componente per tutti gli stati, in tutta l'app (vedi StatusBadge.tsx).

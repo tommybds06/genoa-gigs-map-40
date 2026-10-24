@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { srcLogo } from "@/lib/gerarchia";
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { z } from 'zod';
@@ -205,7 +206,7 @@ const Auth = () => {
           messaggio.includes('not enabled') || messaggio.includes('not configured')
             ? `Accesso con ${provider === 'google' ? 'Google' : 'Apple'} non ancora attivo`
             : 'Accesso non riuscito. Riprova.',
-          { duration: 3000 }
+          { duration: 2300 }
         );
         setSocial(null);
         return;
@@ -216,7 +217,7 @@ const Auth = () => {
       // prima che la pagina cambi.
     } catch (err) {
       console.error(`Errore accesso ${provider}:`, err);
-      toast.error('Accesso non riuscito. Riprova.', { duration: 3000 });
+      toast.error('Accesso non riuscito. Riprova.', { duration: 2300 });
       setSocial(null);
     }
   };
@@ -275,12 +276,12 @@ const Auth = () => {
         const { error } = await signIn(email, password);
         if (error) {
           if (error.message.includes('Invalid login credentials')) {
-            toast.error('Email o password non corretti', { duration: 2000 });
+            toast.error('Email o password non corretti', { duration: 1500 });
           } else {
-            toast.error(error.message, { duration: 2000 });
+            toast.error(error.message, { duration: 1500 });
           }
         } else {
-          toast.success('Bentornato!', { duration: 2000 });
+          toast.success('Bentornato!', { duration: 1500 });
         }
       } else {
         if (!selectedRole) {
@@ -303,9 +304,9 @@ const Auth = () => {
         
         if (error) {
           if (error.message.includes('already registered')) {
-            toast.error('Email già registrata.', { duration: 2000 });
+            toast.error('Email già registrata.', { duration: 1500 });
           } else {
-            toast.error(error.message, { duration: 2000 });
+            toast.error(error.message, { duration: 1500 });
           }
         } else if (data.user) {
           const profileData: {
@@ -330,12 +331,12 @@ const Auth = () => {
 
           if (profileError) {
             console.error('Error creating profile:', profileError);
-            toast.error('Errore nella creazione del profilo. Riprova.', { duration: 3000 });
+            toast.error('Errore nella creazione del profilo. Riprova.', { duration: 2300 });
             setLoading(false);
             return;
           }
 
-          toast.success('Benvenuto! Reindirizzamento...', { duration: 1000 });
+          toast.success('Benvenuto! Reindirizzamento...', { duration: 800 });
           
           setTimeout(() => {
             window.location.replace('/onboarding');
@@ -376,7 +377,7 @@ const Auth = () => {
         {/* Logo & Title */}
         <div className="text-center mb-8 animate-fade-in">
           <img
-            src={selectedRole === 'employer' ? "/images/logo-employer-v2.svg" : "/images/logo-worker-v2.svg"}
+            src={srcLogo(selectedRole === 'employer')}
             alt="Politask"
             className="h-20 w-auto mx-auto mb-3 transition-all duration-500"
           />
@@ -585,14 +586,18 @@ const Auth = () => {
               <span className="h-px flex-1 bg-border" />
             </div>
 
+            {/* Google e Apple SENZA contorno, come sono sempre stati a schermo:
+                `ghost`, non `outline`. Il 23 ottobre il contorno disegnato è
+                diventato di serie sugli `outline` e qui è comparso senza che
+                nessuno l'avesse chiesto (Tommaso). La sagoma resta per l'hover. */}
             <div className="mt-4 space-y-2">
               <Button
                 type="button"
-                variant="outline"
+                variant="ghost"
                 size="lg"
                 onClick={() => accediCon('google')}
                 disabled={!!social}
-                className="w-full font-medium border-transparent sagoma-btn sagoma-btn-lg bordo-btn rounded-full"
+                className="w-full font-medium sagoma-btn sagoma-btn-lg rounded-full"
               >
                 {social === 'google' ? (
                   <Loader2 className="w-5 h-5 animate-spin" />
@@ -606,11 +611,11 @@ const Auth = () => {
 
               <Button
                 type="button"
-                variant="outline"
+                variant="ghost"
                 size="lg"
                 onClick={() => accediCon('apple')}
                 disabled={!!social}
-                className="w-full font-medium border-transparent sagoma-btn sagoma-btn-lg bordo-btn rounded-full"
+                className="w-full font-medium sagoma-btn sagoma-btn-lg rounded-full"
               >
                 {social === 'apple' ? (
                   <Loader2 className="w-5 h-5 animate-spin" />

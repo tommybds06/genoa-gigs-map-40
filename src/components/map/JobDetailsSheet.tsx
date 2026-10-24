@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   Drawer,
@@ -192,10 +192,16 @@ export function JobDetailsSheet({ job, isOpen, onClose, showMiniMap = false, sop
   const bassa = fondoTesta ?? RISERVA_PRIMA_DELLA_MISURA;
   const altezzaScheda = typeof window === "undefined" ? 0 : window.innerHeight * ALTEZZA_SCHEDA;
   const contenutoCorto = fondoContenuto != null && fondoContenuto < altezzaScheda && fondoContenuto > bassa;
-  const agganci = [
-    altezzaAggancio(bassa),
-    contenutoCorto ? altezzaAggancio(fondoContenuto) : AGGANCIO_ALTO,
-  ];
+  /* ⚠️ Lo STESSO array finché i valori non cambiano (Tommaso, 24 ottobre:
+     «quando la tiri giù c'è un lag»). vaul, a ogni ridisegno con un array
+     nuovo, crede che gli agganci siano cambiati e rimette la scheda
+     sull'aggancio corrente. Alla chiusura la pagina ridisegna la scheda
+     (`isOpen` → false), e la scheda trascinata giù a 823 px saltava indietro
+     a 568 in UN fotogramma, poi ripartiva verso il fondo: uno scatto
+     all'indietro prima di ogni chiusura. Misurato fotogramma per fotogramma. */
+  const basso = altezzaAggancio(bassa);
+  const alto = contenutoCorto ? altezzaAggancio(fondoContenuto) : AGGANCIO_ALTO;
+  const agganci = useMemo(() => [basso, alto], [basso, alto]);
 
   // Check if worker has already applied when drawer opens
   useEffect(() => {
@@ -280,11 +286,11 @@ export function JobDetailsSheet({ job, isOpen, onClose, showMiniMap = false, sop
         if (error.code === '23505') {
           // Duplicate - already applied
           setHasApplied(true);
-          toast.info('Hai già inviato la candidatura per questo lavoro', { duration: 2000 });
+          toast.info('Hai già inviato la candidatura per questo lavoro', { duration: 1500 });
         } else if (error.message?.includes('annuncio_non_attivo')) {
           // Il database rifiuta le candidature agli annunci scaduti o chiusi
           // (migration 20261023120000): capita se scade mentre lo si guarda.
-          toast.error('Questo annuncio non accetta più candidature', { duration: 2500 });
+          toast.error('Questo annuncio non accetta più candidature', { duration: 1900 });
         } else {
           throw error;
         }
@@ -292,11 +298,11 @@ export function JobDetailsSheet({ job, isOpen, onClose, showMiniMap = false, sop
         setHasApplied(true);
         // Invalidate applications cache for instant UI refresh
         await queryClient.invalidateQueries({ queryKey: ['applications'] });
-        toast.success('Candidatura inviata!', { duration: 2000 });
+        toast.success('Candidatura inviata!', { duration: 1500 });
       }
     } catch (error) {
       console.error('Error applying to job:', error);
-      toast.error('Errore nell\'invio della candidatura', { duration: 2000 });
+      toast.error('Errore nell\'invio della candidatura', { duration: 1500 });
     } finally {
       setIsApplying(false);
     }

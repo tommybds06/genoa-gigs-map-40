@@ -5,7 +5,7 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Application, useChatForApplication } from "@/hooks/useApplications";
 import { getJobIconFromTags } from "@/lib/jobIcons";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { formatTempoTrascorso } from "@/lib/dates";
 
 interface ApplicationCardProps {
@@ -43,9 +43,9 @@ export function ApplicationCard({ application, userId }: ApplicationCardProps) {
       // Use query param format that Messaggi.tsx expects
       navigate(`/messaggi?chat=${chatId}`);
     } else if (isActiveStatus && !employerId) {
-      toast({
-        title: "Chat non disponibile",
+      toast.info("Chat non disponibile", {
         description: "La chat sarà presto disponibile.",
+        duration: 2300,
       });
     } else if (employerId) {
       navigate(`/profile/${employerId}`);
