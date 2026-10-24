@@ -257,7 +257,7 @@ che lì gli scuri sono GIÀ i colori principali. Rotellina e freccia del
 profilo pubblico restavano pastello. Esclusione tolta. ⚠️ Non è
 un'inversione pura: testi e icone su carta restano scuri, il pastello come
 testo non si legge. Resta pastello il Lottie dello splash (file di Tommaso).
-**Non committato** finché Tommaso non decide.
+**Committata e pushata il 24 ottobre** come base («si parte da qui»).
 
 ⚠️ **Google e Apple in Auth sono `ghost`, SENZA contorno**: a schermo non
 l'hanno mai avuto (la classe c'era, ma senza `relative` il disegno non si
@@ -1802,7 +1802,7 @@ link social.
 
 ---
 
-# 22. Lo scotch — 23 ottobre 2026 (prototipo, non committato)
+# 22. Lo scotch — 23 ottobre 2026 (pushato il 24)
 
 Idea di Tommaso: pezzetti di scotch disegnati sulle card che NON si toccano,
 come se tenessero su dei foglietti, con un easter egg al tocco.
