@@ -20,12 +20,16 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { getTagClasses } from "@/lib/tagColors";
 import { LocationMiniMap } from "./LocationMiniMap";
+import { StatusBadge } from "@/components/ui/StatusBadge";
 
 interface JobProfile {
   full_name: string | null;
   avatar_url: string | null;
   address_text: string | null;
   photos?: string[] | null;
+  tipo_employer?: "attivita" | "privato" | null;
+  piva_verificata?: boolean;
+  identita_verificata?: boolean;
 }
 
 interface Job {
@@ -43,6 +47,8 @@ interface Job {
   status?: string;
   created_at?: string | null;
   scade_il?: string | null;
+  /** Annuncio di un privato: area invece del pin (24 ottobre). */
+  area_raggio?: number | null;
   profiles?: JobProfile | null;
 }
 
@@ -247,7 +253,13 @@ export function JobDetailsSheet({ job, isOpen, onClose, showMiniMap = false, sop
   const employerAvatar = employerPhotos && employerPhotos.length > 0
     ? employerPhotos[0]
     : job.profiles?.avatar_url || null;
-  const employerAddress = job.profiles?.address_text || null;
+  // Un privato non ha indirizzo: si mostra solo la zona (24 ottobre).
+  const privato = job.profiles?.tipo_employer === "privato" || !!job.area_raggio;
+  const employerAddress = privato ? null : job.profiles?.address_text || null;
+  // Nella scheda solo il segno POSITIVO («Attività verificata»).
+  // «Privato non verificato» lo si legge entrando nel profilo (Tommaso, 25
+  // ottobre): qui, sotto il nome, pesava come un avvertimento.
+  const verifica = !privato && job.profiles?.piva_verificata ? ("attivita_verificata" as const) : null;
   const employerInitials = employerName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
 
   const tagVisibili = (job.tags || []).filter(tag => tag.toLowerCase() !== 'altro');
@@ -466,7 +478,13 @@ export function JobDetailsSheet({ job, isOpen, onClose, showMiniMap = false, sop
                 {/* In Shinjo: e' un nome proprio in posizione di intestazione,
                     ed era l'unico titolo della scheda rimasto in Outfit. */}
                 <p className="titolo-mini truncate">{employerName}</p>
-                <p className="text-[13px] text-muted-foreground">Vedi profilo</p>
+                {/* «Attività verificata» (24 ottobre): qui, accanto a chi lo
+                    offre, è dove si decide di fidarsi. */}
+                {verifica ? (
+                  <StatusBadge stato={verifica} className="mt-0.5" />
+                ) : (
+                  <p className="text-[13px] text-muted-foreground">Vedi profilo</p>
+                )}
               </div>
               <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0" />
             </button>
@@ -489,13 +507,16 @@ export function JobDetailsSheet({ job, isOpen, onClose, showMiniMap = false, sop
               <h3 className="titolo-mini mb-2.5">Dove</h3>
               {haMiniMappa ? (
                 <>
-                  <LocationMiniMap lat={job.lat} lng={job.lng} tags={job.tags} />
+                  <LocationMiniMap lat={job.lat} lng={job.lng} tags={job.tags} raggio={job.area_raggio ?? undefined} />
                   <div className="mt-2.5 flex items-start gap-2">
                     <MappaIcon className={cn("w-4 h-4 mt-[3px] shrink-0", inchiostroRuolo)} />
                     <p className="text-[15px] text-foreground">
                       {job.neighborhood || "Zona non specificata"}
                       {employerAddress && (
                         <span className="text-muted-foreground"> · {employerAddress}</span>
+                      )}
+                      {job.area_raggio && (
+                        <span className="text-muted-foreground"> · posizione approssimativa</span>
                       )}
                     </p>
                   </div>
@@ -511,6 +532,14 @@ export function JobDetailsSheet({ job, isOpen, onClose, showMiniMap = false, sop
                     <p className="titolo-mini">{job.neighborhood || "Zona non specificata"}</p>
                     {employerAddress && (
                       <p className="text-[13px] text-muted-foreground truncate">{employerAddress}</p>
+                    )}
+                    {/* Il pin di un privato non è casa sua (24 ottobre): è il
+                        centro di un'area spostato a caso. Sulla mappa, a scheda
+                        aperta, il cerchio attorno al pin dice la stessa cosa. */}
+                    {job.area_raggio && (
+                      <p className="text-[13px] text-muted-foreground">
+                        Posizione approssimativa, entro {job.area_raggio} m
+                      </p>
                     )}
                   </div>
                 </div>

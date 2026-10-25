@@ -28,7 +28,10 @@ export type StatoCandidatura =
   // Stati di un ANNUNCIO (Annunci dell'employer, 23 ottobre): stessa regola,
   // pieno tenue = non più attivo.
   | "scaduto"
-  | "chiuso";
+  | "chiuso"
+  // Di CHI OFFRE LAVORO (24 ottobre): la verifica facoltativa.
+  | "attivita_verificata"
+  | "privato_non_verificato";
 
 const CONFIG: Record<
   StatoCandidatura,
@@ -63,6 +66,16 @@ const CONFIG: Record<
   },
   chiuso: {
     label: "Chiuso",
+    className: "bg-neutral-soft text-neutral-soft-foreground border-transparent",
+  },
+  // Tenue anche la verifica: è un'informazione, non un'azione da fare.
+  attivita_verificata: {
+    label: "Attività verificata",
+    className: "bg-success-soft text-success-soft-foreground border-transparent",
+    icon: CheckCircle,
+  },
+  privato_non_verificato: {
+    label: "Privato non verificato",
     className: "bg-neutral-soft text-neutral-soft-foreground border-transparent",
   },
 };

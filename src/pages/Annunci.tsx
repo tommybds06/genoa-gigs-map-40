@@ -387,11 +387,15 @@ const Annunci = () => {
       <Header />
 
       <main className="flex-1 px-4 pb-4 overflow-y-auto">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="titolo-sezione">I Tuoi Annunci Pubblicati</h2>
+        {/* Titolo più corto e uno spazio vero fra titolo e bottone: «I Tuoi
+            Annunci Pubblicati» arrivava a toccare «Crea» (Tommaso, 24
+            ottobre). `min-w-0` lascia andare a capo il titolo, `shrink-0`
+            tiene intero il bottone. */}
+        <div className="flex items-center justify-between gap-4 mb-3">
+          <h2 className="titolo-sezione min-w-0">I tuoi annunci</h2>
           <Button
             onClick={() => navigate('/create-job')}
-            className="bg-employer-700 hover:bg-employer-800 text-employer-foreground rounded-full px-4 touch-feedback"
+            className="shrink-0 bg-employer-700 hover:bg-employer-800 text-employer-foreground rounded-full px-4 touch-feedback"
             size="sm"
           >
             <PiuIcon className="h-4 w-4 mr-1" />

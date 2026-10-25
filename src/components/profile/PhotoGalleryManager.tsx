@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { PiuIcon, ProfiloIcon, XIcon } from "@/components/icons/uiIcons";
+import { PiuIcon, XIcon } from "@/components/icons/uiIcons";
 import { Loader2, GripVertical } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -28,7 +28,6 @@ export function PhotoGalleryManager({
 
   // Inchiostri, non pastelli: sono testo e icone su carta (§5).
   const primaryColor = isEmployer ? "text-employer-800" : "text-primary-strong";
-  const primaryBgLight = isEmployer ? "bg-employer-50" : "bg-accent";
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -239,15 +238,9 @@ export function PhotoGalleryManager({
         )}
       </div>
 
-      {/* Empty state */}
-      {photos.length === 0 && !isUploading && (
-        <div className={cn("text-center py-4 rounded-xl", primaryBgLight)}>
-          <ProfiloIcon className={cn("w-8 h-8 mx-auto mb-2", primaryColor)} />
-          <p className="text-sm text-muted-foreground">
-            Aggiungi almeno una foto profilo
-          </p>
-        </div>
-      )}
+      {/* Niente riquadro «Aggiungi almeno una foto» a galleria vuota (24
+          ottobre): era un rettangolo col bordo CSS che ripeteva la stampa
+          vuota «Aggiungi» qui sopra. Basta la riga in fondo. */}
 
       <input
         ref={fileInputRef}

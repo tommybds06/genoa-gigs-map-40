@@ -23,6 +23,8 @@ export function CampoData({
   value: string;
   onChange: (valore: string) => void;
   min?: string;
+  max?: string;
+  id?: string;
   disabled?: boolean;
   className?: string;
   "aria-label"?: string;

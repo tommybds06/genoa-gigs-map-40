@@ -114,6 +114,10 @@
 
     /* accent = tile arancio chiara (icone ruolo, chip, badge) */
     --accent: 36 60% 87%;            /* #F2E2CA */
+    /* La stessa tinta, ma FISSA: `--accent` sotto [data-ruolo="employer"]
+       diventa azzurro, e dove serve il caldo del worker anche in una pagina
+       blu (la tessera «Cerco impiego» in registrazione) si usa questa. */
+    --accent-worker: 36 60% 87%;
     --accent-foreground: var(--brand-orange-ink);
 
     /* Terracotta piu' decisa: a 52/44 era troppo timida per un'azione distruttiva. */

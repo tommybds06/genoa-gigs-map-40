@@ -1,7 +1,8 @@
 import { memo, useState, useCallback, useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import { OrologioIcon } from "@/components/icons/uiIcons";
 import { useLocation, useNavigate } from "react-router-dom";
-import Map, { Marker, MapRef } from "react-map-gl";
+import Map, { Layer, Marker, MapRef, Source } from "react-map-gl";
+import { cerchioGeo, coloreToken } from "@/lib/area";
 import { JobDetailsSheet } from "./JobDetailsSheet";
 import { PinMappa } from "./PinMappa";
 import { EmployerGroupMarker } from "./EmployerGroupMarker";
@@ -211,11 +212,21 @@ function InteractiveMapInner({
   }, []);
 
 
-  // Group jobs by employer
-  const employerGroups = useMemo(() => {
-    const jobsToGroup = isSearchActive ? allJobs : jobs;
-    return groupJobsByEmployer(jobsToGroup);
-  }, [jobs, allJobs, isSearchActive]);
+  /* Gli annunci dei PRIVATI sono pin come gli altri (Tommaso, 24 ottobre:
+     i cerchi sempre visibili «occupano troppo spazio e rendono la mappa
+     confusionaria»). Il pin sta sul centro GIÀ SPOSTATO dal database. Il
+     cerchio compare solo quando se ne apre la scheda (`areaAperta`, più giù). */
+  const employerGroups = useMemo(
+    () => groupJobsByEmployer(isSearchActive ? allJobs : jobs),
+    [jobs, allJobs, isSearchActive]
+  );
+  const coloriAree = useMemo(
+    () => ({
+      fondo: coloreToken(isEmployer ? "--employer-700" : "--primary", 0.2),
+      bordo: coloreToken(isEmployer ? "--employer-800" : "--primary-strong"),
+    }),
+    [isEmployer]
+  );
 
   // For search filtering, we need to know which groups have filtered jobs
   const filteredIdsString = useMemo(() => Array.from(filteredJobIds).sort().join(','), [filteredJobIds]);
@@ -259,6 +270,12 @@ function InteractiveMapInner({
   const handleCloseDetails = useCallback(() => {
     setIsDetailsOpen(false);
   }, []);
+
+  const areaAperta = useMemo(() => {
+    const j = isDetailsOpen ? lastSelectedJob : null;
+    if (!j?.area_raggio || j.lat == null || j.lng == null) return null;
+    return cerchioGeo(j.lat, j.lng, j.area_raggio, j.owner_id);
+  }, [isDetailsOpen, lastSelectedJob]);
 
   const handleCloseEmployerDrawer = useCallback(() => {
     setIsEmployerDrawerOpen(false);
@@ -470,6 +487,18 @@ function InteractiveMapInner({
           centraSuUtente();
         }}
       >
+        {/* L'area dell'annuncio APERTO, se è di un privato: dice «più o meno
+            qui» mentre si legge la scheda, e sparisce quando la si chiude. */}
+        {areaAperta && (
+          <Source id="area-aperta" type="geojson" data={areaAperta}>
+            <Layer id="area-aperta-fondo" type="fill" paint={{ "fill-color": coloriAree.fondo }} />
+            <Layer
+              id="area-aperta-bordo"
+              type="line"
+              paint={{ "line-color": coloriAree.bordo, "line-width": 2, "line-dasharray": [2, 1.5] }}
+            />
+          </Source>
+        )}
         {/* Niente NavigationControl: su mobile lo zoom si fa con le dita, e i
             quadratini bianchi di serie di Mapbox erano l'unico elemento di UI
             in tutta l'app a non essere nostro. */}

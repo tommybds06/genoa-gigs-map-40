@@ -5,6 +5,7 @@ import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { useMapboxToken } from "@/hooks/useMapboxToken";
 import { useUser } from "@/contexts/UserContext";
+import { cerchioGeo, coloreToken } from "@/lib/area";
 
 import { getJobIconFromTags } from "@/lib/jobIcons";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -15,9 +16,12 @@ interface LocationMiniMapProps {
   neighborhood?: string | null;
   address?: string | null;
   tags?: string[] | null;
+  /** Annuncio di un privato: il raggio dell'area in metri. Al posto del pin
+      si disegna il cerchio (24 ottobre). lat/lng sono già il centro spostato. */
+  raggio?: number;
 }
 
-export function LocationMiniMap({ lat, lng, neighborhood, address, tags }: LocationMiniMapProps) {
+export function LocationMiniMap({ lat, lng, neighborhood, address, tags, raggio }: LocationMiniMapProps) {
   const tagsKey = (tags || []).join(",");
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
@@ -48,7 +52,29 @@ export function LocationMiniMap({ lat, lng, neighborhood, address, tags }: Locat
       if (logoEl) {
         (logoEl as HTMLElement).style.display = 'none';
       }
+      // L'AREA di un privato: un cerchio, nei colori del pin di chi guarda.
+      if (raggio && map.current) {
+        map.current.addSource("area", { type: "geojson", data: cerchioGeo(lat, lng, raggio, `${lat},${lng}`) });
+        map.current.addLayer({
+          id: "area-riempimento",
+          type: "fill",
+          source: "area",
+          paint: { "fill-color": coloreToken(isEmployer ? "--employer-700" : "--primary", 0.22) },
+        });
+        map.current.addLayer({
+          id: "area-bordo",
+          type: "line",
+          source: "area",
+          paint: { "line-color": coloreToken(isEmployer ? "--employer-800" : "--primary-strong"), "line-width": 2 },
+        });
+      }
     });
+
+    if (raggio) {
+      return () => {
+        map.current?.remove();
+      };
+    }
 
     // I colori del pin dell'annuncio sulla mappa grande (InteractiveMap):
     // arancio pieno + icona in inchiostro (6,45:1), oppure employer-700 +
@@ -83,7 +109,7 @@ export function LocationMiniMap({ lat, lng, neighborhood, address, tags }: Locat
     return () => {
       map.current?.remove();
     };
-  }, [mapboxToken, lat, lng, tagsKey, isEmployer]);
+  }, [mapboxToken, lat, lng, tagsKey, isEmployer, raggio]);
 
   if (isLoading) {
     return (

@@ -44,6 +44,9 @@ interface Profile {
   looking_for: string | null;
   experience: string | null;
   social_links?: SocialLinks | null;
+  tipo_employer?: "attivita" | "privato" | null;
+  piva_verificata?: boolean;
+  identita_verificata?: boolean;
 }
 
 interface CompletedJob {
@@ -119,6 +122,7 @@ const PublicProfile = () => {
             ...profileData,
             photos: profileData.photos || [],
             social_links: profileData.social_links as SocialLinks | null,
+            tipo_employer: profileData.tipo_employer as Profile["tipo_employer"],
           });
 
           // If employer profile, fetch reviews
@@ -245,8 +249,18 @@ const PublicProfile = () => {
 
   // Determine if viewing a worker or employer profile
   const isWorkerProfile = profile.role === "worker";
-  // I worker mostrano solo il quartiere, le attività l'indirizzo.
-  const luogo = isWorkerProfile ? profile.neighborhood : profile.address_text;
+  // I worker e i PRIVATI mostrano solo il quartiere, le attività l'indirizzo.
+  const privato = !isWorkerProfile && profile.tipo_employer === "privato";
+  const luogo = isWorkerProfile || privato ? profile.neighborhood : profile.address_text;
+  const verifica = isWorkerProfile
+    ? null
+    : privato
+      ? profile.identita_verificata
+        ? null
+        : ("privato_non_verificato" as const)
+      : profile.piva_verificata
+        ? ("attivita_verificata" as const)
+        : null;
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
@@ -288,6 +302,7 @@ const PublicProfile = () => {
                 di cinque ripeteva lo stesso dato. Toccandolo si va alle recensioni. */}
           <div className="text-center mb-4">
             <h1 className="text-2xl font-bold">{displayName}</h1>
+            {verifica && <StatusBadge stato={verifica} className="mt-2" />}
             {(reviewStats || luogo) && (
               <p className="mt-2 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-muted-foreground">
                 {reviewStats && !isWorkerProfile && (

@@ -29,6 +29,12 @@ export interface UserProfile {
   neighborhood: string | null;
   lat: number | null;
   lng: number | null;
+  /** Solo employer: attività (pin preciso) o privato (area). */
+  tipo_employer: "attivita" | "privato" | null;
+  /** Privato: il raggio dell'area; `lat`/`lng` sono il centro GIÀ spostato. */
+  area_raggio: number | null;
+  piva_verificata: boolean;
+  identita_verificata: boolean;
 }
 
 interface UserContextType {
@@ -119,6 +125,10 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
           neighborhood: data.neighborhood || null,
           lat: data.lat || null,
           lng: data.lng || null,
+          tipo_employer: (data.tipo_employer as UserProfile["tipo_employer"]) ?? null,
+          area_raggio: data.area_raggio ?? null,
+          piva_verificata: !!data.piva_verificata,
+          identita_verificata: !!data.identita_verificata,
         };
         
         setProfile(userProfile);

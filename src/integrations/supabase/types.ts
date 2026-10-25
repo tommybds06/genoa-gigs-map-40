@@ -205,6 +205,7 @@ export type Database = {
       }
       jobs: {
         Row: {
+          area_raggio: number | null
           category: string | null
           created_at: string
           description: string | null
@@ -224,6 +225,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          area_raggio?: number | null
           category?: string | null
           created_at?: string
           description?: string | null
@@ -243,6 +245,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          area_raggio?: number | null
           category?: string | null
           created_at?: string
           description?: string | null
@@ -336,9 +339,63 @@ export type Database = {
           },
         ]
       }
+      profili_riservati: {
+        Row: {
+          area_lat: number | null
+          area_lng: number | null
+          area_raggio: number | null
+          created_at: string
+          data_nascita: string | null
+          id: string
+          maggiorenne_confermato_il: string | null
+          partita_iva: string | null
+          piva_nome_vies: string | null
+          spostamento_est_m: number | null
+          spostamento_nord_m: number | null
+          updated_at: string
+        }
+        Insert: {
+          area_lat?: number | null
+          area_lng?: number | null
+          area_raggio?: number | null
+          created_at?: string
+          data_nascita?: string | null
+          id: string
+          maggiorenne_confermato_il?: string | null
+          partita_iva?: string | null
+          piva_nome_vies?: string | null
+          spostamento_est_m?: number | null
+          spostamento_nord_m?: number | null
+          updated_at?: string
+        }
+        Update: {
+          area_lat?: number | null
+          area_lng?: number | null
+          area_raggio?: number | null
+          created_at?: string
+          data_nascita?: string | null
+          id?: string
+          maggiorenne_confermato_il?: string | null
+          partita_iva?: string | null
+          piva_nome_vies?: string | null
+          spostamento_est_m?: number | null
+          spostamento_nord_m?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profili_riservati_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           address_text: string | null
+          area_raggio: number | null
           avatar_url: string | null
           bio: string | null
           created_at: string
@@ -346,6 +403,8 @@ export type Database = {
           full_name: string | null
           id: string
           is_demo: boolean
+          identita_verificata: boolean
+          identita_verificata_il: string | null
           is_onboarded: boolean | null
           lat: number | null
           level: number
@@ -353,14 +412,23 @@ export type Database = {
           looking_for: string | null
           neighborhood: string | null
           photos: string[] | null
+          piva_verificata: boolean
+          piva_verificata_il: string | null
           role: Database["public"]["Enums"]["user_role"]
           social_links: Json | null
           tags: string[] | null
+          tipo_employer: string | null
           updated_at: string
           username: string | null
           xp_points: number
         }
         Insert: {
+          area_raggio?: number | null
+          identita_verificata?: boolean
+          identita_verificata_il?: string | null
+          piva_verificata?: boolean
+          piva_verificata_il?: string | null
+          tipo_employer?: string | null
           address_text?: string | null
           avatar_url?: string | null
           bio?: string | null
@@ -384,6 +452,12 @@ export type Database = {
           xp_points?: number
         }
         Update: {
+          area_raggio?: number | null
+          identita_verificata?: boolean
+          identita_verificata_il?: string | null
+          piva_verificata?: boolean
+          piva_verificata_il?: string | null
+          tipo_employer?: string | null
           address_text?: string | null
           avatar_url?: string | null
           bio?: string | null

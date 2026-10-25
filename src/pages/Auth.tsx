@@ -1,4 +1,8 @@
 import { useState, useEffect } from 'react';
+import { SceltaTipoEmployer } from "@/components/auth/SceltaTipoEmployer";
+import { CampoMaggiorenne } from "@/components/auth/CampoMaggiorenne";
+import { controllaEta, MESSAGGIO_MINORENNE, salvaRiservati, testiEmployer, type TipoEmployer } from "@/lib/registrazione";
+import { TesseraRuolo } from "@/components/auth/TesseraRuolo";
 import { srcLogo } from "@/lib/gerarchia";
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
@@ -98,9 +102,15 @@ const Auth = () => {
   const [fullName, setFullName] = useState('');
   const [neighborhood, setNeighborhood] = useState('');
   const [address, setAddress] = useState('');
+  // Chi offre lavoro: attività o privato (24 ottobre). Il worker: età.
+  const [tipoEmployer, setTipoEmployer] = useState<TipoEmployer | null>(null);
+  const [nascita, setNascita] = useState('');
+  const [maggiorenne, setMaggiorenne] = useState(false);
   const [loading, setLoading] = useState(false);
   const [social, setSocial] = useState<Social | null>(null);
-  const [errors, setErrors] = useState<{ email?: string; password?: string; name?: string; role?: string; neighborhood?: string; address?: string }>({});
+  const [errors, setErrors] = useState<{ email?: string; password?: string; name?: string; role?: string; neighborhood?: string; address?: string; tipo?: string; nascita?: string; conferma?: string }>({});
+  const privato = selectedRole === 'employer' && tipoEmployer === 'privato';
+  const testi = testiEmployer(tipoEmployer);
 
   // Get current theme based on selected role
   const currentTheme = selectedRole ? roleThemes[selectedRole] : roleThemes.neutral;
@@ -252,9 +262,17 @@ const Auth = () => {
         newErrors.neighborhood = 'Seleziona il tuo quartiere';
       }
 
-      // Address required only for employer
-      if (selectedRole === 'employer' && !address.trim()) {
+      if (selectedRole === 'employer' && !tipoEmployer) {
+        newErrors.tipo = 'Scegli se sei un\'attività o un privato';
+      }
+
+      // L'indirizzo solo per le attività: un privato non lo dà mai.
+      if (selectedRole === 'employer' && tipoEmployer === 'attivita' && !address.trim()) {
         newErrors.address = 'Inserisci l\'indirizzo della tua attività';
+      }
+
+      if (selectedRole === 'worker') {
+        Object.assign(newErrors, controllaEta(nascita, maggiorenne));
       }
     }
 
@@ -315,13 +333,15 @@ const Auth = () => {
             full_name: string | null;
             neighborhood: string | null;
             address_text: string | null;
+            tipo_employer: TipoEmployer | null;
             is_onboarded: boolean;
           } = {
             id: data.user.id,
             role: selectedRole,
             full_name: fullName || null,
             neighborhood: neighborhood || null,
-            address_text: selectedRole === 'employer' ? address.trim() || null : null,
+            address_text: selectedRole === 'employer' && !privato ? address.trim() || null : null,
+            tipo_employer: selectedRole === 'employer' ? tipoEmployer : null,
             is_onboarded: false,
           };
 
@@ -334,6 +354,21 @@ const Auth = () => {
             toast.error('Errore nella creazione del profilo. Riprova.', { duration: 2300 });
             setLoading(false);
             return;
+          }
+
+          // La data di nascita sta nei dati RISERVATI (la legge solo lui).
+          if (selectedRole === 'worker') {
+            try {
+              await salvaRiservati(data.user.id, {
+                data_nascita: nascita,
+                maggiorenne_confermato_il: new Date().toISOString(),
+              });
+            } catch (err) {
+              const minorenne = String((err as { message?: string })?.message).includes('minorenne');
+              toast.error(minorenne ? MESSAGGIO_MINORENNE : 'Errore nel salvataggio. Riprova.', { duration: 3000 });
+              setLoading(false);
+              return;
+            }
           }
 
           toast.success('Benvenuto! Reindirizzamento...', { duration: 800 });
@@ -395,54 +430,28 @@ const Auth = () => {
                 <label className="text-sm font-medium text-foreground">Chi sei?</label>
                 {errors.role && <p className="text-xs text-destructive">{errors.role}</p>}
                 <div className="grid grid-cols-2 gap-3">
-                  {/* Worker Card */}
-                  <button
-                    type="button"
-                    onClick={() => setSelectedRole('worker')}
-                    className={cn(
-                      "relative p-4 rounded-2xl transition-all duration-500 text-left touch-feedback",
-                      selectedRole === 'worker'
-                        ? 'bg-primary/15 ring-2 ring-primary'
-                        : 'bg-card border border-border hover:border-primary/40'
-                    )}
-                  >
-                    <div className={cn(
-                      "w-12 h-12 rounded-xl flex items-center justify-center mb-3 transition-colors duration-500",
-                      selectedRole === 'worker' ? 'bg-primary text-primary-foreground' : 'bg-accent text-accent-foreground'
-                    )}>
-                      <GenericoIcon className="w-6 h-6" />
-                    </div>
-                    <h3 className="font-semibold text-sm text-foreground">Cerco impiego</h3>
-                    <p className="text-xs text-muted-foreground mt-1">Sono uno studente</p>
-                    {selectedRole === 'worker' && (
-                      <div className="absolute top-2 right-2 w-3 h-3 bg-primary rounded-full animate-scale-in" />
-                    )}
-                  </button>
-
-                  {/* Employer Card */}
-                  <button
-                    type="button"
-                    onClick={() => setSelectedRole('employer')}
-                    className={cn(
-                      "relative p-4 rounded-2xl transition-all duration-500 text-left touch-feedback",
-                      selectedRole === 'employer'
-                        ? 'bg-employer/15 ring-2 ring-employer-700'
-                        : 'bg-card border border-border hover:border-employer/40'
-                    )}
-                  >
-                    <div className={cn(
-                      "w-12 h-12 rounded-xl flex items-center justify-center mb-3 transition-colors duration-500",
-                      selectedRole === 'employer' ? 'bg-employer-700 text-employer-foreground' : 'bg-employer-50 text-employer-800'
-                    )}>
-                      <AnnunciIcon className="w-6 h-6" />
-                    </div>
-                    <h3 className="font-semibold text-sm text-foreground">Offro impiego</h3>
-                    <p className="text-xs text-muted-foreground mt-1">Privato o attività</p>
-                    {selectedRole === 'employer' && (
-                      <div className="absolute top-2 right-2 w-3 h-3 bg-employer rounded-full animate-scale-in" />
-                    )}
-                  </button>
+                  {/* Le tessere dei ruoli: componente unico con Scegli ruolo
+                      (auth/TesseraRuolo), contorno disegnato e puntina. */}
+                  <TesseraRuolo
+                    ruolo="worker"
+                    scelto={selectedRole === 'worker'}
+                    onScegli={() => setSelectedRole('worker')}
+                    icona={GenericoIcon}
+                    titolo="Cerco impiego"
+                    sotto="Sono uno studente"
+                  />
+                  <TesseraRuolo
+                    ruolo="employer"
+                    scelto={selectedRole === 'employer'}
+                    onScegli={() => setSelectedRole('employer')}
+                    icona={AnnunciIcon}
+                    titolo="Offro impiego"
+                    sotto="Privato o attività"
+                  />
                 </div>
+                {selectedRole === 'employer' && (
+                  <SceltaTipoEmployer valore={tipoEmployer} onScegli={setTipoEmployer} errore={errors.tipo} />
+                )}
               </div>
             )}
 
@@ -450,7 +459,7 @@ const Auth = () => {
             {!isLogin && (
               <div className="space-y-2">
                 <label className="text-sm font-medium text-foreground">
-                  {selectedRole === 'employer' ? 'Nome attività (se ne si ha una)' : 'Nome completo'}
+                  {selectedRole === 'employer' ? testi.nome : 'Nome completo'}
                 </label>
                 <div className="relative">
                   <ProfiloIcon className="absolute left-4 top-1/2 -translate-y-1/2 z-10 w-5 h-5 text-muted-foreground" />
@@ -475,7 +484,7 @@ const Auth = () => {
             {!isLogin && selectedRole && (
               <div className="space-y-2 animate-fade-in">
                 <label className="text-sm font-medium text-foreground">
-                  {selectedRole === 'employer' ? 'In che zona si trova la tua attività?' : 'In che zona abiti?'} <span className="text-destructive">*</span>
+                  {selectedRole === 'employer' ? testi.zona : 'In che zona abiti?'} <span className="text-destructive">*</span>
                 </label>
                 <NeighborhoodSelect
                   value={neighborhood}
@@ -488,8 +497,22 @@ const Auth = () => {
               </div>
             )}
 
-            {/* Address (only for employer signup) */}
-            {!isLogin && selectedRole === 'employer' && (
+            {/* Worker: data di nascita e conferma dei 18 anni (24 ottobre). */}
+            {!isLogin && selectedRole === 'worker' && (
+              <div className="animate-fade-in">
+                <CampoMaggiorenne
+                  nascita={nascita}
+                  onNascita={setNascita}
+                  confermato={maggiorenne}
+                  onConferma={setMaggiorenne}
+                  errori={{ nascita: errors.nascita, conferma: errors.conferma }}
+                />
+              </div>
+            )}
+
+            {/* Address: solo per le ATTIVITÀ. Un privato non dà mai un
+                indirizzo: in configurazione sceglie un'area (24 ottobre). */}
+            {!isLogin && selectedRole === 'employer' && !privato && (
               <div className="space-y-2 animate-fade-in">
                 <label className="text-sm font-medium text-foreground">
                   Indirizzo attività <span className="text-destructive">*</span>

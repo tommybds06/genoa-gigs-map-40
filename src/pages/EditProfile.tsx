@@ -17,12 +17,36 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { TesseraIndietro } from "@/components/ui/Tessera";
 import type { SocialLinks } from "@/contexts/UserContext";
 import { etichettaInstagram, leggiSocial } from "@/lib/social";
+import { MESSAGGI_PARTITA_IVA, verificaPartitaIva } from "@/lib/registrazione";
+import { VerificaIdentita } from "@/components/profile/VerificaIdentita";
+import { StatusBadge } from "@/components/ui/StatusBadge";
 
 const EditProfile = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { profile, refetch } = useUser();
   const { theme, isEmployer } = useAppTheme();
+  // Privato (24 ottobre): niente indirizzo, testi suoi, verifica d'identità.
+  const privato = isEmployer && profile?.tipo_employer === "privato";
+  const [partitaIva, setPartitaIva] = useState("");
+  const [verificaInCorso, setVerificaInCorso] = useState(false);
+  // La partita IVA già data sta nei dati riservati (la legge solo lui).
+  useQuery({
+    queryKey: ["riservati", user?.id],
+    enabled: !!user?.id && isEmployer && !privato,
+    queryFn: async () => {
+      const { data } = await supabase.from("profili_riservati").select("partita_iva").eq("id", user!.id).maybeSingle();
+      if (data?.partita_iva) setPartitaIva(data.partita_iva);
+      return data ?? null;
+    },
+  });
+  const verifica = async () => {
+    setVerificaInCorso(true);
+    const esito = await verificaPartitaIva(partitaIva);
+    setVerificaInCorso(false);
+    (esito === "valida" ? toast.success : toast.error)(MESSAGGI_PARTITA_IVA[esito], { duration: 3000 });
+    if (esito === "valida" || esito === "non_valida") await refetch();
+  };
   const queryClient = useQueryClient();
   
   const [fullName, setFullName] = useState("");
@@ -92,7 +116,8 @@ const EditProfile = () => {
       const updateData: Record<string, unknown> = {
         full_name: fullName.trim(),
         bio: bio.trim(),
-        address_text: addressText.trim(),
+        // Un privato non ha indirizzo (24 ottobre).
+        address_text: privato ? null : addressText.trim(),
         neighborhood: neighborhood || null,
         photos: photos,
         social_links: social.valori,
@@ -171,13 +196,13 @@ const EditProfile = () => {
           {/* Name Field */}
           <div className="space-y-2">
             <Label htmlFor="fullName" className="text-sm font-medium">
-              {isEmployer ? "Nome" : "Nome e cognome"}
+              {isEmployer && !privato ? "Nome" : "Nome e cognome"}
             </Label>
               <Input
               id="fullName"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
-              placeholder={isEmployer ? "Es. Bar Da Mario" : "Es. Mario Rossi"}
+              placeholder={isEmployer && !privato ? "Es. Bar Da Mario" : "Es. Mario Rossi"}
               className={`${inputBorderClasses}`}
             />
           </div>
@@ -195,8 +220,8 @@ const EditProfile = () => {
             />
           </div>
 
-          {/* Address Field - Only for Employers */}
-          {isEmployer && (
+          {/* Address Field - solo per le ATTIVITÀ: un privato non lo dà mai. */}
+          {isEmployer && !privato && (
             <div className="space-y-2">
               <Label htmlFor="address" className="text-sm font-medium">
                 Indirizzo
@@ -222,7 +247,9 @@ const EditProfile = () => {
               onChange={(e) => setBio(e.target.value)}
               placeholder={
                 isEmployer 
-                  ? "Descrivi la tua attività, cosa fate, orari..." 
+                  ? privato
+                    ? "Racconta chi sei e che tipo di aiuto cerchi di solito..."
+                    : "Descrivi la tua attività, cosa fate, orari..." 
                   : "Parlaci di te, delle tue passioni e competenze..."
               }
               rows={4}
@@ -296,6 +323,48 @@ const EditProfile = () => {
             />
             {erroriSocial.website && <p className="text-sm text-destructive">{erroriSocial.website}</p>}
           </div>
+
+          {/* Le verifiche facoltative, anche dopo la configurazione (24 ottobre). */}
+          {isEmployer && (
+            <div className="space-y-2 pt-2">
+              <Label htmlFor="partita-iva" className="text-sm font-medium">
+                {privato ? "Verifica dell'identità" : "Partita IVA"}
+              </Label>
+              {privato ? (
+                <VerificaIdentita verificata={!!profile?.identita_verificata} />
+              ) : (
+                <>
+                  <div className="flex gap-2">
+                    <Input
+                      id="partita-iva"
+                      inputMode="numeric"
+                      autoComplete="off"
+                      placeholder="11 cifre"
+                      value={partitaIva}
+                      onChange={(e) => setPartitaIva(e.target.value)}
+                      className={inputBorderClasses}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={verifica}
+                      disabled={!partitaIva.trim() || verificaInCorso}
+                      className="shrink-0"
+                    >
+                      {verificaInCorso ? <Loader2 className="h-4 w-4 animate-spin" /> : "Verifica"}
+                    </Button>
+                  </div>
+                  {profile?.piva_verificata ? (
+                    <StatusBadge stato="attivita_verificata" />
+                  ) : (
+                    <p className="text-xs text-muted-foreground">
+                      Facoltativa. Le attività verificate ricevono più candidature.
+                    </p>
+                  )}
+                </>
+              )}
+            </div>
+          )}
         </div>
       </main>
 

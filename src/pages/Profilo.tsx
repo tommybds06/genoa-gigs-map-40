@@ -213,7 +213,7 @@ const Profilo = () => {
         )}
 
         {!isEmployer && profile?.experience && (
-          <Foglietto seme="esperienze" scotch={[{ pezzo: "corto", lato: "sopraSx" }]}>
+          <Foglietto seme="esperienze" scotch={[{ pezzo: "corto", lato: "sopraSx", dritto: true }]}>
           <div className="material-card tilt-l p-4 mb-4">
             <h3 className="titolo-mini mb-2 flex items-center gap-2">
               <GenericoIcon className={`w-4 h-4 ${primaryTextClasses}`} />Esperienze
@@ -254,9 +254,8 @@ const Profilo = () => {
 
         {!isEmployer && <WorkerJobHistory primaryTextClasses={primaryTextClasses} />}
 
-        {/* A sinistra: per l'employer il pezzo prima (Recensioni) è a destra;
-            per il worker in mezzo ci sono Interessi e storico, senza scotch. */}
-        <Foglietto seme="informazioni" scotch={[{ pezzo: "corto", lato: "sopraSx" }]}>
+        {/* Sul bordo alto a DESTRA, non sull'angolo (Tommaso, 24 ottobre). */}
+        <Foglietto seme="informazioni" scotch={[{ pezzo: "cortoB", lato: "sopraDx" }]}>
         <div className="material-card tilt-l p-4 mb-4">
           <h3 className="titolo-mini mb-3 flex items-center gap-2"><InfoIcon className={`w-4 h-4 ${primaryTextClasses}`} />Informazioni</h3>
           <div className="space-y-3">

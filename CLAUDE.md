@@ -1854,6 +1854,10 @@ come se tenessero su dei foglietti, con un easter egg al tocco.
   - le sezioni con bottoni dentro (Interessi) e lo storico: niente scotch;
   - **un'eccezione voluta**: la card Descrizione/Presentazione del Profilo
     ha il pezzo sull'ANGOLO in alto a destra (`dx`), su richiesta di Tommaso.
+  - Esperienze (Profilo) ha il pezzo DRITTO (`dritto: true`, 0°) e
+    Informazioni sta sul bordo alto a destra (`sopraDx`): scelte di Tommaso
+    del 24 ottobre. Nel profilo employer così Recensioni e Informazioni
+    hanno tutte e due il pezzo a destra, una dopo l'altra.
 - **`ui/Scotch.tsx`** è il pezzo da solo (va in un genitore `relative`),
   con gli angoli anche in basso (`sxBasso`, `dxBasso`) e una `scala` per le
   foto piccole. `Foglietto` lo usa per le card. ⚠️ Sull'avatar è un fratello
@@ -1963,3 +1967,120 @@ Maps) · **i link**.
 - Una stella sola col numero: la fila di cinque ripeteva il dato. Il voto è
   un bottone che scorre alle recensioni (`#recensioni`).
 - Decimali con la virgola («3,5»), anche nel proprio profilo.
+
+## Le tessere dei ruoli in registrazione (24 ottobre)
+
+- **`auth/TesseraRuolo.tsx`**, una sola per Auth e Scegli ruolo (erano due
+  copie). Contorno disegnato delle card (`.material-card`) al posto del
+  bordo CSS; scelta, il fondo tenue del ruolo (`employer-50` / `accent-worker`).
+- ⚠️ La tessera scelta aveva un fondo grigio-verde: `bg-employer/15` con la
+  gerarchia scura è il 15% del blu SCURO sulla carta. Anche il pastello
+  velato si spegneva in grigio: servono le tinte pensate per i fondi.
+- ⚠️ **`--accent-worker`**: la stessa tinta di `--accent` ma FISSA. `--accent`
+  sotto `[data-ruolo="employer"]` diventa azzurro, e scegliendo «Offro
+  impiego» la valigetta del worker diventava blu.
+- Al posto del pallino, le **puntine della bacheca**, fuori dalla maschera:
+  grigie (`paper-line`) finché la tessera non è scelta; scelta, nel colore
+  del ruolo, e si piantano con uno scatto a 12 fps (si alza, si pianta, torna).
+- In Annunci il titolo è «I tuoi annunci» (era «I Tuoi Annunci Pubblicati» e
+  toccava il bottone «Crea»), con `gap-4` e il bottone `shrink-0`.
+
+## La scelta del quartiere: una scheda con la ricerca (24 ottobre)
+
+`ui/NeighborhoodSelect.tsx` (registrazione, Scegli ruolo, Modifica profilo).
+Era il menu a tendina generico di Radix: riquadro col bordo CSS e l'ombra di
+serie, e su 39 quartieri si scorreva con la freccetta in fondo (Tommaso:
+«poco personalizzata e responsiva»).
+- Ora il campo apre una **scheda dal basso** (quella dell'app, bordo a mano
+  e fessura), come Google Maps e le app di consegna: ricerca in cima, righe
+  da 44 px che scorrono col dito, lettere dell'alfabeto come titoletti,
+  scelta nell'inchiostro del ruolo con la spunta. Si chiude da sola alla
+  scelta.
+- La ricerca ignora accenti, apostrofi e maiuscole: «sant i» trova
+  Sant'Ilario, «pra» trova Prà.
+- La tastiera NON si apre da sola: coprirebbe mezzo elenco.
+- Le righe hanno `sagoma-quartiere`, tarata proprio su 44 px (22 + 22).
+- Il campo è un bottone con `campo-guscio`, come gli altri campi; l'icona è
+  la nostra `MappaIcon` (era il pin di lucide, §8).
+
+---
+
+# 23. Attività o privato, età, verifiche — 24 ottobre 2026
+
+Specifica di Tommaso. Migration `20261024120000_attivita_privato.sql`
+(provata su PGlite, 12 casi), edge function `verifica-partita-iva`. **Applicata
+il 25 ottobre** (verificato via REST; `profili_riservati` all'anonimo
+risponde 200 ma con `[]`: le RLS non gli danno righe).
+
+## Il modello
+- `profiles.tipo_employer` ('attivita' | 'privato'; NULL per i worker). Gli
+  employer di prima → 'attivita', nessun altro dato toccato.
+- ⚠️ **`profili_riservati`, letta SOLO dal proprietario**: data di nascita,
+  conferma dei 18 anni, partita IVA (e il nome su VIES), il centro VERO
+  dell'area del privato e lo spostamento. Le policy di `profiles` fanno
+  leggere ogni colonna a qualunque utente autenticato: lì questi dati
+  sarebbero pubblici.
+- **L'area del privato**: si sceglie un cerchio (300 m, `RAGGIO_AREA`) in
+  configurazione; il centro va nei riservati, e il trigger
+  `pubblica_riservati` scrive in `profiles.lat/lng` (e negli annunci) il
+  centro SPOSTATO: fino a 100 m, uniforme sul disco (`sqrt(random())`),
+  generato una volta e poi fisso (`prepara_riservati` lo protegge anche da
+  chi provasse a scriverlo). Così anche un cerchio centrato su casa non dice
+  dov'è la casa.
+- ⚠️ **Protezioni nel database** (`proteggi_profilo`): l'utente non si dà i
+  badge, non cambia il tipo una volta scelto, e per un privato non può
+  scrivere `lat`/`lng`/`area_raggio` in `profiles`. Gli annunci di un privato
+  prendono SEMPRE l'area pubblica (`posizione_annuncio`), qualunque cosa
+  mandi l'app; quelli delle attività hanno `area_raggio` NULL. I trigger
+  riconoscono il database stesso da `set_config('politask.server','on')`.
+- **Età**: `prepara_riservati` rifiuta una data di nascita da minorenne
+  ('minorenne'); l'app lo dice prima con `MESSAGGIO_MINORENNE`.
+
+## Le verifiche (facoltative, anche dopo da Modifica profilo)
+- **Partita IVA** → edge function `verifica-partita-iva`: controlla le 11
+  cifre e la cifra di controllo, poi VIES (REST, provato: Poste valida,
+  12345678903 non valida). Accende `piva_verificata` con la chiave di
+  servizio. ⚠️ VIES dice che la partita IVA ESISTE, non che è di chi la
+  scrive: una partita IVA già verificata su un account non ne verifica un
+  altro, e il nome VIES si salva nei riservati per i controlli a mano.
+  VIES a volte non risponde: «riprova», non «non valida». Cambiando la
+  partita IVA il badge si spegne.
+- **Identità del privato**: solo interfaccia e stato
+  (`identita_verificata`, lo accende solo il server). Il bottone apre una
+  scheda «Arriva presto». Il servizio si sceglie con l'avvocato.
+- Etichette in `StatusBadge`: `attivita_verificata` (verde tenue),
+  `privato_non_verificato` (neutra). Nel profilo pubblico sotto il nome.
+  Nella scheda annuncio SOLO «Attività verificata» (Tommaso, 25 ottobre:
+  «Privato non verificato» sotto il nome pesava come un avvertimento; lo si
+  legge entrando nel profilo).
+- Il selettore del pin dell'attività (`LocationPicker`) e l'avviso «fuori
+  Genova» hanno la stessa veste dell'area del privato: mappa `.sagoma-foto`
+  senza bottoni dello zoom, avviso `sagoma-quartiere` + `danger-soft`.
+
+## Dove nell'app
+- Registrazione (Auth) e Scegli ruolo: «Offro impiego» → seconda scelta
+  `SceltaTipoEmployer` (tessere piccole con puntina). Privato: niente
+  indirizzo, «Nome e cognome», «In che zona ti trovi?». Worker:
+  `CampoMaggiorenne` (data + «Confermo di avere almeno 18 anni»). Testi in
+  `lib/registrazione.ts` (`testiEmployer`).
+- Configurazione (Onboarding): titolo per tipo; riquadro colorato con il
+  bordo basso tagliato a mano (`IntestazioneAMano`: tratto calcolato sulla
+  larghezza vera, seme fisso, scarto 1,1 px perché su un bordo pieno senza
+  filo ±0,5 non si vedrebbe); privato: `AreaPicker` (cerchio trascinabile,
+  «Non mostreremo mai il tuo indirizzo»); foto con le stampe di Modifica
+  profilo (`PhotoGalleryManager`) per tutti; sezione «Verifica (facoltativa)».
+- Mappa: gli annunci dei privati sono **PIN come gli altri**, sul centro già
+  spostato. ⚠️ Prima versione: cerchi sempre visibili — bocciati (Tommaso:
+  «occupano troppo spazio e rendono la mappa confusionaria»). Ora il cerchio
+  (tratteggiato, bordo a mano col seme del privato) compare sulla mappa SOLO
+  a scheda aperta (`areaAperta` in `InteractiveMap`), e la scheda dice
+  «Posizione approssimativa, entro 300 m». Minimappa (Lista, chat): il
+  cerchio al posto del pin, niente indirizzo.
+- ⚠️ Codice nuovo + database vecchio = **mappa VUOTA**: le letture degli
+  annunci chiedono `profiles(tipo_employer, …)`, e una colonna che non c'è
+  fa fallire tutta la lettura (42703). Successo il 24 ottobre in locale prima
+  di applicare la migration: niente era stato cancellato.
+- ⚠️ Non fatto: cambiare l'area da Modifica profilo (oggi solo in
+  configurazione); il controllo dei 18 anni per chi non manda la data
+  (chiamando le API a mano) — il database rifiuta solo una data da
+  minorenne, non l'assenza della data.

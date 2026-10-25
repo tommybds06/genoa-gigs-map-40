@@ -1,4 +1,8 @@
 import { useEffect, useState } from "react";
+import { SceltaTipoEmployer } from "@/components/auth/SceltaTipoEmployer";
+import { CampoMaggiorenne } from "@/components/auth/CampoMaggiorenne";
+import { controllaEta, MESSAGGIO_MINORENNE, salvaRiservati, testiEmployer, type TipoEmployer } from "@/lib/registrazione";
+import { TesseraRuolo } from "@/components/auth/TesseraRuolo";
 import { srcLogo } from "@/lib/gerarchia";
 import { useNavigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
@@ -39,7 +43,13 @@ const ScegliRuolo = () => {
   const [indirizzo, setIndirizzo] = useState("");
   const [nome, setNome] = useState("");
   const [salvataggio, setSalvataggio] = useState(false);
-  const [errori, setErrori] = useState<{ ruolo?: string; quartiere?: string; indirizzo?: string }>({});
+  // Come in Auth (24 ottobre): attività o privato, e l'età dei worker.
+  const [tipo, setTipo] = useState<TipoEmployer | null>(null);
+  const [nascita, setNascita] = useState("");
+  const [maggiorenne, setMaggiorenne] = useState(false);
+  const [errori, setErrori] = useState<{ ruolo?: string; quartiere?: string; indirizzo?: string; tipo?: string; nascita?: string; conferma?: string }>({});
+  const privato = ruolo === "employer" && tipo === "privato";
+  const testi = testiEmployer(tipo);
 
   // Il nome arriva gia' compilato dal provider: e' l'unico dato che possiamo
   // riempire da soli, e risparmiarlo all'utente vale la riga di codice.
@@ -65,7 +75,9 @@ const ScegliRuolo = () => {
     const e: typeof errori = {};
     if (!ruolo) e.ruolo = "Scegli come vuoi usare Politask";
     if (!quartiere) e.quartiere = "Seleziona il tuo quartiere";
-    if (ruolo === "employer" && !indirizzo.trim()) e.indirizzo = "Inserisci l'indirizzo della tua attività";
+    if (ruolo === "employer" && !tipo) e.tipo = "Scegli se sei un'attività o un privato";
+    if (ruolo === "employer" && tipo === "attivita" && !indirizzo.trim()) e.indirizzo = "Inserisci l'indirizzo della tua attività";
+    if (ruolo === "worker") Object.assign(e, controllaEta(nascita, maggiorenne));
     setErrori(e);
     return Object.keys(e).length === 0;
   };
@@ -83,18 +95,27 @@ const ScegliRuolo = () => {
           role: ruolo,
           full_name: nome.trim() || null,
           neighborhood: quartiere || null,
-          address_text: ruolo === "employer" ? indirizzo.trim() || null : null,
+          address_text: ruolo === "employer" && !privato ? indirizzo.trim() || null : null,
+          tipo_employer: ruolo === "employer" ? tipo : null,
           is_onboarded: false,
         },
         { onConflict: "id" }
       );
       if (error) throw error;
 
+      if (ruolo === "worker") {
+        await salvaRiservati(user.id, {
+          data_nascita: nascita,
+          maggiorenne_confermato_il: new Date().toISOString(),
+        });
+      }
+
       await refetchProfile();
       navigate("/onboarding", { replace: true });
     } catch (err) {
       console.error("Errore creazione profilo:", err);
-      toast.error("Non sono riuscito a salvare. Riprova.", { duration: 2300 });
+      const minorenne = String((err as { message?: string })?.message).includes("minorenne");
+      toast.error(minorenne ? MESSAGGIO_MINORENNE : "Non sono riuscito a salvare. Riprova.", { duration: 3000 });
       setSalvataggio(false);
     }
   };
@@ -112,44 +133,17 @@ const ScegliRuolo = () => {
     Icona: typeof GenericoIcon,
     titolo: string,
     sotto: string
-  ) => {
-    const scelto = ruolo === valore;
-    const isEmp = valore === "employer";
-    return (
-      <button
-        type="button"
-        onClick={() => setRuolo(valore)}
-        className={cn(
-          "relative p-4 rounded-2xl transition-all duration-300 text-left touch-feedback",
-          scelto
-            ? isEmp
-              ? "bg-employer/15 ring-2 ring-employer-700"
-              : "bg-primary/15 ring-2 ring-primary"
-            : cn(
-                "bg-card border border-border",
-                isEmp ? "hover:border-employer/40" : "hover:border-primary/40"
-              )
-        )}
-      >
-        <div
-          className={cn(
-            "w-12 h-12 rounded-xl flex items-center justify-center mb-3 transition-colors",
-            scelto
-              ? isEmp
-                ? "bg-employer-700 text-employer-foreground"
-                : "bg-primary text-primary-foreground"
-              : isEmp
-                ? "bg-employer-50 text-employer-800"
-                : "bg-accent text-accent-foreground"
-          )}
-        >
-          <Icona className="w-6 h-6" />
-        </div>
-        <h3 className="font-semibold text-sm text-foreground">{titolo}</h3>
-        <p className="text-xs text-muted-foreground mt-1">{sotto}</p>
-      </button>
-    );
-  };
+  ) => (
+    // Componente unico con Auth (auth/TesseraRuolo): contorno disegnato e puntina.
+    <TesseraRuolo
+      ruolo={valore}
+      scelto={ruolo === valore}
+      onScegli={() => setRuolo(valore)}
+      icona={Icona}
+      titolo={titolo}
+      sotto={sotto}
+    />
+  );
 
   return (
     <div className="h-full overflow-y-auto bg-background flex items-center justify-center p-4">
@@ -172,18 +166,19 @@ const ScegliRuolo = () => {
                 {tessera("worker", GenericoIcon, "Cerco impiego", "Sono uno studente")}
                 {tessera("employer", AnnunciIcon, "Offro impiego", "Privato o attività")}
               </div>
+              {ruolo === "employer" && <SceltaTipoEmployer valore={tipo} onScegli={setTipo} errore={errori.tipo} />}
             </div>
 
             <div className="space-y-2">
               <label className="text-sm font-medium text-foreground">
-                {ruolo === "employer" ? "Nome attività (se ne hai una)" : "Nome completo"}
+                {ruolo === "employer" ? testi.nome : "Nome completo"}
               </label>
               <Input value={nome} onChange={(e) => setNome(e.target.value)} placeholder="" />
             </div>
 
             <div className="space-y-2">
               <label className="text-sm font-medium text-foreground">
-                {ruolo === "employer" ? "In che zona si trova la tua attività?" : "Quartiere / Zona"}{" "}
+                {ruolo === "employer" ? testi.zona : "Quartiere / Zona"}{" "}
                 <span className="text-destructive">*</span>
               </label>
               <NeighborhoodSelect
@@ -196,7 +191,17 @@ const ScegliRuolo = () => {
               {errori.quartiere && <p className="text-xs text-destructive">{errori.quartiere}</p>}
             </div>
 
-            {ruolo === "employer" && (
+            {ruolo === "worker" && (
+              <CampoMaggiorenne
+                nascita={nascita}
+                onNascita={setNascita}
+                confermato={maggiorenne}
+                onConferma={setMaggiorenne}
+                errori={{ nascita: errori.nascita, conferma: errori.conferma }}
+              />
+            )}
+
+            {ruolo === "employer" && !privato && (
               <div className="space-y-2">
                 <label className="text-sm font-medium text-foreground">
                   Indirizzo attività <span className="text-destructive">*</span>

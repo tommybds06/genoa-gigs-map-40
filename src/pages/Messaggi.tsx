@@ -513,7 +513,7 @@ const Messaggi = () => {
     if (!selectedChat?.job_id) return;
     const { data, error } = await supabase
       .from('jobs')
-      .select('*, profiles(full_name, avatar_url, address_text, photos)')
+      .select('*, profiles(full_name, avatar_url, address_text, photos, tipo_employer, piva_verificata, identita_verificata)')
       .eq('id', selectedChat.job_id)
       .maybeSingle();
     if (error || !data) {

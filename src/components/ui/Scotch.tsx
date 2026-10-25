@@ -31,6 +31,8 @@ export const SOPRA_DX = "78%";
 export interface StrisciaScotch {
   pezzo: NomeScotch;
   lato: LatoScotch;
+  /** Perfettamente orizzontale, senza l'inclinazione dal seme (Tommaso). */
+  dritto?: boolean;
 }
 
 /* Dove sta il centro dello scotch sugli angoli, dal bordo (a scala 1).
@@ -53,8 +55,9 @@ function stile(striscia: StrisciaScotch, seme: number, scala: number): CSSProper
   // (perpendicolare alla diagonale dell'angolo), mai due volte uguale.
   const scarto = (seme % 5) - 2;
   const { lato } = striscia;
-  const gradi =
-    lato === "centro"
+  const gradi = striscia.dritto
+    ? 0
+    : lato === "centro"
       ? scarto * 1.2
       : lato === "sopraSx"
         ? -4 + scarto * 0.8
@@ -92,6 +95,7 @@ function stile(striscia: StrisciaScotch, seme: number, scala: number): CSSProper
 export function Scotch({
   pezzo,
   lato,
+  dritto,
   seme,
   employer,
   scala = 1,
@@ -107,7 +111,7 @@ export function Scotch({
   const blu = employer ?? isEmployer;
   const p = PEZZI_SCOTCH[pezzo];
   return (
-    <svg aria-hidden="true" viewBox={`0 0 ${p.larghezza} ${p.altezza}`} style={stile({ pezzo, lato }, seme, scala)}>
+    <svg aria-hidden="true" viewBox={`0 0 ${p.larghezza} ${p.altezza}`} style={stile({ pezzo, lato, dritto }, seme, scala)}>
       <path
         d={p.d}
         fill={blu ? "hsl(var(--brand-blue) / 0.5)" : "hsl(var(--brand-orange) / 0.5)"}

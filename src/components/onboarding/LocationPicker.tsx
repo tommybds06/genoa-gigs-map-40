@@ -1,6 +1,6 @@
 import { PinMappa } from "@/components/map/PinMappa";
 import { useState, useEffect, useCallback } from "react";
-import Map, { Marker, NavigationControl } from "react-map-gl";
+import Map, { Marker } from "react-map-gl";
 import { Loader2, AlertTriangle } from "lucide-react";
 import { MappaIcon } from "@/components/icons/uiIcons";
 import { supabase } from "@/integrations/supabase/client";
@@ -95,13 +95,17 @@ export function LocationPicker({ lat, lng, onLocationChange }: LocationPickerPro
 
   return (
     <div className="space-y-2">
+      {/* L'avviso col margine tagliato a mano (`sagoma-quartiere`) e i colori
+          dello stato «errore», senza bordo CSS (25 ottobre). */}
       {isOutOfBounds && (
-        <div className="flex items-center gap-2 p-3 bg-destructive/10 border border-destructive/20 rounded-lg text-sm text-destructive">
-          <AlertTriangle className="w-4 h-4 shrink-0" />
+        <div className="sagoma-quartiere flex items-center gap-2.5 rounded-[19px] bg-danger-soft px-4 py-3 text-sm text-danger-soft-foreground">
+          <AlertTriangle className="h-4 w-4 shrink-0" />
           <span>{GEOFENCING_ERROR_MESSAGE}</span>
         </div>
       )}
-      <div className="w-full h-[200px] rounded-xl overflow-hidden border">
+      {/* Ritagliata come le foto e come l'area del privato (`.sagoma-foto`):
+          niente bordo CSS né angoli arrotondati a mano. */}
+      <div className="sagoma-foto w-full h-[200px] overflow-hidden">
         <Map
           {...viewState}
           onMove={(evt) => setViewState(evt.viewState)}
@@ -111,7 +115,8 @@ export function LocationPicker({ lat, lng, onLocationChange }: LocationPickerPro
           mapboxAccessToken={mapboxToken}
           reuseMaps
         >
-          <NavigationControl position="top-right" showCompass={false} />
+          {/* Niente bottoni dello zoom: la maschera degli angoli li taglierebbe,
+              e sul telefono si zooma con due dita (come in AreaPicker). */}
           
           <Marker
             longitude={markerLng}

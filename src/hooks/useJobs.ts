@@ -7,6 +7,10 @@ interface JobProfile {
   avatar_url: string | null;
   address_text: string | null;
   photos?: string[] | null;
+  /** Chi lo offre (24 ottobre): attività o privato, e le verifiche. */
+  tipo_employer?: "attivita" | "privato" | null;
+  piva_verificata?: boolean;
+  identita_verificata?: boolean;
 }
 
 export interface Job {
@@ -25,6 +29,9 @@ export interface Job {
   neighborhood: string | null;
   /** Quando smette di essere visibile (vedi lib/scadenzaAnnunci.ts). */
   scade_il?: string | null;
+  /** Annuncio di un privato: il raggio dell'area (lat/lng = centro già
+      spostato). NULL = annuncio di un'attività, con il pin. */
+  area_raggio?: number | null;
   profiles?: JobProfile | null;
 }
 
@@ -37,7 +44,7 @@ export function useOpenJobs(userTags?: string[]) {
     queryFn: async () => {
       let query = supabase
         .from("jobs")
-        .select("*, profiles(full_name, avatar_url, address_text, photos)")
+        .select("*, profiles(full_name, avatar_url, address_text, photos, tipo_employer, piva_verificata, identita_verificata)")
         .eq("status", "open")
         // Visibili = non ancora scaduti (lib/scadenzaAnnunci.ts).
         .gt("scade_il", adessoISO())
@@ -88,7 +95,7 @@ export function useMapJobs() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("jobs")
-        .select("*, profiles(full_name, avatar_url, address_text, photos)")
+        .select("*, profiles(full_name, avatar_url, address_text, photos, tipo_employer, piva_verificata, identita_verificata)")
         .eq("status", "open")
         .gt("scade_il", adessoISO());
 

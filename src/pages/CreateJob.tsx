@@ -94,7 +94,12 @@ const CreateJob = () => {
 
     // Check if employer has set their location
     if (!profile.lat || !profile.lng) {
-      toast.error('Imposta la posizione della tua attività nel Profilo', { duration: 2300 });
+      toast.error(
+        profile.tipo_employer === 'privato'
+          ? 'Scegli la tua zona nella configurazione del profilo'
+          : 'Imposta la posizione della tua attività nel Profilo',
+        { duration: 2300 }
+      );
       return;
     }
 
