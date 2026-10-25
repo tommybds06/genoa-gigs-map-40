@@ -36,6 +36,13 @@
       "when": 1792751244683,
       "tag": "0004_titolo_chat_annunci_chiusi",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1792888326830,
+      "tag": "0005_tipo_employer_dati_riservati",
+      "breakpoints": true
     }
   ]
 }
