@@ -339,6 +339,96 @@ export type Database = {
           },
         ]
       }
+      profiles: {
+        Row: {
+          address_text: string | null
+          area_raggio: number | null
+          avatar_url: string | null
+          bio: string | null
+          created_at: string
+          experience: string | null
+          full_name: string | null
+          id: string
+          identita_verificata: boolean
+          identita_verificata_il: string | null
+          is_demo: boolean
+          is_onboarded: boolean | null
+          lat: number | null
+          level: number
+          lng: number | null
+          looking_for: string | null
+          neighborhood: string | null
+          photos: string[] | null
+          piva_verificata: boolean
+          piva_verificata_il: string | null
+          role: Database["public"]["Enums"]["user_role"]
+          social_links: Json | null
+          tags: string[] | null
+          tipo_employer: string | null
+          updated_at: string
+          username: string | null
+          xp_points: number
+        }
+        Insert: {
+          address_text?: string | null
+          area_raggio?: number | null
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          experience?: string | null
+          full_name?: string | null
+          id: string
+          identita_verificata?: boolean
+          identita_verificata_il?: string | null
+          is_demo?: boolean
+          is_onboarded?: boolean | null
+          lat?: number | null
+          level?: number
+          lng?: number | null
+          looking_for?: string | null
+          neighborhood?: string | null
+          photos?: string[] | null
+          piva_verificata?: boolean
+          piva_verificata_il?: string | null
+          role?: Database["public"]["Enums"]["user_role"]
+          social_links?: Json | null
+          tags?: string[] | null
+          tipo_employer?: string | null
+          updated_at?: string
+          username?: string | null
+          xp_points?: number
+        }
+        Update: {
+          address_text?: string | null
+          area_raggio?: number | null
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          experience?: string | null
+          full_name?: string | null
+          id?: string
+          identita_verificata?: boolean
+          identita_verificata_il?: string | null
+          is_demo?: boolean
+          is_onboarded?: boolean | null
+          lat?: number | null
+          level?: number
+          lng?: number | null
+          looking_for?: string | null
+          neighborhood?: string | null
+          photos?: string[] | null
+          piva_verificata?: boolean
+          piva_verificata_il?: string | null
+          role?: Database["public"]["Enums"]["user_role"]
+          social_links?: Json | null
+          tags?: string[] | null
+          tipo_employer?: string | null
+          updated_at?: string
+          username?: string | null
+          xp_points?: number
+        }
+        Relationships: []
+      }
       profili_riservati: {
         Row: {
           area_lat: number | null
@@ -391,96 +481,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      profiles: {
-        Row: {
-          address_text: string | null
-          area_raggio: number | null
-          avatar_url: string | null
-          bio: string | null
-          created_at: string
-          experience: string | null
-          full_name: string | null
-          id: string
-          is_demo: boolean
-          identita_verificata: boolean
-          identita_verificata_il: string | null
-          is_onboarded: boolean | null
-          lat: number | null
-          level: number
-          lng: number | null
-          looking_for: string | null
-          neighborhood: string | null
-          photos: string[] | null
-          piva_verificata: boolean
-          piva_verificata_il: string | null
-          role: Database["public"]["Enums"]["user_role"]
-          social_links: Json | null
-          tags: string[] | null
-          tipo_employer: string | null
-          updated_at: string
-          username: string | null
-          xp_points: number
-        }
-        Insert: {
-          area_raggio?: number | null
-          identita_verificata?: boolean
-          identita_verificata_il?: string | null
-          piva_verificata?: boolean
-          piva_verificata_il?: string | null
-          tipo_employer?: string | null
-          address_text?: string | null
-          avatar_url?: string | null
-          bio?: string | null
-          created_at?: string
-          experience?: string | null
-          full_name?: string | null
-          id: string
-          is_demo?: boolean
-          is_onboarded?: boolean | null
-          lat?: number | null
-          level?: number
-          lng?: number | null
-          looking_for?: string | null
-          neighborhood?: string | null
-          photos?: string[] | null
-          role?: Database["public"]["Enums"]["user_role"]
-          social_links?: Json | null
-          tags?: string[] | null
-          updated_at?: string
-          username?: string | null
-          xp_points?: number
-        }
-        Update: {
-          area_raggio?: number | null
-          identita_verificata?: boolean
-          identita_verificata_il?: string | null
-          piva_verificata?: boolean
-          piva_verificata_il?: string | null
-          tipo_employer?: string | null
-          address_text?: string | null
-          avatar_url?: string | null
-          bio?: string | null
-          created_at?: string
-          experience?: string | null
-          full_name?: string | null
-          id?: string
-          is_demo?: boolean
-          is_onboarded?: boolean | null
-          lat?: number | null
-          level?: number
-          lng?: number | null
-          looking_for?: string | null
-          neighborhood?: string | null
-          photos?: string[] | null
-          role?: Database["public"]["Enums"]["user_role"]
-          social_links?: Json | null
-          tags?: string[] | null
-          updated_at?: string
-          username?: string | null
-          xp_points?: number
-        }
-        Relationships: []
       }
       reviews: {
         Row: {

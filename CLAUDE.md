@@ -102,6 +102,13 @@ Sono qui perché sono costate ore, non per completezza.
    dell'anteprima, mai in `window`, `fetch`, `localStorage` o simili; e se
    proprio serve intercettare la rete, dentro un `useEffect` del componente,
    rimettendo l'originale nel cleanup.
+10. ⚠️ **Dopo un SQL in Lovable, aspettare il SUO commit su GitHub prima di
+   pushare.** Lovable registra la migration (drizzle + types.ts) con commit
+   che tiene da sé per un po': il 25 ottobre il `git pull` non li vedeva
+   ancora, il push li ha scavalcati e Lovable ha dovuto ripristinarli su un
+   ramo `lovable-sync`, poi unito a mano. Al merge `types.ts` si fonde in
+   silenzio con campi DOPPI: il typecheck lo prende, si tiene il file di
+   Lovable.
 9. **`git pull --rebase` prima di ogni push.** Lovable committa da solo sullo
    stesso `main` (§12): pushare senza prima riallinearsi vuol dire farsi
    rifiutare il push, o peggio fare un merge che riporta indietro un suo fix.
