@@ -1663,6 +1663,15 @@ Il parametro `?splash` non c'è più: basta ricaricare.
   chiedere a Tommaso.**
 - **Libreria e JSON in import dinamico**: nella build finiscono in pezzi
   propri (48 KB e 10 KB compressi) e non pesano sul bundle principale.
+- ⚠️ **Solo all'APERTURA dell'app** (Tommaso, 26 ottobre). La registrazione
+  ricarica la pagina tre volte (Auth → /onboarding, Onboarding → /, ritorno
+  da Google/Apple), e lo splash ripartiva a ogni passaggio. Prima di quei
+  ricaricamenti `saltaProssimoSplash()` (`lib/splash.ts`) lascia un segno in
+  `sessionStorage`; lo splash lo legge, lo cancella e non parte. Se
+  l'accesso social fallisce prima di uscire, il segno si cancella subito.
+  Chi aggiunge un altro `window.location.replace/reload` dentro un flusso
+  deve chiamarlo anche lui. Verificato nel browser: apertura → c'è; dopo il
+  segno → non c'è e il segno è sparito; ricaricando di nuovo → c'è.
 - **È uno strato sopra l'app, non un cancello prima**: montato per ultimo in
   `App.tsx`, fuori dal router, vive una volta per caricamento della pagina —
   cambiare pagina o tornare indietro non lo rifà comparire (verificato).

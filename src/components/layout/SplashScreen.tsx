@@ -1,4 +1,5 @@
 import { PointerEvent, useCallback, useEffect, useRef, useState } from "react";
+import { consumaSaltoSplash, splashDaSaltare } from "@/lib/splash";
 import type { AnimationItem } from "lottie-web";
 
 /**
@@ -35,7 +36,22 @@ function movimentoRidotto(): boolean {
   );
 }
 
+/**
+ * Il punto d'ingresso: dopo un ricaricamento DENTRO la registrazione lo
+ * splash non parte (`lib/splash.ts`). ⚠️ La lettura sta nell'inizializzatore
+ * (solo lettura: StrictMode lo chiama due volte, §12), la cancellazione in un
+ * effetto.
+ */
 export function SplashScreen() {
+  const [salta] = useState(splashDaSaltare);
+  useEffect(() => {
+    if (salta) consumaSaltoSplash();
+  }, [salta]);
+  if (salta) return null;
+  return <SplashAnimato />;
+}
+
+function SplashAnimato() {
   const [aperto, setAperto] = useState(true);
   const [inUscita, setInUscita] = useState(false);
   const [statico, setStatico] = useState(false);

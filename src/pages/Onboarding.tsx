@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { saltaProssimoSplash } from "@/lib/splash";
 import { leggiSocial } from "@/lib/social";
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
@@ -137,6 +138,8 @@ const Onboarding = () => {
       
       // HARD RELOAD to ensure fresh data is loaded from DB
       setTimeout(() => {
+        // Fine della registrazione, non un'apertura: niente splash.
+        saltaProssimoSplash();
         window.location.replace('/');
       }, 800);
     } catch (error) {

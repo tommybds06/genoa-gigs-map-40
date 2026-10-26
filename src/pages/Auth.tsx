@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { consumaSaltoSplash, saltaProssimoSplash } from "@/lib/splash";
 import { SceltaTipoEmployer } from "@/components/auth/SceltaTipoEmployer";
 import { CampoMaggiorenne } from "@/components/auth/CampoMaggiorenne";
 import { controllaEta, MESSAGGIO_MINORENNE, salvaRiservati, testiEmployer, type TipoEmployer } from "@/lib/registrazione";
@@ -203,6 +204,8 @@ const Auth = () => {
    */
   const accediCon = async (provider: Social) => {
     setSocial(provider);
+    // Il ritorno da Google o Apple ricarica l'app: non è un'apertura.
+    saltaProssimoSplash();
     try {
       const result = await supabase.auth.signInWithOAuth({
         provider,
@@ -210,6 +213,7 @@ const Auth = () => {
       });
 
       if (result.error) {
+        consumaSaltoSplash(); // nessun ritorno da Google: il segno non serve più
         console.error(`Errore accesso ${provider}:`, result.error);
         const messaggio = String(result.error.message ?? '');
         toast.error(
@@ -374,6 +378,8 @@ const Auth = () => {
           toast.success('Benvenuto! Reindirizzamento...', { duration: 800 });
           
           setTimeout(() => {
+            // Un passaggio della registrazione, non un'apertura: niente splash.
+            saltaProssimoSplash();
             window.location.replace('/onboarding');
           }, 800);
           
