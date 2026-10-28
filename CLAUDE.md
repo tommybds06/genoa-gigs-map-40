@@ -1871,9 +1871,8 @@ come se tenessero su dei foglietti, con un easter egg al tocco.
   - **un'eccezione voluta**: la card Descrizione/Presentazione del Profilo
     ha il pezzo sull'ANGOLO in alto a destra (`dx`), su richiesta di Tommaso.
   - Esperienze (Profilo) ha il pezzo DRITTO (`dritto: true`, 0°) e
-    Informazioni sta sul bordo alto a destra (`sopraDx`): scelte di Tommaso
-    del 24 ottobre. Nel profilo employer così Recensioni e Informazioni
-    hanno tutte e due il pezzo a destra, una dopo l'altra.
+    Informazioni il pezzo al CENTRO del bordo alto: scelte di Tommaso (24 e
+    26 ottobre; a destra faceva coppia con quello delle recensioni sopra).
 - **`ui/Scotch.tsx`** è il pezzo da solo (va in un genitore `relative`),
   con gli angoli anche in basso (`sxBasso`, `dxBasso`) e una `scala` per le
   foto piccole. `Foglietto` lo usa per le card. ⚠️ Sull'avatar è un fratello
@@ -2100,3 +2099,76 @@ risponde 200 ma con `[]`: le RLS non gli danno righe).
   configurazione); il controllo dei 18 anni per chi non manda la data
   (chiamando le API a mano) — il database rifiuta solo una data da
   minorenne, non l'assenza della data.
+
+---
+
+# 24. Password: occhio, minimo 8, recupero — 26 ottobre 2026
+
+- **`auth/CampoPassword.tsx`** — il campo password unico (accesso,
+  registrazione, reimpostazione): lucchetto a sinistra, **occhio** a destra
+  (bottone da 44 px, `aria-pressed`). Icone disegnate da Tommaso:
+  `OcchioIcon`, `OcchioChiusoIcon` (originali in `brand/icone/`).
+- **Minimo 8 caratteri** (`PASSWORD_MINIMA`, `controllaPasswordNuova` in
+  `lib/registrazione.ts`), niente regole su maiuscole e simboli. ⚠️ Solo per
+  le password NUOVE: per entrare basta che non sia vuota, chi si è iscritto
+  coi 6 di prima deve ancora poter accedere. ⚠️ Il minimo va messo anche
+  nelle impostazioni di accesso del backend (Lovable Cloud), se no lo si
+  salta chiamando il server a mano.
+- **«Password dimenticata?»** sotto il campo, solo in accesso: usa l'email
+  già scritta sopra (se manca, lo dice sul campo email) →
+  `resetPasswordForEmail` con `redirectTo` = `/reimposta-password`. Il
+  messaggio è lo stesso che l'account esista o no (non si rivela chi è
+  iscritto).
+- **`pages/ReimpostaPassword.tsx`**, fuori da `ProtectedRoute`: il link apre
+  una sessione di recupero (evento `PASSWORD_RECOVERY`), il modulo fa
+  `updateUser({ password })` e porta alla mappa. Link scaduto o già usato
+  (errore nell'indirizzo, o nessuna sessione dopo 1,5 s) → «Torna
+  all'accesso».
+  ⚠️ **`/reimposta-password` va aggiunto agli indirizzi ammessi** (per
+  `127.0.0.1:8080` e per il dominio pubblicato): se no Supabase rimanda al
+  Site URL, cioè all'anteprima di Lovable (§10).
+- **«Attività verificata» è un SEGNO accanto al nome, non una pillola**
+  (Tommaso, 26 ottobre): `ui/SegnoVerificato.tsx`, solo `VerificatoIcon`
+  (il suo disegno) nell'inchiostro del ruolo del profilo MOSTRATO
+  (`employer-800` / `primary-strong`), con `aria-label`. In Profilo (prima
+  mancava del tutto: Tommaso verificava Masetto e non lo ritrovava), Profilo
+  pubblico e riga di chi offre nella scheda annuncio — lì è blu anche
+  nell'app arancione del worker: è l'altra parte, il blu è giusto.
+  «Privato non verificato» resta la pillola scritta. In Modifica profilo,
+  sotto il campo della partita IVA, resta la pillola `StatusBadge`: lì è
+  l'esito della verifica, non un'etichetta accanto a un nome.
+  Il nome si legge TUTTO, anche su più righe (`NomeConSegno`): il segno è
+  attaccato all'ultima parola (`nowrap`), se no a 390 px restava da solo su
+  una riga. ⚠️ In Profilo il nome usciva dalla card: al contenitore del
+  testo mancava `min-w-0 flex-1`, e il `truncate` non poteva funzionare.
+
+## Il secondo giro del recupero (27 ottobre) — `lib/recuperoPassword.ts`
+
+Tommaso ha provato con un'email «non registrata» e si è trovato a scegliere
+la password senza riuscire a salvarla, e intanto a completare un account.
+
+- ⚠️ **Il link dell'email È UN ACCESSO.** Supabase apre la sessione appena
+  lo si tocca. Se il salvataggio falliva, cambiando pagina si era già dentro;
+  un account mai completato (entrato una volta con Google, il trigger lo fa
+  worker) finiva nella scelta del ruolo. Ora fino al salvataggio c'è un segno
+  in `sessionStorage`, e ProtectedRoute e Auth rimandano a
+  `/reimposta-password`. «Annulla» chiude la sessione. Dopo il salvataggio si
+  va dove dice `doveMandare`, non per forza alla mappa.
+- ⚠️ **Se arriva l'email, l'account ESISTE.** `resetPasswordForEmail` su un
+  indirizzo sconosciuto risponde «ok» e non manda niente. Il caso di
+  Tommaso era quasi certamente un account nato con un accesso Google.
+- **Il server ha le sue regole sulla password** (lunghezza, caratteri
+  obbligatori, password finite in furti di dati: impostate in Lovable
+  Cloud). Le rifiuta con `weak_password` e i `reasons`, e
+  `messaggioErrorePassword` le traduce, in registrazione e in
+  reimpostazione. Prima ogni rifiuto diventava «Non sono riuscito a
+  salvarla». Il motivo vero va in console (`[Politask] nuova password
+  rifiutata`).
+- `mailer_autoconfirm` è **true** (letto da `/auth/v1/settings`): chi si
+  iscrive con l'email non la conferma. Apple risulta **spento**.
+- **L'email arriva da `no-reply@auth.lovable-app.email`, in inglese.** Per
+  il mittente proprio e il testo in italiano c'è «Custom emails» in Lovable
+  Cloud, ma serve un dominio verificato (DNS). ⚠️ **Rimandato** (28
+  ottobre): Tommaso ha `politask.app`, ma probabilmente cambierà nome
+  all'app, quindi dominio, mittente e testi delle email si fanno dopo la
+  scelta del nome.

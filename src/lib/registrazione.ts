@@ -10,6 +10,20 @@ import { supabase } from "@/integrations/supabase/client";
 export type TipoEmployer = "attivita" | "privato";
 
 export const ETA_MINIMA = 18;
+
+/**
+ * La password NUOVA (registrazione, reimpostazione): almeno 8 caratteri, come
+ * NIST 800-63B, niente regole su maiuscole e simboli (portano a «Politask1!»).
+ * ⚠️ Per ENTRARE non si controlla la lunghezza: chi si è iscritto quando ne
+ * bastavano 6 deve poter ancora accedere. Il minimo va impostato anche nelle
+ * impostazioni di accesso del database, se no lo si salta chiamando il server.
+ */
+export const PASSWORD_MINIMA = 8;
+export function controllaPasswordNuova(p: string): string | null {
+  if (p.length < PASSWORD_MINIMA) return `La password deve avere almeno ${PASSWORD_MINIMA} caratteri`;
+  if (p.length > 72) return "Password troppo lunga";
+  return null;
+}
 /** Il raggio dell'area di un privato, in metri. */
 export const RAGGIO_AREA = 300;
 

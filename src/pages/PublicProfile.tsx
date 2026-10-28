@@ -24,6 +24,7 @@ import { mediaRecensioni, useRecensioniRicevute } from "@/hooks/useRecensioni";
 import { FotoStampata } from "@/components/ui/FotoStampata";
 import { numeroDa, Scotch, type StrisciaScotch } from "@/components/ui/Scotch";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { NomeConSegno } from "@/components/ui/SegnoVerificato";
 import type { SocialLinks } from "@/contexts/UserContext";
 
 // Tag durata usati prima della rinomina, ancora presenti su annunci vecchi
@@ -301,8 +302,21 @@ const PublicProfile = () => {
                 piazza delle erbe». Una stella sola: col numero scritto, la fila
                 di cinque ripeteva lo stesso dato. Toccandolo si va alle recensioni. */}
           <div className="text-center mb-4">
-            <h1 className="text-2xl font-bold">{displayName}</h1>
-            {verifica && <StatusBadge stato={verifica} className="mt-2" />}
+            {/* La verifica è un segno accanto al nome, non una pillola sotto
+                (Tommaso, 26 ottobre). «Privato non verificato» resta scritto. */}
+            {/* Il segno in linea, come l'ultima parola: un nome lungo va a
+                capo e il segno lo segue, invece di restare a metà altezza. */}
+            <h1 className="text-2xl font-bold leading-tight [overflow-wrap:anywhere]">
+              <NomeConSegno
+                nome={displayName}
+                verificato={verifica === "attivita_verificata"}
+                employer={!isWorkerProfile}
+                classeSegno="h-6 w-6"
+              />
+            </h1>
+            {verifica === "privato_non_verificato" && (
+              <div><StatusBadge stato={verifica} className="mt-2" /></div>
+            )}
             {(reviewStats || luogo) && (
               <p className="mt-2 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-muted-foreground">
                 {reviewStats && !isWorkerProfile && (

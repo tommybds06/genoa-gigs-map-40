@@ -1,4 +1,6 @@
+import type { ComponentType } from "react";
 import { Check, CheckCircle } from "lucide-react";
+import { VerificatoIcon } from "@/components/icons/uiIcons";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
@@ -35,7 +37,7 @@ export type StatoCandidatura =
 
 const CONFIG: Record<
   StatoCandidatura,
-  { label: string; className: string; icon?: typeof Check }
+  { label: string; className: string; icon?: ComponentType<{ className?: string }> }
 > = {
   hired: {
     label: "Assunto",
@@ -72,7 +74,8 @@ const CONFIG: Record<
   attivita_verificata: {
     label: "Attività verificata",
     className: "bg-success-soft text-success-soft-foreground border-transparent",
-    icon: CheckCircle,
+    // Il badge disegnato da Tommaso (26 ottobre), non il cerchio di lucide.
+    icon: VerificatoIcon,
   },
   privato_non_verificato: {
     label: "Privato non verificato",

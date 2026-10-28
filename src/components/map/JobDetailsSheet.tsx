@@ -20,7 +20,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { getTagClasses } from "@/lib/tagColors";
 import { LocationMiniMap } from "./LocationMiniMap";
-import { StatusBadge } from "@/components/ui/StatusBadge";
+import { SegnoVerificato } from "@/components/ui/SegnoVerificato";
 
 interface JobProfile {
   full_name: string | null;
@@ -477,14 +477,14 @@ export function JobDetailsSheet({ job, isOpen, onClose, showMiniMap = false, sop
               <div className="flex-1 min-w-0">
                 {/* In Shinjo: e' un nome proprio in posizione di intestazione,
                     ed era l'unico titolo della scheda rimasto in Outfit. */}
-                <p className="titolo-mini truncate">{employerName}</p>
                 {/* «Attività verificata» (24 ottobre): qui, accanto a chi lo
-                    offre, è dove si decide di fidarsi. */}
-                {verifica ? (
-                  <StatusBadge stato={verifica} className="mt-0.5" />
-                ) : (
-                  <p className="text-[13px] text-muted-foreground">Vedi profilo</p>
-                )}
+                    offre, è dove si decide di fidarsi. Dal 26 ottobre è un
+                    segno accanto al nome, non una pillola sotto. */}
+                <p className="flex items-center gap-1.5">
+                  <span className="titolo-mini min-w-0 truncate">{employerName}</span>
+                  {verifica && <SegnoVerificato employer className="h-[18px] w-[18px]" />}
+                </p>
+                <p className="text-[13px] text-muted-foreground">Vedi profilo</p>
               </div>
               <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0" />
             </button>

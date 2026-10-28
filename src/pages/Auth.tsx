@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { consumaSaltoSplash, saltaProssimoSplash } from "@/lib/splash";
 import { SceltaTipoEmployer } from "@/components/auth/SceltaTipoEmployer";
+import { CampoPassword } from "@/components/auth/CampoPassword";
 import { CampoMaggiorenne } from "@/components/auth/CampoMaggiorenne";
-import { controllaEta, MESSAGGIO_MINORENNE, salvaRiservati, testiEmployer, type TipoEmployer } from "@/lib/registrazione";
+import { controllaEta, controllaPasswordNuova, MESSAGGIO_MINORENNE, PASSWORD_MINIMA, salvaRiservati, testiEmployer, type TipoEmployer } from "@/lib/registrazione";
 import { TesseraRuolo } from "@/components/auth/TesseraRuolo";
 import { srcLogo } from "@/lib/gerarchia";
 import { useNavigate } from 'react-router-dom';
@@ -22,11 +23,12 @@ import {
   Loader2,
   ArrowRight
 } from 'lucide-react';
-import { MailIcon, LucchettoIcon, AnnunciIcon, ProfiloIcon, MappaIcon } from '@/components/icons/uiIcons';
+import { MailIcon, AnnunciIcon, ProfiloIcon, MappaIcon } from '@/components/icons/uiIcons';
 import { GenericoIcon } from '@/components/icons/roleIcons';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { doveMandare } from '@/lib/percorsoAccesso';
+import { messaggioErrorePassword, recuperoInCorso } from '@/lib/recuperoPassword';
 
 type UserRole = 'worker' | 'employer';
 type Social = 'google' | 'apple';
@@ -50,7 +52,6 @@ const LogoApple = () => (
 );
 
 const emailSchema = z.string().trim().email('Email non valida').max(255, 'Email troppo lunga');
-const passwordSchema = z.string().min(6, 'Password deve essere almeno 6 caratteri').max(72, 'Password troppo lunga');
 const nameSchema = z.string().trim().max(100, 'Nome troppo lungo').optional();
 
 // Theme configuration for each role
@@ -143,6 +144,10 @@ const Auth = () => {
   useEffect(() => {
     const checkOnboarding = async () => {
       if (user && !authLoading) {
+        if (recuperoInCorso()) {
+          navigate('/reimposta-password', { replace: true });
+          return;
+        }
         // ⚠️ .maybeSingle() e non .single(): chi entra con Google o Apple NON
         // ha ancora una riga in `profiles`, e .single() su zero righe fa
         // rispondere 406 a PostgREST. E' lo stesso inciampo dello storico
@@ -244,9 +249,13 @@ const Auth = () => {
       newErrors.email = emailResult.error.errors[0].message;
     }
 
-    const passwordResult = passwordSchema.safeParse(password);
-    if (!passwordResult.success) {
-      newErrors.password = passwordResult.error.errors[0].message;
+    // Per ENTRARE basta che ci sia (chi si è iscritto con 6 caratteri deve
+    // poter ancora accedere); per ISCRIVERSI almeno 8 (lib/registrazione.ts).
+    if (isLogin) {
+      if (!password) newErrors.password = 'Inserisci la password';
+    } else {
+      const erroreNuova = controllaPasswordNuova(password);
+      if (erroreNuova) newErrors.password = erroreNuova;
     }
 
     if (!isLogin) {
@@ -282,6 +291,28 @@ const Auth = () => {
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
+  };
+
+  /* «Password dimenticata?»: un'email con un link a /reimposta-password.
+     La risposta è la stessa che l'email esista o no: dire «non c'è nessun
+     account con questa email» farebbe scoprire chi è iscritto. */
+  const [invioRecupero, setInvioRecupero] = useState(false);
+  const chiediNuovaPassword = async () => {
+    const ok = emailSchema.safeParse(email);
+    if (!ok.success) {
+      setErrors((e) => ({ ...e, email: 'Scrivi qui sopra la tua email, poi tocca di nuovo' }));
+      return;
+    }
+    setInvioRecupero(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+      redirectTo: `${window.location.origin}/reimposta-password`,
+    });
+    setInvioRecupero(false);
+    if (error && /rate|seconds/i.test(error.message)) {
+      toast.error('Hai già chiesto un link da poco: aspetta un minuto e riprova', { duration: 3000 });
+      return;
+    }
+    toast.success('Se c\'è un account con questa email, ti abbiamo mandato un link per scegliere una nuova password', { duration: 4000 });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -328,7 +359,7 @@ const Auth = () => {
           if (error.message.includes('already registered')) {
             toast.error('Email già registrata.', { duration: 1500 });
           } else {
-            toast.error(error.message, { duration: 1500 });
+            toast.error(messaggioErrorePassword(error) ?? error.message, { duration: 3000 });
           }
         } else if (data.user) {
           const profileData: {
@@ -561,22 +592,32 @@ const Auth = () => {
             {/* Password */}
             <div className="space-y-2">
               <label className="text-sm font-medium text-foreground">Password</label>
-              <div className="relative">
-                <LucchettoIcon className="absolute left-4 top-1/2 -translate-y-1/2 z-10 w-5 h-5 text-muted-foreground" />
-                <Input
-                  type="password"
-                  placeholder=""
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className={cn(
-                    "pl-12",
-                    !isLogin && selectedRole === 'worker' && "focus:ring-2 focus:ring-primary",
-                    !isLogin && selectedRole === 'employer' && "focus:ring-2 focus:ring-employer",
-                    (isLogin || !selectedRole) && "focus:ring-2 focus:ring-ring"
-                  )}
-                />
-              </div>
+              <CampoPassword
+                value={password}
+                onChange={setPassword}
+                autoComplete={isLogin ? "current-password" : "new-password"}
+                className={cn(
+                  !isLogin && selectedRole === 'worker' && "focus:ring-2 focus:ring-primary",
+                  !isLogin && selectedRole === 'employer' && "focus:ring-2 focus:ring-employer",
+                  (isLogin || !selectedRole) && "focus:ring-2 focus:ring-ring"
+                )}
+              />
               {errors.password && <p className="text-xs text-destructive">{errors.password}</p>}
+              {/* Il recupero della password (26 ottobre): prima non esisteva,
+                  e chi la dimenticava perdeva l'account. */}
+              {isLogin && (
+                <button
+                  type="button"
+                  onClick={chiediNuovaPassword}
+                  disabled={invioRecupero}
+                  className="min-h-[44px] text-sm font-medium text-primary-strong"
+                >
+                  {invioRecupero ? 'Invio in corso…' : 'Password dimenticata?'}
+                </button>
+              )}
+              {!isLogin && !errors.password && (
+                <p className="text-xs text-muted-foreground">Almeno {PASSWORD_MINIMA} caratteri</p>
+              )}
             </div>
 
             {/* Submit Button */}

@@ -2,6 +2,8 @@
 // coprivano la foto per un gesto che si fa gia' con lo swipe. Restano i pallini.
 import { LinkSocial } from "@/components/profile/LinkSocial";
 import { Foglietto } from "@/components/ui/Foglietto";
+import { StatusBadge } from "@/components/ui/StatusBadge";
+import { NomeConSegno } from "@/components/ui/SegnoVerificato";
 import { FotoStampata } from "@/components/ui/FotoStampata";
 import { RecensioniRicevute } from "@/components/reviews/RecensioniRicevute";
 import { mediaRecensioni, useRecensioniRicevute } from "@/hooks/useRecensioni";
@@ -37,6 +39,21 @@ const Profilo = () => {
      spostando la riga sotto il nome. */
   const { data: recensioni = [] } = useRecensioniRicevute(isEmployer ? profile?.id : undefined);
   const reviewStats = mediaRecensioni(recensioni);
+  /* La verifica anche nel PROPRIO profilo (26 ottobre): c'era nel profilo
+     pubblico, nella scheda annuncio e in Modifica profilo, ma qui no, e chi
+     si era appena verificato non la ritrovava (Tommaso, con Masetto). Stessa
+     regola del profilo pubblico: attività verificata, o privato non
+     verificato; niente per i worker. */
+  const privato = isEmployer && profile?.tipo_employer === "privato";
+  const verifica = !isEmployer
+    ? null
+    : privato
+      ? profile?.identita_verificata
+        ? null
+        : ("privato_non_verificato" as const)
+      : profile?.piva_verificata
+        ? ("attivita_verificata" as const)
+        : null;
 
   useEffect(() => {
     if (profile?.tags) setSelectedTags(profile.tags);
@@ -147,9 +164,18 @@ const Profilo = () => {
                 <ProfiloIcon className="w-10 h-10" />
               </AvatarFallback>
             </Avatar>
-            <div>
-              <h2 className="text-xl font-bold">{profile?.full_name || user?.user_metadata?.full_name || "Utente"}</h2>
-              <p className="text-muted-foreground text-sm mb-1">{user?.email}</p>
+            {/* `min-w-0 flex-1`: senza, un nome lungo usciva dalla card invece
+                di andare a capo. Il nome si legge TUTTO, anche su due righe;
+                il segno lo segue in linea, come l'ultima parola. */}
+            <div className="min-w-0 flex-1">
+              <h2 className="text-xl font-bold leading-tight [overflow-wrap:anywhere]">
+                <NomeConSegno
+                  nome={profile?.full_name || user?.user_metadata?.full_name || "Utente"}
+                  verificato={verifica === "attivita_verificata"}
+                  employer={isEmployer}
+                />
+              </h2>
+              <p className="text-muted-foreground text-sm mb-1 mt-0.5 truncate">{user?.email}</p>
               <div className="flex items-center gap-2">
                 <span className={`font-medium text-sm ${primaryTextClasses}`}>{isEmployer ? "Employer" : "Worker"}</span>
                 {isEmployer && reviewStats && (
@@ -163,6 +189,7 @@ const Profilo = () => {
                   </>
                 )}
               </div>
+              {verifica === "privato_non_verificato" && <StatusBadge stato={verifica} className="mt-2" />}
             </div>
           </div>
 
@@ -254,8 +281,9 @@ const Profilo = () => {
 
         {!isEmployer && <WorkerJobHistory primaryTextClasses={primaryTextClasses} />}
 
-        {/* Sul bordo alto a DESTRA, non sull'angolo (Tommaso, 24 ottobre). */}
-        <Foglietto seme="informazioni" scotch={[{ pezzo: "cortoB", lato: "sopraDx" }]}>
+        {/* Al CENTRO del bordo alto (Tommaso, 26 ottobre): a destra faceva
+            coppia con quello delle recensioni appena sopra. */}
+        <Foglietto seme="informazioni" scotch={[{ pezzo: "cortoB", lato: "centro" }]}>
         <div className="material-card tilt-l p-4 mb-4">
           <h3 className="titolo-mini mb-3 flex items-center gap-2"><InfoIcon className={`w-4 h-4 ${primaryTextClasses}`} />Informazioni</h3>
           <div className="space-y-3">

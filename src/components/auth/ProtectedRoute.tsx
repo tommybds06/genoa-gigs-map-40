@@ -2,6 +2,7 @@ import { ReactNode } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Loader2 } from 'lucide-react';
+import { recuperoInCorso } from '@/lib/recuperoPassword';
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -37,6 +38,12 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
 
   if (!user) {
     return <Navigate to="/auth" replace />;
+  }
+
+  // Entrato dal link di «Password dimenticata?» ma la password non è ancora
+  // salvata: si torna lì (lib/recuperoPassword.ts).
+  if (recuperoInCorso()) {
+    return <Navigate to="/reimposta-password" replace />;
   }
 
   return <>{children}</>;

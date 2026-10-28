@@ -22,6 +22,7 @@ import PublicProfile from "./pages/PublicProfile";
 import Settings from "./pages/Settings";
 import EditProfile from "./pages/EditProfile";
 import Auth from "./pages/Auth";
+import ReimpostaPassword from "./pages/ReimpostaPassword";
 import Onboarding from "./pages/Onboarding";
 import ScegliRuolo from "./pages/ScegliRuolo";
 import NotFound from "./pages/NotFound";
@@ -67,6 +68,13 @@ function AnimatedRoutes() {
           <Route path="/auth" element={
             <PageTransition variant="fade">
               <Auth />
+            </PageTransition>
+          } />
+          {/* Dal link dell'email «Password dimenticata?»: fuori da
+              ProtectedRoute, la sessione di recupero la apre il link. */}
+          <Route path="/reimposta-password" element={
+            <PageTransition variant="fade">
+              <ReimpostaPassword />
             </PageTransition>
           } />
           <Route path="/scegli-ruolo" element={
