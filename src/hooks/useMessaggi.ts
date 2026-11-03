@@ -35,18 +35,29 @@ function conRisposte(righe: Messaggio[]): Messaggio[] {
   return righe.map((m) => ({ ...m, reply_to: m.reply_to_id ? perId.get(m.reply_to_id) ?? null : null }));
 }
 
+async function leggiMessaggi(chatId: string) {
+  const { data, error } = await supabase
+    .from("messages")
+    .select("*")
+    .eq("chat_id", chatId)
+    .order("created_at", { ascending: true });
+  if (error) throw error;
+  return conRisposte((data ?? []) as Messaggio[]);
+}
+
+/**
+ * Al TOCCO di una riga della lista (`pointerdown`), prima che si apra la
+ * chat: la lettura parte ~100 ms prima. Se all'apertura è ancora in corso,
+ * react-query non ne fa una seconda.
+ */
+export function precaricaMessaggi(qc: QueryClient, chatId: string) {
+  qc.prefetchQuery({ queryKey: chiaveMessaggi(chatId), queryFn: () => leggiMessaggi(chatId) });
+}
+
 export function useMessaggi(chatId: string | undefined) {
   return useQuery({
     queryKey: chiaveMessaggi(chatId),
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("messages")
-        .select("*")
-        .eq("chat_id", chatId!)
-        .order("created_at", { ascending: true });
-      if (error) throw error;
-      return conRisposte((data ?? []) as Messaggio[]);
-    },
+    queryFn: () => leggiMessaggi(chatId!),
     enabled: !!chatId,
     // Sempre rilette all'apertura (in background): i messaggi li scrivono
     // anche gli altri, e il tempo reale copre solo da quando la chat è aperta.

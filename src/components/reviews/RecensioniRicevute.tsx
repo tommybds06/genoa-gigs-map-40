@@ -68,7 +68,7 @@ export function RecensioniRicevute({
         <button
           type="button"
           onClick={() => setVisibili(restanti > 0 ? visibili + PASSO : PASSO)}
-          className="linea-divisoria-sottile flex min-h-[44px] w-full items-center justify-center pt-2 text-sm font-semibold text-employer-800"
+          className="linea-divisoria-sottile flex min-h-[44px] w-full items-center justify-center pt-2 text-sm font-semibold transition-opacity active:opacity-60 text-employer-800"
         >
           {restanti > 0
             ? prossime === 1

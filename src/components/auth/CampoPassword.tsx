@@ -49,7 +49,7 @@ export function CampoPassword({
         onClick={() => setVisibile((v) => !v)}
         aria-label={visibile ? "Nascondi la password" : "Mostra la password"}
         aria-pressed={visibile}
-        className="absolute right-1 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground"
+        className="absolute right-1 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full touch-feedback text-muted-foreground transition-colors hover:text-foreground"
       >
         <Icona className="h-5 w-5" />
       </button>

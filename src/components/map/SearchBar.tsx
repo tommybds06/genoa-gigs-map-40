@@ -92,7 +92,7 @@ export function SearchBar({
           {searchQuery && (
             <button
               onClick={() => onSearchChange("")}
-              className="absolute right-3 top-1/2 -translate-y-1/2 z-10 text-muted-foreground hover:text-foreground"
+              className="absolute right-3 top-1/2 -translate-y-1/2 z-10 text-muted-foreground hover:text-foreground transition-transform active:scale-90"
             >
               <XIcon className="w-4 h-4" />
             </button>
@@ -142,14 +142,14 @@ export function SearchBar({
                 {tempFiltersCount > 0 && (
                   <button
                     onClick={clearTempFilters}
-                    className="text-sm text-muted-foreground hover:text-foreground px-3 py-1"
+                    className="text-sm text-muted-foreground hover:text-foreground px-3 py-1 transition-opacity active:opacity-60"
                   >
                     Cancella tutti
                   </button>
                 )}
                 <button
                   onClick={() => setIsFilterOpen(false)}
-                  className="p-2 rounded-full hover:bg-muted transition-colors"
+                  className="p-2 rounded-full hover:bg-muted transition active:scale-90 active:bg-muted"
                 >
                   <XIcon className="w-5 h-5" />
                 </button>
@@ -173,7 +173,7 @@ export function SearchBar({
                       key={tag}
                       onClick={() => toggleTempTag(tag)}
                       className={cn(
-                        "px-4 py-2 sagoma-chip rounded-full text-sm font-medium transition-all",
+                        "px-4 py-2 sagoma-chip rounded-full text-sm font-medium transition-all active:scale-95",
                         getTagSelectedClasses(tag, isSelected)
                       )}
                     >
@@ -198,7 +198,7 @@ export function SearchBar({
                       key={tag}
                       onClick={() => toggleTempTag(tag)}
                       className={cn(
-                        "px-4 py-2 sagoma-chip rounded-full text-sm font-medium transition-all",
+                        "px-4 py-2 sagoma-chip rounded-full text-sm font-medium transition-all active:scale-95",
                         getTagSelectedClasses(tag, isSelected)
                       )}
                     >
@@ -223,7 +223,7 @@ export function SearchBar({
                       key={neighborhood}
                       onClick={() => toggleTempNeighborhood(neighborhood)}
                       className={cn(
-                        "flex items-center justify-between px-4 py-3 sagoma-quartiere rounded-[19px] text-sm font-medium transition-all border",
+                        "flex items-center justify-between px-4 py-3 sagoma-quartiere rounded-[19px] text-sm font-medium transition-all border active:scale-[0.98]",
                         isSelected
                           ? "bg-primary text-primary-foreground border-primary"
                           : "bg-muted/50 text-foreground border-transparent hover:bg-muted"

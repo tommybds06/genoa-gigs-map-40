@@ -101,7 +101,7 @@ export function TagSelector({
         className={cn(
           // sagoma-chip: il fondo e' ritagliato sul disegno di Tommaso.
           // Il raggio serve da fallback dove la maschera non c'e' (vedi index.css).
-          "inline-flex items-center gap-1.5 px-3 py-1.5 sagoma-chip rounded-full text-sm font-medium transition-all",
+          "inline-flex items-center gap-1.5 px-3 py-1.5 sagoma-chip rounded-full text-sm font-medium transition-all active:scale-95",
           getTagSelectedClasses(tag, isSelected)
         )}
       >
@@ -162,7 +162,7 @@ export function TagSelector({
                   type="button"
                   onClick={() => toggleTag(tag)}
                   className={cn(
-                    "px-3 py-1.5 sagoma-chip rounded-full text-sm font-medium transition-all",
+                    "px-3 py-1.5 sagoma-chip rounded-full text-sm font-medium transition-all active:scale-95",
                     getTagSelectedClasses(tag, isSelected)
                   )}
                 >

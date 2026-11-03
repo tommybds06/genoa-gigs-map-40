@@ -14,7 +14,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { EditJobDialog } from '@/components/jobs/EditJobDialog';
 import { DeleteJobDialog } from '@/components/jobs/DeleteJobDialog';
-import { SwipeNavigator } from '@/components/layout/SwipeNavigator';
+import { useAllaRiattivazione } from '@/hooks/useScheda';
 import { formatTempoTrascorso } from "@/lib/dates";
 import { annuncioScaduto, testoScadenza } from "@/lib/scadenzaAnnunci";
 import { TesseraIcona, TesseraIndietro } from "@/components/ui/Tessera";
@@ -71,7 +71,7 @@ const Annunci = () => {
    * dentro la stessa risposta (`applications(count)`), e dalla seconda visita
    * entro un minuto la lista c'e' gia' al primo fotogramma.
    */
-  const { data: jobs = [], isLoading: loading } = useQuery({
+  const { data: jobs = [], isLoading: loading, refetch: rileggiAnnunci } = useQuery({
     // Sotto 'jobs': chi crea un annuncio o assume invalida ['jobs'], e cosi'
     // si aggiorna anche questa lista.
     queryKey: ['jobs', 'annunci-employer', user?.id],
@@ -99,6 +99,10 @@ const Annunci = () => {
       }));
     },
   });
+
+  // La pagina ora resta montata (layout/Schede.tsx): il «a ogni visita» di
+  // `refetchOnMount` diventa «a ogni ritorno sulla scheda».
+  useAllaRiattivazione(() => rileggiAnnunci());
 
   /** Dopo modifica o cancellazione: si rilegge la lista. */
   const fetchJobs = () => queryClient.invalidateQueries({ queryKey: ['jobs', 'annunci-employer'] });
@@ -381,7 +385,7 @@ const Annunci = () => {
   }
 
   return (
-    <SwipeNavigator>
+    <div className="h-full">
     <div className="flex flex-col h-full bg-background">
       {/* Header with "Annunci" title in blue for employers */}
       <Header />
@@ -498,7 +502,7 @@ const Annunci = () => {
         onSuccess={handleDeleteSuccess}
       />
     </div>
-    </SwipeNavigator>
+    </div>
   );
 };
 

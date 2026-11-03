@@ -610,7 +610,7 @@ const Auth = () => {
                   type="button"
                   onClick={chiediNuovaPassword}
                   disabled={invioRecupero}
-                  className="min-h-[44px] text-sm font-medium text-primary-strong"
+                  className="min-h-[44px] text-sm font-medium text-primary-strong transition-opacity active:opacity-60"
                 >
                   {invioRecupero ? 'Invio in corso…' : 'Password dimenticata?'}
                 </button>
@@ -710,7 +710,7 @@ const Auth = () => {
                 setNeighborhood('');
                 setAddress('');
               }}
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors transition-opacity active:opacity-60"
             >
               {isLogin ? (
                 <>Non hai un account? <span className="text-secondary font-medium">Registrati</span></>

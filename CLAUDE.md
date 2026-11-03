@@ -169,7 +169,8 @@ src/
   components/
     map/          InteractiveMap, SearchBar, JobDetailsSheet,
                   EmployerJobsDrawer, EmployerGroupMarker, LocationMiniMap
-    layout/       Header, MainLayout, PageTransition, BottomNav, SwipeNavigator,
+    layout/       Header, MainLayout, PageTransition (solo i dettagli), BottomNav,
+                  Schede (le pagine con la barra, montate una volta: §25),
                   SplashScreen (§17)
     bacheca/      employer: Bacheca, CartellinoCard, SchedaCartellino,
                   AggiungiCartellino, PromemoriaScadenza, SagomaCartellino ·
@@ -178,13 +179,15 @@ src/
     applications/ jobs/ profile/ onboarding/ reviews/ tags/ skeletons/
     auth/ icons/  ui/ (shadcn)
   hooks/          useAppTheme (dual-theme), useAuth, useChats, useJobs,
-                  useCartellini, useLavoriWorker, useMisure, useMapboxToken
+                  useCartellini, useLavoriWorker, useMisure, useMapboxToken,
+                  useScheda (attiva/visibile, §25), useProfiloPubblico
   contexts/       UserContext (role: worker | employer) — il profilo dell'utente
                   sta QUI, già in memoria: non rileggerlo nelle pagine (§12)
   lib/            dates.ts, tagColors.ts, percorsoAccesso.ts, jobIcons.ts,
                   bacheca.ts (azioni e regole della bacheca, §16),
                   tratto.ts + formaCartellino.ts + formaNegozio.ts (le sagome
-                  calcolate), recensione.ts (aprire la recensione a richiesta)
+                  calcolate), recensione.ts (aprire la recensione a richiesta),
+                  foto.ts (foto ridimensionate in upload e in lettura, §25)
   integrations/   supabase/ (client, types generati), lovable/ (auto-generato)
   assets/         politask-logo-animato.json — il Lottie dello splash (§17)
 supabase/
@@ -957,13 +960,9 @@ pagina»):
   qualunque momento.
 - **Il cambio tab non anima più** (vedi §12, `AnimatePresence`).
 
-Resta aperto, ed è il pezzo grosso: **ogni cambio tab smonta e rimonta la
-pagina intera**, mappa compresa (`reuseMaps` attenua, non risolve). Si risolve
-tenendo montate le pagine già visitate invece di smontarle nella transizione.
-È un lavoro di struttura, non una riga, e ha effetti da gestire: gli effetti
-«al montaggio» non ripartono più, quindi il ritorno da un profilo con
-`location.state.returnJob` (Index, Lista) e l'apertura di una chat da
-`?chat=` vanno riscritti per reagire al cambio di indirizzo.
+✅ **Chiuso il 3 novembre**: le pagine con la barra in basso non si smontano
+più (`layout/Schede.tsx`), e `returnJob` e `?chat=` reagiscono al cambio di
+indirizzo. Vedi §25.
 
 ---
 
@@ -1113,8 +1112,9 @@ LIKE '%@demo.politask.invalid'` (cascata) e togliere le colonne `is_demo` da
 1. **Bacheca, employer e worker**: provarle con dati veri (appendere,
    assumere, terminare, l'avviso di scadenza; lato worker gli stati e la
    recensione dalla card) — scritte e verificate solo con dati finti.
-2. **Pagine montate una volta sola** invece che a ogni cambio tab (§12,
-   Prestazioni): il pezzo grosso rimasto sul lag.
+2. ✅ **Pagine montate una volta sola** (3 novembre, §25). Da provare a
+   mano sul Pixel: swipe, ritorno dal profilo, chat aperta e gesto
+   «indietro» di Android.
 3. **Revisione schermata per schermata** (in corso): fatte accesso,
    registrazione, onboarding, home, scheda annuncio, messaggi e chat (§18).
    Restano lista, annunci, crea annuncio, profilo, profilo pubblico, modifica profilo,
@@ -1947,11 +1947,12 @@ coi pallini (Profilo) o con le frecce (galleria del profilo pubblico).
 - **Galleria**: la stampa intera si trascina e, lasciata oltre 80 px, vola
   via e arriva la prossima. Prima c'era uno swipe a soglia senza che la foto
   si muovesse.
-- ⚠️ **Lo swipe fra le schede** (`SwipeNavigator`) ascolta i tocchi di tutta
-  la pagina con listener NATIVI: uno `stopPropagation` di React arriverebbe
-  tardi. Ignora i gesti che partono dentro `[data-senza-swipe-tab]`, che il
-  carosello mette su di sé. Chiunque aggiunga un gesto orizzontale in una
-  pagina con le schede deve mettere quell'attributo.
+- ⚠️ **Lo swipe fra le schede** (`layout/Schede.tsx`, §25; era
+  `SwipeNavigator`) ascolta i tocchi con listener NATIVI: uno
+  `stopPropagation` di React arriverebbe tardi. Ignora i gesti che partono
+  dentro `[data-senza-swipe-tab]` (il carosello, la chat aperta) o sulla
+  mappa. Chiunque aggiunga un gesto orizzontale in una pagina con le schede
+  deve mettere quell'attributo.
 - I colori di card e campi NON sono cambiati con la gerarchia scura
   (misurati: card `#FAF5EC`, campo `#F3EADD`): sembrano più bianchi per
   contrasto con i pieni scuri. La Polaroid invece è davvero più chiara
@@ -2172,3 +2173,149 @@ la password senza riuscire a salvarla, e intanto a completare un account.
   ottobre): Tommaso ha `politask.app`, ma probabilmente cambierà nome
   all'app, quindi dominio, mittente e testi delle email si fanno dopo la
   scelta del nome.
+
+---
+
+# 25. La fluidità — 3 novembre 2026
+
+Tommaso: «ogni tocco, slide, interazione deve essere animata e responsiva».
+Prova l'app su un **Pixel 9a** (Chrome), aperta da Lovable.
+
+⚠️ **L'anteprima di Lovable gira in modalità SVILUPPO** (React di sviluppo,
+StrictMode che disegna tutto due volte, codice non compresso): lì l'app è
+2–3 volte più lenta di quella vera. La fluidità si giudica sull'indirizzo
+PUBBLICATO.
+
+## Prima si è misurato
+
+Pagina di misura a parte (un `misura.html` con dati finti, mai importato da
+App.tsx), compilata in PRODUZIONE, tocchi veri via CDP a 390×844, processore
+rallentato 4×. Lo script registra i fotogrammi, gli eventi (dal tocco allo
+schermo) e la CPU. ⚠️ **Va lanciato con la GPU vera** (`--use-angle=metal`):
+con SwiftShader (quello di `scatta-telefono.mjs`) quasi tutto il tempo era
+rasterizzazione software, e i numeri dicevano il falso. ⚠️ E con la mappa
+già ferma: le piastrelle che arrivano occupano la GPU e gonfiano qualunque
+misura nei primi secondi.
+
+Cosa è venuto fuori — e cosa NO:
+- le **sagome disegnate non c'entrano**: spegnendo maschere, ritagli e ombre
+  una alla volta, i tempi non cambiavano;
+- il JavaScript di un cambio scheda era ~80 ms rallentato (~20 veri): poco;
+- il lag vero veniva da: **foto intere**, **rimontaggio delle pagine**,
+  **swipe a dito staccato animato sul thread principale**, **40 elementi
+  toccabili senza risposta**.
+
+Dopo: in tutte le fasi del percorso (tap sulle schede, swipe, pin → scheda,
+scorrimento, scheda annuncio) **il fotogramma più lungo è 17 ms**, zero
+fotogrammi persi; dal tocco allo schermo 24–56 ms (prima 40–96, con picchi).
+
+## 1. Le foto leggere — `lib/foto.ts`
+
+- ⚠️ Andavano su Supabase come uscivano dal telefono (3–8 MB, 12+ MP): un
+  avatar da 44 px scaricava 4 MB e decodificava 12 milioni di pixel.
+- **Upload**: `ridimensionaFoto` nel telefono, prima di partire — lato lungo
+  1600, JPEG 0,82, rotazione EXIF rispettata. Misurato: 6,9 MB → 390 KB (con
+  una foto di solo rumore, il caso peggiore). Il limite dei 5 MB vale sul
+  file ridimensionato. In tutti e tre i punti: galleria, onboarding, chat.
+- **Lettura**: `urlFoto(url, MISURA_FOTO.x)` chiede la misura giusta alle
+  trasformazioni di Supabase (`/render/image/`): avatar 256, miniature 480,
+  grandi 1080. Anche per le foto caricate prima. Gli allegati della chat con
+  `createSignedUrl(…, { transform })`.
+- ✅ **Le trasformazioni ci sono** sul piano di Lovable Cloud (viste nel
+  video di Tommaso). ⚠️ Ma **mai la sola larghezza col ritaglio di serie
+  (`cover`)**: Supabase ritagliava una striscia centrale invece di ridurre la
+  foto, e negli avatar si vedeva solo la bocca. Avatar: `width=height=256` +
+  `cover` (lo stesso ritaglio di `object-cover`); tutto il resto:
+  `resize=contain` sulla larghezza, che non ritaglia mai. C'è il ripiego: se la versione piccola non arriva si prova
+  l'originale, e **se l'originale arriva** si spengono per la sessione. Una
+  foto che manca del tutto non le spegne (provati tutti e due i casi). Se in
+  console compare «trasformazioni delle foto non disponibili», sul piano di
+  Lovable Cloud non ci sono: allora restano leggere solo le foto nuove. Sul
+  piano Pro di Supabase costano per foto d'origine al mese (100 incluse).
+- `decoding="async"` sulle foto: la decodifica non blocca il disegno.
+
+## 2. Le schede montate una volta — `layout/Schede.tsx`
+
+- Le 4 pagine della barra si montano la prima volta e RESTANO: tap
+  istantaneo, mappa che non si ricarica (verificato: stesso elemento), la
+  Lista ritrova lo scorrimento. Le vicine di quella in vista si preparano a
+  app ferma (`requestIdleCallback`).
+- Una scheda non attiva vede l'indirizzo **congelato** (si ridà
+  `UNSAFE_LocationContext` col valore di quando era attiva) e il suo
+  contenuto è un elemento memorizzato: non si ridisegna a ogni navigazione.
+- **`useScheda()`** → `{ attiva, visibile }`. `attiva` = l'indirizzo è il
+  suo; `visibile` = è lei sullo schermo, anche sotto un dettaglio.
+- ⚠️ **Schede dal basso e finestre si chiudono da sole** quando la loro
+  pagina non è più attiva (`useApertaSoloInScheda` dentro `ui/drawer`,
+  `ui/dialog`, `ui/alert-dialog`): stanno in un portal, e restavano aperte
+  sopra la pagina nuova (gesto «indietro» di Android). Fuori dalle schede il
+  contesto vale tutto vero: niente cambia.
+- ⚠️ **`ProtectedRoute` in una scheda non attiva non rimanda mai**: un
+  `<Navigate>` lì porterebbe via chi guarda un'altra pagina.
+- ⚠️ **Gli effetti «al montaggio» ora reagiscono a `location.key`**:
+  `returnJob` (InteractiveMap, Lista), `?chat=` (Messaggi). Annunci rilegge
+  a ogni ritorno (`useAllaRiattivazione`, era `refetchOnMount: 'always'`), e
+  a ogni cambio di scheda si rileggono le query scadute
+  (`refetchQueries({ type: 'active', stale: true })`), come faceva il
+  rimontaggio.
+- ⚠️ **La chat aperta è `fixed` a `z-[60]`, sopra i dettagli (`z-50`)**: si
+  chiude quando Messaggi non è attiva, in un `useLayoutEffect` (se no un
+  fotogramma sopra la pagina nuova). Il profilo aperto dalla chat lascia
+  `?chat=` nell'indirizzo, così «indietro» la ritrova aperta (verificato).
+- Sotto un dettaglio resta visibile l'ultima scheda: il dettaglio che esce
+  verso destra la scopre, ed è ancora lì com'era.
+- ⚠️ **`transition-all` comprende `visibility`**, e da visibile a nascosto
+  il CSS tiene l'elemento VISIBILE fino alla fine della transizione:
+  nascondendo Messaggi, le sue linguette (`transition-all duration-200`)
+  restavano disegnate 200 ms sopra la pagina nuova (video di Tommaso). Le
+  schede nascoste hanno `.scheda-nascosta`, che spegne le transizioni dentro
+  di loro (in fondo a `index.css`).
+
+## 3. Lo swipe che segue il dito
+
+- Le due pagine si spostano con `transform` a ogni movimento; al rilascio
+  WAAPI (compositor) con la curva che parte alla velocità del dito. Avanti
+  oltre **un terzo** della larghezza o con un colpo **> 0,35 px/ms** nello
+  stesso verso, se no torna. Elastico sulla prima e sull'ultima. A riposo
+  nessuna trasformazione (un `fixed` dentro un antenato trasformato si
+  misurerebbe su di lui). Verificato: lento 40 e 110 px → resta; veloce →
+  avanti; verticale, sulla mappa, dentro la chat → niente.
+- ⚠️ **PROVATO E SCARTATO: `scroll-snap`** (le pagine affiancate in un
+  contenitore che scorre). Sembrava il meglio (scorrimento nativo, sul thread
+  del browser), ma a fine gesto Chrome aggancia SEMPRE nella direzione del
+  dito: 25 px lenti portavano alla scheda dopo. Correggerlo al `touchend` non
+  basta (il suo aggancio arriva dopo e lo sovrascrive), e nemmeno dopo (ha
+  ri-agganciato una seconda volta). Due tentativi, poi cambiato strumento.
+
+## 4. Le pagine di dettaglio sul compositor — `PageTransition`
+
+- ⚠️ framer manda al compositor solo `transform`, `opacity`, `filter`,
+  `clipPath` (motion-dom, `acceleratedValues`): con `x` l'ingresso da destra
+  girava sul thread principale mentre React montava la pagina. Ora
+  `transform: "translateX(…)"`, e a fine corsa `transitionEnd: { transform:
+  "none" }` — ⚠️ un `none` come destinazione framer lo trasforma in
+  `translateX(0%)`, e lì resta (misurato). Verificato con
+  `document.getAnimations()`: ingresso e uscita sono animazioni WAAPI.
+- **Profilo pubblico** in react-query (`useProfiloPubblico`): le tre letture
+  partono INSIEME (erano in fila), e la scheda dell'annuncio lo precarica
+  dopo 400 ms; la chat precarica quello dell'altra persona.
+- **Messaggi di una chat** precaricati al `pointerdown` sulla riga.
+
+## 5. La risposta al tocco
+
+Tutti gli elementi toccabili hanno uno stato premuto: icone e tessere
+`active:scale-95`, link di testo `active:opacity-60`, righe un fondo appena
+più scuro. Restano senza, di proposito: gli strati che raccolgono il tocco
+fuori (sfondo dell'anteprima avatar, contenitore della galleria), le mezze
+stelle della recensione, il carosello del Profilo (litigherebbe col
+trascinamento) e il «rispondi» della bolla, nascosto sul telefono.
+
+## Resta
+
+- Provare sul Pixel, sull'indirizzo pubblicato.
+- Il pacchetto `react-swipeable` non lo usa più nessuno: toglierlo cambia
+  `bun.lock`, che aggiorna Lovable.
+- L'avvio: l'app è un file solo da 2,96 MB (875 KB compressi). Spezzare le
+  pagine rare (accesso, onboarding, crea annuncio…) lo accorcerebbe; lo
+  splash ne copre già buona parte.
+

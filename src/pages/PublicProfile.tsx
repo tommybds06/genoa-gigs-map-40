@@ -1,6 +1,5 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { Header } from "@/components/layout/Header";
 import { BottomNav } from "@/components/layout/BottomNav";
@@ -15,7 +14,6 @@ import { GenericoIcon } from "@/components/icons/roleIcons";
 import { useAppTheme } from "@/hooks/useAppTheme";
 import { useUser } from "@/contexts/UserContext";
 import { getJobIconFromTags } from "@/lib/jobIcons";
-import { adessoISO } from "@/lib/scadenzaAnnunci";
 import { TesseraIcona, TesseraIndietro } from "@/components/ui/Tessera";
 import { LinkSocial } from "@/components/profile/LinkSocial";
 import { Foglietto } from "@/components/ui/Foglietto";
@@ -25,7 +23,8 @@ import { FotoStampata } from "@/components/ui/FotoStampata";
 import { numeroDa, Scotch, type StrisciaScotch } from "@/components/ui/Scotch";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { NomeConSegno } from "@/components/ui/SegnoVerificato";
-import type { SocialLinks } from "@/contexts/UserContext";
+import { MISURA_FOTO, ripiegaFoto, urlFoto } from "@/lib/foto";
+import { useProfiloPubblico, type AnnuncioPubblico, type ProfiloPubblico } from "@/hooks/useProfiloPubblico";
 
 // Tag durata usati prima della rinomina, ancora presenti su annunci vecchi
 
@@ -33,44 +32,8 @@ import type { SocialLinks } from "@/contexts/UserContext";
    disordine lo davano i pezzi in diagonale sugli angoli. */
 const SCOTCH_FOTO: StrisciaScotch[] = [{ pezzo: "lungo", lato: "centro" }];
 
-interface Profile {
-  id: string;
-  full_name: string | null;
-  avatar_url: string | null;
-  bio: string | null;
-  address_text: string | null;
-  neighborhood: string | null;
-  role: "worker" | "employer";
-  photos: string[];
-  looking_for: string | null;
-  experience: string | null;
-  social_links?: SocialLinks | null;
-  tipo_employer?: "attivita" | "privato" | null;
-  piva_verificata?: boolean;
-  identita_verificata?: boolean;
-}
-
-interface CompletedJob {
-  id: string;
-  applicationId: string;
-  title: string;
-  employerName: string;
-  completedAt: string;
-  tags: string[];
-}
-
-interface Job {
-  id: string;
-  title: string;
-  description: string | null;
-  price: string | null;
-  category: string | null;
-  schedule: string | null;
-  neighborhood: string | null;
-  created_at: string;
-  tags: string[];
-}
-
+type Profile = ProfiloPubblico;
+type Job = AnnuncioPubblico;
 
 /** «3,5», non «3.5»: la virgola dei decimali, in italiano. */
 const votoItaliano = (n: number) => n.toLocaleString("it-IT", { maximumFractionDigits: 1 });
@@ -90,10 +53,11 @@ const PublicProfile = () => {
   const { theme } = useAppTheme();
   const { isEmployer } = useUser();
   
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [jobs, setJobs] = useState<Job[]>([]);
-  const [completedJobs, setCompletedJobs] = useState<CompletedJob[]>([]);
-  const [loading, setLoading] = useState(true);
+  // In cache e precaricato dalla scheda dell'annuncio (hooks/useProfiloPubblico.ts).
+  const { data: dati, isLoading: loading } = useProfiloPubblico(userId);
+  const profile = dati?.profilo ?? null;
+  const jobs = dati?.annunci ?? [];
+  const completedJobs = dati?.conclusi ?? [];
   const { data: reviews = [] } = useRecensioniRicevute(profile?.role === "employer" ? userId : undefined);
   const reviewStats = mediaRecensioni(reviews);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
@@ -101,93 +65,6 @@ const PublicProfile = () => {
   const [galleryIndex, setGalleryIndex] = useState(0);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [isJobDetailsOpen, setIsJobDetailsOpen] = useState(false);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      if (!userId) return;
-      
-      setLoading(true);
-      
-      try {
-        // Fetch profile
-        const { data: profileData, error: profileError } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", userId)
-          .maybeSingle();
-        
-        if (profileError) throw profileError;
-        
-        if (profileData) {
-          setProfile({
-            ...profileData,
-            photos: profileData.photos || [],
-            social_links: profileData.social_links as SocialLinks | null,
-            tipo_employer: profileData.tipo_employer as Profile["tipo_employer"],
-          });
-
-          // If employer profile, fetch reviews
-          if (profileData.role === "employer") {
-            // Le recensioni le legge `useRecensioniRicevute` (tutte, in cache).
-
-            // Gli annunci attivi: aperti e non scaduti (lib/scadenzaAnnunci.ts).
-            const { data: jobsData, error: jobsError } = await supabase
-              .from("jobs")
-              .select("*")
-              .eq("owner_id", userId)
-              .eq("status", "open")
-              .gt("scade_il", adessoISO())
-              .order("created_at", { ascending: false });
-            
-            if (!jobsError) {
-              setJobs((jobsData || []).map(j => ({ ...j, tags: j.tags || [] })));
-            }
-          }
-
-          // If worker profile, fetch completed jobs
-          if (profileData.role === "worker") {
-            const { data: applicationsData, error: applicationsError } = await supabase
-              .from("applications")
-              .select(`
-                id,
-                updated_at,
-                job_id,
-                jobs (
-                  id,
-                  title,
-                  tags,
-                  owner_id,
-                  profiles!jobs_owner_id_fkey (
-                    full_name
-                  )
-                )
-              `)
-              .eq("applicant_id", userId)
-              .eq("status", "completed")
-              .order("updated_at", { ascending: false });
-
-            if (!applicationsError && applicationsData) {
-              const formattedJobs: CompletedJob[] = applicationsData.map((app: any) => ({
-                id: app.jobs?.id || app.job_id,
-                applicationId: app.id,
-                title: app.jobs?.title || "Lavoro",
-                employerName: app.jobs?.profiles?.full_name || "Attività",
-                completedAt: app.updated_at,
-                tags: app.jobs?.tags || [],
-              }));
-              setCompletedJobs(formattedJobs);
-            }
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching public profile:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [userId]);
 
   const nextPhoto = () => {
     if (profile?.photos && profile.photos.length > 1) {
@@ -324,7 +201,7 @@ const PublicProfile = () => {
                     type="button"
                     onClick={() => document.getElementById("recensioni")?.scrollIntoView({ behavior: "smooth", block: "start" })}
                     aria-label={`${votoItaliano(reviewStats.avg)} su 5, ${reviewStats.count} recensioni: vai alle recensioni`}
-                    className="inline-flex items-center gap-1"
+                    className="inline-flex items-center gap-1 transition-opacity active:opacity-60"
                   >
                     <StellaIcon className="h-4 w-4 text-employer-800" />
                     <span className="font-semibold text-foreground">{votoItaliano(reviewStats.avg)}</span>
@@ -372,14 +249,14 @@ const PublicProfile = () => {
                       setIsGalleryOpen(true);
                     }}
                     aria-label={`Apri la foto ${index + 1}`}
-                    className="block w-full rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    className="block w-full rounded-xl transition-transform active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                   >
                     <FotoStampata
                       seme={photo}
                       employer={!isWorkerProfile}
                       scotch={SCOTCH_FOTO}
                     >
-                      <img src={photo} alt={`Foto ${index + 1}`} className="h-full w-full object-cover" />
+                      <img src={urlFoto(photo, MISURA_FOTO.miniatura)} onError={ripiegaFoto(photo)} alt={`Foto ${index + 1}`} className="h-full w-full object-cover" loading="lazy" decoding="async" />
                     </FotoStampata>
                   </button>
                 ))}

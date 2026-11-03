@@ -99,7 +99,7 @@ const Settings = () => {
             {/* Edit Profile */}
             <button 
               onClick={() => navigate("/settings/edit-profile")}
-              className="w-full flex items-center justify-between p-4 hover:bg-muted/50 transition-colors border-b border-border"
+              className="w-full flex items-center justify-between p-4 hover:bg-muted/50 active:bg-muted/70 transition-colors border-b border-border"
             >
               <div className="flex items-center gap-3">
                 <ProfiloIcon className={`w-5 h-5 ${theme.primaryText}`} />
@@ -132,7 +132,7 @@ const Settings = () => {
             {/* Support */}
             <button 
               onClick={handleSupport}
-              className="w-full flex items-center justify-between p-4 hover:bg-muted/50 transition-colors border-b border-border"
+              className="w-full flex items-center justify-between p-4 hover:bg-muted/50 active:bg-muted/70 transition-colors border-b border-border"
             >
               <div className="flex items-center gap-3">
                 <InfoIcon className={`w-5 h-5 ${theme.primaryText}`} />
@@ -144,7 +144,7 @@ const Settings = () => {
             {/* Terms & Privacy */}
             <button 
               onClick={() => toast.info("Termini e privacy", { description: "Pagina in arrivo..." })}
-              className="w-full flex items-center justify-between p-4 hover:bg-muted/50 transition-colors"
+              className="w-full flex items-center justify-between p-4 hover:bg-muted/50 active:bg-muted/70 transition-colors"
             >
               <div className="flex items-center gap-3">
                 <DocumentoIcon className={`w-5 h-5 ${theme.primaryText}`} />
@@ -168,7 +168,7 @@ const Settings = () => {
             <button 
               onClick={handleLogout}
               disabled={isLoggingOut}
-              className="w-full flex items-center justify-between p-4 hover:bg-destructive/5 transition-colors border-b border-border disabled:opacity-50"
+              className="w-full flex items-center justify-between p-4 hover:bg-destructive/5 active:bg-destructive/10 transition-colors border-b border-border disabled:opacity-50"
             >
               <div className="flex items-center gap-3">
                 {isLoggingOut ? (
@@ -183,7 +183,7 @@ const Settings = () => {
             {/* Delete Account */}
             <button 
               onClick={() => setShowDeleteDialog(true)}
-              className="w-full flex items-center justify-between p-4 hover:bg-destructive/5 transition-colors"
+              className="w-full flex items-center justify-between p-4 hover:bg-destructive/5 active:bg-destructive/10 transition-colors"
             >
               <div className="flex items-center gap-3">
                 <BidoneIcon className="w-5 h-5 text-destructive" />

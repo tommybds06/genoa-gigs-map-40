@@ -4,7 +4,6 @@ import { InteractiveMap } from "@/components/map/InteractiveMap";
 import { SearchBar } from "@/components/map/SearchBar";
 import { useUser } from "@/contexts/UserContext";
 import { useMapJobs } from "@/hooks/useJobs";
-import { SwipeNavigator } from "@/components/layout/SwipeNavigator";
 
 // Default center: Genova
 const DEFAULT_CENTER = { lat: 44.4056, lng: 8.9463 };
@@ -129,8 +128,10 @@ const Index = () => {
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
-       {/* Swipe zone - only header/search area triggers navigation */}
-       <SwipeNavigator zoneRestricted>
+       {/* Testata e ricerca: qui lo swipe cambia scheda. Sulla mappa no, il
+           trascinamento la sposta (Mapbox mette `touch-action: none` sul suo
+           riquadro, vedi layout/Schede.tsx). */}
+       <div>
          <Header />
  
          {!isEmployer && (
@@ -145,7 +146,7 @@ const Index = () => {
              />
            </div>
          )}
-       </SwipeNavigator>
+       </div>
 
       {/* Map area - no swipe navigation here to allow panning.
           La mappa arriva a filo: su mobile lo spazio verticale e' la risorsa

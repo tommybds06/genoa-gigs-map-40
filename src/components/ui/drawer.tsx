@@ -4,10 +4,20 @@ import { Drawer as DrawerPrimitive } from "vaul";
 import { cn } from "@/lib/utils";
 import { SagomaScheda } from "@/components/ui/SagomaScheda";
 import { TESTA_SCHEDA } from "@/lib/formaScheda";
+import { useApertaSoloInScheda } from "@/hooks/useScheda";
 
-const Drawer = ({ shouldScaleBackground = true, ...props }: React.ComponentProps<typeof DrawerPrimitive.Root>) => (
-  <DrawerPrimitive.Root shouldScaleBackground={shouldScaleBackground} {...props} />
-);
+// Chiusa da sola se la sua scheda smette di essere attiva (hooks/useScheda.ts).
+const Drawer = ({ shouldScaleBackground = true, open, onOpenChange, ...props }: React.ComponentProps<typeof DrawerPrimitive.Root>) => {
+  const aperta = useApertaSoloInScheda(open, onOpenChange);
+  return (
+    <DrawerPrimitive.Root
+      shouldScaleBackground={shouldScaleBackground}
+      open={aperta}
+      onOpenChange={onOpenChange}
+      {...props}
+    />
+  );
+};
 Drawer.displayName = "Drawer";
 
 const DrawerTrigger = DrawerPrimitive.Trigger;

@@ -14,6 +14,7 @@ import {
 } from "@/lib/bacheca";
 import { FORO_Y, SPAZIO_SOPRA } from "@/lib/formaCartellino";
 import { SagomaCartellino } from "./SagomaCartellino";
+import { MISURA_FOTO, ripiegaFoto, urlFoto } from "@/lib/foto";
 
 /** Larghezza della puntina: la stessa di prima. */
 const PUNTINA_PX = 21;
@@ -139,7 +140,7 @@ export function CartellinoCard({ c, onClick }: CartellinoCardProps) {
             solito nella metà alta, un taglio centrato li decapiterebbe. */}
         <div className="sagoma-foto relative min-h-0 w-full flex-1 overflow-hidden bg-paper-sunken">
           {c.foto ? (
-            <img src={c.foto} alt="" className="h-full w-full object-cover object-[center_30%]" loading="lazy" />
+            <img src={urlFoto(c.foto, MISURA_FOTO.miniatura)} onError={ripiegaFoto(c.foto)} alt="" className="h-full w-full object-cover object-[center_30%]" loading="lazy" decoding="async" />
           ) : (
             <Iniziali nome={c.nome} className="text-3xl" />
           )}

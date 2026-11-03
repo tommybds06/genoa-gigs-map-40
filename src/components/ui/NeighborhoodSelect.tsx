@@ -82,7 +82,7 @@ export function NeighborhoodSelect({
         onClick={() => setAperta(true)}
         aria-haspopup="dialog"
         className={cn(
-          "campo-guscio flex h-12 w-full items-center gap-2 rounded-xl border border-input bg-field px-4 text-left text-base disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
+          "campo-guscio flex h-12 w-full items-center gap-2 rounded-xl border border-input bg-field px-4 text-left text-base transition-transform active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
           error && "border-destructive",
           className
         )}

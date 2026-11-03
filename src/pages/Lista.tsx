@@ -11,7 +11,6 @@ import { getJobIconFromTags } from "@/lib/jobIcons";
 import { useOpenJobs, useEmployerJobs, Job } from "@/hooks/useJobs";
 import { useUserApplications } from "@/hooks/useApplications";
 import { JobCardSkeletonList } from "@/components/skeletons/JobCardSkeleton";
-import { SwipeNavigator } from "@/components/layout/SwipeNavigator";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ApplicationCard, ApplicationCardSkeleton } from "@/components/applications/ApplicationCard";
 import { TesseraIcona } from "@/components/ui/Tessera";
@@ -33,7 +32,8 @@ const Lista = () => {
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("explore");
 
-  // Reopen sheet when returning from employer profile
+  // Ritorno dal profilo di chi ha pubblicato: si riapre la scheda. A ogni
+  // arrivo, non al montaggio: la pagina resta montata (layout/Schede.tsx).
   useEffect(() => {
     const returnJob = location.state?.returnJob;
     if (returnJob) {
@@ -42,7 +42,7 @@ const Lista = () => {
       navigate(location.pathname, { replace: true, state: null });
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [location.key]);
 
   const userTags = profile?.tags || [];
   const employerJobsQuery = useEmployerJobs(isEmployer ? user?.id : undefined);
@@ -59,7 +59,7 @@ const Lista = () => {
   };
 
   return (
-    <SwipeNavigator>
+    <div className="h-full">
       <div className="flex flex-col h-full bg-background">
         <Header title="Lista" titleColor="text-primary" />
 
@@ -152,7 +152,7 @@ const Lista = () => {
           showMiniMap={true}
         />
       </div>
-    </SwipeNavigator>
+    </div>
   );
 };
 

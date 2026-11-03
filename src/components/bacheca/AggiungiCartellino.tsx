@@ -20,6 +20,7 @@ import {
 import { appendi } from "@/lib/bacheca";
 import { cn } from "@/lib/utils";
 import { Iniziali } from "./CartellinoCard";
+import { MISURA_FOTO, ripiegaFoto, urlFoto } from "@/lib/foto";
 
 interface AggiungiCartellinoProps {
   aperto: boolean;
@@ -95,7 +96,7 @@ export function AggiungiCartellino({ aperto, onClose }: AggiungiCartellinoProps)
                   >
                     <div className="sagoma-foto h-12 w-12 shrink-0 overflow-hidden bg-paper-sunken">
                       {p.foto ? (
-                        <img src={p.foto} alt="" className="h-full w-full object-cover" />
+                        <img src={urlFoto(p.foto, MISURA_FOTO.avatar, true)} onError={ripiegaFoto(p.foto)} alt="" className="h-full w-full object-cover" decoding="async" />
                       ) : (
                         <Iniziali nome={p.nome} />
                       )}

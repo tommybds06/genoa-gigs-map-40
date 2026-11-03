@@ -22,7 +22,6 @@ import { soloRuoli } from "@/constants/tags";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { WorkerJobHistory } from "@/components/profile/WorkerJobHistory";
- import { SwipeNavigator } from "@/components/layout/SwipeNavigator";
 
 const Profilo = () => {
   const { user } = useAuth();
@@ -93,7 +92,7 @@ const Profilo = () => {
   const primaryTextClasses = theme.primaryText;
 
   return (
-     <SwipeNavigator>
+     <div className="h-full">
        <div className="flex flex-col h-full bg-background">
          {/* Header */}
          <header className="sticky top-0 z-40 bg-background px-4 pt-8 pb-3">
@@ -304,7 +303,7 @@ const Profilo = () => {
                azioni distruttive non vanno offerte in due posti diversi. */}
          </main>
        </div>
-     </SwipeNavigator>
+     </div>
   );
 };
 

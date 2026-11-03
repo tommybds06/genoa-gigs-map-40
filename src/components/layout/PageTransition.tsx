@@ -1,104 +1,63 @@
 import { motion } from "framer-motion";
-import { ReactNode, useSyncExternalStore } from "react";
-import { 
-  getSwipeDirectionSnapshot, 
-  subscribeToSwipeDirection,
-  getServerSnapshot 
-} from "@/lib/swipeState";
+import { ReactNode } from "react";
 
 interface PageTransitionProps {
   children: ReactNode;
   variant?: "fade" | "slide";
 }
 
-type EasingType = [number, number, number, number] | "easeOut" | "easeIn" | "easeInOut" | "linear";
-type VariantValue = { x: number | string; opacity: number };
+type EasingType = [number, number, number, number] | "easeOut";
+type VariantValue = { transform?: string; opacity: number; transitionEnd?: { transform: string } };
 type AnimVariants = { initial: VariantValue; animate: VariantValue; exit: VariantValue };
 
 /**
- * TAP SULLA BOTTOM NAV: cambio ISTANTANEO, nessuna dissolvenza.
+ * Le pagine FUORI dalle schede (accesso, dettagli). Le schede con la barra in
+ * basso non passano più di qui: sono montate una volta e affiancate
+ * (layout/Schede.tsx), e lo swipe fra loro lo fa il browser.
  *
- * ⚠️ Era una dissolvenza incrociata da 0,1s: la vecchia pagina 1→0 mentre la
- * nuova 0→1, sovrapposte. A meta' ci sono DUE pagine intere al 50%, cioe' due
- * header e due contenuti uno sopra l'altro — l'occhio non legge una
- * transizione, legge un difetto. E per quei fotogrammi il browser compone due
- * schermate intere mentre React sta ancora montando la nuova.
- *
- * Le tab bar delle app native non animano il cambio (iOS, WhatsApp,
- * Instagram): la tab e' un posto, non un percorso. L'animazione resta dove
- * racconta un gesto: lo swipe tra tab e le pagine di dettaglio che entrano da
- * destra.
+ * FADE (accesso, onboarding): cambio ISTANTANEO. Era una dissolvenza
+ * incrociata da 0,1s, che a metà mostrava DUE pagine intere al 50% (§12).
  */
 const fadeVariants: AnimVariants = {
-  initial: { opacity: 1, x: 0 },
-  animate: { opacity: 1, x: 0 },
-  exit: { opacity: 1, x: 0 },
+  initial: { opacity: 1 },
+  animate: { opacity: 1 },
+  exit: { opacity: 1 },
 };
 
-// Slide from right for detail pages
+/**
+ * SLIDE (dettagli): entra da destra sopra la scheda, ed esce verso destra
+ * scoprendola.
+ *
+ * ⚠️ `transform` scritto per intero, non `x`: framer manda al compositor
+ * (WAAPI) solo `transform`, `opacity`, `filter` e `clipPath`
+ * (motion-dom, `acceleratedValues`). Con `x` l'animazione girava sul thread
+ * principale, fotogramma per fotogramma, proprio mentre React montava la
+ * pagina che entrava: i primi fotogrammi si perdevano e la pagina «saltava»
+ * dentro. Sul compositor scorre anche se React è occupato.
+ */
 const slideVariants: AnimVariants = {
-  initial: { x: "100%", opacity: 1 },
-  animate: { x: 0, opacity: 1 },
-  exit: { x: "100%", opacity: 1 },
-};
-
-// Swipe left = new page enters from right, old exits to left
-const swipeLeftVariants: AnimVariants = {
-  initial: { x: "100%", opacity: 1 },
-  animate: { x: 0, opacity: 1 },
-  exit: { x: "-100%", opacity: 1 },
-};
-
-// Swipe right = new page enters from left, old exits to right
-const swipeRightVariants: AnimVariants = {
-  initial: { x: "-100%", opacity: 1 },
-  animate: { x: 0, opacity: 1 },
-  exit: { x: "100%", opacity: 1 },
+  initial: { transform: "translateX(100%)", opacity: 1 },
+  // `none` a riposo, come faceva `x: 0`: con una trasformazione rimasta, le
+  // barre `fixed` delle pagine (Modifica profilo, Crea annuncio) si
+  // misurerebbero sulla pagina invece che sullo schermo. ⚠️ Non come
+  // destinazione: framer la converte in `translateX(0%)` e lì resta
+  // (misurato). `transitionEnd` la applica a fine corsa.
+  animate: { transform: "translateX(0%)", opacity: 1, transitionEnd: { transform: "none" } },
+  exit: { transform: "translateX(100%)", opacity: 1 },
 };
 
 const iosEase: EasingType = [0.32, 0.72, 0, 1];
 
 export function PageTransition({ children, variant = "fade" }: PageTransitionProps) {
-  // Read current direction synchronously - both entering and exiting pages use the SAME direction
-  // This ensures coordinated animations (old exits one way, new enters from opposite)
-  const direction = useSyncExternalStore(
-    subscribeToSwipeDirection,
-    getSwipeDirectionSnapshot,
-    getServerSnapshot
-  );
-  
   const isSlide = variant === "slide";
-  
-  // Determine animation based on frozen direction
-  let variants = fadeVariants;
-  let duration = 0;
-  let ease: EasingType = "easeOut";
-  
-  if (isSlide) {
-    // Detail page slide
-    variants = slideVariants;
-    duration = 0.3;
-    ease = iosEase;
-  } else if (direction === "left") {
-    // Swipe navigation left (next tab)
-    variants = swipeLeftVariants;
-    duration = 0.3;
-    ease = iosEase;
-  } else if (direction === "right") {
-    // Swipe navigation right (previous tab)
-    variants = swipeRightVariants;
-    duration = 0.3;
-    ease = iosEase;
-  }
-  
+
   return (
     <motion.div
       initial="initial"
       animate="animate"
       exit="exit"
-      variants={variants}
-      transition={{ duration, ease }}
-      // Use inset-0 for absolute positioning, pb-16 for bottom nav space on tab pages
+      variants={isSlide ? slideVariants : fadeVariants}
+      transition={isSlide ? { duration: 0.3, ease: iosEase } : { duration: 0 }}
       className={`absolute inset-0 bg-background flex flex-col ${isSlide ? 'z-50' : 'pb-16'}`}
     >
       {children}

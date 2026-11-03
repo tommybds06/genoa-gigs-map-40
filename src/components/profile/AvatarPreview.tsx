@@ -11,6 +11,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Tessera } from "@/components/ui/Tessera";
 import { useAppTheme } from "@/hooks/useAppTheme";
+import { MISURA_FOTO, ripiegaFoto, urlFoto } from "@/lib/foto";
 
 interface AvatarPreviewProps {
   imageUrl: string | null | undefined;
@@ -135,7 +136,9 @@ export function AvatarPreview({
               <div className="aspect-square bg-muted relative overflow-hidden">
                 {imageUrl ? (
                   <img
-                    src={imageUrl}
+                    src={urlFoto(imageUrl, MISURA_FOTO.grande)}
+                    onError={ripiegaFoto(imageUrl)}
+                    decoding="async"
                     alt={displayName}
                     className="w-full h-full object-cover"
                   />

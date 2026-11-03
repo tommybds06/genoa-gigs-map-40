@@ -5,6 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { FotoStampata } from "@/components/ui/FotoStampata";
+import { MAX_BYTE_FOTO, ridimensionaFoto } from "@/lib/foto";
+import { MISURA_FOTO, ripiegaFoto, urlFoto } from "@/lib/foto";
 
 interface PhotoGalleryManagerProps {
   photos: string[];
@@ -45,16 +47,18 @@ export function PhotoGalleryManager({
     try {
       const uploadedUrls: string[] = [];
 
-      for (const file of filesToUpload) {
+      for (const originale of filesToUpload) {
         // Validate file type
-        if (!file.type.startsWith("image/")) {
-          toast.error(`${file.name} non è un'immagine valida`);
+        if (!originale.type.startsWith("image/")) {
+          toast.error(`${originale.name} non è un'immagine valida`);
           continue;
         }
 
-        // Validate file size (max 5MB)
-        if (file.size > 5 * 1024 * 1024) {
-          toast.error(`${file.name} supera i 5MB`);
+        // Ridimensionata nel telefono PRIMA di partire (lib/foto.ts): il
+        // limite vale sul file che parte, non sullo scatto originale.
+        const file = await ridimensionaFoto(originale);
+        if (file.size > MAX_BYTE_FOTO) {
+          toast.error(`${originale.name} supera i 5MB`);
           continue;
         }
 
@@ -187,7 +191,9 @@ export function PhotoGalleryManager({
               }
             >
               <img
-                src={photo}
+                src={urlFoto(photo, MISURA_FOTO.miniatura)}
+                onError={ripiegaFoto(photo)}
+                decoding="async"
                 alt={`Foto ${index + 1}`}
                 className="h-full w-full object-cover"
                 draggable={false}
@@ -206,7 +212,7 @@ export function PhotoGalleryManager({
                 type="button"
                 onClick={() => handleRemove(index)}
                 aria-label={`Togli la foto ${index + 1}`}
-                className="absolute right-1 top-1 flex h-7 w-7 items-center justify-center rounded-full bg-ink/60 text-paper-sheet"
+                className="absolute right-1 top-1 flex h-7 w-7 items-center justify-center rounded-full bg-ink/60 text-paper-sheet touch-feedback"
               >
                 <XIcon className="h-3 w-3" />
               </button>
@@ -220,7 +226,7 @@ export function PhotoGalleryManager({
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={isUploading}
-            className="block w-full disabled:cursor-not-allowed disabled:opacity-50"
+            className="block w-full transition-transform active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <FotoStampata seme="aggiungi" vuota storta={false}>
               <div className="flex h-full w-full flex-col items-center justify-center gap-1">

@@ -3,6 +3,7 @@ import * as AvatarPrimitive from "@radix-ui/react-avatar";
 
 import { cn } from "@/lib/utils";
 import { useCerchioImperfetto } from "@/hooks/useCerchioImperfetto";
+import { eRidimensionata, MISURA_FOTO, spegniTrasformazioni, urlFoto } from "@/lib/foto";
 
 /**
  * ⚠️ Ogni avatar dell'app è un CERCHIO IMPERFETTO (hooks/useCerchioImperfetto,
@@ -41,12 +42,37 @@ const Avatar = React.forwardRef<
 });
 Avatar.displayName = AvatarPrimitive.Root.displayName;
 
+/**
+ * La foto si chiede a `MISURA_FOTO.avatar` (256 px), non intera (lib/foto.ts):
+ * prima un avatar da 44 px scaricava la foto da 4 MB della fotocamera.
+ * Se la versione piccola non arriva, si prova l'originale: Radix su errore
+ * mostra le iniziali, quindi il ripiego passa dal suo stato di caricamento.
+ */
 const AvatarImage = React.forwardRef<
   React.ElementRef<typeof AvatarPrimitive.Image>,
   React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Image>
->(({ className, ...props }, ref) => (
-  <AvatarPrimitive.Image ref={ref} className={cn("aspect-square h-full w-full object-cover", className)} {...props} />
-));
+>(({ className, src, onLoadingStatusChange, ...props }, ref) => {
+  const piccola = urlFoto(src, MISURA_FOTO.avatar, true);
+  // Legato alla foto: se `src` cambia, si riprova la versione piccola.
+  const [originaleDi, setOriginaleDi] = React.useState<string>();
+  const originale = originaleDi === src;
+  return (
+    <AvatarPrimitive.Image
+      ref={ref}
+      src={originale ? src : piccola}
+      decoding="async"
+      onLoadingStatusChange={(stato) => {
+        if (stato === "error" && !originale && eRidimensionata(piccola)) setOriginaleDi(src);
+        // L'originale arriva e la versione piccola no: è il servizio a
+        // mancare, non la foto (lib/foto.ts).
+        if (stato === "loaded" && originale && src !== piccola) spegniTrasformazioni();
+        onLoadingStatusChange?.(stato);
+      }}
+      className={cn("aspect-square h-full w-full object-cover", className)}
+      {...props}
+    />
+  );
+});
 AvatarImage.displayName = AvatarPrimitive.Image.displayName;
 
 const AvatarFallback = React.forwardRef<

@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { MAX_BYTE_FOTO, MISURA_FOTO, ridimensionaFoto, ripiegaFoto, urlFoto } from '@/lib/foto';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
 import { PiuIcon, XIcon } from "@/components/icons/uiIcons";
@@ -34,16 +35,17 @@ export const PhotoUploader = ({
     try {
       const newPhotos: string[] = [];
 
-      for (const file of Array.from(files)) {
+      for (const originale of Array.from(files)) {
         // Validate file type
-        if (!file.type.startsWith('image/')) {
-          toast.error(`${file.name} non è un'immagine valida`, { duration: 1500 });
+        if (!originale.type.startsWith('image/')) {
+          toast.error(`${originale.name} non è un'immagine valida`, { duration: 1500 });
           continue;
         }
 
-        // Validate file size (max 5MB)
-        if (file.size > 5 * 1024 * 1024) {
-          toast.error(`${file.name} è troppo grande (max 5MB)`, { duration: 1500 });
+        // Ridimensionata prima di partire (lib/foto.ts).
+        const file = await ridimensionaFoto(originale);
+        if (file.size > MAX_BYTE_FOTO) {
+          toast.error(`${originale.name} è troppo grande (max 5MB)`, { duration: 1500 });
           continue;
         }
 
@@ -109,13 +111,15 @@ export const PhotoUploader = ({
             className="relative aspect-square rounded-xl overflow-hidden bg-muted"
           >
             <img
-              src={photo}
+              src={urlFoto(photo, MISURA_FOTO.miniatura)}
+              onError={ripiegaFoto(photo)}
+              decoding="async"
               alt={`Foto ${index + 1}`}
               className="w-full h-full object-cover"
             />
             <button
               onClick={() => handleRemove(index)}
-              className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full p-1 shadow-md"
+              className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full p-1 shadow-md touch-feedback"
             >
               <XIcon className="h-4 w-4" />
             </button>
@@ -130,7 +134,7 @@ export const PhotoUploader = ({
                 key={`empty-${index}`}
                 onClick={() => fileInputRef.current?.click()}
                 disabled={uploading}
-                className="aspect-square rounded-xl border-2 border-dashed border-muted-foreground/30 hover:border-primary/50 transition-colors flex items-center justify-center bg-muted/30"
+                className="aspect-square rounded-xl border-2 border-dashed border-muted-foreground/30 hover:border-primary/50 active:scale-95 transition-colors flex items-center justify-center bg-muted/30"
               >
                 {uploading && index === 0 ? (
                   <Loader2 className="h-8 w-8 text-muted-foreground animate-spin" />

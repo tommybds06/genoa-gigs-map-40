@@ -157,7 +157,7 @@ export const WorkerJobHistory = ({ primaryTextClasses }: WorkerJobHistoryProps) 
                 {jobs.map((job) => (
                   <div
                     key={job.id}
-                    className="bg-muted/50 rounded-xl p-3 cursor-pointer hover:bg-muted transition-colors"
+                    className="bg-muted/50 rounded-xl p-3 cursor-pointer hover:bg-muted active:bg-muted transition-colors"
                     onClick={() => job.employer?.id && navigate(`/profile/${job.employer.id}`)}
                   >
                     <div className="flex items-start justify-between gap-2">

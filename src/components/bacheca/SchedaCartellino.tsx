@@ -142,7 +142,7 @@ function Chip({
       disabled={disabled}
       aria-pressed={attiva}
       className={cn(
-        "sagoma-chip rounded-full text-sm font-medium transition-colors disabled:opacity-50",
+        "sagoma-chip rounded-full text-sm font-medium transition active:scale-95 disabled:opacity-50",
         attiva ? theme.btnFilled : "bg-paper-sunken text-ink",
         className
       )}

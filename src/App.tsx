@@ -12,12 +12,9 @@ import { PromemoriaScadenza } from "@/components/bacheca/PromemoriaScadenza";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { PageTransition } from "@/components/layout/PageTransition";
 import { SplashScreen } from "@/components/layout/SplashScreen";
-import Index from "./pages/Index";
-import Lista from "./pages/Lista";
-import Annunci from "./pages/Annunci";
+import { Schede } from "@/components/layout/Schede";
+import { TAB_ROUTES } from "@/lib/schede";
 import CreateJob from "./pages/CreateJob";
-import Messaggi from "./pages/Messaggi";
-import Profilo from "./pages/Profilo";
 import PublicProfile from "./pages/PublicProfile";
 import Settings from "./pages/Settings";
 import EditProfile from "./pages/EditProfile";
@@ -37,16 +34,16 @@ const queryClient = new QueryClient({
   },
 });
 
-// Tab routes that show the persistent bottom nav
-const TAB_ROUTES = ['/', '/lista', '/annunci', '/messaggi', '/profilo'];
-
 function AnimatedRoutes() {
   const location = useLocation();
   const isTabRoute = TAB_ROUTES.includes(location.pathname);
-  const isDetailRoute = !isTabRoute && !['/auth', '/onboarding'].includes(location.pathname);
-  
+
   return (
     <MainLayout hideBottomNav={!isTabRoute}>
+      {/* Le pagine con la barra in basso: montate una volta e affiancate
+          (components/layout/Schede.tsx). Sotto le pagine di dettaglio resta
+          visibile l'ultima, così chi entra da destra le scorre sopra. */}
+      <Schede />
       {/* ⚠️ NIENTE `mode="wait"` — era la causa dello SFARFALLIO.
           Con `wait` la pagina vecchia completa la sua uscita (opacità → 0) e
           solo DOPO monta la nuova (opacità 0 → 1): fra le due c'è un istante in
@@ -59,10 +56,10 @@ function AnimatedRoutes() {
           `PageTransition` è `absolute inset-0`, quindi le due pagine si
           sovrappongono invece di accodarsi.
 
-          In più `wait` contraddiceva le varianti di swipe: sono scritte perché
-          la vecchia esca da un lato MENTRE la nuova entra dall'altro, e con
-          `wait` erano per forza in sequenza. */}
+          Qui restano solo le pagine FUORI dalle schede: il dettaglio che
+          esce verso destra scopre la scheda sotto, che non si è mai smontata. */}
       <AnimatePresence initial={false}>
+        {!isTabRoute && (
         <Routes location={location} key={location.pathname}>
           {/* Auth routes - no layout */}
           <Route path="/auth" element={
@@ -85,33 +82,6 @@ function AnimatedRoutes() {
           <Route path="/onboarding" element={
             <PageTransition variant="fade">
               <ProtectedRoute><Onboarding /></ProtectedRoute>
-            </PageTransition>
-          } />
-          
-          {/* Tab routes - fade transition */}
-          <Route path="/" element={
-            <PageTransition variant="fade">
-              <ProtectedRoute><Index /></ProtectedRoute>
-            </PageTransition>
-          } />
-          <Route path="/lista" element={
-            <PageTransition variant="fade">
-              <ProtectedRoute><Lista /></ProtectedRoute>
-            </PageTransition>
-          } />
-          <Route path="/annunci" element={
-            <PageTransition variant="fade">
-              <ProtectedRoute><Annunci /></ProtectedRoute>
-            </PageTransition>
-          } />
-          <Route path="/messaggi" element={
-            <PageTransition variant="fade">
-              <ProtectedRoute><Messaggi /></ProtectedRoute>
-            </PageTransition>
-          } />
-          <Route path="/profilo" element={
-            <PageTransition variant="fade">
-              <ProtectedRoute><Profilo /></ProtectedRoute>
             </PageTransition>
           } />
           
@@ -144,6 +114,7 @@ function AnimatedRoutes() {
             </PageTransition>
           } />
         </Routes>
+        )}
       </AnimatePresence>
     </MainLayout>
   );

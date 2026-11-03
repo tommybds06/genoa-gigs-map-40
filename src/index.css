@@ -1257,3 +1257,15 @@ body [data-sonner-toaster] {
       drop-shadow(0 2px 3px rgb(56 45 36 / 0.14));
   }
 }
+
+/* LE SCHEDE NASCOSTE (components/layout/Schede.tsx) — niente transizioni.
+   ⚠️ `transition-all` comprende anche `visibility`, e nel passaggio da
+   visibile a nascosto il CSS tiene l'elemento VISIBILE fino alla fine della
+   transizione: nascondendo una scheda, le linguette «Chat | Bacheca» di
+   Messaggi (`transition-all duration-200`) restavano disegnate per 200 ms
+   sopra la pagina nuova (video di Tommaso, 3 novembre). Fuori dai layer:
+   deve vincere sulle utility. */
+.scheda-nascosta * {
+  transition: none !important;
+}
+

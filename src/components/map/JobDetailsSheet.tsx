@@ -21,6 +21,7 @@ import { cn } from "@/lib/utils";
 import { getTagClasses } from "@/lib/tagColors";
 import { LocationMiniMap } from "./LocationMiniMap";
 import { SegnoVerificato } from "@/components/ui/SegnoVerificato";
+import { precaricaProfiloPubblico } from "@/hooks/useProfiloPubblico";
 
 interface JobProfile {
   full_name: string | null;
@@ -152,6 +153,16 @@ export function JobDetailsSheet({ job, isOpen, onClose, showMiniMap = false, sop
   const [hasApplied, setHasApplied] = useState(false);
   const [isApplying, setIsApplying] = useState(false);
   const [checkingStatus, setCheckingStatus] = useState(false);
+
+  /* Il profilo di chi lo offre si legge PRIMA che lo si tocchi: chi apre la
+     riga «chi lo offre» lo trova già (hooks/useProfiloPubblico.ts). Dopo un
+     attimo, per non contendere la rete alla scheda stessa. */
+  const ownerId = job?.owner_id;
+  useEffect(() => {
+    if (!isOpen || !ownerId) return;
+    const t = window.setTimeout(() => precaricaProfiloPubblico(queryClient, ownerId), 400);
+    return () => window.clearTimeout(t);
+  }, [isOpen, ownerId, queryClient]);
 
   /* ⚠️ Il punto di aggancio va CONTROLLATO, non lasciato a vaul. Il suo stato
      interno vive nella Root, che qui non si smonta mai: chi aprisse la scheda,

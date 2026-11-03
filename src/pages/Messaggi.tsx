@@ -7,7 +7,10 @@ import { cn } from "@/lib/utils";
 import { Tessera, TesseraIcona, TesseraIndietro } from "@/components/ui/Tessera";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { useSearchParams, useNavigate } from "react-router-dom";
+import { MAX_BYTE_FOTO, ridimensionaFoto } from '@/lib/foto';
+import { useSearchParams, useNavigate, useLocation } from "react-router-dom";
+import { useScheda } from "@/hooks/useScheda";
+import { precaricaProfiloPubblico } from "@/hooks/useProfiloPubblico";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AvatarPreview } from "@/components/profile/AvatarPreview";
 import { Button } from "@/components/ui/button";
@@ -27,7 +30,6 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/ui/StatusBadge";
- import { SwipeNavigator } from "@/components/layout/SwipeNavigator";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Bacheca } from "@/components/bacheca/Bacheca";
 import { SchedaCartellino } from "@/components/bacheca/SchedaCartellino";
@@ -43,7 +45,7 @@ import { GenericoIcon } from "@/components/icons/roleIcons";
 import { OrologioIcon, InfoIcon } from "@/components/icons/uiIcons";
 import { ChevronRight } from "lucide-react";
 import { useAttachmentUrl } from "@/hooks/useAttachmentUrl";
-import { useMessaggi, inserisciMessaggio, aggiornaMessaggio, type Messaggio } from "@/hooks/useMessaggi";
+import { useMessaggi, inserisciMessaggio, aggiornaMessaggio, type Messaggio, precaricaMessaggi } from "@/hooks/useMessaggi";
 
 /** Il messaggio di una chat: vedi `hooks/useMessaggi.ts`. */
 type Message = Messaggio;
@@ -53,6 +55,8 @@ const Messaggi = () => {
   const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const { attiva } = useScheda();
   const queryClient = useQueryClient();
   
   // Use React Query for cached chat list
@@ -98,7 +102,10 @@ const Messaggi = () => {
     else toast.error('Chat non trovata');
   };
 
-  // Handle URL param for direct chat open
+  // Handle URL param for direct chat open.
+  // `location.key`: la pagina resta montata (layout/Schede.tsx), e tornare
+  // sullo stesso «?chat=» di prima deve riaprirla anche se il testo
+  // dell'indirizzo non è cambiato.
   useEffect(() => {
     const chatIdParam = searchParams.get('chat');
     if (chatIdParam && chats.length > 0) {
@@ -107,7 +114,18 @@ const Messaggi = () => {
         setSelectedChat(targetChat);
       }
     }
-  }, [searchParams, chats]);
+  }, [searchParams, chats, location.key]);
+
+  /* La chat è `fixed` a z-[60], sopra le pagine di dettaglio (z-50): quando
+     Messaggi smette di essere attiva si chiude, PRIMA del disegno (se no per
+     un fotogramma coprirebbe la pagina nuova). Per tornarci, il profilo
+     aperto dalla chat lascia «?chat=» nell'indirizzo (`apriProfiloDallaChat`). */
+  useLayoutEffect(() => {
+    if (attiva) return;
+    setSelectedChat(null);
+    setReplyingTo(null);
+    setPendingAttachment(null);
+  }, [attiva]);
 
   // Ref to track current selected chat without re-subscribing
   const selectedChatRef = useRef<Chat | null>(null);
@@ -260,23 +278,24 @@ const Messaggi = () => {
   }, [messages.length, statoUltimo]);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !user || !selectedChat) return;
+    const originale = e.target.files?.[0];
+    if (!originale || !user || !selectedChat) return;
 
     // Validate file type
-    if (!file.type.startsWith('image/')) {
+    if (!originale.type.startsWith('image/')) {
       toast.error('Solo immagini sono permesse', { duration: 1500 });
-      return;
-    }
-
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('Immagine troppo grande (max 5MB)', { duration: 1500 });
       return;
     }
 
     setUploadingImage(true);
     try {
+      // Ridimensionata prima di partire (lib/foto.ts): una foto della
+      // fotocamera passa da ~4 MB a ~250 KB.
+      const file = await ridimensionaFoto(originale);
+      if (file.size > MAX_BYTE_FOTO) {
+        toast.error('Immagine troppo grande (max 5MB)', { duration: 1500 });
+        return;
+      }
       const fileExt = file.name.split('.').pop();
       const filePath = `${selectedChat.id}/${user.id}/${Date.now()}.${fileExt}`;
 
@@ -486,6 +505,23 @@ const Messaggi = () => {
     });
   }, [selectedChat?.id]);
 
+  // Il profilo dell'altra persona si legge mentre si chatta: aprirlo dalla
+  // testata è immediato (hooks/useProfiloPubblico.ts).
+  const altroId = selectedChat?.other_user?.id;
+  useEffect(() => {
+    if (!altroId) return;
+    const t = window.setTimeout(() => precaricaProfiloPubblico(queryClient, altroId), 600);
+    return () => window.clearTimeout(t);
+  }, [altroId, queryClient]);
+
+  /* Il profilo dell'altra persona, aperto dalla chat: prima si segna la chat
+     nell'indirizzo di Messaggi, così «indietro» la ritrova aperta. */
+  const apriProfiloDallaChat = () => {
+    if (!selectedChat) return;
+    navigate(`/messaggi?chat=${selectedChat.id}`, { replace: true });
+    navigate(`/profile/${selectedChat.other_user?.id}`);
+  };
+
   const chiudiChat = () => {
     const fine = () => {
       chiusuraInCorso.current = false;
@@ -524,11 +560,14 @@ const Messaggi = () => {
   };
 
   // Chat detail view
-  const vistaChat = selectedChat ? (
+  const vistaChat = selectedChat && attiva ? (
       // Fullscreen chat container - covers entire viewport including navbar
       // z-[60] to be ABOVE the BottomNav which is z-50
       <div
         ref={pannelloChat}
+        // Dentro la chat il trascinamento orizzontale non cambia scheda
+        // (layout/Schede.tsx).
+        data-senza-swipe-tab
         className="fixed inset-0 flex flex-col bg-background z-[60]"
         style={{ height: '100dvh' }}
       >
@@ -538,8 +577,8 @@ const Messaggi = () => {
             <TesseraIndietro onClick={chiudiChat} />
             <button
               type="button"
-              className="shrink-0"
-              onClick={() => navigate(`/profile/${selectedChat.other_user?.id}`)}
+              className="shrink-0 touch-feedback"
+              onClick={apriProfiloDallaChat}
               aria-label={`Profilo di ${selectedChat.other_user?.full_name || 'utente'}`}
             >
               <Avatar seme={selectedChat.other_user?.id} className="h-10 w-10">
@@ -552,8 +591,8 @@ const Messaggi = () => {
             <div className="flex-1 min-w-0">
               <button
                 type="button"
-                className="block max-w-full truncate text-left font-semibold text-[15px] leading-tight"
-                onClick={() => navigate(`/profile/${selectedChat.other_user?.id}`)}
+                className="block max-w-full truncate text-left font-semibold text-[15px] leading-tight transition-opacity active:opacity-60"
+                onClick={apriProfiloDallaChat}
               >
                 {selectedChat.other_user?.full_name || 'Utente'}
               </button>
@@ -892,6 +931,7 @@ const Messaggi = () => {
                        role="button"
                        tabIndex={0}
                        onClick={apri}
+                       onPointerDown={() => precaricaMessaggi(queryClient, chat.id)}
                        onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && apri()}
                        className="-mx-2 flex cursor-pointer items-center gap-3 rounded-xl px-2 py-3 transition-colors active:bg-accent/50"
                      >
@@ -968,7 +1008,7 @@ const Messaggi = () => {
 
   return (
     <>
-     <SwipeNavigator>
+     <div className="h-full">
        <div className="flex flex-col h-full bg-background">
          {/* Simple Header with safe area */}
          <header className="sticky top-0 z-40 bg-background px-4 pt-8 pb-3">
@@ -1013,7 +1053,7 @@ const Messaggi = () => {
              </Tabs>
          </main>
        </div>
-     </SwipeNavigator>
+     </div>
      {vistaChat}
     </>
   );

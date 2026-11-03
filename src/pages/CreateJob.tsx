@@ -257,7 +257,7 @@ const CreateJob = () => {
                 key={tag}
                 type="button"
                 onClick={() => setSelectedTypeTag(tag)}
-                className={`flex items-center justify-center px-3 py-2.5 sagoma-quartiere rounded-[19px] text-sm font-medium transition-all border-2 ${
+                className={`flex items-center justify-center px-3 py-2.5 sagoma-quartiere rounded-[19px] text-sm font-medium transition-all active:scale-95 border-2 ${
                   selectedTypeTag === tag
                     ? 'bg-employer-700 text-employer-foreground border-employer-700'
                     : 'bg-employer-50 text-employer border-transparent hover:bg-employer-100'
@@ -290,7 +290,7 @@ const CreateJob = () => {
                   key={tag}
                   type="button"
                   onClick={() => handleRoleSelect(tag)}
-                  className={`flex flex-col items-center gap-1.5 p-3 sagoma-tag rounded-[28px] text-sm font-medium transition-all border-2 ${
+                  className={`flex flex-col items-center gap-1.5 p-3 sagoma-tag rounded-[28px] text-sm font-medium transition-all active:scale-95 border-2 ${
                     isSelected
                       ? 'bg-employer-700 text-employer-foreground border-transparent'
                       : 'bg-accent text-accent-foreground border-transparent hover:bg-accent/70'
@@ -306,7 +306,7 @@ const CreateJob = () => {
             <button
               type="button"
               onClick={() => handleRoleSelect('custom')}
-              className={`flex flex-col items-center gap-1.5 p-3 sagoma-tag rounded-[28px] text-sm font-medium transition-all border-2 ${
+              className={`flex flex-col items-center gap-1.5 p-3 sagoma-tag rounded-[28px] text-sm font-medium transition-all active:scale-95 border-2 ${
                 isCustomRole
                   ? 'bg-employer-700 text-employer-foreground border-transparent'
                   : 'bg-accent text-accent-foreground border-transparent hover:bg-accent/70'

@@ -2,7 +2,8 @@ import { useMemo, useState } from "react";
 import { motion, useMotionValue, useTransform, useAnimation, PanInfo } from "framer-motion";
 import { CheckCheck, Reply } from "lucide-react";
 import { OrologioIcon } from "@/components/icons/uiIcons";
-import { useAttachmentUrl } from "@/hooks/useAttachmentUrl";
+import { useAllegato } from "@/hooks/useAttachmentUrl";
+import { MISURA_FOTO } from "@/lib/foto";
 import { useMisure } from "@/hooks/useMisure";
 import { formaBolla } from "@/lib/formaBolla";
 import { oraMessaggio } from "@/lib/dates";
@@ -46,7 +47,7 @@ export const MessageBubble = ({
   onRiprova,
 }: MessageBubbleProps) => {
   const [, setShowReplyIcon] = useState(false);
-  const attachmentUrl = useAttachmentUrl(message.attachment_url);
+  const { url: attachmentUrl, ripiega: ripiegaAllegato, caricata: allegatoCaricato } = useAllegato(message.attachment_url, MISURA_FOTO.grande);
   const x = useMotionValue(0);
   const controls = useAnimation();
   const { ref, misure } = useMisure<HTMLDivElement>();
@@ -126,7 +127,7 @@ export const MessageBubble = ({
 
           {attachmentUrl && (
             <div className="-mx-1.5 mb-1.5 mt-0.5">
-              <img src={attachmentUrl} alt="Allegato" className="h-auto max-h-64 max-w-full rounded-xl object-cover" />
+              <img src={attachmentUrl} onError={ripiegaAllegato} onLoad={allegatoCaricato} decoding="async" alt="Allegato" className="h-auto max-h-64 max-w-full rounded-xl object-cover" />
             </div>
           )}
 
@@ -177,7 +178,7 @@ export const MessageBubble = ({
           <button
             type="button"
             onClick={() => onRiprova?.(message)}
-            className="mt-1 self-end text-xs font-medium text-danger"
+            className="mt-1 self-end text-xs font-medium text-danger transition-opacity active:opacity-60"
           >
             Non inviato · Tocca per riprovare
           </button>

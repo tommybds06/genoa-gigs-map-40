@@ -4,6 +4,7 @@ import { motion, AnimatePresence, type PanInfo } from "framer-motion";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { FotoStampata } from "@/components/ui/FotoStampata";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { MISURA_FOTO, ripiegaFoto, urlFoto } from "@/lib/foto";
 
 interface GalleryDialogProps {
   isOpen: boolean;
@@ -134,7 +135,9 @@ export function GalleryDialog({
                 }
               >
                 <img
-                  src={photos[currentIndex]}
+                  src={urlFoto(photos[currentIndex], MISURA_FOTO.grande)}
+                  onError={ripiegaFoto(photos[currentIndex])}
+                  decoding="async"
                   alt={`Foto ${currentIndex + 1}`}
                   className="pointer-events-none h-full w-full select-none object-cover"
                   draggable={false}

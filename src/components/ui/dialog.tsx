@@ -3,8 +3,12 @@ import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { useApertaSoloInScheda } from "@/hooks/useScheda";
 
-const Dialog = DialogPrimitive.Root;
+// Chiusa da sola se la sua scheda smette di essere attiva (hooks/useScheda.ts).
+const Dialog = ({ open, onOpenChange, ...props }: React.ComponentProps<typeof DialogPrimitive.Root>) => (
+  <DialogPrimitive.Root open={useApertaSoloInScheda(open, onOpenChange)} onOpenChange={onOpenChange} {...props} />
+);
 
 const DialogTrigger = DialogPrimitive.Trigger;
 

@@ -2,9 +2,13 @@ import * as React from "react";
 import * as AlertDialogPrimitive from "@radix-ui/react-alert-dialog";
 
 import { cn } from "@/lib/utils";
+import { useApertaSoloInScheda } from "@/hooks/useScheda";
 import { buttonVariants } from "@/components/ui/button";
 
-const AlertDialog = AlertDialogPrimitive.Root;
+// Chiusa da sola se la sua scheda smette di essere attiva (hooks/useScheda.ts).
+const AlertDialog = ({ open, onOpenChange, ...props }: React.ComponentProps<typeof AlertDialogPrimitive.Root>) => (
+  <AlertDialogPrimitive.Root open={useApertaSoloInScheda(open, onOpenChange)} onOpenChange={onOpenChange} {...props} />
+);
 
 const AlertDialogTrigger = AlertDialogPrimitive.Trigger;
 

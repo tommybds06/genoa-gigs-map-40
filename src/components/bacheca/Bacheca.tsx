@@ -11,6 +11,7 @@ import { SchedaCartellino } from "./SchedaCartellino";
 import { AggiungiCartellino } from "./AggiungiCartellino";
 import { SagomaCartellino } from "./SagomaCartellino";
 import { SPAZIO_SOPRA } from "@/lib/formaCartellino";
+import { MISURA_FOTO, ripiegaFoto, urlFoto } from "@/lib/foto";
 
 interface BachecaProps {
   /** La chat si apre nella stessa pagina (Messaggi), non con un cambio di URL. */
@@ -112,7 +113,7 @@ export function Bacheca({ onApriChat }: BachecaProps) {
                   >
                     <div className="sagoma-foto h-10 w-10 shrink-0 overflow-hidden bg-paper-sunken">
                       {c.foto ? (
-                        <img src={c.foto} alt="" className="h-full w-full object-cover" />
+                        <img src={urlFoto(c.foto, MISURA_FOTO.avatar, true)} onError={ripiegaFoto(c.foto)} alt="" className="h-full w-full object-cover" decoding="async" />
                       ) : (
                         <Iniziali nome={c.nome} className="text-sm" />
                       )}

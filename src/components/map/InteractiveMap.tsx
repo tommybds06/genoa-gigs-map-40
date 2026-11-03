@@ -145,8 +145,6 @@ function InteractiveMapInner({
   const location = useLocation();
   const mapNavigate = useNavigate();
 
-  // Reopen sheet when returning from employer profile
-  const didRestoreJob = useRef(false);
   const mappaRef = useRef<MapRef>(null);
   /* Vista da cui partire: quella ricordata se c'è (e dello stesso ruolo),
      altrimenti il centro calcolato da Index. Letta UNA volta, al montaggio:
@@ -199,17 +197,18 @@ function InteractiveMapInner({
   useEffect(() => {
     centraSuUtente();
   }, [centraSuUtente]);
+  /* Ritorno dal profilo di chi ha pubblicato: si riapre la scheda.
+     ⚠️ A ogni ARRIVO su un indirizzo con `returnJob`, non al montaggio: la
+     mappa ora resta montata (components/layout/Schede.tsx), e mentre si
+     guarda il profilo il suo indirizzo è congelato. */
   useEffect(() => {
-    if (didRestoreJob.current) return;
     const returnJob = location.state?.returnJob as Job | undefined;
-    if (returnJob) {
-      didRestoreJob.current = true;
-      setLastSelectedJob(returnJob);
-      setIsDetailsOpen(true);
-      mapNavigate(location.pathname, { replace: true, state: null });
-    }
+    if (!returnJob) return;
+    setLastSelectedJob(returnJob);
+    setIsDetailsOpen(true);
+    mapNavigate(location.pathname, { replace: true, state: null });
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [location.key]);
 
 
   /* Gli annunci dei PRIVATI sono pin come gli altri (Tommaso, 24 ottobre:

@@ -5,6 +5,7 @@ import type { LavoroWorker } from "@/hooks/useLavoriWorker";
 import { Iniziali } from "./CartellinoCard";
 import { SagomaNegozio } from "./SagomaNegozio";
 import { badgeLavoro } from "./statiLavoro";
+import { MISURA_FOTO, ripiegaFoto, urlFoto } from "@/lib/foto";
 
 /**
  * LA CARD DI UN LAVORO, lato worker — la «vetrina» dell'attività per cui
@@ -51,7 +52,7 @@ export function LavoroCard({ l, onClick }: LavoroCardProps) {
       >
         <div className="sagoma-foto relative min-h-0 w-full flex-1 overflow-hidden bg-paper-sunken">
           {l.foto ? (
-            <img src={l.foto} alt="" className="h-full w-full object-cover object-[center_30%]" loading="lazy" />
+            <img src={urlFoto(l.foto, MISURA_FOTO.miniatura)} onError={ripiegaFoto(l.foto)} alt="" className="h-full w-full object-cover object-[center_30%]" loading="lazy" decoding="async" />
           ) : (
             <Iniziali nome={l.attivita} className="text-3xl" />
           )}

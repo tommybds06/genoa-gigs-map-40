@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { animate, motion, useMotionValue, type PanInfo } from "framer-motion";
 import { useMisure } from "@/hooks/useMisure";
+import { MISURA_FOTO, ripiegaFoto, urlFoto } from "@/lib/foto";
 
 /**
  * LE FOTO CHE SCORRONO SOTTO IL DITO (Tommaso, 24 ottobre: «non c'è un
@@ -67,7 +68,9 @@ export function CaroselloFoto({
         {foto.map((f, i) => (
           <img
             key={f}
-            src={f}
+            src={urlFoto(f, MISURA_FOTO.grande)}
+            onError={ripiegaFoto(f)}
+            decoding="async"
             alt={`Foto ${i + 1}`}
             draggable={false}
             className="h-full w-full shrink-0 select-none object-cover"

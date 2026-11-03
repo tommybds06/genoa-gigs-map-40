@@ -3,6 +3,7 @@ import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Loader2 } from 'lucide-react';
 import { recuperoInCorso } from '@/lib/recuperoPassword';
+import { useScheda } from '@/hooks/useScheda';
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -27,6 +28,11 @@ interface ProtectedRouteProps {
  */
 const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const { user, loading } = useAuth();
+  // Una scheda montata ma non attiva (components/layout/Schede.tsx) non
+  // rimanda nessuno da nessuna parte: porterebbe via chi sta guardando
+  // un'altra pagina. Senza utente non disegna niente.
+  const { attiva } = useScheda();
+  if (!attiva) return user ? <>{children}</> : null;
 
   if (loading) {
     return (
