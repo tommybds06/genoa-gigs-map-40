@@ -209,16 +209,28 @@ export type Database = {
           category: string | null
           created_at: string
           description: string | null
+          giorni: number | null
           id: string
           is_demo: boolean
           lat: number | null
           lng: number | null
           neighborhood: string | null
+          opzione: string
+          ore_giorno: number | null
+          ore_settimana: number | null
+          ore_totali: number | null
           owner_id: string
+          paga_importo: number | null
+          paga_lorda: boolean | null
+          paga_tipo: string | null
+          prezzo_allungamento: number | null
+          prezzo_pacchetto: number | null
+          prezzo_potenziamento: number | null
           price: string | null
           scade_il: string
           scadenza_vista: boolean
           schedule: string | null
+          settimane: number | null
           status: string
           tags: string[] | null
           title: string
@@ -229,16 +241,28 @@ export type Database = {
           category?: string | null
           created_at?: string
           description?: string | null
+          giorni?: number | null
           id?: string
           is_demo?: boolean
           lat?: number | null
           lng?: number | null
           neighborhood?: string | null
+          opzione?: string
+          ore_giorno?: number | null
+          ore_settimana?: number | null
+          ore_totali?: number | null
           owner_id: string
+          paga_importo?: number | null
+          paga_lorda?: boolean | null
+          paga_tipo?: string | null
+          prezzo_allungamento?: number | null
+          prezzo_pacchetto?: number | null
+          prezzo_potenziamento?: number | null
           price?: string | null
           scade_il?: string
           scadenza_vista?: boolean
           schedule?: string | null
+          settimane?: number | null
           status?: string
           tags?: string[] | null
           title: string
@@ -249,16 +273,28 @@ export type Database = {
           category?: string | null
           created_at?: string
           description?: string | null
+          giorni?: number | null
           id?: string
           is_demo?: boolean
           lat?: number | null
           lng?: number | null
           neighborhood?: string | null
+          opzione?: string
+          ore_giorno?: number | null
+          ore_settimana?: number | null
+          ore_totali?: number | null
           owner_id?: string
+          paga_importo?: number | null
+          paga_lorda?: boolean | null
+          paga_tipo?: string | null
+          prezzo_allungamento?: number | null
+          prezzo_pacchetto?: number | null
+          prezzo_potenziamento?: number | null
           price?: string | null
           scade_il?: string
           scadenza_vista?: boolean
           schedule?: string | null
+          settimane?: number | null
           status?: string
           tags?: string[] | null
           title?: string
@@ -598,6 +634,7 @@ export type Database = {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["user_role"]
       }
+      prova_gratuita: { Args: never; Returns: boolean }
     }
     Enums: {
       user_role: "worker" | "employer"

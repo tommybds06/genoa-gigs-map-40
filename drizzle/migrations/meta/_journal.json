@@ -43,6 +43,13 @@
       "when": 1792888326830,
       "tag": "0005_tipo_employer_dati_riservati",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1793893753469,
+      "tag": "0006_opzioni_pagamento_annunci",
+      "breakpoints": true
     }
   ]
 }
