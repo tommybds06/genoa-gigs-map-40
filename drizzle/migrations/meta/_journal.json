@@ -50,6 +50,13 @@
       "when": 1793893753469,
       "tag": "0006_opzioni_pagamento_annunci",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1793893868310,
+      "tag": "0007_effetti_potenziamento",
+      "breakpoints": true
     }
   ]
 }
