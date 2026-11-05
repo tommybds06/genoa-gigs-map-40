@@ -63,6 +63,13 @@ export type Database = {
             referencedRelation: "jobs"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "applications_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "statistiche_annunci_test"
+            referencedColumns: ["id"]
+          },
         ]
       }
       cartellini: {
@@ -146,6 +153,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "cartellini_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "statistiche_annunci_test"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "cartellini_worker_id_fkey"
             columns: ["worker_id"]
             isOneToOne: false
@@ -192,6 +206,13 @@ export type Database = {
             columns: ["job_id"]
             isOneToOne: false
             referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chats_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "statistiche_annunci_test"
             referencedColumns: ["id"]
           },
           {
@@ -518,6 +539,24 @@ export type Database = {
           },
         ]
       }
+      quartieri: {
+        Row: {
+          lat: number
+          lng: number
+          nome: string
+        }
+        Insert: {
+          lat: number
+          lng: number
+          nome: string
+        }
+        Update: {
+          lat?: number
+          lng?: number
+          nome?: string
+        }
+        Relationships: []
+      }
       reviews: {
         Row: {
           comment: string | null
@@ -562,10 +601,53 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "reviews_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "statistiche_annunci_test"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "reviews_worker_id_fkey"
             columns: ["worker_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      statistiche_annunci: {
+        Row: {
+          aggiornate_il: string
+          aperture: number
+          job_id: string
+          viste: number
+        }
+        Insert: {
+          aggiornate_il?: string
+          aperture?: number
+          job_id: string
+          viste?: number
+        }
+        Update: {
+          aggiornate_il?: string
+          aperture?: number
+          job_id?: string
+          viste?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "statistiche_annunci_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: true
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "statistiche_annunci_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: true
+            referencedRelation: "statistiche_annunci_test"
             referencedColumns: ["id"]
           },
         ]
@@ -611,6 +693,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "chats_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "statistiche_annunci_test"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "chats_worker_id_fkey"
             columns: ["worker_id"]
             isOneToOne: false
@@ -626,15 +715,37 @@ export type Database = {
           },
         ]
       }
+      statistiche_annunci_test: {
+        Row: {
+          aperture: number | null
+          candidature: number | null
+          created_at: string | null
+          id: string | null
+          opzione: string | null
+          prezzo_allungamento: number | null
+          prezzo_pacchetto: number | null
+          prezzo_potenziamento: number | null
+          scade_il: string | null
+          title: string | null
+          viste: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       chiudi_lavori_scaduti: { Args: never; Returns: number }
       cuori_del_worker: { Args: { p_worker: string }; Returns: string[] }
+      distanza_m: {
+        Args: { lat1: number; lat2: number; lng1: number; lng2: number }
+        Returns: number
+      }
       get_user_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["user_role"]
       }
       prova_gratuita: { Args: never; Returns: boolean }
+      registra_apertura: { Args: { annuncio: string }; Returns: undefined }
+      registra_viste: { Args: { annunci: string[] }; Returns: undefined }
     }
     Enums: {
       user_role: "worker" | "employer"
