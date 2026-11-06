@@ -57,6 +57,13 @@
       "when": 1793893868310,
       "tag": "0007_effetti_potenziamento",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1793984078997,
+      "tag": "0008_sistema_notifiche",
+      "breakpoints": true
     }
   ]
 }
