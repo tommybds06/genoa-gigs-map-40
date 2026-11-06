@@ -224,6 +224,62 @@ export type Database = {
           },
         ]
       }
+      impostazioni_server: {
+        Row: {
+          chiave: string
+          valore: string
+        }
+        Insert: {
+          chiave: string
+          valore: string
+        }
+        Update: {
+          chiave?: string
+          valore?: string
+        }
+        Relationships: []
+      }
+      iscrizioni_push: {
+        Row: {
+          auth: string | null
+          creata_il: string
+          endpoint: string
+          id: string
+          p256dh: string | null
+          piattaforma: string
+          usata_il: string
+          utente_id: string
+        }
+        Insert: {
+          auth?: string | null
+          creata_il?: string
+          endpoint: string
+          id?: string
+          p256dh?: string | null
+          piattaforma?: string
+          usata_il?: string
+          utente_id: string
+        }
+        Update: {
+          auth?: string | null
+          creata_il?: string
+          endpoint?: string
+          id?: string
+          p256dh?: string | null
+          piattaforma?: string
+          usata_il?: string
+          utente_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "iscrizioni_push_utente_id_fkey"
+            columns: ["utente_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       jobs: {
         Row: {
           area_raggio: number | null
@@ -232,6 +288,7 @@ export type Database = {
           description: string | null
           giorni: number | null
           id: string
+          inizio_il: string | null
           is_demo: boolean
           lat: number | null
           lng: number | null
@@ -264,6 +321,7 @@ export type Database = {
           description?: string | null
           giorni?: number | null
           id?: string
+          inizio_il?: string | null
           is_demo?: boolean
           lat?: number | null
           lng?: number | null
@@ -296,6 +354,7 @@ export type Database = {
           description?: string | null
           giorni?: number | null
           id?: string
+          inizio_il?: string | null
           is_demo?: boolean
           lat?: number | null
           lng?: number | null
@@ -391,6 +450,118 @@ export type Database = {
             foreignKeyName: "messages_sender_id_fkey"
             columns: ["sender_id"]
             isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notifiche: {
+        Row: {
+          aggiornata_il: string
+          azione: string | null
+          canali: string[]
+          categoria: string
+          chiave: string | null
+          conteggio: number
+          creata_il: string
+          email_dopo: string | null
+          email_inviata_il: string | null
+          giorno: string
+          id: string
+          letta_il: string | null
+          mostra_dal: string
+          push_inviata_il: string | null
+          riferimento: string | null
+          testo: string
+          tipo: string
+          titolo: string
+          utente_id: string
+        }
+        Insert: {
+          aggiornata_il?: string
+          azione?: string | null
+          canali?: string[]
+          categoria: string
+          chiave?: string | null
+          conteggio?: number
+          creata_il?: string
+          email_dopo?: string | null
+          email_inviata_il?: string | null
+          giorno: string
+          id?: string
+          letta_il?: string | null
+          mostra_dal?: string
+          push_inviata_il?: string | null
+          riferimento?: string | null
+          testo: string
+          tipo: string
+          titolo: string
+          utente_id: string
+        }
+        Update: {
+          aggiornata_il?: string
+          azione?: string | null
+          canali?: string[]
+          categoria?: string
+          chiave?: string | null
+          conteggio?: number
+          creata_il?: string
+          email_dopo?: string | null
+          email_inviata_il?: string | null
+          giorno?: string
+          id?: string
+          letta_il?: string | null
+          mostra_dal?: string
+          push_inviata_il?: string | null
+          riferimento?: string | null
+          testo?: string
+          tipo?: string
+          titolo?: string
+          utente_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifiche_utente_id_fkey"
+            columns: ["utente_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      preferenze_notifiche: {
+        Row: {
+          aggiornate_il: string
+          candidature: boolean
+          messaggi: boolean
+          promemoria: boolean
+          scadenze: boolean
+          utente_id: string
+          vicini: boolean
+        }
+        Insert: {
+          aggiornate_il?: string
+          candidature?: boolean
+          messaggi?: boolean
+          promemoria?: boolean
+          scadenze?: boolean
+          utente_id: string
+          vicini?: boolean
+        }
+        Update: {
+          aggiornate_il?: string
+          candidature?: boolean
+          messaggi?: boolean
+          promemoria?: boolean
+          scadenze?: boolean
+          utente_id?: string
+          vicini?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "preferenze_notifiche_utente_id_fkey"
+            columns: ["utente_id"]
+            isOneToOne: true
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -733,7 +904,22 @@ export type Database = {
       }
     }
     Functions: {
+      chiama_invio_notifiche: { Args: never; Returns: undefined }
       chiudi_lavori_scaduti: { Args: never; Returns: number }
+      crea_notifica: {
+        Args: {
+          p_azione?: string
+          p_chiave?: string
+          p_modo?: string
+          p_riferimento?: string
+          p_testo: string
+          p_testo_gruppo?: string
+          p_tipo: string
+          p_titolo: string
+          p_utente: string
+        }
+        Returns: string
+      }
       cuori_del_worker: { Args: { p_worker: string }; Returns: string[] }
       distanza_m: {
         Args: { lat1: number; lat2: number; lng1: number; lng2: number }
@@ -743,9 +929,29 @@ export type Database = {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["user_role"]
       }
+      nome_di: { Args: { p_utente: string }; Returns: string }
+      notifiche_a_orario: { Args: never; Returns: undefined }
+      orario_silenzio: { Args: { t: string }; Returns: string }
+      preferenza_notifiche: {
+        Args: { p_categoria: string; p_utente: string }
+        Returns: boolean
+      }
       prova_gratuita: { Args: never; Returns: boolean }
       registra_apertura: { Args: { annuncio: string }; Returns: undefined }
+      registra_dispositivo: {
+        Args: {
+          p_auth?: string
+          p_endpoint: string
+          p_p256dh?: string
+          p_piattaforma: string
+        }
+        Returns: undefined
+      }
       registra_viste: { Args: { annunci: string[] }; Returns: undefined }
+      ruolo_annuncio: {
+        Args: { p_tags: string[]; p_titolo: string }
+        Returns: string
+      }
     }
     Enums: {
       user_role: "worker" | "employer"
