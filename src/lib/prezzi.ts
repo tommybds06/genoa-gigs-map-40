@@ -8,7 +8,7 @@
 import { PREZZI } from "../config/prezzi.ts";
 
 export type Durata = "occasionale" | "giornaliero" | "settimanale" | "mensile" | "continuativo";
-export type TipoPaga = "oraria" | "forfait";
+export type TipoPaga = "oraria" | "giornaliera" | "settimanale" | "mensile" | "forfait";
 export type Opzione = "nessuna" | "potenziamento" | "allungamento" | "pacchetto";
 
 /**
@@ -30,14 +30,50 @@ export function durataDaTag(tag: string | null | undefined): Durata | null {
   return (tag && DURATA_DA_TAG[tag]) || null;
 }
 
-/** Quali ore servono per ogni durata (le chiede il form). */
-export const ORE_PER_DURATA: Record<Durata, ("oreTotali" | "oreGiorno" | "giorni" | "oreSettimana" | "settimane")[]> = {
+/**
+ * LE UNITÀ DI PAGA PER DURATA (7 novembre). Solo quelle che hanno senso:
+ * «al mese» su un lavoro di una sera no. «Al giorno» anche sui lavori lunghi,
+ * perché «60 € a serata, due sere a settimana» è il caso tipico.
+ * L'ordine è quello dei bottoni nel form.
+ */
+export const UNITA_PER_DURATA: Record<Durata, TipoPaga[]> = {
+  occasionale: ["oraria", "forfait"],
+  giornaliero: ["oraria", "giornaliera", "forfait"],
+  settimanale: ["oraria", "giornaliera", "settimanale", "forfait"],
+  mensile: ["oraria", "giornaliera", "settimanale", "mensile", "forfait"],
+  continuativo: ["oraria", "giornaliera", "settimanale", "mensile", "forfait"],
+};
+
+export type CampoQuantita = "oreTotali" | "oreGiorno" | "giorni" | "oreSettimana" | "giorniSettimana" | "settimane";
+
+/** Quali ore servono per ogni durata, con la paga ORARIA. */
+export const ORE_PER_DURATA: Record<Durata, CampoQuantita[]> = {
   occasionale: ["oreTotali"],
   giornaliero: ["oreGiorno", "giorni"],
   settimanale: ["oreSettimana", "settimane"],
   mensile: ["oreSettimana"],
   continuativo: ["oreSettimana"],
 };
+
+/**
+ * Le quantità che il form chiede per calcolare il valore: dipendono dalla
+ * durata E dall'unità di paga. Il forfait e il mensile non chiedono niente
+ * (il mese è già il tetto del valore), la paga settimanale solo quante
+ * settimane, la giornaliera quanti giorni (o quanti a settimana).
+ */
+export function campiQuantita(durata: Durata | null, tipoPaga: TipoPaga): CampoQuantita[] {
+  if (!durata || !UNITA_PER_DURATA[durata].includes(tipoPaga)) return [];
+  switch (tipoPaga) {
+    case "oraria":
+      return ORE_PER_DURATA[durata];
+    case "giornaliera":
+      return durata === "giornaliero" ? ["giorni"] : durata === "settimanale" ? ["giorniSettimana", "settimane"] : ["giorniSettimana"];
+    case "settimanale":
+      return durata === "settimanale" ? ["settimane"] : [];
+    default:
+      return [];
+  }
+}
 
 export interface DatiValore {
   durata: Durata;
@@ -48,6 +84,8 @@ export interface DatiValore {
   oreGiorno?: number | null;
   giorni?: number | null;
   oreSettimana?: number | null;
+  /** Con la paga giornaliera sui lavori di settimane o mesi. */
+  giorniSettimana?: number | null;
   settimane?: number | null;
 }
 
@@ -59,8 +97,22 @@ const positivo = (n: number | null | undefined): n is number => typeof n === "nu
  */
 export function valoreAnnuncio(d: DatiValore): number | null {
   if (!Number.isFinite(d.importo) || d.importo < 0) return null;
+  // Una combinazione che il form non offre (al mese su una tantum): niente valore.
+  if (!UNITA_PER_DURATA[d.durata].includes(d.tipoPaga)) return null;
   if (d.tipoPaga === "forfait") return d.importo;
   const paga = d.importo;
+  // Quante settimane contano: quelle dichiarate, fino al tetto (4); i lavori
+  // di mesi o continuativi valgono il tetto.
+  const settimane = d.durata === "settimanale" ? (positivo(d.settimane) ? Math.min(d.settimane, PREZZI.settimaneMassime) : null) : PREZZI.settimaneMassime;
+
+  if (d.tipoPaga === "mensile") return paga; // un mese ≈ il tetto di 4 settimane
+  if (d.tipoPaga === "settimanale") return settimane === null ? null : paga * settimane;
+  if (d.tipoPaga === "giornaliera") {
+    if (d.durata === "giornaliero") return positivo(d.giorni) ? paga * d.giorni : null;
+    const g = d.giorniSettimana;
+    return positivo(g) && g <= 7 && settimane !== null ? paga * g * settimane : null;
+  }
+
   switch (d.durata) {
     case "occasionale":
       return positivo(d.oreTotali) ? d.oreTotali * paga : null;
@@ -110,10 +162,18 @@ function testoImporto(n: number): string {
 
 /**
  * Il testo della paga che mostrano card e scheda («10€/h netti»,
- * «150€ forfait lordi»). ⚠️ `leggiPagaDaTesto` (lib/bacheca.ts) lo rilegge
- * per precompilare il cartellino: «/h» e «forfait» devono restarci.
+ * «80€/giorno lordi», «1.200€/mese netti», «150€ forfait lordi»).
+ * ⚠️ `leggiPagaDaTesto` (lib/bacheca.ts) lo rilegge per precompilare il
+ * cartellino: i suffissi devono restare riconoscibili (ci sono i test).
  */
+const SUFFISSO_PAGA: Record<TipoPaga, string> = {
+  oraria: "/h",
+  giornaliera: "/giorno",
+  settimanale: "/settimana",
+  mensile: "/mese",
+  forfait: " forfait",
+};
+
 export function testoPaga(tipoPaga: TipoPaga, importo: number, lorda: boolean): string {
-  const base = tipoPaga === "oraria" ? `${testoImporto(importo)}/h` : `${testoImporto(importo)} forfait`;
-  return `${base} ${lorda ? "lordi" : "netti"}`;
+  return `${testoImporto(importo)}${SUFFISSO_PAGA[tipoPaga]} ${lorda ? "lordi" : "netti"}`;
 }

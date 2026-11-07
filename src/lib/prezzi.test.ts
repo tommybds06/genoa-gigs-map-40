@@ -4,7 +4,7 @@
  */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { calcolaPrezzi, testoPaga, testoPrezzo, valoreAnnuncio } from "./prezzi.ts";
+import { calcolaPrezzi, campiQuantita, testoPaga, testoPrezzo, UNITA_PER_DURATA, valoreAnnuncio } from "./prezzi.ts";
 
 const vicino = (ottenuto: number, atteso: number, msg: string) =>
   assert.ok(Math.abs(ottenuto - atteso) <= 0.01, `${msg}: ${ottenuto} invece di ${atteso}`);
@@ -55,4 +55,37 @@ test("testi", () => {
   assert.equal(testoPrezzo(15), "15,00 €");
   assert.equal(testoPaga("oraria", 9.5, false), "9,50€/h netti");
   assert.equal(testoPaga("forfait", 150, true), "150€ forfait lordi");
+  assert.equal(testoPaga("giornaliera", 70, true), "70€/giorno lordi");
+  assert.equal(testoPaga("settimanale", 300, false), "300€/settimana netti");
+  assert.equal(testoPaga("mensile", 1200, true), "1200€/mese lordi");
+});
+
+test("paga al giorno, a settimana, al mese (7 novembre)", () => {
+  // al giorno: giorni in tutto, o giorni a settimana × settimane (tetto 4)
+  assert.equal(valoreAnnuncio({ durata: "giornaliero", tipoPaga: "giornaliera", importo: 70, giorni: 3 }), 210);
+  assert.equal(valoreAnnuncio({ durata: "settimanale", tipoPaga: "giornaliera", importo: 60, giorniSettimana: 2, settimane: 3 }), 360);
+  assert.equal(valoreAnnuncio({ durata: "settimanale", tipoPaga: "giornaliera", importo: 60, giorniSettimana: 2, settimane: 10 }), 480);
+  assert.equal(valoreAnnuncio({ durata: "continuativo", tipoPaga: "giornaliera", importo: 60, giorniSettimana: 2 }), 480);
+  // a settimana: le settimane dichiarate (tetto 4), o il tetto
+  assert.equal(valoreAnnuncio({ durata: "settimanale", tipoPaga: "settimanale", importo: 300, settimane: 2 }), 600);
+  assert.equal(valoreAnnuncio({ durata: "mensile", tipoPaga: "settimanale", importo: 300 }), 1200);
+  // al mese: un mese, cioè il tetto
+  assert.equal(valoreAnnuncio({ durata: "mensile", tipoPaga: "mensile", importo: 900 }), 900);
+  // i dati che mancano, e le combinazioni che il form non offre
+  assert.equal(valoreAnnuncio({ durata: "giornaliero", tipoPaga: "giornaliera", importo: 70 }), null);
+  assert.equal(valoreAnnuncio({ durata: "mensile", tipoPaga: "giornaliera", importo: 60, giorniSettimana: 8 }), null);
+  assert.equal(valoreAnnuncio({ durata: "occasionale", tipoPaga: "mensile", importo: 900 }), null);
+  assert.equal(valoreAnnuncio({ durata: "giornaliero", tipoPaga: "settimanale", importo: 300 }), null);
+});
+
+test("cosa chiede il form, unità per unità", () => {
+  assert.deepEqual(UNITA_PER_DURATA.occasionale, ["oraria", "forfait"]);
+  assert.deepEqual(campiQuantita("occasionale", "oraria"), ["oreTotali"]);
+  assert.deepEqual(campiQuantita("giornaliero", "giornaliera"), ["giorni"]);
+  assert.deepEqual(campiQuantita("settimanale", "giornaliera"), ["giorniSettimana", "settimane"]);
+  assert.deepEqual(campiQuantita("mensile", "giornaliera"), ["giorniSettimana"]);
+  assert.deepEqual(campiQuantita("settimanale", "settimanale"), ["settimane"]);
+  assert.deepEqual(campiQuantita("mensile", "mensile"), []);
+  assert.deepEqual(campiQuantita("occasionale", "forfait"), []);
+  assert.deepEqual(campiQuantita(null, "oraria"), []);
 });

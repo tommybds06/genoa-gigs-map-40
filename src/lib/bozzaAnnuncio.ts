@@ -27,6 +27,7 @@ export interface BozzaAnnuncio {
   oreGiorno: number | null;
   giorni: number | null;
   oreSettimana: number | null;
+  giorniSettimana: number | null;
   settimane: number | null;
 }
 

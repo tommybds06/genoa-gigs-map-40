@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { TesseraIcona, TesseraIndietro } from '@/components/ui/Tessera';
 import { InvioIcon } from '@/components/icons/uiIcons';
 import { getJobIcon } from '@/lib/jobIcons';
-import { calcolaPrezzi, testoPaga, testoPrezzo, valoreAnnuncio, type Opzione } from '@/lib/prezzi';
+import { calcolaPrezzi, campiQuantita, testoPaga, testoPrezzo, valoreAnnuncio, type CampoQuantita, type Opzione } from '@/lib/prezzi';
 import { PREZZI } from '@/config/prezzi';
 import { cancellaBozza, leggiBozza, type BozzaAnnuncio } from '@/lib/bozzaAnnuncio';
 import { chiediPermessoDopo } from '@/lib/notifiche/permesso';
@@ -42,20 +42,22 @@ const OPZIONI: { id: OpzionePagata; nome: string; conNome: string; descrizione: 
   },
 ];
 
-/** La riga sotto il titolo nel riepilogo: «Cameriere · Una tantum · 5 ore». */
+/** Come si legge ogni quantità nel riepilogo. */
+const TESTO_QUANTITA: Record<CampoQuantita, string> = {
+  oreTotali: 'ore',
+  oreGiorno: 'ore',
+  giorni: 'giorni',
+  oreSettimana: 'ore a settimana',
+  giorniSettimana: 'giorni a settimana',
+  settimane: 'settimane',
+};
+
+/** La riga sotto il titolo nel riepilogo: «Cameriere · Una tantum · 5 ore»,
+ *  «Cameriere · Settimane · 2 giorni a settimana × 3 settimane». */
 function righeRiepilogo(b: BozzaAnnuncio): string {
   const n = (x: number | null) => String(x ?? '').replace('.', ',');
-  const ore =
-    b.pagaTipo === 'forfait'
-      ? null
-      : b.durata === 'occasionale'
-        ? `${n(b.oreTotali)} ore`
-        : b.durata === 'giornaliero'
-          ? `${n(b.oreGiorno)} ore × ${n(b.giorni)} giorni`
-          : b.durata === 'settimanale'
-            ? `${n(b.oreSettimana)} ore a settimana × ${n(b.settimane)} settimane`
-            : `${n(b.oreSettimana)} ore a settimana`;
-  return [b.ruolo, b.tagDurata, ore].filter(Boolean).join(' · ');
+  const pezzi = campiQuantita(b.durata, b.pagaTipo).map((c) => `${n(b[c])} ${TESTO_QUANTITA[c]}`);
+  return [b.ruolo, b.tagDurata, pezzi.join(' × ')].filter(Boolean).join(' · ');
 }
 
 /**
@@ -96,6 +98,7 @@ const OpzioniAnnuncio = () => {
         oreGiorno: bozza.oreGiorno,
         giorni: bozza.giorni,
         oreSettimana: bozza.oreSettimana,
+        giorniSettimana: bozza.giorniSettimana,
         settimane: bozza.settimane,
       }),
     [bozza]
@@ -135,6 +138,7 @@ const OpzioniAnnuncio = () => {
         ore_giorno: bozza.oreGiorno,
         giorni: bozza.giorni,
         ore_settimana: bozza.oreSettimana,
+        giorni_settimana: bozza.giorniSettimana,
         settimane: bozza.settimane,
         // La scelta e i prezzi VISTI qui. La scadenza la decide il database
         // dall'opzione (48 ore, o 7 giorni in prova con l'allungamento).

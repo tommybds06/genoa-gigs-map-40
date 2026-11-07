@@ -15,7 +15,7 @@ import { PennaIcon, DocumentoIcon, OrologioIcon, CalendarioIcon, EuroIcon } from
 import { GenericoIcon } from '@/components/icons/roleIcons';
 import { isWithinGenovaBounds, GEOFENCING_ERROR_MESSAGE } from '@/constants/geofencing';
 import { TesseraIndietro } from "@/components/ui/Tessera";
-import { durataDaTag, ORE_PER_DURATA, type TipoPaga } from "@/lib/prezzi";
+import { campiQuantita, durataDaTag, UNITA_PER_DURATA, type CampoQuantita, type TipoPaga } from "@/lib/prezzi";
 import { leggiBozza, salvaBozza } from "@/lib/bozzaAnnuncio";
 import { cn } from "@/lib/utils";
 
@@ -26,17 +26,29 @@ const numero = (testo: string): number | null => {
 };
 const testoNumero = (n: number | null | undefined) => (n == null ? "" : String(n).replace(".", ","));
 
-/** Le ore che può chiedere il form, con la loro etichetta e se sono intere. */
-const CAMPI_ORE = {
+/** Le quantità che può chiedere il form (lib/prezzi.ts, `campiQuantita`),
+ *  con l'etichetta, se sono intere e il massimo. */
+const CAMPI_ORE: Record<CampoQuantita, { etichetta: string; intero: boolean; massimo?: number }> = {
   oreTotali: { etichetta: "Ore in tutto", intero: false },
   oreGiorno: { etichetta: "Ore al giorno", intero: false },
   giorni: { etichetta: "Giorni", intero: true },
   oreSettimana: { etichetta: "Ore a settimana", intero: false },
+  giorniSettimana: { etichetta: "Giorni a settimana", intero: true, massimo: 7 },
   settimane: { etichetta: "Settimane", intero: true },
-} as const;
-type CampoOre = keyof typeof CAMPI_ORE;
+};
+type CampoOre = CampoQuantita;
 
-/** Le due scelte affiancate di paga (all'ora/forfait, netto/lordo). */
+/** Le unità di paga: il testo del bottone, quello dentro il campo e un esempio. */
+const UNITA: Record<TipoPaga, { bottone: string; campo: string; esempio: string }> = {
+  oraria: { bottone: "All'ora", campo: "€ / ora", esempio: "es. 10" },
+  giornaliera: { bottone: "Al giorno", campo: "€ / giorno", esempio: "es. 70" },
+  settimanale: { bottone: "A settimana", campo: "€ / settimana", esempio: "es. 300" },
+  mensile: { bottone: "Al mese", campo: "€ / mese", esempio: "es. 900" },
+  forfait: { bottone: "Forfait", campo: "€", esempio: "es. 80" },
+};
+
+/** Le scelte affiancate della paga (l'unità, netto/lordo). Due per riga, tre
+ *  quando sono tre o cinque: con quattro, due righe da due. */
 function SceltaDoppia<T extends string | boolean>({
   opzioni,
   valore,
@@ -47,7 +59,7 @@ function SceltaDoppia<T extends string | boolean>({
   onScegli: (v: T) => void;
 }) {
   return (
-    <div className="grid grid-cols-2 gap-2">
+    <div className={cn("grid gap-2", opzioni.length % 3 === 0 || opzioni.length === 5 ? "grid-cols-3" : "grid-cols-2")}>
       {opzioni.map((o) => (
         <button
           key={String(o.valore)}
@@ -55,7 +67,7 @@ function SceltaDoppia<T extends string | boolean>({
           aria-pressed={valore === o.valore}
           onClick={() => onScegli(o.valore)}
           className={cn(
-            "flex items-center justify-center px-3 py-2.5 sagoma-quartiere rounded-[19px] text-sm font-medium transition-all active:scale-95 border-2",
+            "flex items-center justify-center px-2 py-2.5 sagoma-quartiere rounded-[19px] text-sm font-medium transition-all active:scale-95 border-2",
             valore === o.valore
               ? "bg-employer-700 text-employer-foreground border-employer-700"
               : "bg-employer-50 text-employer border-transparent hover:bg-employer-100"
@@ -93,6 +105,7 @@ const CreateJob = () => {
     oreGiorno: testoNumero(bozza?.oreGiorno),
     giorni: testoNumero(bozza?.giorni),
     oreSettimana: testoNumero(bozza?.oreSettimana),
+    giorniSettimana: testoNumero(bozza?.giorniSettimana),
     settimane: testoNumero(bozza?.settimane),
   });
 
@@ -112,9 +125,19 @@ const CreateJob = () => {
   }>({});
 
   const durata = durataDaTag(selectedTypeTag);
-  // Le ore servono al valore solo con la paga oraria: col forfait il valore
-  // è l'importo (lib/prezzi.ts).
-  const campiOre: CampoOre[] = durata && pagaTipo === 'oraria' ? ORE_PER_DURATA[durata] : [];
+  // Le unità di paga che hanno senso per questa durata (prima di sceglierla:
+  // quelle di un lavoro di una volta).
+  const unita = durata ? UNITA_PER_DURATA[durata] : UNITA_PER_DURATA.occasionale;
+  // Le quantità che servono al valore: dipendono da durata e unità (col
+  // forfait e il mensile nessuna). lib/prezzi.ts, `campiQuantita`.
+  const campiOre: CampoOre[] = campiQuantita(durata, pagaTipo);
+
+  /** Cambiando durata, un'unità che lì non c'è torna «all'ora». */
+  const scegliDurata = (tag: string) => {
+    setSelectedTypeTag(tag);
+    const d = durataDaTag(tag);
+    if (d && !UNITA_PER_DURATA[d].includes(pagaTipo)) setPagaTipo('oraria');
+  };
 
   const handleRoleSelect = (role: string) => {
     if (role === 'custom') {
@@ -157,7 +180,8 @@ const CreateJob = () => {
 
     for (const campo of campiOre) {
       const n = numero(ore[campo]);
-      if (n === null || n <= 0 || (CAMPI_ORE[campo].intero && !Number.isInteger(n))) {
+      const { intero, massimo } = CAMPI_ORE[campo];
+      if (n === null || n <= 0 || (intero && !Number.isInteger(n)) || (massimo !== undefined && n > massimo)) {
         newErrors.ore = `Indica ${CAMPI_ORE[campo].etichetta.toLowerCase()}`;
         break;
       }
@@ -213,6 +237,7 @@ const CreateJob = () => {
       oreGiorno: oreDi('oreGiorno'),
       giorni: oreDi('giorni'),
       oreSettimana: oreDi('oreSettimana'),
+      giorniSettimana: oreDi('giorniSettimana'),
       settimane: oreDi('settimane'),
     });
     navigate('/create-job/opzioni');
@@ -291,39 +316,8 @@ const CreateJob = () => {
           />
         </div>
 
-        {/* Paga: all'ora o a forfait, l'importo, netto o lordo */}
-        <div className="space-y-2">
-          <Label htmlFor="paga" className="text-base font-medium flex items-center gap-2">
-            <EuroIcon className="h-4 w-4 text-employer-800" />
-            Paga <span className="text-destructive">*</span>
-          </Label>
-          <SceltaDoppia<TipoPaga>
-            opzioni={[{ valore: 'oraria', testo: "All'ora" }, { valore: 'forfait', testo: 'Forfait' }]}
-            valore={pagaTipo}
-            onScegli={setPagaTipo}
-          />
-          <div className="relative">
-            <Input
-              id="paga"
-              inputMode="decimal"
-              placeholder={pagaTipo === 'oraria' ? 'es. 10' : 'es. 80'}
-              value={pagaImporto}
-              onChange={(e) => setPagaImporto(e.target.value)}
-              className={cn('pr-16', errors.paga && 'border-destructive')}
-            />
-            <span className="pointer-events-none absolute right-4 top-1/2 z-10 -translate-y-1/2 text-sm text-muted-foreground">
-              {pagaTipo === 'oraria' ? '€ / ora' : '€'}
-            </span>
-          </div>
-          <SceltaDoppia<boolean>
-            opzioni={[{ valore: false, testo: 'Netto' }, { valore: true, testo: 'Lordo' }]}
-            valore={pagaLorda}
-            onScegli={setPagaLorda}
-          />
-          {errors.paga && <p className="text-sm text-destructive">{errors.paga}</p>}
-        </div>
-
-        {/* Type Tag (Modalità) - Single Selection Required */}
+        {/* Durata — PRIMA della paga (7 novembre): le unità di paga dipendono
+            da lei (al mese su un lavoro di una sera no). */}
         <div className="space-y-3">
           <Label className="text-base font-medium flex items-center gap-2">
             <CalendarioIcon className="h-4 w-4 text-employer-800" />
@@ -337,7 +331,7 @@ const CreateJob = () => {
               <button
                 key={tag}
                 type="button"
-                onClick={() => setSelectedTypeTag(tag)}
+                onClick={() => scegliDurata(tag)}
                 className={`flex items-center justify-center px-3 py-2.5 sagoma-quartiere rounded-[19px] text-sm font-medium transition-all active:scale-95 border-2 ${
                   selectedTypeTag === tag
                     ? 'bg-employer-700 text-employer-foreground border-employer-700'
@@ -349,9 +343,41 @@ const CreateJob = () => {
             ))}
           </div>
           {errors.typeTag && <p className="text-sm text-destructive">{errors.typeTag}</p>}
+        </div>
 
-          {/* Le ore: solo quelle che servono a questa durata, e solo con la
-              paga oraria (lib/prezzi.ts, ORE_PER_DURATA). */}
+        {/* Paga: l'unità (secondo la durata), l'importo, netto o lordo, e
+            le quantità che servono al valore. */}
+        <div className="space-y-2">
+          <Label htmlFor="paga" className="text-base font-medium flex items-center gap-2">
+            <EuroIcon className="h-4 w-4 text-employer-800" />
+            Paga <span className="text-destructive">*</span>
+          </Label>
+          <SceltaDoppia<TipoPaga>
+            opzioni={unita.map((u) => ({ valore: u, testo: UNITA[u].bottone }))}
+            valore={pagaTipo}
+            onScegli={setPagaTipo}
+          />
+          <div className="relative">
+            <Input
+              id="paga"
+              inputMode="decimal"
+              placeholder={UNITA[pagaTipo].esempio}
+              value={pagaImporto}
+              onChange={(e) => setPagaImporto(e.target.value)}
+              className={cn('pr-32', errors.paga && 'border-destructive')}
+            />
+            <span className="pointer-events-none absolute right-4 top-1/2 z-10 -translate-y-1/2 text-sm text-muted-foreground">
+              {UNITA[pagaTipo].campo}
+            </span>
+          </div>
+          <SceltaDoppia<boolean>
+            opzioni={[{ valore: false, testo: 'Netto' }, { valore: true, testo: 'Lordo' }]}
+            valore={pagaLorda}
+            onScegli={setPagaLorda}
+          />
+          {errors.paga && <p className="text-sm text-destructive">{errors.paga}</p>}
+          {/* Le quantità: solo quelle che servono a questa durata con questa
+              unità (lib/prezzi.ts, `campiQuantita`). */}
           {campiOre.length > 0 && (
             <div className={cn('grid gap-2 pt-1', campiOre.length > 1 ? 'grid-cols-2' : 'grid-cols-1')}>
               {campiOre.map((campo) => (

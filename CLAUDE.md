@@ -2352,6 +2352,18 @@ due volte). ⚠️ **Va applicata PRIMA del push**: il form scrive colonne nuove
   `leggiPagaDaTesto` (bacheca) lo rilegge giusto. Le **ore** compaiono solo
   con la paga oraria e solo quelle della durata (`ORE_PER_DURATA`): col
   forfait il valore è l'importo.
+- **Al giorno, a settimana, al mese** (7 novembre, migration
+  `20261107130000_paga_giorno_settimana_mese.sql`). Le unità dipendono
+  dalla durata (`UNITA_PER_DURATA`): Una tantum ora/forfait; Giorni + al
+  giorno; Settimane + al giorno, a settimana; Mesi e Continuativo + al
+  giorno, a settimana, al mese. «Al giorno» anche sui lavori lunghi («60 €
+  a serata, 2 sere a settimana»), con la colonna nuova `giorni_settimana`.
+  Le quantità da chiedere le decide `campiQuantita(durata, unità)`. Valore:
+  paga × giorni (o × giorni a settimana × settimane), × settimane, × 1 mese,
+  sempre col tetto di 4 settimane; una combinazione che il form non offre
+  dà `null`. **Durata ora sta SOPRA Paga** nel form, e cambiando durata
+  un'unità che lì non c'è torna «all'ora». Testi: «70€/giorno lordi»,
+  «300€/settimana», «1200€/mese» (it-IT non separa le migliaia a 4 cifre).
 - **Bozza** tra le due rotte in `lib/bozzaAnnuncio.ts` (variabile del modulo):
   tornando indietro il form ritrova tutto; dopo la pubblicazione si cancella.
 - ⚠️ **La scadenza la decide ancora il DATABASE**: `proteggi_scadenza_annuncio`
