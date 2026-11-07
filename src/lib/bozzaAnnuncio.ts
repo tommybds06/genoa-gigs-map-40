@@ -14,10 +14,6 @@ export interface BozzaAnnuncio {
   title: string;
   description: string;
   schedule: string;
-  /** Quando inizia (facoltativo, data «2026-11-12» e ora «19:00»): serve
-   *  solo al promemoria del giorno prima. Si salva solo se ci sono tutte e due. */
-  inizioData: string;
-  inizioOra: string;
   /** Il tag di durata così com'è nell'app («Una tantum», «Mesi»…). */
   tagDurata: string;
   durata: Durata;
@@ -40,13 +36,6 @@ export const leggiBozza = () => bozza;
 export const salvaBozza = (b: BozzaAnnuncio) => {
   bozza = b;
 };
-/** L'inizio come istante (ora di Genova, quella del telefono), o null. */
-export function inizioDaBozza(b: Pick<BozzaAnnuncio, "inizioData" | "inizioOra">): string | null {
-  if (!b.inizioData || !b.inizioOra) return null;
-  const d = new Date(`${b.inizioData}T${b.inizioOra}`);
-  return Number.isNaN(d.getTime()) ? null : d.toISOString();
-}
-
 export const cancellaBozza = () => {
   bozza = null;
 };

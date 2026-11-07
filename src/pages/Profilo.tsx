@@ -3,6 +3,7 @@
 import { LinkSocial } from "@/components/profile/LinkSocial";
 import { Campanella } from "@/components/notifiche/Campanella";
 import { Foglietto } from "@/components/ui/Foglietto";
+import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { NomeConSegno } from "@/components/ui/SegnoVerificato";
 import { FotoStampata } from "@/components/ui/FotoStampata";
@@ -89,7 +90,6 @@ const Profilo = () => {
     }
   };
 
-  const primaryBtnClasses = `${theme.btnFilled} ${theme.btnFilledHover}`;
   const primaryTextClasses = theme.primaryText;
 
   return (
@@ -257,12 +257,12 @@ const Profilo = () => {
         {!isEmployer && (
           <div className="material-card tilt-r p-4 mb-4">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="titolo-mini flex items-center gap-2"><CuoreIcon className={`w-4 h-4 ${primaryTextClasses}`} />I tuoi Interessi</h3>
+              <h3 className="titolo-mini flex items-center gap-2"><CuoreIcon className={`w-4 h-4 ${primaryTextClasses}`} />I tuoi interessi</h3>
               <div className="flex gap-2">
                 {hasChanges && (
-                  <button onClick={handleSaveTags} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-colors touch-feedback ${primaryBtnClasses}`}>
+                  <Button size="sm" onClick={handleSaveTags} className={`gap-1.5 ${theme.btnFilled}`}>
                     <SalvaIcon className="w-4 h-4" />Salva
-                  </button>
+                  </Button>
                 )}
                 {!editMode && (
                   <button onClick={() => setEditMode(true)} className={`text-sm font-medium touch-feedback ${primaryTextClasses}`}>Modifica</button>

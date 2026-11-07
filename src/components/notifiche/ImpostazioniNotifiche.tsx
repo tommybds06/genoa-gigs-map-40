@@ -21,7 +21,7 @@ const VOCI_WORKER: Voce[] = [
   { categoria: "candidature", titolo: "Candidature e selezioni", riga: "Quando un'attività ti sceglie, e com'è andato un lavoro", icona: GenericoIcon },
   { categoria: "messaggi", titolo: "Messaggi", riga: "Quando qualcuno ti scrive in chat", icona: MessaggiIcon },
   { categoria: "vicini", titolo: "Lavori in evidenza vicino a te", riga: "Annunci del tuo ruolo entro 2 km, al massimo 2 al giorno", icona: MappaIcon },
-  { categoria: "promemoria", titolo: "Promemoria dei lavori", riga: "Il giorno prima di un turno, se l'annuncio ha data e ora", icona: CalendarioIcon },
+  { categoria: "promemoria", titolo: "Promemoria dei lavori", riga: "La sera prima del primo giorno di lavoro", icona: CalendarioIcon },
 ];
 const VOCI_EMPLOYER: Voce[] = [
   { categoria: "candidature", titolo: "Candidature e selezioni", riga: "Quando qualcuno si candida ai tuoi annunci", icona: GenericoIcon },
@@ -103,7 +103,6 @@ export function ImpostazioniNotifiche() {
               checked={preferenze[v.categoria]}
               onCheckedChange={(acceso) => cambia(v.categoria, acceso)}
               aria-label={v.titolo}
-              className={isEmployer ? "data-[state=checked]:bg-employer" : undefined}
             />
           </div>
         ))}

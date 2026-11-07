@@ -197,12 +197,16 @@ export function TagBadges({ tags, className }: { tags: string[]; className?: str
   });
 
   return (
-    <div className={cn("flex flex-wrap gap-1.5", className)}>
+    /* Come i tag della scheda annuncio: chip ritagliato (`sagoma-chip`). Erano
+       pillole CSS da 20 px, le uniche rimaste senza margine tagliato (Tommaso,
+       7 novembre). ⚠️ L'altezza deve restare sopra i 30 px (py-2 + text-sm =
+       33,5) o la maschera si schiaccia. */
+    <div className={cn("flex flex-wrap gap-2", className)}>
       {sortedTags.map((tag) => (
         <span
           key={tag}
           className={cn(
-            "px-2 py-0.5 rounded-full text-xs font-medium",
+            "px-4 py-2 sagoma-chip rounded-full text-sm font-medium",
             getTagClasses(tag)
           )}
         >

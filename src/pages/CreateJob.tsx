@@ -18,8 +18,6 @@ import { TesseraIndietro } from "@/components/ui/Tessera";
 import { durataDaTag, ORE_PER_DURATA, type TipoPaga } from "@/lib/prezzi";
 import { leggiBozza, salvaBozza } from "@/lib/bozzaAnnuncio";
 import { cn } from "@/lib/utils";
-import { CampoData } from "@/components/ui/CampoData";
-import { oggiISO } from "@/lib/bacheca";
 
 /** «9,5» o «9.5» → 9,5; vuoto o non valido → null. */
 const numero = (testo: string): number | null => {
@@ -83,9 +81,6 @@ const CreateJob = () => {
   const [title, setTitle] = useState(bozza?.title ?? '');
   const [description, setDescription] = useState(bozza?.description ?? '');
   const [schedule, setSchedule] = useState(bozza?.schedule ?? '');
-  // Quando inizia (facoltativo): solo per il promemoria del giorno prima.
-  const [inizioData, setInizioData] = useState(bozza?.inizioData ?? '');
-  const [inizioOra, setInizioOra] = useState(bozza?.inizioOra ?? '');
 
   /* LA PAGA, strutturata (5 novembre): serve al calcolo dei prezzi delle
      opzioni (lib/prezzi.ts). Il testo che vedono card e scheda («10€/h
@@ -207,8 +202,6 @@ const CreateJob = () => {
       title: title.trim(),
       description: description.trim(),
       schedule: schedule.trim(),
-      inizioData,
-      inizioOra,
       tagDurata: selectedTypeTag,
       durata: durata!,
       ruolo: isCustomRole ? customRoleTag.trim() : selectedRoleTag,
@@ -296,35 +289,6 @@ const CreateJob = () => {
             value={schedule}
             onChange={(e) => setSchedule(e.target.value)}
           />
-        </div>
-
-        {/* Quando inizia — facoltativo. Con data E ora, chi viene scelto può
-            ricevere il promemoria il giorno prima (§28). */}
-        <div className="space-y-2">
-          <Label htmlFor="inizio" className="text-base font-medium flex items-center gap-2">
-            <CalendarioIcon className="h-4 w-4 text-employer-800" />
-            Quando inizia
-            <span className="text-sm font-normal text-muted-foreground">(facoltativo)</span>
-          </Label>
-          <div className="grid grid-cols-[3fr_2fr] gap-2">
-            <CampoData id="inizio" value={inizioData} min={oggiISO()} onChange={setInizioData} aria-label="Giorno d'inizio" />
-            <div className="relative">
-              <Input
-                type="time"
-                value={inizioOra}
-                onChange={(e) => setInizioOra(e.target.value)}
-                className="campo-data relative pr-11"
-                aria-label="Ora d'inizio"
-              />
-              <OrologioIcon
-                aria-hidden="true"
-                className="pointer-events-none absolute right-4 top-1/2 z-10 h-5 w-5 -translate-y-1/2 text-ink-soft"
-              />
-            </div>
-          </div>
-          {(inizioData !== '') !== (inizioOra !== '') && (
-            <p className="text-sm text-muted-foreground">Con giorno e ora, chi scegli riceve un promemoria il giorno prima.</p>
-          )}
         </div>
 
         {/* Paga: all'ora o a forfait, l'importo, netto o lordo */}

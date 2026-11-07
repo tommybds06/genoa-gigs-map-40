@@ -44,8 +44,8 @@ async function mostra(d) {
     body: d.testo || "",
     tag: d.tag || d.notifica || undefined,
     renotify: Boolean(d.tag),
-    icon: "/icons/icona-192-v1.png",
-    badge: "/icons/badge-96-v1.png",
+    icon: "/icons/icona-192-v2.png",
+    badge: "/icons/badge-96-v2.png",
     lang: "it",
     data: { notifica: d.notifica || null },
   });

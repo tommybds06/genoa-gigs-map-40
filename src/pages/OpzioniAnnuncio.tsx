@@ -12,7 +12,7 @@ import { InvioIcon } from '@/components/icons/uiIcons';
 import { getJobIcon } from '@/lib/jobIcons';
 import { calcolaPrezzi, testoPaga, testoPrezzo, valoreAnnuncio, type Opzione } from '@/lib/prezzi';
 import { PREZZI } from '@/config/prezzi';
-import { cancellaBozza, inizioDaBozza, leggiBozza, type BozzaAnnuncio } from '@/lib/bozzaAnnuncio';
+import { cancellaBozza, leggiBozza, type BozzaAnnuncio } from '@/lib/bozzaAnnuncio';
 import { chiediPermessoDopo } from '@/lib/notifiche/permesso';
 import { GIORNI_A_PAGAMENTO, ORE_GRATUITE } from '@/lib/scadenzaAnnunci';
 import { cn } from '@/lib/utils';
@@ -121,7 +121,6 @@ const OpzioniAnnuncio = () => {
         title: bozza.title,
         description: bozza.description,
         schedule: bozza.schedule || null,
-        inizio_il: inizioDaBozza(bozza),
         price: testoPaga(bozza.pagaTipo, bozza.pagaImporto, bozza.pagaLorda),
         category: bozza.ruolo.toLowerCase(),
         tags: [bozza.tagDurata, bozza.ruolo],

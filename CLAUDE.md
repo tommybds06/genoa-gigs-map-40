@@ -430,6 +430,8 @@ questo le misure sono solo due.
   inchiostro; no: `accent` + `ink-soft`. ⚠️ **In LETTURA i ruoli restano i
   chip di testo** (`TagBadges`): una prima versione li aveva fatti tessere
   anche lì, ed era sbagliato — Tommaso voleva la tessera solo in modifica.
+  Dal 7 novembre quei chip hanno la `sagoma-chip` (prima erano pillole CSS da
+  20 px), alti 33 px come i tag della scheda annuncio.
 - Altri posti: anteprima profilo in chat (Messaggio/Profilo con didascalia),
   testa delle schede cartellino e lavoro (Chat/Profilo), ruolo nella scheda
   lavoro, icona in Impostazioni, icone degli stati vuoti (Lista ×3,
@@ -2444,8 +2446,15 @@ PGlite: raggruppamenti, preferenze, silenzio, RLS, due giri), edge function
 - Eventi: trigger su `applications`, `cartellini`, `messages`, `reviews`,
   `jobs` (potenziati vicini); `notifiche_a_orario()` ogni ora (pg_cron) per
   in scadenza (6 h), scaduto senza nessuno scelto, lavoro finito, promemoria
-  24 h prima (serve `jobs.inizio_il`, campo facoltativo «Quando inizia» nel
-  form).
+  del primo giorno di lavoro.
+- ⚠️ **Il promemoria viene dal CARTELLINO, non dall'annuncio** (7 novembre,
+  migration `20261107120000_promemoria_da_cartellino.sql`): «Quando inizia»
+  è stato tolto dal form (Tommaso: la data si decide dopo l'assunzione,
+  nella bacheca). Il giorno prima di `cartellini.data_inizio`, dalle 18 di
+  Genova, «Domani inizi a lavorare da X» (o «Domani lavori da X» se è un
+  giorno solo), con gli `orari` concordati come testo. Il cartellino ha la
+  data ma non l'ora: per questo non più «24 ore prima». `jobs.inizio_il`
+  resta nel database, vuota e inutilizzata.
 - **Email** (Resend) solo per «ti ha scelto» e «nuova candidatura» se
   ANCORA NON LETTE dopo 2 ore, e per l'esito della verifica (subito, la
   scrive `verifica-partita-iva`).
@@ -2458,8 +2467,15 @@ PGlite: raggruppamenti, preferenze, silenzio, RLS, due giri), edge function
   (categoria `account`) non si spengono.
 
 ## L'app
-- **Installabile**: `public/manifest.webmanifest`, icone `public/icons/*-v1`
-  (⚠️ PROVVISORIE, la «P» del logo: da ridisegnare), `public/sw.js` — SOLO
+- **Installabile**: `public/manifest.webmanifest`, icone `public/icons/*-v2`
+  (⚠️ PROVVISORIE, il tentacolo del logo: da ridisegnare). Le v1 erano
+  spostate di ~20 px a destra e alte metà icona (Tommaso: «decentrato e
+  piccolino»). Le v2 sono rigenerate dal VETTORE (il tracciato del
+  tentacolo in `logo-worker-scuro-v1.svg`), centrate sul riquadro del
+  disegno e misurate sul raggio: la `maskable` sta in un cerchio di raggio
+  0,34 del lato (Android ritaglia a cerchio, la zona sicura è 0,40), le
+  `any` a 0,40, il badge bianco a 0,46.
+  `public/sw.js`, cioè il service worker: SOLO `public/sw.js` — SOLO
   push e tocco, nessuna cache (niente versioni vecchie servite per giorni).
   Registrato da `main.tsx`, mai dentro l'iframe di Lovable.
 - **`lib/notifiche/canale.ts`**: l'interfaccia `CanalePush` (stato, attiva,
@@ -2494,6 +2510,12 @@ PGlite: raggruppamenti, preferenze, silenzio, RLS, due giri), edge function
   push senza mostrarli.
 - **Impostazioni**: «Su questo telefono» (stato + Attiva) e un interruttore
   per categoria, diverse per ruolo. Via l'interruttore «Notifiche» finto.
+- **`ui/switch.tsx` ridisegnato** (7 novembre): binario `sagoma-chip` alto
+  32 px (la maschera vuole più di 30), acceso nel pieno del ruolo, spento
+  `paper-line`; pomello a cerchio imperfetto col filo delle card, senza
+  ombra. La maschera sta su uno span interno, non sul bottone, se no
+  taglierebbe pomello e anello del fuoco. Vale anche per «Togli l'annuncio
+  dalla mappa» nel cartellino.
 - Il toast vecchio «Nuovo messaggio da…» in Messaggi è stato tolto.
 
 ## Da fare / da decidere
