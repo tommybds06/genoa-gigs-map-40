@@ -505,20 +505,20 @@
      card. La card candidatura compare cinque volte di fila: cinque copie
      identiche leggono come fotocopia. E' la lezione della texture, applicata
      prima di sbagliare invece che dopo. */
-  @supports (-webkit-mask-box-image: url("/images/cornici/sagoma-card-a.svg")) or
-            (mask-border: url("/images/cornici/sagoma-card-a.svg")) {
+  @supports (-webkit-mask-box-image: url("/images/cornici/sagoma-card-a-3x.png")) or
+            (mask-border: url("/images/cornici/sagoma-card-a-3x.png")) {
     .material-card,
     .material-card-elevated {
       position: relative;
       border-radius: 0;
       border-color: transparent;
       box-shadow: none;
-      -webkit-mask-box-image-source: url("/images/cornici/sagoma-card-a.svg");
-      -webkit-mask-box-image-slice: 28 fill;
+      -webkit-mask-box-image-source: url("/images/cornici/sagoma-card-a-3x.png");
+      -webkit-mask-box-image-slice: 84 fill;
       -webkit-mask-box-image-width: 28px;
       -webkit-mask-box-image-repeat: stretch;
-      mask-border-source: url("/images/cornici/sagoma-card-a.svg");
-      mask-border-slice: 28 fill;
+      mask-border-source: url("/images/cornici/sagoma-card-a-3x.png");
+      mask-border-slice: 84 fill;
       mask-border-width: 28px;
       mask-border-repeat: stretch;
     }
@@ -547,8 +547,8 @@
       border-style: solid;
       border-color: transparent;
       border-width: 28px;
-      border-image-source: url("/images/cornici/bordo-card-a.svg");
-      border-image-slice: 28;
+      border-image-source: url("/images/cornici/bordo-card-a-3x.png");
+      border-image-slice: 84;
       border-image-width: 28px;
       border-image-repeat: stretch;
     }
@@ -557,32 +557,32 @@
        (sezioni che non sono fratelli). Chi non rientra resta sulla "a". */
     .material-card:nth-of-type(4n + 2),
     .card-tilt > *:nth-child(4n + 2) .material-card {
-      -webkit-mask-box-image-source: url("/images/cornici/sagoma-card-b.svg");
-      mask-border-source: url("/images/cornici/sagoma-card-b.svg");
+      -webkit-mask-box-image-source: url("/images/cornici/sagoma-card-b-3x.png");
+      mask-border-source: url("/images/cornici/sagoma-card-b-3x.png");
     }
     .material-card:nth-of-type(4n + 2)::after,
     .card-tilt > *:nth-child(4n + 2) .material-card::after {
-      border-image-source: url("/images/cornici/bordo-card-b.svg");
+      border-image-source: url("/images/cornici/bordo-card-b-3x.png");
     }
 
     .material-card:nth-of-type(4n + 3),
     .card-tilt > *:nth-child(4n + 3) .material-card {
-      -webkit-mask-box-image-source: url("/images/cornici/sagoma-card-c.svg");
-      mask-border-source: url("/images/cornici/sagoma-card-c.svg");
+      -webkit-mask-box-image-source: url("/images/cornici/sagoma-card-c-3x.png");
+      mask-border-source: url("/images/cornici/sagoma-card-c-3x.png");
     }
     .material-card:nth-of-type(4n + 3)::after,
     .card-tilt > *:nth-child(4n + 3) .material-card::after {
-      border-image-source: url("/images/cornici/bordo-card-c.svg");
+      border-image-source: url("/images/cornici/bordo-card-c-3x.png");
     }
 
     .material-card:nth-of-type(4n + 4),
     .card-tilt > *:nth-child(4n + 4) .material-card {
-      -webkit-mask-box-image-source: url("/images/cornici/sagoma-card-d.svg");
-      mask-border-source: url("/images/cornici/sagoma-card-d.svg");
+      -webkit-mask-box-image-source: url("/images/cornici/sagoma-card-d-3x.png");
+      mask-border-source: url("/images/cornici/sagoma-card-d-3x.png");
     }
     .material-card:nth-of-type(4n + 4)::after,
     .card-tilt > *:nth-child(4n + 4) .material-card::after {
-      border-image-source: url("/images/cornici/bordo-card-d.svg");
+      border-image-source: url("/images/cornici/bordo-card-d-3x.png");
     }
   }
 
@@ -693,8 +693,8 @@
      ⚠️ `mask-border` e' Blink/WebKit (l'app girera' li' con Despia; Firefox
      desktop no). Dentro @supports: dove non c'e', resta il raggio CSS e non
      si rompe niente. */
-  @supports (-webkit-mask-box-image: url("/images/cornici/sagoma-bottone.svg")) or
-            (mask-border: url("/images/cornici/sagoma-bottone.svg")) {
+  @supports (-webkit-mask-box-image: url("/images/cornici/sagoma-bottone-3x.png")) or
+            (mask-border: url("/images/cornici/sagoma-bottone-3x.png")) {
     .sagoma-btn,
     .sagoma-chip,
     .sagoma-tag,
@@ -707,10 +707,10 @@
 
     /* --- bottone pieno, pillola --- */
     .sagoma-btn {
-      -webkit-mask-box-image-source: url("/images/cornici/sagoma-bottone.svg");
-      -webkit-mask-box-image-slice: 49 54 fill;
-      mask-border-source: url("/images/cornici/sagoma-bottone.svg");
-      mask-border-slice: 49 54 fill;
+      -webkit-mask-box-image-source: url("/images/cornici/sagoma-bottone-3x.png");
+      -webkit-mask-box-image-slice: 147 162 fill;
+      mask-border-source: url("/images/cornici/sagoma-bottone-3x.png");
+      mask-border-slice: 147 162 fill;
     }
     /* Le misure seguono l'altezza del bottone (44 e 56 su una tavola alta 99).
        Il valore verticale sta sotto meta' altezza per lasciare una banda da
@@ -726,11 +726,11 @@
 
     /* --- chip, pillola bassa (~32px) --- */
     .sagoma-chip {
-      -webkit-mask-box-image-source: url("/images/cornici/sagoma-chip.svg");
-      -webkit-mask-box-image-slice: 24 20 fill;
+      -webkit-mask-box-image-source: url("/images/cornici/sagoma-chip-3x.png");
+      -webkit-mask-box-image-slice: 72 60 fill;
       -webkit-mask-box-image-width: 15px 13px;
-      mask-border-source: url("/images/cornici/sagoma-chip.svg");
-      mask-border-slice: 24 20 fill;
+      mask-border-source: url("/images/cornici/sagoma-chip-3x.png");
+      mask-border-slice: 72 60 fill;
       mask-border-width: 15px 13px;
     }
 
@@ -748,8 +748,8 @@
       pointer-events: none;
       border-style: solid;
       border-color: transparent;
-      border-image-source: url("/images/cornici/bordo-bottone.svg");
-      border-image-slice: 49 54;
+      border-image-source: url("/images/cornici/bordo-bottone-3x.png");
+      border-image-slice: 147 162;
       border-image-repeat: stretch;
       border-width: 27px 30px;
       border-image-width: 27px 30px;
@@ -772,7 +772,7 @@
        cornice, e cosi' resta indipendente dal box del componente. */
     .linea-divisoria {
       border: 0;
-      background-image: url("/images/cornici/linea-divisoria.svg");
+      background-image: url("/images/cornici/linea-divisoria-3x.png");
       background-repeat: repeat-x;
       background-position: center bottom;
       background-size: 241px 4px;
@@ -781,7 +781,7 @@
 
     .linea-divisoria-sopra {
       border: 0;
-      background-image: url("/images/cornici/linea-divisoria.svg");
+      background-image: url("/images/cornici/linea-divisoria-3x.png");
       background-repeat: repeat-x;
       background-position: center top;
       background-size: 241px 4px;
@@ -794,7 +794,7 @@
        (preserveAspectRatio="none"), quindi schiacciarlo assottiglia il tratto. */
     .linea-divisoria-sottile {
       border: 0;
-      background-image: url("/images/cornici/linea-divisoria.svg");
+      background-image: url("/images/cornici/linea-divisoria-3x.png");
       background-repeat: repeat-x;
       background-position: center top;
       background-size: 241px 2.5px;
@@ -821,8 +821,8 @@
       border-style: solid;
       border-color: transparent;
       border-width: 15px;
-      border-image-source: url("/images/cornici/bordo-campo.svg");
-      border-image-slice: 27 26;
+      border-image-source: url("/images/cornici/bordo-campo-3x.png");
+      border-image-slice: 81 78;
       border-image-width: 15px;
       border-image-repeat: stretch;
     }
@@ -830,24 +830,44 @@
   /* --- badge di stato (~26px): il chip riscalato piu' piccolo --- */
     .sagoma-badge {
       border-radius: 0;
-      -webkit-mask-box-image-source: url("/images/cornici/sagoma-chip.svg");
-      -webkit-mask-box-image-slice: 24 20 fill;
+      -webkit-mask-box-image-source: url("/images/cornici/sagoma-chip-3x.png");
+      -webkit-mask-box-image-slice: 72 60 fill;
       -webkit-mask-box-image-width: 12px 10px;
       -webkit-mask-box-image-repeat: stretch;
-      mask-border-source: url("/images/cornici/sagoma-chip.svg");
-      mask-border-slice: 24 20 fill;
+      mask-border-source: url("/images/cornici/sagoma-chip-3x.png");
+      mask-border-slice: 72 60 fill;
       mask-border-width: 12px 10px;
       mask-border-repeat: stretch;
     }
 
     /* --- tessera quadrata con icona (~110x95): griglia dei ruoli --- */
     .sagoma-tag {
-      -webkit-mask-box-image-source: url("/images/cornici/sagoma-tag.svg");
-      -webkit-mask-box-image-slice: 35 fill;
+      -webkit-mask-box-image-source: url("/images/cornici/sagoma-tag-3x.png");
+      -webkit-mask-box-image-slice: 105 fill;
       -webkit-mask-box-image-width: 33px;
-      mask-border-source: url("/images/cornici/sagoma-tag.svg");
-      mask-border-slice: 35 fill;
+      mask-border-source: url("/images/cornici/sagoma-tag-3x.png");
+      mask-border-slice: 105 fill;
       mask-border-width: 33px;
+    }
+
+    /* --- TESSERA (48 e 56 px): la stessa forma, in UN PEZZO SOLO ---
+       Su un quadrato da 56 gli angoli di .sagoma-tag (33 + 33 = 66) non ci
+       stanno: il browser li riduce a 28 e i quattro pezzi del 9 sezioni si
+       toccano al CENTRO. Sul Pixel le giunture si vedevano come una croce
+       sottile sull'icona («una griglia strana sopra», Tommaso, video del 7
+       novembre), di più durante lo scatto `active:scale-95`.
+       sagoma-tessera-v1.svg è il disegno di sagoma-tag con i quattro angoli
+       da 35 già accostati (e sovrapposti di 0,6, così non c'è fessura): la
+       stessa forma di prima (confrontata a 2,625× e 4×), ma una maschera
+       sola, senza giunture. */
+    .sagoma-tessera {
+      border-radius: 0;
+      -webkit-mask-image: url("/images/cornici/sagoma-tessera-v1-3x.png");
+      mask-image: url("/images/cornici/sagoma-tessera-v1-3x.png");
+      -webkit-mask-size: 100% 100%;
+      mask-size: 100% 100%;
+      -webkit-mask-repeat: no-repeat;
+      mask-repeat: no-repeat;
     }
 
     /* --- FOTO: il margine tagliato fa da contenitore ---
@@ -864,28 +884,28 @@
        maschera taglia gia' tutto, compresi i figli in `absolute` del
        carosello. */
     .sagoma-foto {
-      -webkit-mask-box-image-source: url("/images/cornici/sagoma-card-a.svg");
-      -webkit-mask-box-image-slice: 28 fill;
+      -webkit-mask-box-image-source: url("/images/cornici/sagoma-card-a-3x.png");
+      -webkit-mask-box-image-slice: 84 fill;
       -webkit-mask-box-image-width: 28px;
-      mask-border-source: url("/images/cornici/sagoma-card-a.svg");
-      mask-border-slice: 28 fill;
+      mask-border-source: url("/images/cornici/sagoma-card-a-3x.png");
+      mask-border-slice: 84 fill;
       mask-border-width: 28px;
     }
 
     /* Variante ribaltata, per le griglie di foto: due ritagli identici uno
        accanto all'altro leggono come fotocopia — la stessa lezione delle card. */
     .sagoma-foto-b {
-      -webkit-mask-box-image-source: url("/images/cornici/sagoma-card-c.svg");
-      mask-border-source: url("/images/cornici/sagoma-card-c.svg");
+      -webkit-mask-box-image-source: url("/images/cornici/sagoma-card-c-3x.png");
+      mask-border-source: url("/images/cornici/sagoma-card-c-3x.png");
     }
 
     /* --- riga larga e bassa (~46px): quartieri, durata in Crea annuncio --- */
     .sagoma-quartiere {
-      -webkit-mask-box-image-source: url("/images/cornici/sagoma-quartiere.svg");
-      -webkit-mask-box-image-slice: 27 26 fill;
+      -webkit-mask-box-image-source: url("/images/cornici/sagoma-quartiere-3x.png");
+      -webkit-mask-box-image-slice: 81 78 fill;
       -webkit-mask-box-image-width: 22px 21px;
-      mask-border-source: url("/images/cornici/sagoma-quartiere.svg");
-      mask-border-slice: 27 26 fill;
+      mask-border-source: url("/images/cornici/sagoma-quartiere-3x.png");
+      mask-border-slice: 81 78 fill;
       mask-border-width: 22px 21px;
     }
   }
@@ -1128,8 +1148,8 @@
   border-style: solid;
   border-color: transparent;
   border-width: 24px;
-  border-image-source: url("/images/cornici/bordo-campo.svg");
-  border-image-slice: 27 26;
+  border-image-source: url("/images/cornici/bordo-campo-3x.png");
+  border-image-slice: 81 78;
   border-image-width: 24px;
   border-image-repeat: stretch;
 }
@@ -1161,23 +1181,23 @@ button.campo-guscio:focus-visible {
 
 .campo-guscio:focus-within::after,
 button.campo-guscio:focus::after {
-  border-image-source: url("/images/cornici/bordo-campo-attivo.svg");
+  border-image-source: url("/images/cornici/bordo-campo-attivo-3x.png");
 }
 
 [data-ruolo="employer"] .campo-guscio:focus-within::after,
 [data-ruolo="employer"] button.campo-guscio:focus::after {
-  border-image-source: url("/images/cornici/bordo-campo-attivo-blu.svg");
+  border-image-source: url("/images/cornici/bordo-campo-attivo-blu-3x.png");
 }
 
 /* Gerarchia scura (vedi «la gerarchia» in alto): il tratto del campo attivo
    è un file col colore dentro, quindi serve la sua copia scura. */
 [data-gerarchia="scura"] .campo-guscio:focus-within::after,
 [data-gerarchia="scura"] button.campo-guscio:focus::after {
-  border-image-source: url("/images/cornici/bordo-campo-attivo-scuro-v1.svg");
+  border-image-source: url("/images/cornici/bordo-campo-attivo-scuro-v1-3x.png");
 }
 [data-gerarchia="scura"][data-ruolo="employer"] .campo-guscio:focus-within::after,
 [data-gerarchia="scura"][data-ruolo="employer"] button.campo-guscio:focus::after {
-  border-image-source: url("/images/cornici/bordo-campo-attivo-blu-scuro-v1.svg");
+  border-image-source: url("/images/cornici/bordo-campo-attivo-blu-scuro-v1-3x.png");
 }
 
 /* ---- CAMPO DATA: l'indicatore nativo, invisibile sopra la nostra icona ----
@@ -1241,12 +1261,12 @@ body [data-sonner-toaster] {
 [data-sonner-toaster] [data-sonner-toast].toast-scotch[data-type="error"] {
   --velo: hsl(var(--danger) / 0.3);
 }
-@supports (-webkit-mask-box-image: url("/images/cornici/scotch-lungo-v1.svg")) or
-          (mask-border: url("/images/cornici/scotch-lungo-v1.svg")) {
+@supports (-webkit-mask-box-image: url("/images/cornici/scotch-lungo-v1-3x.png")) or
+          (mask-border: url("/images/cornici/scotch-lungo-v1-3x.png")) {
   [data-sonner-toaster] [data-sonner-toast].toast-scotch {
     border-radius: 0;
-    -webkit-mask-box-image: url("/images/cornici/scotch-lungo-v1.svg") 0 48 fill / 0 28px stretch;
-    mask-border: url("/images/cornici/scotch-lungo-v1.svg") 0 48 fill / 0 28px stretch;
+    -webkit-mask-box-image: url("/images/cornici/scotch-lungo-v1-3x.png") 0 144 fill / 0 28px stretch;
+    mask-border: url("/images/cornici/scotch-lungo-v1-3x.png") 0 144 fill / 0 28px stretch;
   }
   [data-sonner-toaster] {
     filter:
@@ -1275,32 +1295,33 @@ body [data-sonner-toaster] {
    lato worker. Quattro varianti come il filo normale, nei file
    bordo-card-*-evidenza-v1.svg. Fuori dai layer: deve battere le regole
    delle varianti per posizione. */
-@supports (-webkit-mask-box-image: url("/images/cornici/sagoma-card-a.svg")) or
-          (mask-border: url("/images/cornici/sagoma-card-a.svg")) {
+@supports (-webkit-mask-box-image: url("/images/cornici/sagoma-card-a-3x.png")) or
+          (mask-border: url("/images/cornici/sagoma-card-a-3x.png")) {
   .material-card.card-evidenza::after {
-    border-image-source: url("/images/cornici/bordo-card-a-evidenza-v1.svg");
+    border-image-source: url("/images/cornici/bordo-card-a-evidenza-v1-3x.png");
   }
   .material-card.card-evidenza:nth-of-type(4n + 2)::after,
   .card-tilt > *:nth-child(4n + 2) .material-card.card-evidenza::after {
-    border-image-source: url("/images/cornici/bordo-card-b-evidenza-v1.svg");
+    border-image-source: url("/images/cornici/bordo-card-b-evidenza-v1-3x.png");
   }
   .material-card.card-evidenza:nth-of-type(4n + 3)::after,
   .card-tilt > *:nth-child(4n + 3) .material-card.card-evidenza::after {
-    border-image-source: url("/images/cornici/bordo-card-c-evidenza-v1.svg");
+    border-image-source: url("/images/cornici/bordo-card-c-evidenza-v1-3x.png");
   }
   .material-card.card-evidenza:nth-of-type(4n + 4)::after,
   .card-tilt > *:nth-child(4n + 4) .material-card.card-evidenza::after {
-    border-image-source: url("/images/cornici/bordo-card-d-evidenza-v1.svg");
+    border-image-source: url("/images/cornici/bordo-card-d-evidenza-v1-3x.png");
   }
 }
+
 
 /* LA LINEA DEL TEMPO (Crea annuncio, la durata: components/jobs/LineaDurata)
    — il tratto delle divisorie come MASCHERA, così prende il colore del
    fondo: carta per la linea intera, il pieno del ruolo per il pezzo fino
    alla durata scelta. Il disegno si stira (preserveAspectRatio="none"). */
 .linea-tempo {
-  -webkit-mask-image: url("/images/cornici/linea-divisoria.svg");
-  mask-image: url("/images/cornici/linea-divisoria.svg");
+  -webkit-mask-image: url("/images/cornici/linea-divisoria-3x.png");
+  mask-image: url("/images/cornici/linea-divisoria-3x.png");
   -webkit-mask-size: 100% 100%;
   mask-size: 100% 100%;
   -webkit-mask-repeat: no-repeat;

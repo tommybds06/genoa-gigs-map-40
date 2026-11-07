@@ -67,7 +67,7 @@ export function TesseraIcona({
   return (
     <div
       aria-hidden="true"
-      className={cn("sagoma-tag flex shrink-0 items-center justify-center rounded-xl", MISURE[misura].box, colori, className)}
+      className={cn("sagoma-tessera flex shrink-0 items-center justify-center rounded-xl", MISURE[misura].box, colori, className)}
     >
       <I className={MISURE[misura].icona} />
     </div>
@@ -109,7 +109,7 @@ export function Tessera({
   const coloriRuolo = useColoriTessera();
   const colori = spenta ? "bg-paper-sunken text-ink-soft" : coloriRuolo;
   const disegno = (
-    <span className={cn("sagoma-tag flex shrink-0 items-center justify-center rounded-xl", MISURE[misura].box, colori)}>
+    <span className={cn("sagoma-tessera flex shrink-0 items-center justify-center rounded-xl", MISURE[misura].box, colori)}>
       <I className={cn(MISURE[misura].icona, classeIcona)} />
     </span>
   );

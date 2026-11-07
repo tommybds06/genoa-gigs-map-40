@@ -87,7 +87,7 @@ export function TesseraRuolo({
       >
         <div
           className={cn(
-            "sagoma-tag flex shrink-0 items-center justify-center rounded-xl transition-colors duration-300",
+            "sagoma-tessera flex shrink-0 items-center justify-center rounded-xl transition-colors duration-300",
             piccola ? "h-9 w-9" : "mb-3 h-12 w-12",
             scelto
               ? employer

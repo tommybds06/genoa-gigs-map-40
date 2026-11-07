@@ -411,6 +411,11 @@ da 33 px, su 48–56 non ci stanno (33+33 = 66), il browser li riduce e il
 quadrato diventa un «sasso». ⚠️ Sopra ~66 px compaiono i lati dritti: per
 questo le misure sono solo due.
 
+- ⚠️ **Classe `.sagoma-tessera`, non `.sagoma-tag`** (7 novembre): col 9
+  sezioni i quattro angoli si toccano al CENTRO, e sul Pixel le giunture si
+  vedevano come una croce sottile sull'icona («una griglia strana»).
+  `sagoma-tessera-v1.svg` sono i quattro angoli di sagoma-tag già accostati
+  (sovrapposti di 0,6): stessa forma, una maschera sola (`mask-image`).
 - ⚠️ **Colori: PIENO CHIARO del ruolo + icona in INCHIOSTRO** (`bg-primary` /
   `bg-employer` + `text-ink`), come i giorni selezionati nella scheda lavoro.
   Prima era fondo `accent` con l'icona in `primary-strong` (`#A7531B`):
@@ -540,6 +545,16 @@ inchiostro sul bordo alto, dentro il buco, la fa leggere come un taglio.
 - ⚠️ vaul allunga la scheda in basso con un `::after` a `background:
   inherit`: con la scheda trasparente diventava trasparente anche lui. Regola
   in fondo a `index.css`, con un attributo in più del selettore di vaul.
+
+## ⚠️ Le sagome si usano in PNG a 3× (dal 7 novembre)
+
+Gli SVG in `public/images/cornici/` sono la SORGENTE (i disegni di Tommaso);
+il CSS usa le copie `<nome>-3x.png`, fatte da `node brand/sagome-png.mjs`.
+Un SVG come maschera o bordo si ridisegna come vettore a ogni ridisegno: era
+il grosso del lag sul telefono (§25.6). ⚠️ Gli slice sono in pixel
+dell'IMMAGINE, quindi nel CSS sono il triplo della tavola (28 → 84, 49 54 →
+147 162). Chi aggiunge o cambia una sagoma: SVG, script, slice × 3, e nome
+nuovo se il disegno cambia.
 
 ## Il punto che decide tutto: MASCHERA, non bordo
 
@@ -912,6 +927,12 @@ di react-map-gl non lo dichiarano e il typecheck fallisce (successo due volte).
   animazioni, `transform: none`. Per animare un ingresso dentro una pagina:
   `element.animate()` nativo in un `useLayoutEffect` (vedi `IngressoPin`),
   o un `AnimatePresence` nuovo attorno.
+- ⚠️ **`duration-[240ms]` e `ease-[cubic-bezier(…)]` NON vengono generate**:
+  `tailwindcss-animate` usa anche lui `duration-` ed `ease-` (per le
+  animazioni), Tailwind le trova ambigue, avvisa in console e non scrive la
+  classe. Il valore va scritto come proprietà: `[transition-duration:240ms]`,
+  `[transition-timing-function:cubic-bezier(…)]`. L'avviso si vede con
+  `npx tailwindcss -i src/index.css -o /dev/null`.
 - **Nel pannello browser con l'emulazione mobile i clic a coordinate
   sbagliano bersaglio** (il viewport emulato viene rimpicciolito per entrare
   nel pannello). Se un clic «non fa niente», riprovare senza emulazione prima
@@ -2293,11 +2314,12 @@ fotogrammi persi; dal tocco allo schermo 24–56 ms (prima 40–96, con picchi).
 
 - ⚠️ framer manda al compositor solo `transform`, `opacity`, `filter`,
   `clipPath` (motion-dom, `acceleratedValues`): con `x` l'ingresso da destra
-  girava sul thread principale mentre React montava la pagina. Ora
-  `transform: "translateX(…)"`, e a fine corsa `transitionEnd: { transform:
-  "none" }` — ⚠️ un `none` come destinazione framer lo trasforma in
-  `translateX(0%)`, e lì resta (misurato). Verificato con
-  `document.getAnimations()`: ingresso e uscita sono animazioni WAAPI.
+  girava sul thread principale mentre React montava la pagina.
+- ⚠️ **Dal 7 novembre niente framer: `element.animate` nativo** (vedi §25.6,
+  il fotogramma sbagliato a fine corsa). Ingresso `fill: "backwards"` (a fine
+  corsa resta lo stile dell'elemento, nessuna trasformazione), uscita `fill:
+  "forwards"` + `usePresence` di framer per dire ad AnimatePresence quando
+  toglierla. `initial={false}` si legge da `PresenceContext`.
 - **Profilo pubblico** in react-query (`useProfiloPubblico`): le tre letture
   partono INSIEME (erano in fila), e la scheda dell'annuncio lo precarica
   dopo 400 ms; la chat precarica quello dell'altra persona.
@@ -2312,9 +2334,50 @@ fuori (sfondo dell'anteprima avatar, contenitore della galleria), le mezze
 stelle della recensione, il carosello del Profilo (litigherebbe col
 trascinamento) e il «rispondi» della bolla, nascosto sul telefono.
 
+## 6. Il video del 7 novembre — cosa c'era davvero
+
+Tommaso, dal Pixel sull'app PUBBLICATA: «lag ogni volta che si clicca
+impostazioni, notifiche, o si va in un profilo e si torna indietro»; «le
+icone delle preferenze hanno una griglia strana sopra e laggano».
+
+**Come si legge un video così** (`brand/video/`): il registratore di Android
+scrive un fotogramma SOLO quando lo schermo cambia, a 60 al secondo. Quindi
+nei tempi dei fotogrammi (`tempi.swift`: tempo + differenza dal precedente)
+un BUCO durante un movimento è il telefono che non disegna: è il lag,
+misurato. `fotogrammi.swift` estrae i fotogrammi esatti. ⚠️ Chrome headless
+su quel mp4 di WhatsApp restituiva sempre lo stesso fotogramma: AVFoundation
+no. Nel video: le animazioni scorrevano a 60, i difetti erano altri tre.
+
+1. **Un fotogramma SBAGLIATO alla fine di ogni ingresso e uscita.** Entrando
+   Impostazioni ricompariva il Profilo per un fotogramma; uscendo,
+   Impostazioni ricompariva intera. Causa in motion-dom (`NativeAnimation`,
+   `onfinish`): framer cancella l'animazione e scrive il valore finale nel
+   motion value, che arriva al DOM al fotogramma DOPO; in mezzo si vede lo
+   stile di partenza. `PageTransition` ora è nativa (§25.4). Misurato
+   leggendo la posizione a ogni fotogramma: prima «… 1 0 390 0 …», ora
+   nessun salto.
+2. **Il DISEGNO, non il JavaScript.** Col processore rallentato 4× il codice
+   di un tocco sta sotto i 20 ms; i 300 ms del telefono sono
+   rasterizzazione. ⚠️ `setCPUThrottlingRate` NON rallenta il disegno: per
+   confrontare si usa la GPU software (`--use-angle=swiftshader
+   --enable-gpu-rasterization`), che esagera ma ordina giusto. Lì una
+   tessera degli interessi faceva 320 ms come nel video. Il grosso erano le
+   **sagome SVG**: ogni maschera e ogni bordo ridisegna il vettore, 9
+   sezioni per elemento, decine di elementi. **Ora sono PNG a 3×**
+   (`brand/sagome-png.mjs`, slice triplicati nel CSS, §6): tessera 320 →
+   160 ms, «Modifica» 130 → 56, ingranaggio 105 → 64, campanella 56 → 28.
+   A schermo identiche: ≤0,03% di pixel diversi su 8 schermate, solo
+   antialiasing dei bordi.
+3. **La «griglia strana» erano le giunture del 9 sezioni** sulle tessere da
+   56 px, dove i quattro angoli si toccano al centro: una croce sottile.
+   Ora `.sagoma-tessera`, la stessa forma in un pezzo solo (§6).
+
 ## Resta
 
 - Provare sul Pixel, sull'indirizzo pubblicato.
+- Se resta lag all'APERTURA di una pagina: è il disegno della pagina nuova
+  prima che parta lo scorrimento. Prossimo passo, misurare sul telefono vero
+  (chrome://inspect via USB, debug USB acceso sul Pixel).
 - Il pacchetto `react-swipeable` non lo usa più nessuno: toglierlo cambia
   `bun.lock`, che aggiorna Lovable.
 - L'avvio: l'app è un file solo da 2,96 MB (875 KB compressi). Spezzare le
