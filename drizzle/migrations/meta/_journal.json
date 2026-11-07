@@ -64,6 +64,13 @@
       "when": 1793984078997,
       "tag": "0008_sistema_notifiche",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1794044770261,
+      "tag": "0009_promemoria_da_cartellino",
+      "breakpoints": true
     }
   ]
 }
