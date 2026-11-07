@@ -521,6 +521,8 @@
       mask-border-slice: 84 fill;
       mask-border-width: 28px;
       mask-border-repeat: stretch;
+      --giunta-v: 28px;
+      --giunta-o: 28px;
     }
 
     .material-card:hover,
@@ -718,10 +720,14 @@
     .sagoma-btn-md {
       -webkit-mask-box-image-width: 21px 24px;
       mask-border-width: 21px 24px;
+      --giunta-v: 21px;
+      --giunta-o: 24px;
     }
     .sagoma-btn-lg {
       -webkit-mask-box-image-width: 27px 30px;
       mask-border-width: 27px 30px;
+      --giunta-v: 27px;
+      --giunta-o: 30px;
     }
 
     /* --- chip, pillola bassa (~32px) --- */
@@ -732,6 +738,8 @@
       mask-border-source: url("/images/cornici/sagoma-chip-3x.png");
       mask-border-slice: 72 60 fill;
       mask-border-width: 15px 13px;
+      --giunta-v: 15px;
+      --giunta-o: 13px;
     }
 
     /* ---- BOTTONI VUOTI: il contorno disegnato ----
@@ -838,6 +846,8 @@
       mask-border-slice: 72 60 fill;
       mask-border-width: 12px 10px;
       mask-border-repeat: stretch;
+      --giunta-v: 12px;
+      --giunta-o: 10px;
     }
 
     /* --- tessera quadrata con icona (~110x95): griglia dei ruoli --- */
@@ -848,6 +858,8 @@
       mask-border-source: url("/images/cornici/sagoma-tag-3x.png");
       mask-border-slice: 105 fill;
       mask-border-width: 33px;
+      --giunta-v: 33px;
+      --giunta-o: 33px;
     }
 
     /* --- TESSERA (48 e 56 px): la stessa forma, in UN PEZZO SOLO ---
@@ -890,6 +902,8 @@
       mask-border-source: url("/images/cornici/sagoma-card-a-3x.png");
       mask-border-slice: 84 fill;
       mask-border-width: 28px;
+      --giunta-v: 28px;
+      --giunta-o: 28px;
     }
 
     /* Variante ribaltata, per le griglie di foto: due ritagli identici uno
@@ -907,6 +921,49 @@
       mask-border-source: url("/images/cornici/sagoma-quartiere-3x.png");
       mask-border-slice: 81 78 fill;
       mask-border-width: 22px 21px;
+      --giunta-v: 22px;
+      --giunta-o: 21px;
+    }
+
+    /* ---- LA TOPPA SULLE GIUNTURE (7 novembre, sera) ----
+       Il 9 sezioni disegna i nove pezzi uno accanto all'altro. Con le sagome
+       in PNG (§6) ogni pezzo ha il bordo sfumato: dove due pezzi si toccano
+       a metà di un pixel, ognuno lo copre a metà e il pixel resta trasparente
+       per un quarto. Sul Pixel (2,625 pixel per punto, quasi sempre a metà)
+       erano linee chiare attraverso bottoni, chip e card: l'«impalcatura
+       bianca» degli screenshot di Tommaso. A 2× e 3× i bordi cadono sui pixel
+       interi e non si vede niente: per questo sul computer era sfuggita.
+       Misurato a 2,625 (pixel fuori colore DENTRO la forma, 8 bottoni):
+       PNG 11.990, SVG 1.235, PNG + toppa 1.222 — il resto è il bordo curvo.
+
+       La toppa: due fasce PIENE nella stessa maschera (si sommano al 9
+       sezioni), una orizzontale e una verticale, che coprono le giunture
+       DENTRO la forma. Ogni giuntura cade dove finisce un angolo, cioè dove
+       il bordo è già quasi dritto e a 1 px dal riquadro: a 3 px di distanza
+       si è dentro di sicuro. Le misure dei pezzi le dà ogni sagoma
+       (`--giunta-v` sopra e sotto, `--giunta-o` ai lati); `max(4px, …)`
+       copre anche il caso in cui il riquadro è più piccolo dei due angoli e
+       il browser li rimpicciolisce fino a farli toccare al centro. */
+    .material-card,
+    .material-card-elevated,
+    .sagoma-btn,
+    .sagoma-chip,
+    .sagoma-badge,
+    .sagoma-tag,
+    .sagoma-foto,
+    .sagoma-quartiere {
+      -webkit-mask-image: linear-gradient(#000 0 0), linear-gradient(#000 0 0);
+      mask-image: linear-gradient(#000 0 0), linear-gradient(#000 0 0);
+      -webkit-mask-size:
+        calc(100% - 6px) max(4px, calc(100% - 2 * var(--giunta-v, 50vh) + 4px)),
+        max(4px, calc(100% - 2 * var(--giunta-o, 50vw) + 4px)) calc(100% - 6px);
+      mask-size:
+        calc(100% - 6px) max(4px, calc(100% - 2 * var(--giunta-v, 50vh) + 4px)),
+        max(4px, calc(100% - 2 * var(--giunta-o, 50vw) + 4px)) calc(100% - 6px);
+      -webkit-mask-position: center;
+      mask-position: center;
+      -webkit-mask-repeat: no-repeat;
+      mask-repeat: no-repeat;
     }
   }
 
@@ -1231,18 +1288,25 @@ button.campo-guscio:focus::after {
      ma su un fondo di FOGLIO, cioè opaco: un toast passa sopra la mappa e le
      foto, e il testo deve reggere ovunque. Inchiostro sopra: 8,7 su arancio,
      7,3 su blu. Gli errori sono terracotta per tutti (§5): 7,8.
-   - «Disegnato»: il contorno non può stare sul toast (la maschera lo
-     taglierebbe), quindi è sul contenitore dei toast — quattro ombre senza
-     sfocatura spostate di 0,8 px, cioè un filo nell'inchiostro del ruolo che
-     segue la forma.
+   - «Disegnato»: il filo è il CONTORNO dello stesso scotch
+     (bordo-scotch-*-v1.svg, nell'inchiostro del ruolo al 70%), come
+     `border-image` sul toast, tagliato a 9 sezioni come la maschera: la
+     maschera ne tiene la metà interna, come il filo delle card.
+     ⚠️ Fino al 7 novembre era un `filter` con cinque `drop-shadow` sul
+     CONTENITORE dei toast: a ogni toast il browser rifaceva lo strato
+     filtrato, e l'entrata scattava (Tommaso: «alcuni toast sono scattosi»).
+     Misurato con la GPU lenta, toast su una pagina ferma: col filtro un
+     fotogramma da ~480 ms in ogni serie di prove, senza zero fotogrammi
+     persi in 20 prove su 20. Non su un `::before`/`::after`: sonner li usa
+     per le sue aree di tocco.
    - Fuori da ogni @layer: lo stile di sonner arriva a runtime e vincerebbe. */
 :root {
   --toast-scotch: var(--brand-orange);
-  --toast-tratto: var(--brand-orange-ink);
+  --toast-filo: url("/images/cornici/bordo-scotch-worker-v1-3x.png");
 }
 [data-ruolo="employer"] {
   --toast-scotch: var(--brand-blue);
-  --toast-tratto: var(--brand-blue-ink);
+  --toast-filo: url("/images/cornici/bordo-scotch-employer-v1-3x.png");
 }
 [data-sonner-toaster] [data-sonner-toast].toast-scotch {
   --velo: hsl(var(--toast-scotch) / 0.55);
@@ -1267,14 +1331,20 @@ body [data-sonner-toaster] {
     border-radius: 0;
     -webkit-mask-box-image: url("/images/cornici/scotch-lungo-v1-3x.png") 0 144 fill / 0 28px stretch;
     mask-border: url("/images/cornici/scotch-lungo-v1-3x.png") 0 144 fill / 0 28px stretch;
-  }
-  [data-sonner-toaster] {
-    filter:
-      drop-shadow(0.8px 0 0 hsl(var(--toast-tratto) / 0.7))
-      drop-shadow(-0.8px 0 0 hsl(var(--toast-tratto) / 0.7))
-      drop-shadow(0 0.8px 0 hsl(var(--toast-tratto) / 0.7))
-      drop-shadow(0 -0.8px 0 hsl(var(--toast-tratto) / 0.7))
-      drop-shadow(0 2px 3px rgb(56 45 36 / 0.14));
+    /* La toppa sulle giunture (vedi le sagome): qui i pezzi sono solo ai
+       lati, quindi una fascia verticale. */
+    -webkit-mask-image: linear-gradient(#000 0 0);
+    mask-image: linear-gradient(#000 0 0);
+    -webkit-mask-size: calc(100% - 52px) calc(100% - 6px);
+    mask-size: calc(100% - 52px) calc(100% - 6px);
+    -webkit-mask-position: center;
+    mask-position: center;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    /* Il filo: senza bordo vero (larghezza 0), il disegno occupa comunque
+       il riquadro del toast; `fill` serve per i due lati lunghi, che stanno
+       nel pezzo di mezzo. */
+    border-image: var(--toast-filo) 0 144 fill / 0 28px stretch;
   }
 }
 

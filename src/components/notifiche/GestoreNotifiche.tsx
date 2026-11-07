@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { canaleAttivo } from "@/lib/notifiche/canale";
 import { apriNotifica } from "@/lib/notifiche/link";
+import { nomeCanale } from "@/lib/tempoReale";
 import {
   CAMPI_NOTIFICA,
   chatApertaOra,
@@ -30,8 +31,24 @@ import {
  * - IL DISPOSITIVO: a ogni accesso, se il permesso c'è, si rinnova
  *   l'iscrizione push (l'endpoint può cambiare, o l'account sul telefono).
  */
+/** Toglie dal telefono le notifiche silenziose mostrate con l'app in vista
+ *  (solo quelle: una arrivata nel frattempo con l'app chiusa resta). */
+async function chiudiNotificheInVista(tag: string) {
+  try {
+    const reg = await navigator.serviceWorker.getRegistration();
+    const aperte = (await reg?.getNotifications({ tag })) ?? [];
+    aperte.forEach((n) => n.data?.inVista && n.close());
+  } catch {
+    /* niente: resta nel centro notifiche del telefono, nessun danno */
+  }
+}
+
 export function GestoreNotifiche() {
   const { user } = useAuth();
+  // L'id, non l'oggetto: `user` cambia identità a ogni evento della sessione
+  // (rinnovo del token ogni ora, ritorno in primo piano) e ogni effetto qui
+  // sotto ripartiva — iscrizione push rifatta, tempo reale riabbonato.
+  const uid = user?.id;
   const qc = useQueryClient();
   const location = useLocation();
   // In un ref: `navigate` cambia a ogni navigazione, e il tempo reale si
@@ -53,24 +70,31 @@ export function GestoreNotifiche() {
 
   // Il dispositivo.
   useEffect(() => {
-    if (user) canaleAttivo.sincronizza();
-  }, [user]);
+    if (uid) canaleAttivo.sincronizza();
+  }, [uid]);
 
   // `/?notifica=<id>`: dal push con l'app chiusa, o dall'email.
   useEffect(() => {
-    if (!user) return;
+    if (!uid) return;
     const id = new URLSearchParams(location.search).get("notifica");
     if (!id) return;
     navigate.current(location.pathname, { replace: true });
     apriDaId.current(id);
-  }, [user, location.search, location.pathname]);
+  }, [uid, location.search, location.pathname]);
 
   // Il tocco sul push con l'app già aperta.
   useEffect(() => {
     if (!("serviceWorker" in navigator)) return;
     const ascolta = (e: MessageEvent) => {
       if (e.data?.tipo === "notifica-toccata" && e.data.notifica) apriDaId.current(e.data.notifica);
-      if (e.data?.tipo === "notifica-arrivata") qc.invalidateQueries({ queryKey: ["notifiche"] });
+      if (e.data?.tipo === "notifica-arrivata") {
+        qc.invalidateQueries({ queryKey: ["notifiche"] });
+        // Su Android il service worker la mostra anche con l'app in vista,
+        // silenziosa, se no Chrome ne metterebbe una sua vuota (public/sw.js).
+        // Qui c'è già il toast: la si toglie. Dopo 2 s, perché Chrome
+        // controlla che ci sia DOPO che il service worker ha finito.
+        if (e.data.tag) setTimeout(() => chiudiNotificheInVista(e.data.tag), 2000);
+      }
     };
     navigator.serviceWorker.addEventListener("message", ascolta);
     return () => navigator.serviceWorker.removeEventListener("message", ascolta);
@@ -78,8 +102,8 @@ export function GestoreNotifiche() {
 
   // Il tempo reale.
   useEffect(() => {
-    if (!user) return;
-    const chiave = chiaveNotifiche(user.id);
+    if (!uid) return;
+    const chiave = chiaveNotifiche(uid);
 
     const arriva = (n: Notifica) => {
       const prima = qc.getQueryData<Notifica[]>(chiave)?.find((x) => x.id === n.id);
@@ -114,10 +138,10 @@ export function GestoreNotifiche() {
     };
 
     const canale = supabase
-      .channel(`notifiche-${user.id}`)
+      .channel(nomeCanale(`notifiche-${uid}`))
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "notifiche", filter: `utente_id=eq.${user.id}` },
+        { event: "*", schema: "public", table: "notifiche", filter: `utente_id=eq.${uid}` },
         (p) => {
           if (p.eventType === "DELETE") return;
           arriva(p.new as Notifica);
@@ -135,7 +159,7 @@ export function GestoreNotifiche() {
       supabase.removeChannel(canale);
       document.removeEventListener("visibilitychange", torna);
     };
-  }, [user, qc]);
+  }, [uid, qc]);
 
   return null;
 }

@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { Tessera, TesseraIcona, TesseraIndietro } from "@/components/ui/Tessera";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { nomeCanale } from "@/lib/tempoReale";
 import { MAX_BYTE_FOTO, ridimensionaFoto } from '@/lib/foto';
 import { useSearchParams, useNavigate, useLocation } from "react-router-dom";
 import { useScheda } from "@/hooks/useScheda";
@@ -144,7 +145,7 @@ const Messaggi = () => {
     if (!user?.id) return;
 
     const channel = supabase
-      .channel(`global-messages-${user.id}`)
+      .channel(nomeCanale(`global-messages-${user.id}`))
       .on(
         'postgres_changes',
         {
@@ -200,7 +201,7 @@ const Messaggi = () => {
     fetchApplicationStatus();
 
     const channel = supabase
-      .channel(`messages-${chatId}`)
+      .channel(nomeCanale(`messages-${chatId}`))
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'messages', filter: `chat_id=eq.${chatId}` },
@@ -868,16 +869,15 @@ const Messaggi = () => {
           sopraChat
         />
 
-        {/* Dopo l'assunzione: «Compila il cartellino», sopra la chat. */}
-        {cartellinoDaCompilare && (
-          <SchedaCartellino
-            cartellino={cartellinoDaCompilare}
-            compila
-            sopraChat
-            onClose={() => setCompilaPer(null)}
-            onApriChat={() => setCompilaPer(null)}
-          />
-        )}
+        {/* Dopo l'assunzione: «Compila il cartellino», sopra la chat.
+            Sempre montata: chiudendo scende (hooks/useUltimoAperto). */}
+        <SchedaCartellino
+          cartellino={cartellinoDaCompilare ?? null}
+          compila
+          sopraChat
+          onClose={() => setCompilaPer(null)}
+          onApriChat={() => setCompilaPer(null)}
+        />
       </div>
   ) : null;
 

@@ -17,6 +17,7 @@ import {
   ProfiloIcon,
 } from "@/components/icons/uiIcons";
 import { useAppTheme } from "@/hooks/useAppTheme";
+import { useUltimoAperto } from "@/hooks/useUltimoAperto";
 import type { LavoroWorker } from "@/hooks/useLavoriWorker";
 import { formatData, formatPaga, giorniA, GIORNI, modoGiorni, quantoManca } from "@/lib/bacheca";
 import { getJobIconFromTags } from "@/lib/jobIcons";
@@ -80,9 +81,11 @@ function notaFinale(l: LavoroWorker): string | null {
  * distanza, non ha senso»). La chat diretta con l'attività è la tessera
  * Messaggi in alto; accanto, il profilo dell'attività.
  */
-export function SchedaLavoro({ lavoro: l, onClose, onApriChat, onRecensisci }: SchedaLavoroProps) {
+export function SchedaLavoro({ lavoro, onClose, onApriChat, onRecensisci }: SchedaLavoroProps) {
   const { theme, isEmployer } = useAppTheme();
   const navigate = useNavigate();
+  // Resta montata con l'ultimo lavoro, così chiudendo scende (hooks/useUltimoAperto).
+  const [l, aperta] = useUltimoAperto(lavoro);
   if (!l) return null;
 
   const b = badgeLavoro(l.stato, theme.btnFilled);
@@ -93,7 +96,7 @@ export function SchedaLavoro({ lavoro: l, onClose, onApriChat, onRecensisci }: S
   const nota = notaFinale(l);
 
   return (
-    <Drawer open onOpenChange={(o) => !o && onClose()}>
+    <Drawer open={aperta} onOpenChange={(o) => !o && onClose()}>
       <DrawerContent className="max-h-[88vh]">
         <div className="min-h-0 overflow-y-auto px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
           {/* ---- CHI ---- */}

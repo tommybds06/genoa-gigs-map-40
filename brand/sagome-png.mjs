@@ -20,6 +20,10 @@
  * aggiunge una sagoma deve moltiplicarli anche lui.
  * ⚠️ Se un disegno cambia: rilanciare lo script E cambiare nome al file (es.
  * `-v2`), se no il browser tiene la copia vecchia (§2, lezione 3).
+ *
+ * `node brand/sagome-png.mjs bordo-scotch` rifà solo i file col nome che
+ * contiene quel pezzo: gli altri PNG restano com'erano (rigenerati uguali a
+ * schermo, ma con byte diversi, finirebbero tutti nel commit).
  */
 import { chromium } from "playwright";
 import { readdirSync, readFileSync } from "node:fs";
@@ -30,7 +34,8 @@ const CARTELLA = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../
 const SCALA = 3;
 
 const browser = await chromium.launch({ channel: "chrome" });
-for (const file of readdirSync(CARTELLA).filter((f) => f.endsWith(".svg"))) {
+const SOLO = process.argv[2] ?? "";
+for (const file of readdirSync(CARTELLA).filter((f) => f.endsWith(".svg") && f.includes(SOLO))) {
   const svg = readFileSync(path.join(CARTELLA, file), "utf8");
   const apertura = svg.match(/<svg[^>]*>/)[0];
   const w = Number(apertura.match(/width="([\d.]+)"/)[1]);

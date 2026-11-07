@@ -24,30 +24,45 @@ self.addEventListener("push", (e) => {
   e.waitUntil(mostra(d));
 });
 
-// Con l'app IN VISTA niente notifica di sistema: la mostra l'app stessa
-// (toast col tempo reale), e due avvisi per la stessa cosa sono rumore.
-// Chrome lo permette: la regola «ogni push mostra una notifica» non vale
-// se una pagina del sito è in primo piano.
-// ⚠️ Su Safari (iPhone) invece SEMPRE: toglie l'iscrizione a chi riceve
-// push senza mostrarli.
+// Con l'app IN VISTA l'avviso lo dà l'app stessa (toast col tempo reale).
+// Ma OGNI push deve mostrare una notifica di sistema: se non la mostriamo
+// noi, Chrome ne mette una sua — «Questo sito è stato aggiornato in
+// background», col logo di Chrome, silenziosa e senza testo (Tommaso, 7
+// novembre: «notifiche silenziose con il logo di Chrome»). Chrome la
+// risparmia solo se il sito è la scheda attiva e visibile; sul telefono,
+// con l'app aperta dalla schermata Home, non la riconosce come tale.
+//
+// Quindi:
+// - Android: SEMPRE la nostra. Con l'app in vista SILENZIOSA, e l'app la
+//   toglie appena dopo (GestoreNotifiche), quando c'è già il toast.
+// - Safari (iPhone, Mac): SEMPRE, normale: toglie l'iscrizione a chi riceve
+//   push senza mostrarli.
+// - Chrome sul computer: con la scheda in vista niente (lì l'eccezione di
+//   Chrome funziona), solo il toast.
 const ua = self.navigator.userAgent;
 // Safari, anche su Mac (ha la stessa regola); Chrome e gli altri no.
 const suSafari = /iPhone|iPad|iPod/.test(ua) || (/Safari/.test(ua) && !/Chrome|Chromium|Android|Edg/.test(ua));
+const suAndroid = /Android/.test(ua);
 async function mostra(d) {
   const finestre = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
-  const inVista = finestre.filter((f) => f.visibilityState === "visible" && new URL(f.url).origin === self.location.origin);
-  if (inVista.length > 0 && !suSafari) {
-    inVista.forEach((f) => f.postMessage({ tipo: "notifica-arrivata", notifica: d.notifica || null }));
-    return;
-  }
+  const inVista = finestre.filter(
+    (f) => (f.focused || f.visibilityState === "visible") && new URL(f.url).origin === self.location.origin
+  );
+  const tag = d.tag || d.notifica || "politask";
+  inVista.forEach((f) => f.postMessage({ tipo: "notifica-arrivata", notifica: d.notifica || null, tag }));
+  if (inVista.length > 0 && !suSafari && !suAndroid) return;
+  const silenziosa = inVista.length > 0 && !suSafari;
   return self.registration.showNotification(d.titolo || "Politask", {
     body: d.testo || "",
-    tag: d.tag || d.notifica || undefined,
-    renotify: Boolean(d.tag),
+    tag,
+    // Stesso tag = sostituisce quella di prima; «renotify» la fa suonare di nuovo.
+    renotify: !silenziosa,
+    silent: silenziosa,
     icon: "/icons/icona-192-v2.png",
     badge: "/icons/badge-96-v2.png",
     lang: "it",
-    data: { notifica: d.notifica || null },
+    timestamp: Date.now(),
+    data: { notifica: d.notifica || null, inVista: silenziosa },
   });
 }
 

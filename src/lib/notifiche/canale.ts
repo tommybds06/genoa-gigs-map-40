@@ -55,8 +55,19 @@ function chiaveInByte(base64: string) {
   return Uint8Array.from(b, (c) => c.charCodeAt(0));
 }
 
+/** `p`, oppure `null` se non risponde entro `ms`. */
+export const entro = <T,>(p: Promise<T>, ms: number) =>
+  Promise.race([p, new Promise<null>((r) => setTimeout(() => r(null), ms))]);
+
 async function iscrizioneWeb(crea: boolean) {
-  const reg = await navigator.serviceWorker.ready;
+  // ⚠️ MAI `navigator.serviceWorker.ready` senza limite: se il service
+  // worker non c'è (anteprima di Lovable, registrazione fallita) non
+  // risponde MAI, e chi lo aspetta resta appeso per sempre. L'uscita
+  // dall'account lo aspettava: «Esci» girava all'infinito.
+  // Per leggere basta la registrazione che c'è già; per crearne una si
+  // aspetta, ma al massimo 5 s.
+  const reg = crea ? await entro(navigator.serviceWorker.ready, 5000) : await navigator.serviceWorker.getRegistration();
+  if (!reg) return null;
   const esistente = await reg.pushManager.getSubscription();
   if (esistente || !crea) return esistente;
   return reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: chiaveInByte(CHIAVE_PUBBLICA_PUSH) });

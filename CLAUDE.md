@@ -109,6 +109,15 @@ Sono qui perché sono costate ore, non per completezza.
    ramo `lovable-sync`, poi unito a mano. Al merge `types.ts` si fonde in
    silenzio con campi DOPPI: il typecheck lo prende, si tiene il file di
    Lovable.
+11. ⚠️ **Provare alla DENSITÀ vera, non solo alla larghezza.** Il Pixel ha
+   2,625 pixel per punto: un difetto che cade «a metà pixel» (le giunture
+   delle sagome in PNG, §6) a 2× e 3× non esiste e lì è un'impalcatura di
+   linee. Le prove con Playwright/Chrome: `deviceScaleFactor: 2.625`.
+12. ⚠️ **Ogni flusso che si cambia va riprovato per intero, accesso
+   compreso.** Il 7 novembre la nuova `PageTransition` è passata da tutte le
+   prove di navigazione e ha bloccato l'accesso (§25.4): nessuna prova
+   passava dalla pagina di login a una scheda. Il banco per il cambio
+   account si monta come in §25.7.
 9. **`git pull --rebase` prima di ogni push.** Lovable committa da solo sullo
    stesso `main` (§12): pushare senza prima riallinearsi vuol dire farsi
    rifiutare il push, o peggio fare un merge che riporta indietro un suo fix.
@@ -554,7 +563,25 @@ Un SVG come maschera o bordo si ridisegna come vettore a ogni ridisegno: era
 il grosso del lag sul telefono (§25.6). ⚠️ Gli slice sono in pixel
 dell'IMMAGINE, quindi nel CSS sono il triplo della tavola (28 → 84, 49 54 →
 147 162). Chi aggiunge o cambia una sagoma: SVG, script, slice × 3, e nome
-nuovo se il disegno cambia.
+nuovo se il disegno cambia. `node brand/sagome-png.mjs <pezzo-del-nome>` rifà
+solo quei file.
+
+⚠️ **LE GIUNTURE — la toppa (7 novembre, sera).** Il 9 sezioni disegna i
+nove pezzi uno accanto all'altro; in PNG ogni pezzo ha il bordo sfumato, e
+dove due pezzi si toccano a metà di un pixel il pixel resta trasparente per un
+quarto. Sul Pixel (2,625) erano linee chiare attraverso bottoni, chip, card e
+toast: l'«impalcatura bianca» degli screenshot di Tommaso (anche su WebKit,
+verificato con Quick Look). A 2× e 3× non si vede: per questo era sfuggita.
+Misurato (pixel fuori colore dentro la forma, 8 bottoni a 2,625): PNG 11.990,
+SVG 1.235, PNG + toppa 1.222 — il resto è il bordo curvo, non giunture.
+**La toppa**: due fasce piene (`linear-gradient`) nella stessa maschera, che
+si sommano al 9 sezioni e coprono le giunture DENTRO la forma; ogni sagoma
+dichiara `--giunta-v` / `--giunta-o` (le misure dei suoi pezzi). Regola in
+`index.css` dopo `.sagoma-quartiere`. ⚠️ Una sagoma nuova a 9 sezioni va
+aggiunta a quella regola, con le sue due variabili. ⚠️ Resta un trattino da
+1 pixel dove la giuntura incrocia il bordo: si vede solo ingrandito.
+⚠️ Fuori da `@supports` la toppa NON deve esserci: da sola ritaglierebbe una
+croce (Firefox desktop).
 
 ## Il punto che decide tutto: MASCHERA, non bordo
 
@@ -1570,6 +1597,14 @@ candidature restano in Lista → Candidature.
   ReviewPrompt invalida `['applications']`, e la chiave della bacheca worker
   sta lì sotto: la card passa a «Concluso» da sola.
 - **Ordine**: le attive nell'ordine di arrivo, le concluse in fondo.
+- ⚠️ **Le due schede (`SchedaCartellino`, `SchedaLavoro`) restano MONTATE**
+  con l'ultimo oggetto (`hooks/useUltimoAperto`), e chiudere vuol dire solo
+  `open={false}`. Prima il genitore passava `null` e la scheda si smontava:
+  vaul non la faceva scendere, spariva in UN fotogramma, anche a metà di un
+  trascinamento («va a scatti rispetto alle altre», Tommaso, 7 novembre).
+  Misurato: scheda annuncio 32 fotogrammi di discesa, cartellino 1 → ora 32.
+  Il modulo del cartellino si riazzera a ogni APERTURA, non più allo
+  smontaggio. Una scheda che si apre su un oggetto si scrive così.
 - ⚠️ `DrawerDescription asChild` sopra un `<p>` fonde le sue classi
   (`text-sm text-muted-foreground`) con quelle del figlio: il ruolo usciva
   piccolo e grigio. La descrizione accessibile è un `sr-only` a parte.
@@ -1946,8 +1981,16 @@ bordo con lo stesso tratto. **`ui/FotoStampata.tsx`** + `lib/formaStampa.ts`.
   FOGLIO, opaco: il toast passa sopra mappa e foto. Inchiostro sopra (8,7 /
   7,3), anche la descrizione (in grigio stava a ~3:1). Errori in terracotta
   per tutti (7,8).
-- Il filo disegnato sta sul CONTENITORE dei toast (quattro `drop-shadow`
-  senza sfocatura a 0,8 px): sul toast la maschera lo taglierebbe.
+- Il filo è il CONTORNO dello stesso scotch (`bordo-scotch-{worker,
+  employer}-v1.svg`, inchiostro del ruolo al 70%) come `border-image` sul
+  toast, tagliato come la maschera: ne resta la metà interna, come per le
+  card. ⚠️ Fino al 7 novembre era un `filter` con cinque `drop-shadow` sul
+  CONTENITORE: a ogni toast il browser rifaceva lo strato filtrato e
+  l'entrata scattava («alcuni toast sono scattosi»). Misurato con la GPU
+  lenta su una pagina ferma: col filtro un fotogramma da ~480 ms in ogni
+  serie, senza zero fotogrammi persi in 20 prove su 20. Non su `::before` /
+  `::after`: sonner li usa per le sue aree di tocco. Persa l'ombra morbida
+  sotto il toast: il filo basta a staccarlo.
 - ⚠️ sonner impone il carattere di sistema: `body [data-sonner-toaster] {
   font-family: inherit }` rimette Outfit.
 - **Durate −25%** (Tommaso: «leggermente» più brevi): di serie 3 s invece di
@@ -2320,6 +2363,20 @@ fotogrammi persi; dal tocco allo schermo 24–56 ms (prima 40–96, con picchi).
   corsa resta lo stile dell'elemento, nessuna trasformazione), uscita `fill:
   "forwards"` + `usePresence` di framer per dire ad AnimatePresence quando
   toglierla. `initial={false}` si legge da `PresenceContext`.
+- ⚠️ **IL BLOCCO DELL'ACCESSO (7 novembre, sera) — colpa di questa riscrittura.**
+  Le pagine che escono SENZA animazione (accesso, onboarding, «riduci
+  movimento») chiamavano `rimuovi()` dentro il loro layout effect. Ma
+  AnimatePresence segna una pagina «in uscita» nel SUO layout effect, e i
+  layout effect girano dai figli ai genitori: il segnale arrivava prima, lui
+  lo ignorava (`exitComplete.has(key)` falso, in
+  `AnimatePresence/index.mjs`) e la pagina non veniva tolta MAI. Dopo
+  l'accesso la schermata di login restava sopra la mappa; «l'app si blocca,
+  bisogna chiuderla» (Tommaso). Ora `rimuovi` parte in un `queueMicrotask`,
+  a commit finito; la pagina che esce si nasconde subito e non prende più
+  tocchi (`pointer-events: none`: un tocco durante i 300 ms dell'uscita è
+  per la pagina che si scopre). Se torna mentre esce, l'uscita si annulla.
+  ⚠️ Regola: con `usePresence`, MAI `safeToRemove` nello stesso commit in
+  cui la presenza diventa falsa.
 - **Profilo pubblico** in react-query (`useProfiloPubblico`): le tre letture
   partono INSIEME (erano in fila), e la scheda dell'annuncio lo precarica
   dopo 400 ms; la chat precarica quello dell'altra persona.
@@ -2371,6 +2428,18 @@ no. Nel video: le animazioni scorrevano a 60, i difetti erano altri tre.
 3. **La «griglia strana» erano le giunture del 9 sezioni** sulle tessere da
    56 px, dove i quattro angoli si toccano al centro: una croce sottile.
    Ora `.sagoma-tessera`, la stessa forma in un pezzo solo (§6).
+
+## 7. Il banco per il cambio account (7 novembre)
+
+Il blocco dell'accesso (§25.4) si è riprodotto sul banco della guida
+(`supabase/demo/guida/schermate/banco.sh`) con un `Guida.tsx` modificato:
+l'utente sta in uno `useState` e `signIn` / `signOut` finti lo cambiano dopo
+300 ms, come fa supabase; montati anche ReviewPrompt, PromemoriaScadenza,
+ChiediPermesso, BannerIphone come in App. Il giro: Profilo → ingranaggio →
+Esci → accesso con un altro → mappa, e si controlla che nel DOM non resti
+`input[type=email]`. Non entra nessuna credenziale vera: niente va a
+Supabase. ⚠️ `banco.sh giu` copia `src/guida/Guida.tsx` indietro nel banco:
+prima di smontare rimettere l'originale, se no il banco resta modificato.
 
 ## Resta
 
@@ -2580,9 +2649,40 @@ PGlite: raggruppamenti, preferenze, silenzio, RLS, due giri), edge function
 - **`lib/notifiche/link.ts` → `apriNotifica`**, l'unico posto che decide
   dove porta una notifica: chat, scheda dell'annuncio, Annunci
   (`?annuncio=`, nuovo), recensione, bacheca, profilo, modifica profilo.
-- Con l'app IN VISTA il service worker non mostra la notifica di sistema
-  (c'è il toast) — tranne su Safari, che toglie l'iscrizione a chi riceve
-  push senza mostrarli.
+- ⚠️ **OGNI push deve mostrare una notifica**, se no Chrome ne mette una sua:
+  «Questo sito è stato aggiornato in background», col logo di Chrome,
+  SILENZIOSA e senza testo (Tommaso, 7 novembre: «notifiche silenziose col
+  logo di Chrome, senza anteprima»). Chrome la risparmia solo se il sito è la
+  scheda attiva e visibile, e sul telefono, con l'app aperta dalla schermata
+  Home, non la riconosce. Prima il service worker non mostrava niente con
+  l'app in vista (c'era il toast). Ora (`public/sw.js`):
+  - **Android**: sempre la nostra; con l'app in vista SILENZIOSA
+    (`data.inVista`), e `GestoreNotifiche` la toglie dopo 2 s — non prima:
+    Chrome controlla che ci sia DOPO che il service worker ha finito.
+  - **Safari** (iPhone, Mac): sempre, normale (toglie l'iscrizione a chi
+    riceve push senza mostrarli).
+  - **Chrome sul computer**: in vista niente, solo il toast (lì l'eccezione
+    di Chrome funziona).
+  «In vista» = `focused` o `visibilityState === "visible"`. Provato col
+  service worker vero e push simulati da DevTools
+  (`ServiceWorker.deliverPushMessage`; per fingere Android serve
+  `--user-agent` sul browser intero, quello del contesto non arriva al
+  service worker): in vista su Android → la nostra, silenziosa, tolta dopo
+  2 s; sul computer → niente; app chiusa → normale, con suono, resta.
+- ⚠️ **Mai `navigator.serviceWorker.ready` senza limite di tempo**: se il
+  service worker non c'è (anteprima di Lovable, registrazione fallita) non
+  risponde MAI. L'uscita dall'account lo aspettava («Esci» girava
+  all'infinito). Ora `scollega` legge `getRegistration()`, l'iscrizione
+  aspetta al massimo 5 s (`entro` in `lib/notifiche/canale.ts`), e `signOut`
+  dà alle notifiche al massimo 3 s.
+- ⚠️ **I canali del tempo reale hanno un nome NUOVO a ogni abbonamento**
+  (`nomeCanale` in `lib/tempoReale.ts`). realtime-js 2.91 restituisce il
+  canale esistente con lo stesso nome anche mentre si sta chiudendo
+  (`removeChannel` è asincrono): un effetto che ripartiva subito (cambio
+  utente, rinnovo del token, chat chiusa e riaperta) riceveva quello vecchio,
+  e il tempo reale smetteva in silenzio. In `GestoreNotifiche` gli effetti
+  dipendono da `user?.id`, non da `user`, che cambia a ogni evento della
+  sessione (rinnovo del token ogni ora, ritorno in primo piano).
 - **Impostazioni**: «Su questo telefono» (stato + Attiva) e un interruttore
   per categoria, diverse per ruolo. Via l'interruttore «Notifiche» finto.
 - **`ui/switch.tsx` ridisegnato** (7 novembre): binario `sagoma-chip` alto

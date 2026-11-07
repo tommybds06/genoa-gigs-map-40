@@ -30,6 +30,7 @@ import { Tessera } from "@/components/ui/Tessera";
 import { MessaggiIcon, ProfiloIcon, SalvaIcon } from "@/components/icons/uiIcons";
 import { useAuth } from "@/hooks/useAuth";
 import { useAppTheme } from "@/hooks/useAppTheme";
+import { useUltimoAperto } from "@/hooks/useUltimoAperto";
 import { CHIAVE_CANDIDATI, CHIAVE_CARTELLINI } from "@/hooks/useCartellini";
 import { cn } from "@/lib/utils";
 import {
@@ -162,8 +163,11 @@ function Chip({
  * ⚠️ I dati arrivano dalla query `cartellini` e non da una copia locale: dopo
  * un salvataggio la scheda mostra quello che c'e' davvero nel database.
  */
-export function SchedaCartellino({ cartellino: c, onClose, onApriChat, compila = false, sopraChat = false }: SchedaCartellinoProps) {
+export function SchedaCartellino({ cartellino, onClose, onApriChat, compila = false, sopraChat = false }: SchedaCartellinoProps) {
   const { user } = useAuth();
+  // Resta montata con l'ultimo cartellino, così chiudendo scende invece di
+  // sparire (hooks/useUltimoAperto).
+  const [c, aperta] = useUltimoAperto(cartellino);
   const { theme } = useAppTheme();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -193,12 +197,19 @@ export function SchedaCartellino({ cartellino: c, onClose, onApriChat, compila =
     };
   }, [modoCompila, c?.jobId]);
 
-  // Il modulo si ricarica quando cambia cartellino, non a ogni refetch: se no
-  // un aggiornamento in background cancellerebbe quello che stai scrivendo.
+  // Il modulo si ricarica a ogni APERTURA (o se cambia cartellino), non a
+  // ogni refetch: se no un aggiornamento in background cancellerebbe quello
+  // che stai scrivendo. Con la scheda chiusa resta com'era: si vede mentre
+  // scende. Prima lo azzerava lo smontaggio; ora la scheda resta montata,
+  // quindi si riparte da capo qui (modifiche non salvate comprese).
   useEffect(() => {
+    if (!aperta) return;
     setModulo(c ? moduloDa(c) : null);
+    setModoCompila(compila);
+    setConferma(null);
+    setTogliDallaMappa(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [c?.id]);
+  }, [c?.id, aperta]);
 
   const sporco = useMemo(() => !!c && !!modulo && !uguali(modulo, moduloSalvato(c)), [c, modulo]);
   const solaLettura = c?.stato === "concluso";
@@ -313,7 +324,7 @@ export function SchedaCartellino({ cartellino: c, onClose, onApriChat, compila =
 
   return (
     <>
-      <Drawer open onOpenChange={(o) => !o && onClose()}>
+      <Drawer open={aperta} onOpenChange={(o) => !o && onClose()}>
         <DrawerContent
           className={cn("max-h-[92vh]", sopraChat && "z-[70]")}
           overlayClassName={sopraChat ? "z-[70]" : undefined}
