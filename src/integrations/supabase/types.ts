@@ -287,6 +287,7 @@ export type Database = {
           created_at: string
           description: string | null
           giorni: number | null
+          giorni_settimana: number | null
           id: string
           inizio_il: string | null
           is_demo: boolean
@@ -320,6 +321,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           giorni?: number | null
+          giorni_settimana?: number | null
           id?: string
           inizio_il?: string | null
           is_demo?: boolean
@@ -353,6 +355,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           giorni?: number | null
+          giorni_settimana?: number | null
           id?: string
           inizio_il?: string | null
           is_demo?: boolean
