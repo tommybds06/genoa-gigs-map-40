@@ -18,6 +18,8 @@ import { TesseraIndietro } from "@/components/ui/Tessera";
 import { campiQuantita, durataDaTag, UNITA_PER_DURATA, type CampoQuantita, type TipoPaga } from "@/lib/prezzi";
 import { leggiBozza, salvaBozza } from "@/lib/bozzaAnnuncio";
 import { cn } from "@/lib/utils";
+import { Pista } from "@/components/ui/Pista";
+import { LineaDurata } from "@/components/jobs/LineaDurata";
 
 /** «9,5» o «9.5» → 9,5; vuoto o non valido → null. */
 const numero = (testo: string): number | null => {
@@ -38,47 +40,27 @@ const CAMPI_ORE: Record<CampoQuantita, { etichetta: string; intero: boolean; mas
 };
 type CampoOre = CampoQuantita;
 
-/** Le unità di paga: il testo del bottone, quello dentro il campo e un esempio. */
+/** Le unità di paga: il testo nella pista, quello dentro il campo e un esempio.
+ *  Nella pista la parola sola («Settimana», non «A settimana»): con cinque
+ *  opzioni le forme lunghe non ci stanno su una riga a 390 px, e «€ /
+ *  settimana» nel campo sotto dice già il resto. */
 const UNITA: Record<TipoPaga, { bottone: string; campo: string; esempio: string }> = {
-  oraria: { bottone: "All'ora", campo: "€ / ora", esempio: "es. 10" },
-  giornaliera: { bottone: "Al giorno", campo: "€ / giorno", esempio: "es. 70" },
-  settimanale: { bottone: "A settimana", campo: "€ / settimana", esempio: "es. 300" },
-  mensile: { bottone: "Al mese", campo: "€ / mese", esempio: "es. 900" },
+  oraria: { bottone: "Ora", campo: "€ / ora", esempio: "es. 10" },
+  giornaliera: { bottone: "Giorno", campo: "€ / giorno", esempio: "es. 70" },
+  settimanale: { bottone: "Settimana", campo: "€ / settimana", esempio: "es. 300" },
+  mensile: { bottone: "Mese", campo: "€ / mese", esempio: "es. 900" },
   forfait: { bottone: "Forfait", campo: "€", esempio: "es. 80" },
 };
 
-/** Le scelte affiancate della paga (l'unità, netto/lordo). Due per riga, tre
- *  quando sono tre o cinque: con quattro, due righe da due. */
-function SceltaDoppia<T extends string | boolean>({
-  opzioni,
-  valore,
-  onScegli,
-}: {
-  opzioni: { valore: T; testo: string }[];
-  valore: T | null;
-  onScegli: (v: T) => void;
-}) {
-  return (
-    <div className={cn("grid gap-2", opzioni.length % 3 === 0 || opzioni.length === 5 ? "grid-cols-3" : "grid-cols-2")}>
-      {opzioni.map((o) => (
-        <button
-          key={String(o.valore)}
-          type="button"
-          aria-pressed={valore === o.valore}
-          onClick={() => onScegli(o.valore)}
-          className={cn(
-            "flex items-center justify-center px-2 py-2.5 sagoma-quartiere rounded-[19px] text-sm font-medium transition-all active:scale-95 border-2",
-            valore === o.valore
-              ? "bg-employer-700 text-employer-foreground border-employer-700"
-              : "bg-employer-50 text-employer border-transparent hover:bg-employer-100"
-          )}
-        >
-          {o.testo}
-        </button>
-      ))}
-    </div>
-  );
-}
+/** Sotto «Durata», la riga che dice cosa vuol dire la durata scelta. */
+const DESCRIZIONE_DURATA: Record<string, string> = {
+  "": "Tocca o trascina sulla linea",
+  "Una tantum": "Una volta sola: un evento, una serata",
+  Giorni: "Qualche giorno",
+  Settimane: "Qualche settimana",
+  Mesi: "Qualche mese",
+  Continuativo: "Nessuna data di fine prevista",
+};
 
 const CreateJob = () => {
   const navigate = useNavigate();
@@ -323,25 +305,15 @@ const CreateJob = () => {
             <CalendarioIcon className="h-4 w-4 text-employer-800" />
             Durata <span className="text-destructive">*</span>
           </Label>
-          <p className="text-sm text-muted-foreground">
-            Seleziona il tipo di impiego
+          <p className="text-sm text-muted-foreground" aria-live="polite">
+            {DESCRIZIONE_DURATA[selectedTypeTag] ?? ''}
           </p>
-          <div className="grid grid-cols-2 gap-2">
-            {TYPE_TAGS.map((tag) => (
-              <button
-                key={tag}
-                type="button"
-                onClick={() => scegliDurata(tag)}
-                className={`flex items-center justify-center px-3 py-2.5 sagoma-quartiere rounded-[19px] text-sm font-medium transition-all active:scale-95 border-2 ${
-                  selectedTypeTag === tag
-                    ? 'bg-employer-700 text-employer-foreground border-employer-700'
-                    : 'bg-employer-50 text-employer border-transparent hover:bg-employer-100'
-                }`}
-              >
-                {tag}
-              </button>
-            ))}
-          </div>
+          <LineaDurata
+            opzioni={[...TYPE_TAGS]}
+            valore={selectedTypeTag}
+            onScegli={scegliDurata}
+            etichetta="Durata"
+          />
           {errors.typeTag && <p className="text-sm text-destructive">{errors.typeTag}</p>}
         </div>
 
@@ -352,29 +324,36 @@ const CreateJob = () => {
             <EuroIcon className="h-4 w-4 text-employer-800" />
             Paga <span className="text-destructive">*</span>
           </Label>
-          <SceltaDoppia<TipoPaga>
+          <Pista<TipoPaga>
+            etichetta="Unità di paga"
             opzioni={unita.map((u) => ({ valore: u, testo: UNITA[u].bottone }))}
             valore={pagaTipo}
             onScegli={setPagaTipo}
           />
-          <div className="relative">
-            <Input
-              id="paga"
-              inputMode="decimal"
-              placeholder={UNITA[pagaTipo].esempio}
-              value={pagaImporto}
-              onChange={(e) => setPagaImporto(e.target.value)}
-              className={cn('pr-32', errors.paga && 'border-destructive')}
+          {/* L'importo e, accanto, netti o lordi: una riga sola, si legge
+              come «10 € all'ora · netti». */}
+          <div className="flex gap-2">
+            <div className="relative min-w-0 flex-1">
+              <Input
+                id="paga"
+                inputMode="decimal"
+                placeholder={UNITA[pagaTipo].esempio}
+                value={pagaImporto}
+                onChange={(e) => setPagaImporto(e.target.value)}
+                className={cn('pr-28', errors.paga && 'border-destructive')}
+              />
+              <span className="pointer-events-none absolute right-4 top-1/2 z-10 -translate-y-1/2 text-sm text-muted-foreground">
+                {UNITA[pagaTipo].campo}
+              </span>
+            </div>
+            <Pista<boolean>
+              etichetta="Netta o lorda"
+              className="w-[136px] shrink-0"
+              opzioni={[{ valore: false, testo: 'Netti' }, { valore: true, testo: 'Lordi' }]}
+              valore={pagaLorda}
+              onScegli={setPagaLorda}
             />
-            <span className="pointer-events-none absolute right-4 top-1/2 z-10 -translate-y-1/2 text-sm text-muted-foreground">
-              {UNITA[pagaTipo].campo}
-            </span>
           </div>
-          <SceltaDoppia<boolean>
-            opzioni={[{ valore: false, testo: 'Netto' }, { valore: true, testo: 'Lordo' }]}
-            valore={pagaLorda}
-            onScegli={setPagaLorda}
-          />
           {errors.paga && <p className="text-sm text-destructive">{errors.paga}</p>}
           {/* Le quantità: solo quelle che servono a questa durata con questa
               unità (lib/prezzi.ts, `campiQuantita`). */}

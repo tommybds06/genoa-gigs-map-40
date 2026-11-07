@@ -1294,3 +1294,15 @@ body [data-sonner-toaster] {
   }
 }
 
+/* LA LINEA DEL TEMPO (Crea annuncio, la durata: components/jobs/LineaDurata)
+   — il tratto delle divisorie come MASCHERA, così prende il colore del
+   fondo: carta per la linea intera, il pieno del ruolo per il pezzo fino
+   alla durata scelta. Il disegno si stira (preserveAspectRatio="none"). */
+.linea-tempo {
+  -webkit-mask-image: url("/images/cornici/linea-divisoria.svg");
+  mask-image: url("/images/cornici/linea-divisoria.svg");
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+}
