@@ -32,6 +32,9 @@ export interface Job {
   /** Annuncio di un privato: il raggio dell'area (lat/lng = centro già
       spostato). NULL = annuncio di un'attività, con il pin. */
   area_raggio?: number | null;
+  /** L'opzione scelta alla pubblicazione (nessuna, potenziamento,
+      allungamento, pacchetto): vedi lib/potenziamento.ts. */
+  opzione?: string | null;
   profiles?: JobProfile | null;
 }
 

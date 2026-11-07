@@ -1,9 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/useAuth';
 import { useUser } from '@/contexts/UserContext';
-import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -13,37 +11,115 @@ import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
 import { ROLE_TAGS, TYPE_TAGS } from '@/constants/tags';
 import { getJobIcon } from '@/lib/jobIcons';
-import { PennaIcon, DocumentoIcon, OrologioIcon, CalendarioIcon, InvioIcon, EuroIcon } from "@/components/icons/uiIcons";
+import { PennaIcon, DocumentoIcon, OrologioIcon, CalendarioIcon, EuroIcon } from "@/components/icons/uiIcons";
 import { GenericoIcon } from '@/components/icons/roleIcons';
 import { isWithinGenovaBounds, GEOFENCING_ERROR_MESSAGE } from '@/constants/geofencing';
 import { TesseraIndietro } from "@/components/ui/Tessera";
-import { ORE_GRATUITE } from "@/lib/scadenzaAnnunci";
+import { durataDaTag, ORE_PER_DURATA, type TipoPaga } from "@/lib/prezzi";
+import { leggiBozza, salvaBozza } from "@/lib/bozzaAnnuncio";
+import { cn } from "@/lib/utils";
+import { CampoData } from "@/components/ui/CampoData";
+import { oggiISO } from "@/lib/bacheca";
+
+/** «9,5» o «9.5» → 9,5; vuoto o non valido → null. */
+const numero = (testo: string): number | null => {
+  const n = Number(testo.replace(",", ".").trim());
+  return testo.trim() && Number.isFinite(n) ? n : null;
+};
+const testoNumero = (n: number | null | undefined) => (n == null ? "" : String(n).replace(".", ","));
+
+/** Le ore che può chiedere il form, con la loro etichetta e se sono intere. */
+const CAMPI_ORE = {
+  oreTotali: { etichetta: "Ore in tutto", intero: false },
+  oreGiorno: { etichetta: "Ore al giorno", intero: false },
+  giorni: { etichetta: "Giorni", intero: true },
+  oreSettimana: { etichetta: "Ore a settimana", intero: false },
+  settimane: { etichetta: "Settimane", intero: true },
+} as const;
+type CampoOre = keyof typeof CAMPI_ORE;
+
+/** Le due scelte affiancate di paga (all'ora/forfait, netto/lordo). */
+function SceltaDoppia<T extends string | boolean>({
+  opzioni,
+  valore,
+  onScegli,
+}: {
+  opzioni: { valore: T; testo: string }[];
+  valore: T | null;
+  onScegli: (v: T) => void;
+}) {
+  return (
+    <div className="grid grid-cols-2 gap-2">
+      {opzioni.map((o) => (
+        <button
+          key={String(o.valore)}
+          type="button"
+          aria-pressed={valore === o.valore}
+          onClick={() => onScegli(o.valore)}
+          className={cn(
+            "flex items-center justify-center px-3 py-2.5 sagoma-quartiere rounded-[19px] text-sm font-medium transition-all active:scale-95 border-2",
+            valore === o.valore
+              ? "bg-employer-700 text-employer-foreground border-employer-700"
+              : "bg-employer-50 text-employer border-transparent hover:bg-employer-100"
+          )}
+        >
+          {o.testo}
+        </button>
+      ))}
+    </div>
+  );
+}
 
 const CreateJob = () => {
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
   const { user } = useAuth();
   const { profile, loading: profileLoading } = useUser();
-  const [loading, setLoading] = useState(false);
   
+  // Tornando dalla pagina delle opzioni si ritrova quello che c'era
+  // (lib/bozzaAnnuncio.ts).
+  const [bozza] = useState(leggiBozza);
+
   // Form fields (neighborhood removed - inherited from profile)
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [schedule, setSchedule] = useState('');
-  const [price, setPrice] = useState('');
-  
+  const [title, setTitle] = useState(bozza?.title ?? '');
+  const [description, setDescription] = useState(bozza?.description ?? '');
+  const [schedule, setSchedule] = useState(bozza?.schedule ?? '');
+  // Quando inizia (facoltativo): solo per il promemoria del giorno prima.
+  const [inizioData, setInizioData] = useState(bozza?.inizioData ?? '');
+  const [inizioOra, setInizioOra] = useState(bozza?.inizioOra ?? '');
+
+  /* LA PAGA, strutturata (5 novembre): serve al calcolo dei prezzi delle
+     opzioni (lib/prezzi.ts). Il testo che vedono card e scheda («10€/h
+     netti») lo scrive l'app da qui (`testoPaga`). */
+  const [pagaTipo, setPagaTipo] = useState<TipoPaga>(bozza?.pagaTipo ?? 'oraria');
+  const [pagaImporto, setPagaImporto] = useState(testoNumero(bozza?.pagaImporto));
+  const [pagaLorda, setPagaLorda] = useState<boolean | null>(bozza?.pagaLorda ?? null);
+  const [ore, setOre] = useState<Record<CampoOre, string>>({
+    oreTotali: testoNumero(bozza?.oreTotali),
+    oreGiorno: testoNumero(bozza?.oreGiorno),
+    giorni: testoNumero(bozza?.giorni),
+    oreSettimana: testoNumero(bozza?.oreSettimana),
+    settimane: testoNumero(bozza?.settimane),
+  });
+
   // Single selection tags
-  const [selectedTypeTag, setSelectedTypeTag] = useState<string>('');
-  const [selectedRoleTag, setSelectedRoleTag] = useState<string>('');
-  const [customRoleTag, setCustomRoleTag] = useState<string>('');
-  const [isCustomRole, setIsCustomRole] = useState(false);
+  const [selectedTypeTag, setSelectedTypeTag] = useState<string>(bozza?.tagDurata ?? '');
+  const [selectedRoleTag, setSelectedRoleTag] = useState<string>(bozza && !bozza.ruoloPersonalizzato ? bozza.ruolo : '');
+  const [customRoleTag, setCustomRoleTag] = useState<string>(bozza?.ruoloPersonalizzato ? bozza.ruolo : '');
+  const [isCustomRole, setIsCustomRole] = useState(bozza?.ruoloPersonalizzato ?? false);
   
   const [errors, setErrors] = useState<{ 
     title?: string; 
     description?: string; 
     typeTag?: string;
     roleTag?: string;
+    paga?: string;
+    ore?: string;
   }>({});
+
+  const durata = durataDaTag(selectedTypeTag);
+  // Le ore servono al valore solo con la paga oraria: col forfait il valore
+  // è l'importo (lib/prezzi.ts).
+  const campiOre: CampoOre[] = durata && pagaTipo === 'oraria' ? ORE_PER_DURATA[durata] : [];
 
   const handleRoleSelect = (role: string) => {
     if (role === 'custom') {
@@ -76,12 +152,27 @@ const CreateJob = () => {
     if (!finalRole) {
       newErrors.roleTag = 'Seleziona o inserisci un ruolo';
     }
+
+    const importo = numero(pagaImporto);
+    if (importo === null || importo <= 0) {
+      newErrors.paga = 'Scrivi quanto paghi';
+    } else if (pagaLorda === null) {
+      newErrors.paga = 'Indica se è netto o lordo';
+    }
+
+    for (const campo of campiOre) {
+      const n = numero(ore[campo]);
+      if (n === null || n <= 0 || (CAMPI_ORE[campo].intero && !Number.isInteger(n))) {
+        newErrors.ore = `Indica ${CAMPI_ORE[campo].etichetta.toLowerCase()}`;
+        break;
+      }
+    }
     
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async () => {
+  const prosegui = () => {
     if (!validateForm()) {
       toast.error('Compila i campi obbligatori', { duration: 1500 });
       return;
@@ -92,7 +183,8 @@ const CreateJob = () => {
       return;
     }
 
-    // Check if employer has set their location
+    // Check if employer has set their location — prima delle opzioni, non
+    // dopo: scoprirlo all'ultimo tocco sarebbe peggio.
     if (!profile.lat || !profile.lng) {
       toast.error(
         profile.tipo_employer === 'privato'
@@ -109,50 +201,28 @@ const CreateJob = () => {
       return;
     }
 
-    setLoading(true);
-
-    try {
-      // Get final role tag
-      const finalRole = isCustomRole ? customRoleTag.trim() : selectedRoleTag;
-      
-      // Combine tags: one type + one role
-      const allTags = [selectedTypeTag, finalRole];
-
-      // Inherit neighborhood from employer's profile
-      const inheritedNeighborhood = profile.neighborhood || null;
-
-      const { error } = await supabase
-        .from('jobs')
-        .insert({
-          owner_id: user.id,
-          title: title.trim(),
-          description: description.trim(),
-          schedule: schedule.trim() || null,
-          price: price.trim() || null,
-          category: finalRole.toLowerCase(),
-          tags: allTags,
-          lat: profile.lat,
-          lng: profile.lng,
-          neighborhood: inheritedNeighborhood,
-          status: 'open',
-        });
-
-      if (error) throw error;
-
-      // Invalidate cache for instant UI refresh
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['jobs'] }),
-        queryClient.invalidateQueries({ queryKey: ['my-jobs'] }),
-      ]);
-
-      toast.success('Annuncio pubblicato!', { duration: 1500 });
-      navigate('/annunci');
-    } catch (error) {
-      console.error('Error creating job:', error);
-      toast.error('Errore nella pubblicazione', { duration: 1500 });
-    } finally {
-      setLoading(false);
-    }
+    const usate = new Set(campiOre);
+    const oreDi = (campo: CampoOre) => (usate.has(campo) ? numero(ore[campo]) : null);
+    salvaBozza({
+      title: title.trim(),
+      description: description.trim(),
+      schedule: schedule.trim(),
+      inizioData,
+      inizioOra,
+      tagDurata: selectedTypeTag,
+      durata: durata!,
+      ruolo: isCustomRole ? customRoleTag.trim() : selectedRoleTag,
+      ruoloPersonalizzato: isCustomRole,
+      pagaTipo,
+      pagaImporto: numero(pagaImporto)!,
+      pagaLorda: pagaLorda!,
+      oreTotali: oreDi('oreTotali'),
+      oreGiorno: oreDi('oreGiorno'),
+      giorni: oreDi('giorni'),
+      oreSettimana: oreDi('oreSettimana'),
+      settimane: oreDi('settimane'),
+    });
+    navigate('/create-job/opzioni');
   };
 
   // Show loading state while profile is being fetched
@@ -228,18 +298,65 @@ const CreateJob = () => {
           />
         </div>
 
-        {/* Price */}
+        {/* Quando inizia — facoltativo. Con data E ora, chi viene scelto può
+            ricevere il promemoria il giorno prima (§28). */}
         <div className="space-y-2">
-          <Label htmlFor="price" className="text-base font-medium flex items-center gap-2">
-            <EuroIcon className="h-4 w-4 text-employer-800" />
-            Paga
+          <Label htmlFor="inizio" className="text-base font-medium flex items-center gap-2">
+            <CalendarioIcon className="h-4 w-4 text-employer-800" />
+            Quando inizia
+            <span className="text-sm font-normal text-muted-foreground">(facoltativo)</span>
           </Label>
-          <Input
-            id="price"
-            placeholder="es. 10€/h oppure 50€"
-            value={price}
-            onChange={(e) => setPrice(e.target.value)}
+          <div className="grid grid-cols-[3fr_2fr] gap-2">
+            <CampoData id="inizio" value={inizioData} min={oggiISO()} onChange={setInizioData} aria-label="Giorno d'inizio" />
+            <div className="relative">
+              <Input
+                type="time"
+                value={inizioOra}
+                onChange={(e) => setInizioOra(e.target.value)}
+                className="campo-data relative pr-11"
+                aria-label="Ora d'inizio"
+              />
+              <OrologioIcon
+                aria-hidden="true"
+                className="pointer-events-none absolute right-4 top-1/2 z-10 h-5 w-5 -translate-y-1/2 text-ink-soft"
+              />
+            </div>
+          </div>
+          {(inizioData !== '') !== (inizioOra !== '') && (
+            <p className="text-sm text-muted-foreground">Con giorno e ora, chi scegli riceve un promemoria il giorno prima.</p>
+          )}
+        </div>
+
+        {/* Paga: all'ora o a forfait, l'importo, netto o lordo */}
+        <div className="space-y-2">
+          <Label htmlFor="paga" className="text-base font-medium flex items-center gap-2">
+            <EuroIcon className="h-4 w-4 text-employer-800" />
+            Paga <span className="text-destructive">*</span>
+          </Label>
+          <SceltaDoppia<TipoPaga>
+            opzioni={[{ valore: 'oraria', testo: "All'ora" }, { valore: 'forfait', testo: 'Forfait' }]}
+            valore={pagaTipo}
+            onScegli={setPagaTipo}
           />
+          <div className="relative">
+            <Input
+              id="paga"
+              inputMode="decimal"
+              placeholder={pagaTipo === 'oraria' ? 'es. 10' : 'es. 80'}
+              value={pagaImporto}
+              onChange={(e) => setPagaImporto(e.target.value)}
+              className={cn('pr-16', errors.paga && 'border-destructive')}
+            />
+            <span className="pointer-events-none absolute right-4 top-1/2 z-10 -translate-y-1/2 text-sm text-muted-foreground">
+              {pagaTipo === 'oraria' ? '€ / ora' : '€'}
+            </span>
+          </div>
+          <SceltaDoppia<boolean>
+            opzioni={[{ valore: false, testo: 'Netto' }, { valore: true, testo: 'Lordo' }]}
+            valore={pagaLorda}
+            onScegli={setPagaLorda}
+          />
+          {errors.paga && <p className="text-sm text-destructive">{errors.paga}</p>}
         </div>
 
         {/* Type Tag (Modalità) - Single Selection Required */}
@@ -268,6 +385,28 @@ const CreateJob = () => {
             ))}
           </div>
           {errors.typeTag && <p className="text-sm text-destructive">{errors.typeTag}</p>}
+
+          {/* Le ore: solo quelle che servono a questa durata, e solo con la
+              paga oraria (lib/prezzi.ts, ORE_PER_DURATA). */}
+          {campiOre.length > 0 && (
+            <div className={cn('grid gap-2 pt-1', campiOre.length > 1 ? 'grid-cols-2' : 'grid-cols-1')}>
+              {campiOre.map((campo) => (
+                <div key={campo} className="space-y-1">
+                  <Label htmlFor={campo} className="text-sm text-muted-foreground">
+                    {CAMPI_ORE[campo].etichetta}
+                  </Label>
+                  <Input
+                    id={campo}
+                    inputMode={CAMPI_ORE[campo].intero ? 'numeric' : 'decimal'}
+                    value={ore[campo]}
+                    onChange={(e) => setOre((o) => ({ ...o, [campo]: e.target.value }))}
+                    className={errors.ore && !numero(ore[campo]) ? 'border-destructive' : ''}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+          {errors.ore && <p className="text-sm text-destructive">{errors.ore}</p>}
         </div>
 
         {/* Role Tag (Ruoli) - Single Selection Required with Custom Option */}
@@ -335,31 +474,16 @@ const CreateJob = () => {
         </div>
       </div>
 
-      {/* Fixed Footer */}
+      {/* Fixed Footer — le opzioni e la pubblicazione sono nella pagina
+          dopo (OpzioniAnnuncio). */}
       <div className="fixed bottom-0 left-0 right-0 bg-background border-t p-4">
         <Button
-          onClick={handleSubmit}
-          disabled={loading}
+          onClick={prosegui}
           size="lg"
           className="w-full bg-employer-700 hover:bg-employer-800 text-employer-foreground font-semibold"
         >
-          {loading ? (
-            <>
-              <Loader2 className="h-5 w-5 animate-spin mr-2" />
-              Pubblicazione...
-            </>
-          ) : (
-            <>
-              <InvioIcon className="h-5 w-5 mr-2" />
-              Pubblica annuncio
-            </>
-          )}
+          Prosegui
         </Button>
-        {/* Detto PRIMA di pubblicare: dopo 48 ore l'annuncio esce dalla mappa
-            e non si ripubblica gratis (lib/scadenzaAnnunci.ts). */}
-        <p className="mt-2 text-center text-[13px] text-muted-foreground">
-          Resta visibile sulla mappa per {ORE_GRATUITE} ore.
-        </p>
       </div>
     </div>
   );

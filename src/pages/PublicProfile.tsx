@@ -81,7 +81,7 @@ const PublicProfile = () => {
   if (loading) {
     return (
       <div className="flex flex-col min-h-screen bg-background">
-        <Header showSearch={false} />
+        <Header showSearch={false} campanella={false} />
         <main className="flex-1 pb-20 px-4">
           <div className="py-4 space-y-6">
             {/* Loading skeleton */}
@@ -104,7 +104,7 @@ const PublicProfile = () => {
   if (!profile) {
     return (
       <div className="flex flex-col min-h-screen bg-background">
-        <Header showSearch={false} />
+        <Header showSearch={false} campanella={false} />
         <main className="flex-1 flex items-center justify-center px-4">
           <div className="text-center">
             <h2 className="titolo-vuoto mb-2">Profilo non trovato</h2>
@@ -142,7 +142,7 @@ const PublicProfile = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
-      <Header showSearch={false} />
+      <Header showSearch={false} campanella={false} />
 
       <main className="flex-1 pb-20 overflow-y-auto">
         {/* Back Button */}

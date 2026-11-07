@@ -1,6 +1,7 @@
 // ChevronLeft/Right rimossi: erano le frecce sul carosello foto, che su mobile
 // coprivano la foto per un gesto che si fa gia' con lo swipe. Restano i pallini.
 import { LinkSocial } from "@/components/profile/LinkSocial";
+import { Campanella } from "@/components/notifiche/Campanella";
 import { Foglietto } from "@/components/ui/Foglietto";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { NomeConSegno } from "@/components/ui/SegnoVerificato";
@@ -102,12 +103,16 @@ const Profilo = () => {
                alt="Politask"
                className="h-14 w-auto -ml-1"
              />
+             <div className="-mr-2 flex items-center">
+             <Campanella />
              <button
                onClick={() => navigate("/settings")}
+               aria-label="Impostazioni"
                className={`p-2 rounded-full transition-colors touch-feedback ${isEmployer ? "hover:bg-employer-50" : "hover:bg-accent"}`}
              >
                <ImpostazioniIcon className={`w-7 h-7 ${isEmployer ? "text-employer" : "text-primary"}`} />
              </button>
+             </div>
            </div>
          </header>
 

@@ -3,6 +3,7 @@ import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } f
 import { useUser } from "@/contexts/UserContext";
 import { JobsList } from "@/pages/Lista";
 import type { Job } from "@/hooks/useJobs";
+import { ordinaAnnunci, type Pertinenza } from "@/lib/potenziamento";
 
 interface ZonaAnnunciDrawerProps {
   isOpen: boolean;
@@ -25,19 +26,21 @@ interface ZonaAnnunciDrawerProps {
  * locale con più annunci.
  *
  * Titolo: il quartiere se gli annunci sono tutti nello stesso, se no «In
- * questa zona». Ordine: dal più recente, come la Lista.
+ * questa zona». Ordine: quello della Lista (lib/potenziamento.ts).
  */
 export function ZonaAnnunciDrawer({ isOpen, onClose, annunci, onJobSelect, evidenziati }: ZonaAnnunciDrawerProps) {
-  const { isEmployer } = useUser();
-  /* Prima chi corrisponde alla ricerca, poi gli altri; dentro ciascun gruppo
-     resta l'ordine di arrivo (dal più recente). `sort` è stabile. */
-  const ordinati = useMemo(
+  const { isEmployer, profile } = useUser();
+  /* Prima i potenziati PERTINENTI per lo studente (ruolo suo e, se c'è,
+     dentro la ricerca), poi chi corrisponde alla ricerca, poi gli altri;
+     dentro, distanza dal suo quartiere e data. */
+  const pertinenza = useMemo<Pertinenza>(
     () =>
-      evidenziati && evidenziati.size > 0
-        ? [...annunci].sort((a, b) => Number(evidenziati.has(b.id)) - Number(evidenziati.has(a.id)))
-        : annunci,
-    [annunci, evidenziati]
+      isEmployer
+        ? { corrispondenti: evidenziati }
+        : { tagsStudente: profile?.tags, quartiereStudente: profile?.neighborhood, corrispondenti: evidenziati },
+    [isEmployer, profile?.tags, profile?.neighborhood, evidenziati]
   );
+  const ordinati = useMemo(() => ordinaAnnunci(annunci, pertinenza), [annunci, pertinenza]);
   if (annunci.length === 0) return null;
 
   const quartieri = new Set(annunci.map((j) => j.neighborhood).filter(Boolean));
@@ -74,6 +77,8 @@ export function ZonaAnnunciDrawer({ isOpen, onClose, annunci, onJobSelect, evide
               onJobClick={scegli}
               sottoTitolo={quartieri.size === 1 ? "attivita" : "zona"}
               evidenziati={evidenziati}
+              pertinenza={isEmployer ? undefined : pertinenza}
+              contaViste={!isEmployer}
             />
           </div>
         </div>

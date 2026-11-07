@@ -1,1 +1,6 @@
 project_id = "cggwpktrbsphwvkrnrvj"
+
+# La chiama il database (pg_net / pg_cron), non un utente: niente token.
+# La protegge il segreto nell'intestazione `x-politask-chiave`.
+[functions.invia-notifiche]
+verify_jwt = false

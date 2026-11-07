@@ -21,7 +21,12 @@ const Toaster = ({ ...props }: ToasterProps) => {
           toast: "toast toast-scotch",
           // Inchiostro anche la descrizione: il grigio sul nastro starebbe a ~3:1.
           description: "!text-ink/80",
-          actionButton: "group-[.toast]:bg-primary group-[.toast]:text-primary-foreground",
+          // ⚠️ Era `group-[.toast]:bg-primary`: cerca un genitore che sia
+          // insieme `.group` e `.toast`, e non c'è (il `.group` è il
+          // contenitore) — il bottone restava il bianco di serie di sonner.
+          // Ora un chip disegnato in inchiostro, leggibile sul nastro per
+          // tutti e due i ruoli.
+          actionButton: "sagoma-chip !rounded-full !bg-ink !px-3 !font-semibold !text-paper-sheet",
           cancelButton: "group-[.toast]:bg-muted group-[.toast]:text-muted-foreground",
         },
       }}

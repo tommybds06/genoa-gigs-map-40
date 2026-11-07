@@ -112,6 +112,21 @@ serve(async (req) => {
       )
       .eq("id", user.id);
 
+    // L'esito anche come notifica, nell'app e per email (sistema delle
+    // notifiche, migration 20261105140000_notifiche.sql).
+    await admin.rpc("crea_notifica", {
+      p_utente: user.id,
+      p_tipo: "verifica_piva",
+      p_titolo: vies.valid ? "Partita IVA verificata" : "Partita IVA non verificata",
+      p_testo: vies.valid
+        ? "Accanto al nome della tua attività ora c'è il segno «Attività verificata»."
+        : "Il servizio europeo VIES non la riconosce come attiva. Controlla il numero in Modifica profilo.",
+      p_azione: "verifica",
+      p_riferimento: null,
+      p_chiave: `verifica:${piva}:${new Date().toISOString().slice(0, 10)}`,
+      p_modo: "unico",
+    });
+
     return risposta({ esito: vies.valid ? "valida" : "non_valida", nome });
   } catch (error: unknown) {
     const messaggio = error instanceof Error ? error.message : "errore";

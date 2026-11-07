@@ -22,6 +22,8 @@ import { getTagClasses } from "@/lib/tagColors";
 import { LocationMiniMap } from "./LocationMiniMap";
 import { SegnoVerificato } from "@/components/ui/SegnoVerificato";
 import { precaricaProfiloPubblico } from "@/hooks/useProfiloPubblico";
+import { registraApertura } from "@/lib/statisticheAnnunci";
+import { chiediPermessoDopo } from "@/lib/notifiche/permesso";
 
 interface JobProfile {
   full_name: string | null;
@@ -158,6 +160,14 @@ export function JobDetailsSheet({ job, isOpen, onClose, showMiniMap = false, sop
      riga «chi lo offre» lo trova già (hooks/useProfiloPubblico.ts). Dopo un
      attimo, per non contendere la rete alla scheda stessa. */
   const ownerId = job?.owner_id;
+
+  // I dati del test: ogni volta che uno studente apre la scheda
+  // (lib/statisticheAnnunci.ts; chi l'ha pubblicato non conta).
+  const idAperto = isOpen && !isEmployer ? job?.id : undefined;
+  useEffect(() => {
+    if (idAperto) registraApertura(idAperto);
+  }, [idAperto]);
+
   useEffect(() => {
     if (!isOpen || !ownerId) return;
     const t = window.setTimeout(() => precaricaProfiloPubblico(queryClient, ownerId), 400);
@@ -322,6 +332,8 @@ export function JobDetailsSheet({ job, isOpen, onClose, showMiniMap = false, sop
         // Invalidate applications cache for instant UI refresh
         await queryClient.invalidateQueries({ queryKey: ['applications'] });
         toast.success('Candidatura inviata!', { duration: 1500 });
+        // Dopo la candidatura: «ti avvisiamo quando ti scelgono» (§28).
+        chiediPermessoDopo('candidatura');
       }
     } catch (error) {
       console.error('Error applying to job:', error);

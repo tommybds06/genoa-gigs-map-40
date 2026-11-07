@@ -1,0 +1,17 @@
+{
+  "name": "Politask",
+  "short_name": "Politask",
+  "description": "Lavoretti a Genova, sulla mappa.",
+  "lang": "it",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F3EFE3",
+  "theme_color": "#F3EFE3",
+  "icons": [
+    { "src": "/icons/icona-192-v1.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icona-512-v1.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icona-512-v1.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

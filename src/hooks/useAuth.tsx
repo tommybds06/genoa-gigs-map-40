@@ -1,5 +1,6 @@
 import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
+import { canaleAttivo } from '@/lib/notifiche/canale';
 import { supabase } from '@/integrations/supabase/client';
 
 interface AuthContextType {
@@ -66,6 +67,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const signOut = async () => {
+    // PRIMA di uscire (dopo, le policy non lasciano più toccare la riga): il
+    // telefono smette di ricevere le notifiche di questo account.
+    await canaleAttivo.scollega();
     await supabase.auth.signOut();
   };
 

@@ -15,6 +15,10 @@ import { useAppTheme } from "@/hooks/useAppTheme";
 import { getJobIconFromTags } from "@/lib/jobIcons";
 import { getTagClasses } from "@/lib/tagColors";
 import { Job } from "@/hooks/useJobs";
+import { useUser } from "@/contexts/UserContext";
+import { inEvidenza, ordinaAnnunci, type Pertinenza } from "@/lib/potenziamento";
+import { EtichettaInEvidenza } from "@/pages/Lista";
+import { cn } from "@/lib/utils";
 
 interface EmployerJobsDrawerProps {
   isOpen: boolean;
@@ -34,6 +38,11 @@ export function EmployerJobsDrawer({
 }: EmployerJobsDrawerProps) {
   const { theme } = useAppTheme();
   const navigate = useNavigate();
+  const { isEmployer, profile } = useUser();
+  // Lo stesso ordine della lista di una zona (lib/potenziamento.ts).
+  const pertinenza: Pertinenza = isEmployer
+    ? { corrispondenti: evidenziati }
+    : { tagsStudente: profile?.tags, quartiereStudente: profile?.neighborhood, corrispondenti: evidenziati };
   
   if (jobs.length === 0) return null;
   
@@ -97,19 +106,17 @@ export function EmployerJobsDrawer({
           {/* Scrollable Job List */}
           <div className="flex-1 overflow-y-auto px-4 pb-6">
             <div className="space-y-3">
-              {/* Prima chi corrisponde alla ricerca (sort stabile: il resto
-                  dell'ordine non cambia), come nella lista di una zona. */}
-              {(evidenziati && evidenziati.size > 0
-                ? [...jobs].sort((a, b) => Number(evidenziati.has(b.id)) - Number(evidenziati.has(a.id)))
-                : jobs
-              ).map((job) => {
+              {/* I potenziati pertinenti, poi chi corrisponde alla ricerca, poi
+                  gli altri: come nella lista di una zona. */}
+              {ordinaAnnunci(jobs, pertinenza).map((job) => {
                 const Icon = getJobIconFromTags(job.tags || []);
+                const evidenza = !isEmployer && inEvidenza(job, pertinenza);
                 
                 return (
                   <button
                     key={job.id}
                     onClick={() => handleJobClick(job)}
-                    className="w-full flex items-center gap-3 p-4 material-card active:scale-[0.98] transition-all text-left"
+                    className={cn("w-full flex items-center gap-3 p-4 material-card active:scale-[0.98] transition-all text-left", evidenza && "card-evidenza")}
                   >
                     {/* La tessera delle altre liste (Lista, zona della mappa).
                         ⚠️ Prima: icona pastello su `accent`, ~1,6:1. */}
@@ -117,6 +124,7 @@ export function EmployerJobsDrawer({
 
                     {/* Content */}
                     <div className="flex-1 min-w-0">
+                      {evidenza && <div className="mb-1"><EtichettaInEvidenza /></div>}
                       <h3 className="font-semibold text-foreground truncate">
                         {job.title}
                       </h3>

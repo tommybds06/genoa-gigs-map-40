@@ -3,7 +3,7 @@ import { Foglietto } from "@/components/ui/Foglietto";
 import { srcLogo } from "@/lib/gerarchia";
 import { TesseraIcona, TesseraIndietro } from "@/components/ui/Tessera";
 import { useNavigate } from "react-router-dom";
-import { NotificheIcon, MailIcon, DocumentoIcon, EsciIcon, BidoneIcon, ProfiloIcon, InfoIcon } from "@/components/icons/uiIcons";
+import { MailIcon, DocumentoIcon, EsciIcon, BidoneIcon, ProfiloIcon, InfoIcon } from "@/components/icons/uiIcons";
 import {
   User,
   HelpCircle,
@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useAppTheme } from "@/hooks/useAppTheme";
-import { Switch } from "@/components/ui/switch";
+import { ImpostazioniNotifiche } from "@/components/notifiche/ImpostazioniNotifiche";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,7 +29,7 @@ const Settings = () => {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const { theme, isEmployer } = useAppTheme();
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
@@ -99,7 +99,7 @@ const Settings = () => {
             {/* Edit Profile */}
             <button 
               onClick={() => navigate("/settings/edit-profile")}
-              className="w-full flex items-center justify-between p-4 hover:bg-muted/50 active:bg-muted/70 transition-colors border-b border-border"
+              className="w-full flex items-center justify-between p-4 hover:bg-muted/50 active:bg-muted/70 transition-colors"
             >
               <div className="flex items-center gap-3">
                 <ProfiloIcon className={`w-5 h-5 ${theme.primaryText}`} />
@@ -107,21 +107,13 @@ const Settings = () => {
               </div>
               <ChevronRight className="w-5 h-5 text-muted-foreground" />
             </button>
-
-            {/* Notifications */}
-            <div className="flex items-center justify-between p-4">
-              <div className="flex items-center gap-3">
-                <NotificheIcon className={`w-5 h-5 ${theme.primaryText}`} />
-                <span className="titolo-mini">Notifiche</span>
-              </div>
-              <Switch
-                checked={notificationsEnabled}
-                onCheckedChange={setNotificationsEnabled}
-                className={isEmployer ? "data-[state=checked]:bg-employer" : ""}
-              />
-            </div>
           </div>
         </div>
+
+        {/* Le notifiche: il dispositivo e una voce per categoria (§28). Al
+            posto dell'interruttore «Notifiche» di prima, che non era
+            collegato a niente. */}
+        <ImpostazioniNotifiche />
 
         {/* Support & Info Section */}
         <div className="mb-6">

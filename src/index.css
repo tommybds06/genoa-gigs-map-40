@@ -1269,3 +1269,28 @@ body [data-sonner-toaster] {
   transition: none !important;
 }
 
+/* L'ANNUNCIO IN EVIDENZA (potenziato e pertinente, lib/potenziamento.ts) —
+   lo stesso filo disegnato delle card, più spesso (3,4 invece di 1,1: la
+   maschera ne lascia metà, ~1,7 px) e nell'arancio di brand, l'accento del
+   lato worker. Quattro varianti come il filo normale, nei file
+   bordo-card-*-evidenza-v1.svg. Fuori dai layer: deve battere le regole
+   delle varianti per posizione. */
+@supports (-webkit-mask-box-image: url("/images/cornici/sagoma-card-a.svg")) or
+          (mask-border: url("/images/cornici/sagoma-card-a.svg")) {
+  .material-card.card-evidenza::after {
+    border-image-source: url("/images/cornici/bordo-card-a-evidenza-v1.svg");
+  }
+  .material-card.card-evidenza:nth-of-type(4n + 2)::after,
+  .card-tilt > *:nth-child(4n + 2) .material-card.card-evidenza::after {
+    border-image-source: url("/images/cornici/bordo-card-b-evidenza-v1.svg");
+  }
+  .material-card.card-evidenza:nth-of-type(4n + 3)::after,
+  .card-tilt > *:nth-child(4n + 3) .material-card.card-evidenza::after {
+    border-image-source: url("/images/cornici/bordo-card-c-evidenza-v1.svg");
+  }
+  .material-card.card-evidenza:nth-of-type(4n + 4)::after,
+  .card-tilt > *:nth-child(4n + 4) .material-card.card-evidenza::after {
+    border-image-source: url("/images/cornici/bordo-card-d-evidenza-v1.svg");
+  }
+}
+

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Header } from '@/components/layout/Header';
 import { useAuth } from '@/hooks/useAuth';
@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { StatusBadge } from '@/components/ui/StatusBadge';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { EditJobDialog } from '@/components/jobs/EditJobDialog';
 import { DeleteJobDialog } from '@/components/jobs/DeleteJobDialog';
@@ -166,6 +166,27 @@ const Annunci = () => {
     setSelectedJob(job);
     fetchApplications(job.id);
   };
+
+  /* «?annuncio=<id>»: da una notifica (nuove candidature, in scadenza,
+     scaduto) si apre quell'annuncio. Si toglie subito dall'indirizzo, e lo si
+     apre appena la lista c'è. `location.key`: la pagina resta montata (§25). */
+  const location = useLocation();
+  const daAprire = useRef<string | null>(null);
+  useEffect(() => {
+    const id = new URLSearchParams(location.search).get('annuncio');
+    if (!id) return;
+    daAprire.current = id;
+    navigate('/annunci', { replace: true });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.key]);
+  useEffect(() => {
+    const id = daAprire.current;
+    const job = id ? jobs.find((j) => j.id === id) : undefined;
+    if (!job) return;
+    daAprire.current = null;
+    handleJobClick(job);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [jobs, location.key]);
 
   const handleBack = () => {
     setSelectedJob(null);

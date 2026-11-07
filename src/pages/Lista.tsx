@@ -1,7 +1,7 @@
 import { Header } from "@/components/layout/Header";
 import { MapPin, Clock, Euro, SearchX, Tag, Briefcase, FileText } from "lucide-react";
 import { XIcon, DocumentoIcon, AnnunciVuotaIcon, CuoreIcon } from "@/components/icons/uiIcons";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useUser } from "@/contexts/UserContext";
 import { useAppTheme } from "@/hooks/useAppTheme";
@@ -14,6 +14,10 @@ import { JobCardSkeletonList } from "@/components/skeletons/JobCardSkeleton";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ApplicationCard, ApplicationCardSkeleton } from "@/components/applications/ApplicationCard";
 import { TesseraIcona } from "@/components/ui/Tessera";
+import { inEvidenza, ordinaAnnunci, type Pertinenza } from "@/lib/potenziamento";
+import { registraVista } from "@/lib/statisticheAnnunci";
+import { useScheda } from "@/hooks/useScheda";
+import { cn } from "@/lib/utils";
 
 
 const Lista = () => {
@@ -47,7 +51,15 @@ const Lista = () => {
   const userTags = profile?.tags || [];
   const employerJobsQuery = useEmployerJobs(isEmployer ? user?.id : undefined);
   const workerJobsQuery = useOpenJobs(!isEmployer && userTags.length > 0 ? userTags : undefined);
-  const { data: jobs = [], isLoading } = isEmployer ? employerJobsQuery : workerJobsQuery;
+  const { data: jobsGrezzi = [], isLoading } = isEmployer ? employerJobsQuery : workerJobsQuery;
+  /* L'ordine per lo studente (lib/potenziamento.ts): i potenziati PERTINENTI
+     per primi, poi gli altri; dentro, distanza dal suo quartiere e data.
+     L'employer vede i suoi annunci come arrivano. */
+  const pertinenza = useMemo<Pertinenza | undefined>(
+    () => (isEmployer ? undefined : { tagsStudente: profile?.tags, quartiereStudente: profile?.neighborhood }),
+    [isEmployer, profile?.tags, profile?.neighborhood]
+  );
+  const jobs = useMemo(() => (pertinenza ? ordinaAnnunci(jobsGrezzi, pertinenza) : jobsGrezzi), [jobsGrezzi, pertinenza]);
   const { data: applications = [], isLoading: applicationsLoading } = useUserApplications(
     !isEmployer ? user?.id : undefined
   );
@@ -108,6 +120,8 @@ const Lista = () => {
                   isEmployer={isEmployer} 
                   hasTags={userTags.length > 0} 
                   onJobClick={handleJobClick} 
+                  pertinenza={pertinenza}
+                  contaViste
                 />
               </TabsContent>
 
@@ -170,9 +184,43 @@ interface JobsListProps {
   sottoTitolo?: "zona" | "attivita";
   /** Annunci che corrispondono alla ricerca della mappa: tessera nei colori del pin evidenziato. */
   evidenziati?: Set<string>;
+  /** Chi guarda (lo studente): decide quali potenziati sono «In evidenza». */
+  pertinenza?: Pertinenza;
+  /** Conta le viste per i dati del test (lib/statisticheAnnunci.ts). */
+  contaViste?: boolean;
 }
 
-export function JobsList({ jobs, loading, isEmployer, hasTags, onJobClick, sottoTitolo = "zona", evidenziati }: JobsListProps) {
+export function JobsList({ jobs, loading, isEmployer, hasTags, onJobClick, sottoTitolo = "zona", evidenziati, pertinenza, contaViste = false }: JobsListProps) {
+  /* LE VISTE: una card è vista quando è sullo schermo per più di metà, e la
+     sua scheda è quella in vista. ⚠️ Una scheda nascosta (layout/Schede.tsx)
+     resta al suo posto, e per l'IntersectionObserver le sue card sono
+     «sullo schermo»: per questo si guarda anche `visibile`. */
+  const { visibile } = useScheda();
+  const contenitore = useRef<HTMLDivElement>(null);
+  const sulloSchermo = useRef(new Set<string>());
+  const visibileRif = useRef(visibile);
+  visibileRif.current = visibile;
+  useEffect(() => {
+    const el = contenitore.current;
+    if (!contaViste || !el) return;
+    const io = new IntersectionObserver(
+      (voci) => {
+        for (const v of voci) {
+          const id = (v.target as HTMLElement).dataset.annuncio!;
+          if (v.isIntersecting) sulloSchermo.current.add(id);
+          else sulloSchermo.current.delete(id);
+        }
+        if (visibileRif.current) sulloSchermo.current.forEach(registraVista);
+      },
+      { threshold: 0.5 }
+    );
+    el.querySelectorAll("[data-annuncio]").forEach((c) => io.observe(c));
+    return () => io.disconnect();
+  }, [contaViste, jobs, loading]);
+  useEffect(() => {
+    if (contaViste && visibile) sulloSchermo.current.forEach(registraVista);
+  }, [contaViste, visibile]);
+
   if (loading) {
     return <JobCardSkeletonList count={5} />;
   }
@@ -196,9 +244,11 @@ export function JobsList({ jobs, loading, isEmployer, hasTags, onJobClick, sotto
      ⚠️ Prima la paga era «€ 9€/h» — l'euro due volte, perché il campo è
      libero e spesso lo contiene già — e in arancio pastello a ~1,9:1. */
   return (
-    <div className="space-y-3 card-tilt">
+    <div ref={contenitore} className="space-y-3 card-tilt">
       {jobs.map((job) => {
         const Icon = getJobIconFromTags(job.tags);
+        // Potenziato E pertinente per chi guarda: bordo arancio e etichetta.
+        const evidenza = !!pertinenza && inEvidenza(job, { ...pertinenza, corrispondenti: evidenziati });
         const zona =
           sottoTitolo === "attivita"
             ? job.profiles?.full_name || null
@@ -207,7 +257,8 @@ export function JobsList({ jobs, loading, isEmployer, hasTags, onJobClick, sotto
         return (
           <div
             key={job.id}
-            className="material-card flex cursor-pointer items-center gap-3 p-3.5 touch-feedback"
+            data-annuncio={job.id}
+            className={cn("material-card flex cursor-pointer items-center gap-3 p-3.5 touch-feedback", evidenza && "card-evidenza")}
             onClick={() => onJobClick(job)}
           >
             <TesseraIcona icona={Icon} evidenziata={evidenziati?.has(job.id)} />
@@ -215,15 +266,31 @@ export function JobsList({ jobs, loading, isEmployer, hasTags, onJobClick, sotto
               <h3 className="line-clamp-2 text-[15px] font-semibold leading-snug">{job.title}</h3>
               {zona && <p className="mt-0.5 truncate text-[13px] text-muted-foreground">{zona}</p>}
             </div>
-            {job.price && (
-              <p className="max-w-[38%] shrink-0 text-right text-[15px] font-semibold leading-snug text-primary-strong line-clamp-2">
-                {job.price}
-              </p>
+            {(job.price || evidenza) && (
+              /* L'etichetta sta nell'angolo in alto, sopra la paga: nella
+                 stessa colonna non la copre mai, a qualunque altezza. */
+              <div className="flex max-w-[38%] shrink-0 flex-col items-end gap-1.5">
+                {evidenza && <EtichettaInEvidenza />}
+                {job.price && (
+                  <p className="text-right text-[15px] font-semibold leading-snug text-primary-strong line-clamp-2">
+                    {job.price}
+                  </p>
+                )}
+              </div>
             )}
           </div>
         );
       })}
     </div>
+  );
+}
+
+/** «In evidenza»: l'arancio di brand pieno con l'inchiostro sopra (6,45:1). */
+export function EtichettaInEvidenza() {
+  return (
+    <span className="sagoma-chip whitespace-nowrap rounded-full bg-brand-orange px-2 py-0.5 text-[11px] font-semibold leading-tight text-ink">
+      In evidenza
+    </span>
   );
 }
 

@@ -1,5 +1,7 @@
 import { Fragment, useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { srcLogo } from "@/lib/gerarchia";
+import { Campanella } from "@/components/notifiche/Campanella";
+import { impostaChatAperta, segnaLetteDellaChat } from "@/lib/notifiche/notifiche";
 import { MessageCircle, ArrowLeft, Send, Loader2, ImagePlus, X, CheckCircle, Check } from "lucide-react";
 import { InvioIcon, ImmaginiIcon, MessaggiVuotaIcon } from "@/components/icons/uiIcons";
 import { useAppTheme } from "@/hooks/useAppTheme";
@@ -127,11 +129,17 @@ const Messaggi = () => {
     setPendingAttachment(null);
   }, [attiva]);
 
-  // Ref to track current selected chat without re-subscribing
-  const selectedChatRef = useRef<Chat | null>(null);
-  selectedChatRef.current = selectedChat;
+  /* La chat aperta per le notifiche (§28): le sue si segnano lette aprendola,
+     e quelle che arrivano mentre la si guarda non fanno il toast. */
+  useEffect(() => {
+    const id = selectedChat?.id;
+    if (!id || !user?.id) return;
+    impostaChatAperta(id);
+    segnaLetteDellaChat(id, user.id).then(() => queryClient.invalidateQueries({ queryKey: ['notifiche'] }));
+    return () => impostaChatAperta(null);
+  }, [selectedChat?.id, user?.id, queryClient]);
 
-  // Subscribe to new messages for notifications - STABLE subscription
+  // Messaggi nuovi in tempo reale → la lista delle chat si rilegge.
   useEffect(() => {
     if (!user?.id) return;
 
@@ -144,9 +152,7 @@ const Messaggi = () => {
           schema: 'public',
           table: 'messages',
         },
-        async (payload) => {
-          const newMsg = payload.new as Message;
-
+        () => {
           // La lista va aggiornata SEMPRE, a ogni messaggio: cambiano ordine,
           // anteprima e contatore. Prima questa riga stava dentro l'if qui
           // sotto, quindi non scattava per i messaggi scritti da me ne' per
@@ -154,18 +160,8 @@ const Messaggi = () => {
           // riordinava solo al refresh della pagina.
           queryClient.invalidateQueries({ queryKey: ['chats'] });
 
-          // Il toast invece resta condizionato: ha senso solo per un messaggio
-          // altrui arrivato in una conversazione che NON sto guardando.
-          if (newMsg.sender_id !== user.id && (!selectedChatRef.current || newMsg.chat_id !== selectedChatRef.current.id)) {
-            // Find sender name
-            const { data: sender } = await supabase
-              .from('profiles')
-              .select('full_name')
-              .eq('id', newMsg.sender_id)
-              .maybeSingle();
-
-            toast.info(`Nuovo messaggio da ${sender?.full_name || 'Utente'}`, { duration: 2300 });
-          }
+          // L'avviso di un messaggio nuovo non sta più qui: è una notifica
+          // (GestoreNotifiche, §28), con raggruppamento e tocco che porta alla chat.
         }
       )
       .subscribe();
@@ -1012,11 +1008,14 @@ const Messaggi = () => {
        <div className="flex flex-col h-full bg-background">
          {/* Simple Header with safe area */}
          <header className="sticky top-0 z-40 bg-background px-4 pt-8 pb-3">
-           <img
-             src={srcLogo(isEmployer)}
-             alt="Politask"
-             className="h-14 w-auto -ml-1"
-           />
+           <div className="flex items-center justify-between">
+             <img
+               src={srcLogo(isEmployer)}
+               alt="Politask"
+               className="h-14 w-auto -ml-1"
+             />
+             <Campanella className="-mr-2" />
+           </div>
          </header>
  
          <main className="flex-1 px-4 pt-2 pb-4 overflow-y-auto">

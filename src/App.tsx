@@ -12,11 +12,16 @@ import { PromemoriaScadenza } from "@/components/bacheca/PromemoriaScadenza";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { PageTransition } from "@/components/layout/PageTransition";
 import { SplashScreen } from "@/components/layout/SplashScreen";
+import { GestoreNotifiche } from "@/components/notifiche/GestoreNotifiche";
+import { ChiediPermesso } from "@/components/notifiche/ChiediPermesso";
+import { BannerIphone } from "@/components/notifiche/BannerIphone";
 import { Schede } from "@/components/layout/Schede";
 import { TAB_ROUTES } from "@/lib/schede";
 import CreateJob from "./pages/CreateJob";
+import OpzioniAnnuncio from "./pages/OpzioniAnnuncio";
 import PublicProfile from "./pages/PublicProfile";
 import Settings from "./pages/Settings";
+import Notifiche from "./pages/Notifiche";
 import EditProfile from "./pages/EditProfile";
 import Auth from "./pages/Auth";
 import ReimpostaPassword from "./pages/ReimpostaPassword";
@@ -91,6 +96,17 @@ function AnimatedRoutes() {
               <ProtectedRoute><CreateJob /></ProtectedRoute>
             </PageTransition>
           } />
+          {/* Dopo «Prosegui»: le opzioni e la pubblicazione (5 novembre). */}
+          <Route path="/create-job/opzioni" element={
+            <PageTransition variant="slide">
+              <ProtectedRoute><OpzioniAnnuncio /></ProtectedRoute>
+            </PageTransition>
+          } />
+          <Route path="/notifiche" element={
+            <PageTransition variant="slide">
+              <ProtectedRoute><Notifiche /></ProtectedRoute>
+            </PageTransition>
+          } />
           <Route path="/settings" element={
             <PageTransition variant="slide">
               <ProtectedRoute><Settings /></ProtectedRoute>
@@ -132,6 +148,11 @@ const App = () => (
              <PromemoriaScadenza />
              <BrowserRouter>
                <AnimatedRoutes />
+               {/* Le notifiche (§28): dentro il router, perché portano a
+                   una schermata. */}
+               <GestoreNotifiche />
+               <ChiediPermesso />
+               <BannerIphone />
              </BrowserRouter>
              {/* Ultimo e fuori dal router: è uno strato sopra tutto, e
                  intanto l'app sotto carica sessione e mappa. */}

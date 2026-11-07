@@ -41,3 +41,6 @@ supabase/demo/
 *.njsproj
 *.sln
 *.sw?
+
+# I segreti delle notifiche (chiavi VAPID, segreto di invio): mai nel repo.
+supabase/segreti/

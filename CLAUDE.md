@@ -2319,3 +2319,187 @@ trascinamento) e il «rispondi» della bolla, nascosto sul telefono.
   pagine rare (accesso, onboarding, crea annuncio…) lo accorcerebbe; lo
   splash ne copre già buona parte.
 
+---
+
+# 26. Le opzioni a pagamento degli annunci — fase di prova (5 novembre 2026)
+
+Specifica di Tommaso. Tra il form (`CreateJob`, ora con «Prosegui») e la
+pubblicazione c'è **`pages/OpzioniAnnuncio.tsx`** (`/create-job/opzioni`):
+riepilogo, tre card (potenziamento, allungamento, pacchetto) col prezzo
+calcolato, «Pubblica gratis». Migration
+`20261105120000_opzioni_annuncio.sql` (provata su PGlite, 10 casi, applicata
+due volte). ⚠️ **Va applicata PRIMA del push**: il form scrive colonne nuove.
+
+- **I numeri in `config/prezzi.ts`**, la logica in `lib/prezzi.ts`
+  (`valoreAnnuncio`, `calcolaPrezzi`), i test in `lib/prezzi.test.ts`:
+  **`npm test`** (`node --test`, Node 24 esegue il TypeScript da solo:
+  nessuna dipendenza in più, quindi `bun.lock` non cambia). ⚠️ Per questo
+  `lib/prezzi.ts` importa con percorsi relativi e l'estensione `.ts`:
+  Node non conosce l'alias `@/`. Verificato che i test sanno fallire.
+- **Al centesimo**, mai all'euro. Allungamento e pacchetto partono dal
+  potenziamento GIÀ arrotondato: i conti sulle card tornano (2,51 → 1,51 →
+  3,22).
+- **I tag di durata non sono stati rinominati**: «Una tantum, Giorni,
+  Settimane, Mesi, Continuativo» = occasionale, giornaliero, settimanale,
+  mensile, continuativo (`durataDaTag`). I nomi della specifica
+  («Occasionale», «Settimanale», «Mensile») sono proprio i LEGACY di
+  `constants/tags.ts`.
+- **La paga ora è strutturata** (all'ora/forfait, importo, netto/lordo):
+  il testo libero `price` lo scrive l'app (`testoPaga`: «10€/h netti»,
+  «150€ forfait lordi»), e card e scheda lo mostrano come prima.
+  `leggiPagaDaTesto` (bacheca) lo rilegge giusto. Le **ore** compaiono solo
+  con la paga oraria e solo quelle della durata (`ORE_PER_DURATA`): col
+  forfait il valore è l'importo.
+- **Bozza** tra le due rotte in `lib/bozzaAnnuncio.ts` (variabile del modulo):
+  tornando indietro il form ritrova tutto; dopo la pubblicazione si cancella.
+- ⚠️ **La scadenza la decide ancora il DATABASE**: `proteggi_scadenza_annuncio`
+  dà 7 giorni con allungamento o pacchetto SOLO se `prova_gratuita()` è
+  vera, altrimenti 48 ore. In modifica da utente non cambiano né scadenza
+  né opzione né prezzi. L'interruttore lato app (`pagamentiAttivi`) e la
+  funzione del database **vanno cambiati insieme**.
+- **Si salvano la scelta (`opzione`) e i tre prezzi MOSTRATI**
+  (`prezzo_potenziamento`…), non ricalcolati: servono a capire dopo il test
+  cosa avrebbero comprato.
+- Gli effetti del potenziamento: §27. Descrizioni di allungamento e
+  pacchetto ancora provvisorie.
+- Con un'opzione scelta i bottoni sono due, della **stessa misura**: «Pubblica
+  con il …» e «Pubblica gratis» (contorno). Senza, uno solo, pieno.
+
+---
+
+# 27. Gli effetti del potenziamento — 5 novembre 2026
+
+Il principio (Tommaso): **il potenziamento non mostra mai a uno studente
+annunci che non ha cercato**, fa solo passare avanti l'annuncio tra quelli già
+pertinenti per lui. Migration `20261105130000_potenziamento.sql` (provata su
+PGlite, applicata due volte dopo la `opzioni_annuncio`). ⚠️ Prima le due
+migration, poi il push.
+
+## L'ordine — `lib/potenziamento.ts` (test in `potenziamento.test.ts`)
+- **Pertinente** = il suo ruolo è tra i tag dello studente (le durate non
+  contano) E corrisponde ai filtri attivi. Senza tag, o da employer, niente
+  passa avanti.
+- `ordinaAnnunci`: potenziati pertinenti → chi corrisponde alla ricerca →
+  tutti gli altri; dentro, l'**ordine normale**.
+- ⚠️ **L'ordine normale ora è distanza, poi data** (prima la Lista era solo
+  per data): distanza dal **quartiere del profilo** (non il GPS), a passi di
+  500 m, perché tra annunci vicini decida la data. Centri dei quartieri in
+  `constants/quartieri.ts`, da OpenStreetMap (Mapbox ne riconosceva 4 su 39);
+  gli stessi nella tabella `quartieri`, da tenere in sincrono.
+- Vale in Lista, nella lista di una zona e in quella di un locale con più
+  annunci (mappa). Il pin resta uguale.
+- **Dura quanto l'annuncio**: uno scaduto non è in nessuna lista.
+
+## L'aspetto
+- `.card-evidenza`: lo stesso filo delle card nelle copie
+  `bordo-card-*-evidenza-v1.svg`, arancio di brand (`#F6A24D`, l'accento
+  worker) a 3,4 invece di 1,1. Regole in fondo a `index.css`.
+- `EtichettaInEvidenza` (in `pages/Lista.tsx`): chip arancio pieno con
+  l'inchiostro (6,45), nell'angolo in alto, SOPRA la paga (stessa colonna:
+  non la copre mai).
+- ⚠️ **«In evidenza» solo se passa avanti per chi guarda** (`inEvidenza`):
+  un potenziato non pertinente resta al suo posto e senza bordo,
+  evidenziarlo lo promuoverebbe lo stesso.
+
+## La notifica
+- «Nuovo lavoro vicino a te» (2 km dal quartiere, ruolo tra i tag, max 2 al
+  giorno) è diventata una delle notifiche del sistema generale: §28. La
+  versione provvisoria (trigger `notifica_lavoro_potenziato`, silenzio
+  21–9, `profiles.notifiche_lavori_vicini`, `NotificheInApp`) non esiste più.
+- ⚠️ Il bottone dei toast era bianco di serie: lo shadcn usava
+  `group-[.toast]:`, che non combacia mai. Ora è un chip in inchiostro.
+
+## I dati del test
+- **Viste**: card sullo schermo per più di metà, una volta per sessione, a
+  gruppi ogni 4 s (`lib/statisticheAnnunci.ts` → `registra_viste`). ⚠️ Solo
+  se la scheda è in vista (`useScheda().visibile`): una scheda nascosta
+  resta al suo posto e per l'IntersectionObserver le sue card «si vedono».
+- **Aperture**: ogni apertura della scheda (`registra_apertura`).
+- Solo studenti; chi ha pubblicato non conta (lo esclude il database).
+- Si leggono dal pannello SQL: `SELECT * FROM statistiche_annunci_test`
+  (opzione, prezzi, viste, aperture, candidature). Niente accesso dall'app.
+
+---
+
+# 28. Le notifiche — 5 novembre 2026
+
+Specifica di Tommaso. Migration `20261105140000_notifiche.sql` (provata su
+PGlite: raggruppamenti, preferenze, silenzio, RLS, due giri), edge function
+`invia-notifiche`. ⚠️ Ordine: `120000` → `130000` → `140000`, POI il push.
+
+## Chi decide cosa: il DATABASE
+- **`notifiche`** = storico (centro notifiche) + POSTA IN USCITA. Colonne:
+  tipo, categoria, titolo, testo, `azione` + `riferimento` (dove porta),
+  `chiave` (una per evento, e per raggruppare), `conteggio`, `canali`,
+  `mostra_dal` (silenzio), `letta_il`, `push_inviata_il`, `email_dopo`,
+  `email_inviata_il`. L'utente cambia SOLO `letta_il` (`proteggi_notifica`,
+  ⚠️ guarda `current_user`, non `auth.uid()`: dentro un trigger partito da
+  un utente `auth.uid()` è suo, e annullava il raggruppamento).
+- **`crea_notifica`** (solo server): preferenze per categoria, canali e
+  email per tipo (tabella nel commento della funzione), **silenzio 24–7**
+  (ora di Genova → alle 7) solo per vicini, promemoria, in scadenza,
+  lavoro finito; **raggruppamento**: candidature dello stesso annuncio entro
+  un'ora («5 nuove candidature per Cameriere»), messaggi della stessa chat
+  non letti («3 nuovi messaggi da X»).
+- Eventi: trigger su `applications`, `cartellini`, `messages`, `reviews`,
+  `jobs` (potenziati vicini); `notifiche_a_orario()` ogni ora (pg_cron) per
+  in scadenza (6 h), scaduto senza nessuno scelto, lavoro finito, promemoria
+  24 h prima (serve `jobs.inizio_il`, campo facoltativo «Quando inizia» nel
+  form).
+- **Email** (Resend) solo per «ti ha scelto» e «nuova candidatura» se
+  ANCORA NON LETTE dopo 2 ore, e per l'esito della verifica (subito, la
+  scrive `verifica-partita-iva`).
+- **Invio**: `invia-notifiche` (segreto `x-politask-chiave`) svuota la posta:
+  la chiama pg_net subito (trigger `invio_subito`) e pg_cron ogni minuto.
+  URL e segreto in `impostazioni_server` (il segreto va inserito a mano).
+  Senza pg_cron/pg_net: l'app funziona, push/email/a orario no.
+- **Preferenze** `preferenze_notifiche` (riga che manca = di serie: tutto
+  acceso tranne i promemoria). Recensione ricevuta ed esito verifica
+  (categoria `account`) non si spengono.
+
+## L'app
+- **Installabile**: `public/manifest.webmanifest`, icone `public/icons/*-v1`
+  (⚠️ PROVVISORIE, la «P» del logo: da ridisegnare), `public/sw.js` — SOLO
+  push e tocco, nessuna cache (niente versioni vecchie servite per giorni).
+  Registrato da `main.tsx`, mai dentro l'iframe di Lovable.
+- **`lib/notifiche/canale.ts`**: l'interfaccia `CanalePush` (stato, attiva,
+  sincronizza, scollega). Oggi `web` (VAPID, chiave pubblica in
+  `config/notifiche.ts`, la privata in `supabase/segreti/`, FUORI dal repo).
+  **Despia**: scrivere un `canaleDespia` che passa il token del dispositivo a
+  `registra_dispositivo('despia', token)` e `inviaDespia` nella funzione
+  server. Nient'altro cambia. `registra_dispositivo` è SECURITY DEFINER:
+  stesso telefono, altro account → l'iscrizione passa a lui.
+  All'uscita (`signOut`) il dispositivo si scollega PRIMA della chiusura
+  della sessione.
+- **Permesso**: mai a freddo. Dopo la prima candidatura e il primo annuncio
+  (`chiediPermessoDopo`), una scheda con una riga sul perché; «Non ora» →
+  di nuovo dopo 7 giorni. iPhone nel browser: niente push, la scheda e il
+  **`BannerIphone`** (sopra la barra, finché non è installata) spiegano
+  «Condividi › Aggiungi a schermata Home».
+- **Centro notifiche** `/notifiche` (`pages/Notifiche.tsx`), **campanella**
+  (`Campanella`) in Header, Messaggi e Profilo. `hooks/useNotifiche`: le
+  ultime 100, rilette ogni 5 minuti e al ritorno in primo piano (⚠️ quelle
+  rimandate dalla notte diventano visibili alle 7 per RLS, il tempo reale
+  non lo dice).
+- **`GestoreNotifiche`** (in App, nel router): tempo reale → cache + toast
+  (stesso id = il raggruppamento aggiorna il toast); il messaggio della chat
+  aperta si segna letto e basta (`impostaChatAperta`); `/?notifica=<id>`
+  (push con app chiusa, link delle email) e il messaggio del service worker
+  (push con app aperta) → `apriNotifica`.
+- **`lib/notifiche/link.ts` → `apriNotifica`**, l'unico posto che decide
+  dove porta una notifica: chat, scheda dell'annuncio, Annunci
+  (`?annuncio=`, nuovo), recensione, bacheca, profilo, modifica profilo.
+- Con l'app IN VISTA il service worker non mostra la notifica di sistema
+  (c'è il toast) — tranne su Safari, che toglie l'iscrizione a chi riceve
+  push senza mostrarli.
+- **Impostazioni**: «Su questo telefono» (stato + Attiva) e un interruttore
+  per categoria, diverse per ruolo. Via l'interruttore «Notifiche» finto.
+- Il toast vecchio «Nuovo messaggio da…» in Messaggi è stato tolto.
+
+## Da fare / da decidere
+- Resend: account, `RESEND_API_KEY`, dominio verificato per il mittente
+  (rimandato con il nome dell'app, §24).
+- «Ripubblicarlo?» porta ad Annunci: ripubblicare gratis non si può (§19),
+  il bottone vero arriva con Stripe.
+- Testi e icona definitivi.
+
