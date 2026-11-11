@@ -117,7 +117,7 @@ async function inviaWeb(i: Iscrizione, n: Notifica): Promise<Esito> {
 }
 
 /** Scrive l'esito; se la colonna non c'è ancora, pazienza (vedi in cima). */
-async function segnaEsito(a: ReturnType<typeof createClient>, ids: string[], esito: string) {
+async function segnaEsito(a: Client, ids: string[], esito: string) {
   if (!ids.length) return;
   const { error } = await a.from("notifiche").update({ push_esito: esito.slice(0, 500) }).in("id", ids);
   if (error) console.warn("[invia-notifiche] esito non salvato", error.message);
@@ -129,7 +129,7 @@ const TESTI_EMAIL: Record<string, string> = {
   verifica_piva: "Apri Politask per vedere il tuo profilo.",
 };
 
-async function inviaEmail(a: ReturnType<typeof createClient>, n: Notifica): Promise<boolean> {
+async function inviaEmail(a: Client, n: Notifica): Promise<boolean> {
   const chiave = env("RESEND_API_KEY");
   if (!chiave) return false;
   const { data } = await a.auth.admin.getUserById(n.utente_id);
