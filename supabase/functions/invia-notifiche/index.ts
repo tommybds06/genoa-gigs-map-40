@@ -35,7 +35,11 @@
 // (es. «Politask <notifiche@politask.app>»), URL_APP (dove portano i link
 // delle email). SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY ci sono già.
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
+import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
+
+// Il client di questa funzione è creato con generics espliciti: il tipo
+// delle funzioni che lo ricevono deve essere altrettanto permissivo.
+type Client = SupabaseClient<any, any, any>;
 import webpush from "npm:web-push@3.6.7";
 
 interface Notifica {
