@@ -2761,8 +2761,9 @@ PGlite: raggruppamenti, preferenze, silenzio, RLS, due giri), edge function
 ## Da fare / da decidere
 - Resend: account, `RESEND_API_KEY`, dominio verificato per il mittente
   (rimandato con il nome dell'app, §24).
-- Capire perché i push non arrivano, con la prova in Impostazioni e, se
-  serve, `supabase/diagnosi-notifiche.sql` (11 novembre: non ancora fatto).
+- ✅ **I push arrivano** (11 novembre, confermato da Tommaso sul telefono
+  dopo la migration `pg_net`, eseguita da Lovable identica: drizzle 0012).
+  Da riprovare anche su iPhone, con l'app aggiunta alla schermata Home.
 - Testi e icona definitivi.
 
 ---
