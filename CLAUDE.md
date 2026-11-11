@@ -2718,8 +2718,22 @@ PGlite: raggruppamenti, preferenze, silenzio, RLS, due giri), edge function
   - Verificato dall'esterno: la funzione è pubblicata e risponde il suo
     401 senza segreto (non il 404 di Supabase); pg_cron gira (gli avvisi
     «scade tra poche ore» arrivano a :05). Il resto si legge con
-    `supabase/diagnosi-notifiche.sql` (solo letture), da incollare in
-    Lovable.
+    `supabase/diagnosi-notifiche.sql` (UNA query, solo letture, regge anche
+    senza pg_net e pg_cron), da incollare in Lovable.
+- ⚠️ **LA CAUSA: pg_net NON ERA INSTALLATO** (11 novembre, dalla diagnosi
+  eseguita da Lovable). `chiama_invio_notifiche()` intercettava l'errore
+  (`EXCEPTION WHEN undefined_function … THEN NULL`) per non rompere chi crea
+  le notifiche, e così la funzione d'invio non è MAI stata chiamata: nessun
+  push è mai partito, dal 5 novembre. È la lezione 7 in un'altra forma: un
+  ripiego silenzioso nasconde il guasto per una settimana. Migration
+  `20261111130000_pg_net.sql`: installa pg_net; segna «non mandate» le
+  notifiche rimaste in coda (dovevano partire da più di 10 minuti), se no
+  arrivavano tutte insieme; e quando l'invio non può partire (pg_net o
+  segreto mancanti) il database scrive il motivo in `push_esito`
+  (`segna_invio_impossibile`, «server: …»), che la prova mostra subito.
+  Provata su PGlite: coda vecchia segnata, rimandate alle 7 e fresche
+  lasciate; senza segreto e senza pg_net il motivo giusto; con un pg_net
+  finto la chiamata parte col segreto; rieseguita senza danni.
 - ⚠️ **Mai `navigator.serviceWorker.ready` senza limite di tempo**: se il
   service worker non c'è (anteprima di Lovable, registrazione fallita) non
   risponde MAI. L'uscita dall'account lo aspettava («Esci» girava

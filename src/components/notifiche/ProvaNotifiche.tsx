@@ -32,6 +32,10 @@ const attesa = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 function leggiEsito(esito: string | null, inviata: string | null): Esito | null {
   if (esito) {
+    // Scritto dal DATABASE quando non riesce nemmeno a chiamare la funzione
+    // (manca pg_net o il segreto: migration 20261111130000).
+    if (/^server:/.test(esito))
+      return { tono: "male", frase: "Il database non riesce a chiamare la funzione che invia le notifiche: va sistemato su Lovable.", grezzo: esito };
     if (/^configurazione:/.test(esito))
       return { tono: "male", frase: "Il server non ha le chiavi per mandare le notifiche: va sistemato su Lovable.", grezzo: esito };
     if (/^nessun dispositivo/.test(esito))
