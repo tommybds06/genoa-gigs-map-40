@@ -959,6 +959,10 @@ export type Database = {
         Args: { p_tags: string[]; p_titolo: string }
         Returns: string
       }
+      segna_invio_impossibile: {
+        Args: { p_motivo: string }
+        Returns: undefined
+      }
     }
     Enums: {
       user_role: "worker" | "employer"
