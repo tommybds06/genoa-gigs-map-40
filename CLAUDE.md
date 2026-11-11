@@ -1818,6 +1818,17 @@ giorni».
 - Quando arriva Stripe: una funzione SECURITY DEFINER (o un webhook) che
   porta `scade_il` a adesso + 7 giorni e rimette `scadenza_vista = false`;
   il bottone spento diventa vero. Niente altro da cambiare.
+- ⚠️ **NIENTE «Ripubblica» (decisione di Tommaso, 11 novembre).** La
+  notifica «Il tuo annuncio è scaduto. Vuoi ripubblicarlo?» faceva una
+  domanda a cui l'app non sapeva rispondere: toccandola si finiva sulle
+  candidature senza poter fare niente. Ora dice solo com'è andata («Il tuo
+  annuncio è scaduto» · «cameriere sabato · 2 candidature in attesa») e
+  porta alle candidature, a cui si può ancora rispondere. Il mio parere,
+  messo agli atti: il divieto di ripubblicare gratis non protegge niente,
+  perché un annuncio NUOVO è gratis e si ricopia a mano; se un giorno si
+  vuole proteggere l'allungamento, la leva è un limite sugli annunci
+  gratuiti, non un bottone che manca. Tommaso: limitare gli annunci degli
+  employer è controproducente, sono la cosa che serve di più all'app.
 
 ---
 
@@ -2663,12 +2674,41 @@ PGlite: raggruppamenti, preferenze, silenzio, RLS, due giri), edge function
     riceve push senza mostrarli).
   - **Chrome sul computer**: in vista niente, solo il toast (lì l'eccezione
     di Chrome funziona).
-  «In vista» = `focused` o `visibilityState === "visible"`. Provato col
-  service worker vero e push simulati da DevTools
+  «In vista» lo dice la PAGINA (11 novembre): il service worker chiede
+  `sei-in-vista` con un `MessageChannel`, `GestoreNotifiche` risponde
+  (`visibilityState === "visible"` e `hasFocus()`), senza risposta in
+  400 ms vale «no». Prima leggeva `visibilityState` da `clients.matchAll()`,
+  che per una pagina congelata in background può non essere aggiornato
+  (ipotesi, non verificata sul telefono): la notifica partiva silenziosa e
+  veniva tolta, cioè per chi guardava non arrivava. Provato col service
+  worker vero e push simulati da DevTools
   (`ServiceWorker.deliverPushMessage`; per fingere Android serve
   `--user-agent` sul browser intero, quello del contesto non arriva al
-  service worker): in vista su Android → la nostra, silenziosa, tolta dopo
-  2 s; sul computer → niente; app chiusa → normale, con suono, resta.
+  service worker): in vista → silenziosa, tolta dopo 2 s; pagina nascosta
+  (risponde no) e pagina che non risponde → normale, resta; app chiusa →
+  normale; la prova → normale anche in vista.
+- ⚠️ **L'ESITO DEL PUSH E LA PROVA (11 novembre).** Tommaso: «non arrivano
+  proprio mai, né Android né iOS». Nel centro notifiche c'erano, quindi il
+  database le crea; tra lì e il telefono ci sono cinque anelli (segreto in
+  `impostazioni_server`, pg_net, la funzione con le chiavi VAPID, il
+  servizio di Google/Apple, il dispositivo iscritto) e un errore in uno
+  qualunque non lasciava traccia: la funzione segnava «inviata» comunque.
+  Migration `20261111120000_notifiche_esito_e_prova.sql`:
+  - `notifiche.push_esito`, scritto dalla funzione dispositivo per
+    dispositivo: «google: 201», «apple: 403 …», «nessun dispositivo
+    iscritto…», «configurazione: …». ⚠️ In un update A PARTE da
+    `push_inviata_il`: con la funzione pubblicata prima della migration
+    fallisce solo lui, se no la stessa notifica ripartirebbe ogni minuto.
+  - `notifica_di_prova()` (tipo `prova`, solo push, una ogni 15 s): in
+    Impostazioni, «Mandami una notifica di prova» (`ProvaNotifiche.tsx`)
+    rinnova l'iscrizione del telefono, la chiede, legge `push_esito` e lo
+    dice in una frase, con la riga grezza sotto. Il telefono la mostra
+    anche con l'app aperta; nel centro notifiche non c'è.
+  - Verificato dall'esterno: la funzione è pubblicata e risponde il suo
+    401 senza segreto (non il 404 di Supabase); pg_cron gira (gli avvisi
+    «scade tra poche ore» arrivano a :05). Il resto si legge con
+    `supabase/diagnosi-notifiche.sql` (solo letture), da incollare in
+    Lovable.
 - ⚠️ **Mai `navigator.serviceWorker.ready` senza limite di tempo**: se il
   service worker non c'è (anteprima di Lovable, registrazione fallita) non
   risponde MAI. L'uscita dall'account lo aspettava («Esci» girava
@@ -2696,7 +2736,47 @@ PGlite: raggruppamenti, preferenze, silenzio, RLS, due giri), edge function
 ## Da fare / da decidere
 - Resend: account, `RESEND_API_KEY`, dominio verificato per il mittente
   (rimandato con il nome dell'app, §24).
-- «Ripubblicarlo?» porta ad Annunci: ripubblicare gratis non si può (§19),
-  il bottone vero arriva con Stripe.
+- Capire perché i push non arrivano, con la prova in Impostazioni e, se
+  serve, `supabase/diagnosi-notifiche.sql` (11 novembre: non ancora fatto).
 - Testi e icona definitivi.
+
+---
+
+# 29. La pagina Annunci dell'employer — 11 novembre 2026
+
+Tommaso: «un listone poco differenziato, con due tipi di tag poco utili, la
+possibilità di modificare quelli chiusi (con tanto di "Salva modifiche"),
+nomi tagliati, informazioni gestite male, poca importanza al tasto per
+creare annunci nuovi»; e «la lista dei vecchi annunci può servire per
+ripescare qualche candidato passato». `pages/Annunci.tsx`, rifatta.
+
+- **«Pubblica un annuncio»**: bottone pieno `lg` a tutta larghezza in cima
+  (era una pillolina «Crea» accanto al titolo).
+- **«Sulla mappa»** (aperti e non scaduti), il più vicino alla scadenza
+  per primo: card con la tessera del mestiere, il titolo intero su due
+  righe, l'orologio con quanto manca (sotto le 6 ore in ocra scuro,
+  `warning-soft-foreground`: il `--warning` pieno fa 3,45:1, poco per testo
+  da 13 px), «N da vedere» (candidature `pending`) nell'inchiostro del
+  ruolo, e a destra il NUMERO delle candidature, grande in Shinjo.
+  Era «1 candidatura · scade tra 44 minuti» su una riga, che a 390 px si
+  spezzava in due colonne storte.
+- **«Passati»** (scaduti o chiusi): righe leggere in UN riquadro, divise
+  dalla linea sottile, cinque alla volta («Mostra altri N»). Sotto il
+  titolo una riga che scorre: «Scaduto l'8 nov · 1 candidatura · 1 da
+  vedere» (⚠️ «l'8», «l'11»: `ilGiorno`). ⚠️ Testo che scorre, non
+  colonne: con «da vedere» in una colonna a destra la riga si spezzava a
+  metà.
+- Via le etichette «Scaduto»/«Chiuso» su ogni riga (le dice la sezione) e
+  le tre icone per riga (matita, cestino, freccia): Modifica ed Elimina
+  stanno nella pagina dell'annuncio. **Modifica solo se è sulla mappa.**
+- **La pagina dell'annuncio**: titolo intero, «Sulla mappa · scade tra…» o
+  «Scaduto l'8 nov», Modifica (solo attivi) ed Elimina a 44 px (sotto, il
+  bottone vuoto non ha il contorno disegnato), «Non è più sulla mappa, ma
+  a chi si è candidato puoi ancora rispondere», le candidature. I profili
+  dei candidati in UNA query (era una per candidato). «Accetta» con
+  `theme.btnFilled` (era `bg-employer-700` scritto a mano).
+- Una query sola per l'elenco: `applications(status)` dentro i jobs, da
+  cui totale e «da vedere».
+- Verificato sul banco a 390 px e 2,625: un attivo che scade tra 44 minuti
+  e nove passati con titoli simili (il caso degli screenshot di Tommaso).
 

@@ -8,6 +8,7 @@ import { useUser } from "@/contexts/UserContext";
 import { usePreferenzeNotifiche, type CategoriaNotifiche } from "@/hooks/usePreferenzeNotifiche";
 import { canaleAttivo, installata, suIos, type StatoPermesso } from "@/lib/notifiche/canale";
 import { toast } from "sonner";
+import { ProvaNotifiche } from "./ProvaNotifiche";
 import { cn } from "@/lib/utils";
 
 interface Voce {
@@ -70,7 +71,7 @@ export function ImpostazioniNotifiche() {
     <div className="mb-6">
       <h2 className="mb-2 px-1 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Notifiche</h2>
       <div className="material-card overflow-hidden">
-        <div className="flex items-center gap-3 border-b border-border p-4">
+        <div className={cn("flex items-center gap-3 p-4", stato === "concesso" ? "pb-3" : "border-b border-border")}>
           <NotificheIcon className={`h-5 w-5 shrink-0 ${theme.primaryText}`} />
           <div className="min-w-0 flex-1">
             <p className="titolo-mini">Su questo telefono</p>
@@ -84,6 +85,8 @@ export function ImpostazioniNotifiche() {
             </Button>
           )}
         </div>
+        {/* Con il permesso dato: la prova che fa il giro vero (11 novembre). */}
+        {stato === "concesso" && <ProvaNotifiche />}
 
         {voci.map((v, i) => (
           /* Tutta la riga accende e spegne (bersaglio grande). Un `div` e non

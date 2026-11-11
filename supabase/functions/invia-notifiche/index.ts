@@ -20,6 +20,16 @@
 // RESEND_API_KEY non parte niente e non si segna niente: si manderanno
 // quando ci sarà.
 //
+// ESITO (11 novembre) — in `notifiche.push_esito` resta cosa è successo,
+// dispositivo per dispositivo: «google: 201», «apple: 403 BadJwtToken»,
+// «nessun dispositivo», «configurazione: …». Prima un errore finiva solo nei
+// log della funzione e la notifica risultava inviata: «non arrivano», e
+// nessun modo di sapere perché. L'app lo legge per la notifica di prova
+// (Impostazioni). ⚠️ L'esito si scrive in un update a parte: se la colonna
+// non c'è ancora (funzione pubblicata prima della migration), fallisce solo
+// lui, e `push_inviata_il` si segna lo stesso — se no la stessa notifica
+// ripartirebbe ogni minuto.
+//
 // Segreti: VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_SUBJECT,
 // INVIO_NOTIFICHE_SEGRETO, RESEND_API_KEY, EMAIL_MITTENTE
 // (es. «Politask <notifiche@politask.app>»), URL_APP (dove portano i link
@@ -47,15 +57,37 @@ interface Iscrizione {
 
 const env = (k: string) => Deno.env.get(k) ?? "";
 
-/** L'app nativa (Despia): da scrivere quando ci sarà. Stessa forma del web. */
-async function inviaDespia(_iscrizione: Iscrizione, _n: Notifica): Promise<"ok" | "sparita"> {
-  console.log("[invia-notifiche] push Despia non ancora collegato");
-  return "ok";
+interface Esito {
+  sparita: boolean;
+  /** Una riga per `push_esito`: chi ha risposto e come. */
+  nota: string;
 }
 
-async function inviaWeb(i: Iscrizione, n: Notifica): Promise<"ok" | "sparita"> {
+/** Il servizio push dall'indirizzo: Google (Android, Chrome), Apple, Mozilla. */
+function servizio(endpoint: string) {
+  const host = (() => {
+    try {
+      return new URL(endpoint).host;
+    } catch {
+      return "?";
+    }
+  })();
+  if (host.endsWith("googleapis.com")) return "google";
+  if (host.endsWith("push.apple.com")) return "apple";
+  if (host.includes("mozilla")) return "mozilla";
+  return host;
+}
+
+/** L'app nativa (Despia): da scrivere quando ci sarà. Stessa forma del web. */
+async function inviaDespia(_iscrizione: Iscrizione, _n: Notifica): Promise<Esito> {
+  console.log("[invia-notifiche] push Despia non ancora collegato");
+  return { sparita: false, nota: "despia: non collegato" };
+}
+
+async function inviaWeb(i: Iscrizione, n: Notifica): Promise<Esito> {
+  const chi = servizio(i.endpoint);
   try {
-    await webpush.sendNotification(
+    const r = await webpush.sendNotification(
       { endpoint: i.endpoint, keys: { p256dh: i.p256dh ?? "", auth: i.auth ?? "" } },
       JSON.stringify({
         titolo: n.titolo,
@@ -64,16 +96,27 @@ async function inviaWeb(i: Iscrizione, n: Notifica): Promise<"ok" | "sparita"> {
         // Stessa chiave = la notifica raggruppata SOSTITUISCE quella di prima
         // sul telefono («3 nuovi messaggi» al posto di «2»).
         tag: n.chiave ?? n.id,
+        // La prova da Impostazioni: il telefono la mostra anche con l'app aperta.
+        prova: n.tipo === "prova",
       }),
       { TTL: 60 * 60 * 24 }
     );
-    return "ok";
+    return { sparita: false, nota: `${chi}: ${r.statusCode}` };
   } catch (e) {
-    const stato = (e as { statusCode?: number }).statusCode;
-    if (stato === 404 || stato === 410) return "sparita";
-    console.error("[invia-notifiche] push fallito", stato, (e as Error).message);
-    return "ok";
+    const err = e as { statusCode?: number; body?: string; message?: string };
+    const stato = err.statusCode;
+    const dettaglio = String(err.body || err.message || "").replace(/\s+/g, " ").slice(0, 160);
+    if (stato === 404 || stato === 410) return { sparita: true, nota: `${chi}: ${stato} iscrizione scaduta, tolta` };
+    console.error("[invia-notifiche] push fallito", chi, stato, dettaglio);
+    return { sparita: false, nota: `${chi}: errore ${stato ?? ""} ${dettaglio}`.trim() };
   }
+}
+
+/** Scrive l'esito; se la colonna non c'è ancora, pazienza (vedi in cima). */
+async function segnaEsito(a: ReturnType<typeof createClient>, ids: string[], esito: string) {
+  if (!ids.length) return;
+  const { error } = await a.from("notifiche").update({ push_esito: esito.slice(0, 500) }).in("id", ids);
+  if (error) console.warn("[invia-notifiche] esito non salvato", error.message);
 }
 
 const TESTI_EMAIL: Record<string, string> = {
@@ -116,27 +159,46 @@ Deno.serve(async (req) => {
   let email = 0;
 
   // ---- PUSH ----
-  if (env("VAPID_PRIVATE_KEY")) {
-    webpush.setVapidDetails(env("VAPID_SUBJECT"), env("VAPID_PUBLIC_KEY"), env("VAPID_PRIVATE_KEY"));
-    const { data: daMandare } = await a
-      .from("notifiche")
-      .select("id, utente_id, tipo, titolo, testo, chiave")
-      .contains("canali", ["push"])
-      .is("push_inviata_il", null)
-      .lte("mostra_dal", adesso)
-      .gte("aggiornata_il", ieri) // una notifica di ieri non si manda più
-      .limit(200);
-    for (const n of (daMandare ?? []) as Notifica[]) {
+  const { data: daMandare } = await a
+    .from("notifiche")
+    .select("id, utente_id, tipo, titolo, testo, chiave")
+    .contains("canali", ["push"])
+    .is("push_inviata_il", null)
+    .lte("mostra_dal", adesso)
+    .gte("aggiornata_il", ieri) // una notifica di ieri non si manda più
+    .limit(200);
+  const inCoda = (daMandare ?? []) as Notifica[];
+
+  // Le chiavi: se mancano o sono sbagliate non parte niente, e lo si scrive
+  // sulle notifiche in coda (restano in coda: si manderanno a chiavi giuste).
+  let configurazione = "";
+  if (!env("VAPID_PRIVATE_KEY") || !env("VAPID_PUBLIC_KEY")) {
+    configurazione = "configurazione: mancano le chiavi VAPID nei segreti della funzione";
+  } else {
+    try {
+      webpush.setVapidDetails(env("VAPID_SUBJECT"), env("VAPID_PUBLIC_KEY"), env("VAPID_PRIVATE_KEY"));
+    } catch (e) {
+      configurazione = `configurazione: ${(e as Error).message}`.slice(0, 300);
+    }
+  }
+  if (configurazione) {
+    console.error("[invia-notifiche]", configurazione);
+    await segnaEsito(a, inCoda.map((n) => n.id), configurazione);
+  } else {
+    for (const n of inCoda) {
       const { data: dispositivi } = await a
         .from("iscrizioni_push")
         .select("id, piattaforma, endpoint, p256dh, auth")
         .eq("utente_id", n.utente_id);
+      const note: string[] = [];
       for (const i of (dispositivi ?? []) as Iscrizione[]) {
         const esito = i.piattaforma === "despia" ? await inviaDespia(i, n) : await inviaWeb(i, n);
-        if (esito === "sparita") await a.from("iscrizioni_push").delete().eq("id", i.id);
+        note.push(esito.nota);
+        if (esito.sparita) await a.from("iscrizioni_push").delete().eq("id", i.id);
         else push++;
       }
       await a.from("notifiche").update({ push_inviata_il: adesso }).eq("id", n.id);
+      await segnaEsito(a, [n.id], note.length ? note.join(" · ") : "nessun dispositivo iscritto per questo account");
     }
   }
 

@@ -39,19 +39,57 @@ self.addEventListener("push", (e) => {
 //   push senza mostrarli.
 // - Chrome sul computer: con la scheda in vista niente (lì l'eccezione di
 //   Chrome funziona), solo il toast.
+// - La PROVA da Impostazioni (`prova`): sempre, normale, anche in vista: è
+//   lì apposta per vedere la notifica vera.
+//
+// ⚠️ «IN VISTA» LO DICE LA PAGINA, NON `visibilityState` (11 novembre).
+// Tommaso: «non arrivano proprio mai». Una delle cause possibili (NON
+// verificata sul telefono): lo stato che il service worker legge da
+// `clients.matchAll()` può non essere aggiornato per una pagina messa in
+// background e congelata da Android. Se risulta ancora «visible», la
+// notifica parte silenziosa e l'app la toglie: per chi guarda, non arriva.
+// Comunque sia, la fonte giusta è la pagina stessa: si CHIEDE
+// (`sei-in-vista`, risponde GestoreNotifiche). Una pagina congelata non può
+// rispondere, e senza risposta in 400 ms vale «non in vista».
 const ua = self.navigator.userAgent;
 // Safari, anche su Mac (ha la stessa regola); Chrome e gli altri no.
 const suSafari = /iPhone|iPad|iPod/.test(ua) || (/Safari/.test(ua) && !/Chrome|Chromium|Android|Edg/.test(ua));
 const suAndroid = /Android/.test(ua);
-async function mostra(d) {
-  const finestre = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
-  const inVista = finestre.filter(
-    (f) => (f.focused || f.visibilityState === "visible") && new URL(f.url).origin === self.location.origin
+
+/** Le finestre dell'app che rispondono «sono in vista», entro 400 ms. */
+async function finestreInVista() {
+  const finestre = (await self.clients.matchAll({ type: "window", includeUncontrolled: true })).filter(
+    (f) => new URL(f.url).origin === self.location.origin
   );
+  const risposte = await Promise.all(
+    finestre.map(
+      (f) =>
+        new Promise((fatto) => {
+          const canale = new MessageChannel();
+          const scaduto = setTimeout(() => fatto(false), 400);
+          canale.port1.onmessage = (e) => {
+            clearTimeout(scaduto);
+            fatto(Boolean(e.data && e.data.inVista));
+          };
+          try {
+            f.postMessage({ tipo: "sei-in-vista" }, [canale.port2]);
+          } catch {
+            clearTimeout(scaduto);
+            fatto(false);
+          }
+        })
+    )
+  );
+  return finestre.filter((_, i) => risposte[i]);
+}
+
+async function mostra(d) {
+  const inVista = await finestreInVista();
   const tag = d.tag || d.notifica || "politask";
+  const prova = Boolean(d.prova);
   inVista.forEach((f) => f.postMessage({ tipo: "notifica-arrivata", notifica: d.notifica || null, tag }));
-  if (inVista.length > 0 && !suSafari && !suAndroid) return;
-  const silenziosa = inVista.length > 0 && !suSafari;
+  if (inVista.length > 0 && !prova && !suSafari && !suAndroid) return;
+  const silenziosa = inVista.length > 0 && !prova && !suSafari;
   return self.registration.showNotification(d.titolo || "Politask", {
     body: d.testo || "",
     tag,

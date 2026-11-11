@@ -33,7 +33,9 @@ export type TipoNotifica =
   | "scaduto"
   | "lavoro_finito"
   | "recensione_ricevuta"
-  | "verifica_piva";
+  | "verifica_piva"
+  /** La prova da Impostazioni: solo push, non sta nel centro notifiche. */
+  | "prova";
 
 export const CAMPI_NOTIFICA =
   "id, tipo, categoria, titolo, testo, azione, riferimento, conteggio, creata_il, aggiornata_il, mostra_dal, letta_il";

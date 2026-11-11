@@ -27,6 +27,7 @@ const ICONE: Record<TipoNotifica, ComponentType<SVGProps<SVGSVGElement>>> = {
   lavoro_finito: CalendarioIcon,
   recensione_ricevuta: StellaIcon,
   verifica_piva: VerificatoIcon,
+  prova: NotificheIcon,
 };
 
 export const iconaNotifica = (tipo: string) => ICONE[tipo as TipoNotifica] ?? NotificheIcon;

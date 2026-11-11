@@ -26,6 +26,8 @@ export function useNotifiche() {
         .from("notifiche")
         .select(CAMPI_NOTIFICA)
         .eq("utente_id", user!.id)
+        // La prova da Impostazioni è solo un push: nel centro non c'è.
+        .neq("tipo", "prova")
         .order("aggiornata_il", { ascending: false })
         .limit(100);
       if (error) throw error;

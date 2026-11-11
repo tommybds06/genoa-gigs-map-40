@@ -86,6 +86,14 @@ export function GestoreNotifiche() {
   useEffect(() => {
     if (!("serviceWorker" in navigator)) return;
     const ascolta = (e: MessageEvent) => {
+      // Il service worker chiede se l'app è DAVVERO in vista prima di
+      // decidere che notifica mostrare (public/sw.js): lo stato che legge
+      // lui può non essere aggiornato. Una pagina congelata in background
+      // non risponde, ed è giusto così.
+      if (e.data?.tipo === "sei-in-vista" && e.ports[0]) {
+        e.ports[0].postMessage({ inVista: document.visibilityState === "visible" && document.hasFocus() });
+        return;
+      }
       if (e.data?.tipo === "notifica-toccata" && e.data.notifica) apriDaId.current(e.data.notifica);
       if (e.data?.tipo === "notifica-arrivata") {
         qc.invalidateQueries({ queryKey: ["notifiche"] });
@@ -97,6 +105,9 @@ export function GestoreNotifiche() {
       }
     };
     navigator.serviceWorker.addEventListener("message", ascolta);
+    // Con `addEventListener` i messaggi possono restare in coda finché non
+    // la si apre: la domanda «sei in vista?» deve avere risposta subito.
+    navigator.serviceWorker.startMessages();
     return () => navigator.serviceWorker.removeEventListener("message", ascolta);
   }, [qc]);
 
@@ -106,6 +117,9 @@ export function GestoreNotifiche() {
     const chiave = chiaveNotifiche(uid);
 
     const arriva = (n: Notifica) => {
+      // La prova da Impostazioni: il telefono la mostra da sé, e nel centro
+      // notifiche non c'è (ci pensa ImpostazioniNotifiche a leggerne l'esito).
+      if (n.tipo === "prova") return;
       const prima = qc.getQueryData<Notifica[]>(chiave)?.find((x) => x.id === n.id);
       qc.setQueryData<Notifica[]>(chiave, (v) => {
         const resto = (v ?? []).filter((x) => x.id !== n.id);
