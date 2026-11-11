@@ -55,8 +55,9 @@ function chiaveInByte(base64: string) {
   return Uint8Array.from(b, (c) => c.charCodeAt(0));
 }
 
-/** `p`, oppure `null` se non risponde entro `ms`. */
-export const entro = <T,>(p: Promise<T>, ms: number) =>
+/** `p`, oppure `null` se non risponde entro `ms`. Anche le richieste di
+ *  supabase, che non sono Promise ma «thenable» (`Promise.race` le apre). */
+export const entro = <T,>(p: PromiseLike<T>, ms: number) =>
   Promise.race([p, new Promise<null>((r) => setTimeout(() => r(null), ms))]);
 
 async function iscrizioneWeb(crea: boolean) {

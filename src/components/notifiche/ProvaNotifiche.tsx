@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { canaleAttivo } from "@/lib/notifiche/canale";
+import { canaleAttivo, entro } from "@/lib/notifiche/canale";
 
 /**
  * «MANDAMI UNA NOTIFICA DI PROVA» (11 novembre) — in Impostazioni, sotto
@@ -18,8 +18,13 @@ import { canaleAttivo } from "@/lib/notifiche/canale";
  * Il telefono mostra la prova anche con l'app aperta (public/sw.js, `prova`):
  * è lì apposta per vederla.
  *
- * ⚠️ `notifica_di_prova` e `push_esito` arrivano con la migration: finché
- * Lovable non rigenera i tipi, qui passano con un cast.
+ * ⚠️ LA PRIMA VERSIONE NON PARTIVA (11 novembre, Tommaso: «non c'è scritto
+ * nulla sotto»). Per aggirare i tipi non ancora rigenerati faceva
+ * `const rpc = supabase.rpc; rpc(…)`: staccato dal client, dentro `rpc`
+ * `this` è vuoto (`return this.rest.rpc(…)`), quindi TypeError subito, la
+ * richiesta non partiva e l'errore spariva (c'era `finally` senza `catch`).
+ * Regola: un metodo del client si chiama SEMPRE sul client. E qui ogni
+ * errore finisce a schermo, e ogni passo ha un tempo massimo.
  */
 type Esito = { tono: "ok" | "male" | "attesa"; frase: string; grezzo?: string };
 
@@ -49,13 +54,18 @@ export function ProvaNotifiche() {
 
   const prova = async () => {
     setInCorso(true);
-    setEsito({ tono: "attesa", frase: "Mandata: dovrebbe arrivare tra pochi secondi…" });
+    setEsito({ tono: "attesa", frase: "Registro questo telefono…" });
     try {
       // Prima si rinnova l'iscrizione di questo telefono per questo account:
       // dopo un cambio di account potrebbe essere ancora dell'altro.
-      await canaleAttivo.sincronizza();
-      const rpc = supabase.rpc as unknown as (f: string) => Promise<{ data: string | null; error: { message: string } | null }>;
-      const { data: id, error } = await rpc("notifica_di_prova");
+      await entro(canaleAttivo.sincronizza(), 8000);
+      setEsito({ tono: "attesa", frase: "Chiedo la notifica al server…" });
+      const risposta = await entro(supabase.rpc("notifica_di_prova"), 10000);
+      if (!risposta) {
+        setEsito({ tono: "male", frase: "Il server non ha risposto entro 10 secondi." });
+        return;
+      }
+      const { data: id, error } = risposta;
       if (error) {
         const frase = /troppo_presto/.test(error.message)
           ? "Aspetta qualche secondo prima di riprovare."
@@ -65,14 +75,21 @@ export function ProvaNotifiche() {
         setEsito({ tono: "male", frase, grezzo: error.message });
         return;
       }
+      if (!id) {
+        // `crea_notifica` restituisce NULL se la categoria è spenta: 'account'
+        // non si spegne, quindi qui non si dovrebbe mai arrivare.
+        setEsito({ tono: "male", frase: "Il server non ha creato la notifica di prova." });
+        return;
+      }
+      setEsito({ tono: "attesa", frase: "Mandata: dovrebbe arrivare tra pochi secondi…" });
       // L'esito lo scrive la funzione appena ha provato a consegnarla.
       for (let i = 0; i < 16; i++) {
         await attesa(1500);
-        const { data } = (await supabase
+        const { data } = await supabase
           .from("notifiche")
-          .select("push_esito, push_inviata_il" as "*")
-          .eq("id", id as string)
-          .maybeSingle()) as unknown as { data: { push_esito: string | null; push_inviata_il: string | null } | null };
+          .select("push_esito, push_inviata_il")
+          .eq("id", id)
+          .maybeSingle();
         const letto = leggiEsito(data?.push_esito ?? null, data?.push_inviata_il ?? null);
         if (letto) {
           setEsito(letto);
@@ -83,6 +100,8 @@ export function ProvaNotifiche() {
         tono: "male",
         frase: "Dopo 24 secondi il server non l'ha ancora mandata: il database non chiama la funzione che invia (il segreto o pg_net). Va sistemato su Lovable.",
       });
+    } catch (e) {
+      setEsito({ tono: "male", frase: "Errore imprevisto nella prova.", grezzo: e instanceof Error ? e.message : String(e) });
     } finally {
       setInCorso(false);
     }

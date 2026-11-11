@@ -118,6 +118,14 @@ Sono qui perché sono costate ore, non per completezza.
    prove di navigazione e ha bloccato l'accesso (§25.4): nessuna prova
    passava dalla pagina di login a una scheda. Il banco per il cambio
    account si monta come in §25.7.
+13. ⚠️ **Un bottone nuovo si prova TOCCANDOLO, non solo i pezzi dietro.**
+   L'11 novembre la prova delle notifiche è stata collaudata sul database
+   (PGlite) e sul service worker, non il bottone: staccava `supabase.rpc`
+   dal client per aggirare i tipi (`const rpc = supabase.rpc`), dentro `rpc`
+   `this` era vuoto, TypeError, e con `finally` senza `catch` l'errore
+   spariva. Tommaso: «non c'è scritto nulla sotto». Regole: un metodo del
+   client si chiama SEMPRE sul client; ogni azione asincrona con un
+   `catch` che mostra l'errore; e il giro si prova sul banco col tocco vero.
 9. **`git pull --rebase` prima di ogni push.** Lovable committa da solo sullo
    stesso `main` (§12): pushare senza prima riallinearsi vuol dire farsi
    rifiutare il push, o peggio fare un merge che riporta indietro un suo fix.
@@ -2702,7 +2710,10 @@ PGlite: raggruppamenti, preferenze, silenzio, RLS, due giri), edge function
   - `notifica_di_prova()` (tipo `prova`, solo push, una ogni 15 s): in
     Impostazioni, «Mandami una notifica di prova» (`ProvaNotifiche.tsx`)
     rinnova l'iscrizione del telefono, la chiede, legge `push_esito` e lo
-    dice in una frase, con la riga grezza sotto. Il telefono la mostra
+    dice in una frase, con la riga grezza sotto. ⚠️ La prima versione non
+    partiva affatto (lezione 13, §2). Provata sul banco col tocco vero, con
+    la funzione finta che scrive «google: 201», «apple: errore 403…» e
+    «nessun dispositivo»: le tre frasi giuste. Il telefono la mostra
     anche con l'app aperta; nel centro notifiche non c'è.
   - Verificato dall'esterno: la funzione è pubblicata e risponde il suo
     401 senza segreto (non il 404 di Supabase); pg_cron gira (gli avvisi
