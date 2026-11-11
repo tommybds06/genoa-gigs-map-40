@@ -473,6 +473,7 @@ export type Database = {
           id: string
           letta_il: string | null
           mostra_dal: string
+          push_esito: string | null
           push_inviata_il: string | null
           riferimento: string | null
           testo: string
@@ -494,6 +495,7 @@ export type Database = {
           id?: string
           letta_il?: string | null
           mostra_dal?: string
+          push_esito?: string | null
           push_inviata_il?: string | null
           riferimento?: string | null
           testo: string
@@ -515,6 +517,7 @@ export type Database = {
           id?: string
           letta_il?: string | null
           mostra_dal?: string
+          push_esito?: string | null
           push_inviata_il?: string | null
           riferimento?: string | null
           testo?: string
@@ -933,6 +936,7 @@ export type Database = {
         Returns: Database["public"]["Enums"]["user_role"]
       }
       nome_di: { Args: { p_utente: string }; Returns: string }
+      notifica_di_prova: { Args: never; Returns: string }
       notifiche_a_orario: { Args: never; Returns: undefined }
       orario_silenzio: { Args: { t: string }; Returns: string }
       preferenza_notifiche: {
