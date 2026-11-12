@@ -2,8 +2,8 @@ import { Fragment, useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { srcLogo } from "@/lib/gerarchia";
 import { Campanella } from "@/components/notifiche/Campanella";
 import { impostaChatAperta, segnaLetteDellaChat } from "@/lib/notifiche/notifiche";
-import { MessageCircle, ArrowLeft, Send, Loader2, ImagePlus, X, CheckCircle, Check } from "lucide-react";
-import { InvioIcon, ImmaginiIcon, MessaggiVuotaIcon } from "@/components/icons/uiIcons";
+import { MessageCircle, ArrowLeft, Send, Loader2, ImagePlus, CheckCircle, Check } from "lucide-react";
+import { InvioIcon, ImmaginiIcon, MessaggiVuotaIcon, DocumentoIcon, XIcon } from "@/components/icons/uiIcons";
 import { useAppTheme } from "@/hooks/useAppTheme";
 import { cn } from "@/lib/utils";
 import { Tessera, TesseraIcona, TesseraIndietro } from "@/components/ui/Tessera";
@@ -20,6 +20,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from 'sonner';
 import { MessageBubble } from "@/components/chat/MessageBubble";
+import { SchedaAllega, type TipoScelta } from "@/components/chat/SchedaAllega";
+import { MenuMessaggio } from "@/components/chat/MenuMessaggio";
+import { MAX_BYTE_DOCUMENTO, ePdf, etichettaMessaggio, nomeAllegato, percorsoDocumento, segnapostoAllegato, tipoAllegato } from "@/lib/allegati";
 import { useChats, Chat } from "@/hooks/useChats";
 import { ChatListSkeleton } from "@/components/skeletons/ChatListSkeleton";
 import { useQueryClient } from "@tanstack/react-query";
@@ -79,7 +82,9 @@ const Messaggi = () => {
   const [showCompleteDialog, setShowCompleteDialog] = useState(false);
   // Dopo «Assumi»: il cartellino da compilare (vedi handleHireWorker).
   const [compilaPer, setCompilaPer] = useState<{ jobId: string; workerId: string } | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  // La scheda «Allega» e il menu di un messaggio (pressione lunga): 12 novembre.
+  const [allegaAperta, setAllegaAperta] = useState(false);
+  const [menuMessaggio, setMenuMessaggio] = useState<Message | null>(null);
 
   /* Bacheca: per tutti e due i ruoli — l'employer ci appende chi lavora con
      lui, il worker ci vede i lavori in cui è stato preso. La scheda attiva sta
@@ -128,6 +133,8 @@ const Messaggi = () => {
     setSelectedChat(null);
     setReplyingTo(null);
     setPendingAttachment(null);
+    setAllegaAperta(false);
+    setMenuMessaggio(null);
   }, [attiva]);
 
   /* La chat aperta per le notifiche (§28): le sue si segnano lette aprendola,
@@ -274,44 +281,50 @@ const Messaggi = () => {
     prevMessagesCountRef.current = messages.length;
   }, [messages.length, statoUltimo]);
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const originale = e.target.files?.[0];
-    if (!originale || !user || !selectedChat) return;
-
-    // Validate file type
-    if (!originale.type.startsWith('image/')) {
-      toast.error('Solo immagini sono permesse', { duration: 1500 });
+  /* UN ALLEGATO scelto dalla scheda «Allega»: una foto (scattata o dalla
+     galleria) o un documento PDF. Si carica subito e resta «in attesa» sopra
+     il campo finché non si preme Invia, così ci si può scrivere accanto. */
+  const caricaAllegato = async (originale: File, tipo: TipoScelta) => {
+    if (!user || !selectedChat) return;
+    const documento = tipo === 'documento';
+    if (documento ? !ePdf(originale) : !originale.type.startsWith('image/')) {
+      toast.error(documento ? 'Si possono mandare solo PDF' : 'Solo immagini sono permesse', { duration: 1900 });
       return;
     }
 
     setUploadingImage(true);
     try {
-      // Ridimensionata prima di partire (lib/foto.ts): una foto della
-      // fotocamera passa da ~4 MB a ~250 KB.
-      const file = await ridimensionaFoto(originale);
-      if (file.size > MAX_BYTE_FOTO) {
-        toast.error('Immagine troppo grande (max 5MB)', { duration: 1500 });
-        return;
+      let file = originale;
+      let filePath: string;
+      if (documento) {
+        if (file.size > MAX_BYTE_DOCUMENTO) {
+          toast.error('Documento troppo grande (max 10 MB)', { duration: 1900 });
+          return;
+        }
+        filePath = percorsoDocumento(selectedChat.id, user.id, file.name);
+      } else {
+        // Ridimensionata prima di partire (lib/foto.ts): una foto della
+        // fotocamera passa da ~4 MB a ~250 KB.
+        file = await ridimensionaFoto(originale);
+        if (file.size > MAX_BYTE_FOTO) {
+          toast.error('Immagine troppo grande (max 5MB)', { duration: 1500 });
+          return;
+        }
+        filePath = `${selectedChat.id}/${user.id}/${Date.now()}.${file.name.split('.').pop()}`;
       }
-      const fileExt = file.name.split('.').pop();
-      const filePath = `${selectedChat.id}/${user.id}/${Date.now()}.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
         .from('chat-attachments')
-        .upload(filePath, file);
+        .upload(filePath, file, documento ? { contentType: 'application/pdf' } : undefined);
 
       if (uploadError) throw uploadError;
 
       setPendingAttachment(filePath);
-      toast.success('Immagine pronta per l\'invio', { duration: 1500 });
     } catch (error) {
-      console.error('Error uploading image:', error);
+      console.error('Error uploading attachment:', error);
       toast.error('Errore nel caricamento', { duration: 1500 });
     } finally {
       setUploadingImage(false);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
     }
   };
 
@@ -346,7 +359,8 @@ const Messaggi = () => {
       id: crypto.randomUUID(),
       chat_id: selectedChat.id,
       sender_id: user.id,
-      content: newMessage.trim() || (pendingAttachment ? '📷 Foto' : ''),
+      // Solo l'allegato: il testo è il suo segnaposto («📷 Foto», «📄 nome.pdf»).
+      content: newMessage.trim() || (pendingAttachment ? segnapostoAllegato(pendingAttachment) : ''),
       created_at: new Date().toISOString(),
       is_read: false,
       reply_to_id: replyingTo?.id || null,
@@ -723,6 +737,7 @@ const Messaggi = () => {
                       isOwn={msg.sender_id === user?.id}
                       isEmployer={isEmployer}
                       onReply={handleReply}
+                      onMenu={setMenuMessaggio}
                       continuaGruppo={!nuovoGiorno && stessoGruppo(prec, msg)}
                       chiudeGruppo={!stessoGruppo(msg, succ)}
                       onRiprova={riprovaMessaggio}
@@ -734,36 +749,38 @@ const Messaggi = () => {
           )}
         </main>
 
-        {/* Reply preview */}
+        {/* A chi si sta rispondendo: una riga sopra il campo, col filo del
+            ruolo a sinistra come la citazione dentro la bolla. */}
         {replyingTo && (
-          <div className="px-4 py-2 bg-muted/50 border-t flex items-center gap-3">
-            <div className="flex-1 min-w-0">
-              <p className="text-xs text-muted-foreground">Rispondendo a:</p>
-              <p className="text-sm truncate">{replyingTo.content}</p>
+          <div className="linea-divisoria-sopra flex shrink-0 items-center gap-3 px-4 py-2">
+            <div className={cn('min-w-0 flex-1 border-l-2 pl-2.5', isEmployer ? 'border-employer-800' : 'border-primary-strong')}>
+              <p className={cn('text-xs font-medium', theme.primaryText)}>
+                {replyingTo.sender_id === user?.id ? 'Rispondi a te stesso' : `Rispondi a ${selectedChat.other_user?.full_name || 'Utente'}`}
+              </p>
+              <p className="truncate text-sm text-ink-soft">{etichettaMessaggio(replyingTo)}</p>
             </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setReplyingTo(null)}
-              className="shrink-0 h-8 w-8"
-            >
-              <X className="h-4 w-4" />
+            <Button variant="ghost" size="icon" onClick={() => setReplyingTo(null)} className="h-9 w-9 shrink-0" aria-label="Annulla la risposta">
+              <XIcon className="h-4 w-4" />
             </Button>
           </div>
         )}
 
-        {/* Pending attachment preview */}
+        {/* L'allegato in attesa: la foto in piccolo, o il nome del documento. */}
         {pendingAttachment && (
-          <div className="px-4 py-2 bg-muted/50 border-t flex items-center gap-3">
-            {pendingAttachmentUrl && <img src={pendingAttachmentUrl} alt="Allegato" className="h-12 w-12 rounded-lg object-cover" />}
-            <p className="flex-1 text-sm text-muted-foreground">Immagine allegata</p>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setPendingAttachment(null)}
-              className="shrink-0 h-8 w-8"
-            >
-              <X className="h-4 w-4" />
+          <div className="linea-divisoria-sopra flex shrink-0 items-center gap-3 px-4 py-2">
+            {tipoAllegato(pendingAttachment) === 'documento' ? (
+              <>
+                <DocumentoIcon className={cn('h-8 w-8 shrink-0', theme.primaryText)} />
+                <p className="min-w-0 flex-1 truncate text-sm text-ink">{nomeAllegato(pendingAttachment)}</p>
+              </>
+            ) : (
+              <>
+                {pendingAttachmentUrl && <img src={pendingAttachmentUrl} alt="Allegato" className="h-12 w-12 rounded-lg object-cover" />}
+                <p className="flex-1 text-sm text-ink-soft">Foto pronta da inviare</p>
+              </>
+            )}
+            <Button variant="ghost" size="icon" onClick={() => setPendingAttachment(null)} className="h-9 w-9 shrink-0" aria-label="Togli l'allegato">
+              <XIcon className="h-4 w-4" />
             </Button>
           </div>
         )}
@@ -774,20 +791,13 @@ const Messaggi = () => {
           style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 16px)' }}
         >
           <div className="flex items-center gap-2">
-            {/* Image upload button */}
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleImageUpload}
-              className="hidden"
-            />
-            {/* Allegato e invio sono due tessere gemelle ai lati del campo. */}
+            {/* Allegato e invio sono due tessere gemelle ai lati del campo.
+                L'allegato apre la scheda «Allega»: scatta, galleria, documento. */}
             <Tessera
               icona={uploadingImage ? Loader2 : ImmaginiIcon}
               classeIcona={uploadingImage ? "animate-spin" : undefined}
-              etichetta="Allega una foto"
-              onClick={() => fileInputRef.current?.click()}
+              etichetta="Allega"
+              onClick={() => setAllegaAperta(true)}
               disabled={uploadingImage}
             />
 
@@ -815,6 +825,15 @@ const Messaggi = () => {
           </div>
         </div>
         
+        <SchedaAllega aperta={allegaAperta} onChiudi={() => setAllegaAperta(false)} onFile={caricaAllegato} />
+        <MenuMessaggio
+          messaggio={menuMessaggio}
+          mio={menuMessaggio?.sender_id === user?.id}
+          nomeAltro={selectedChat.other_user?.full_name || 'Utente'}
+          onChiudi={() => setMenuMessaggio(null)}
+          onRispondi={handleReply}
+        />
+
         {/* Dialog: Hire confirmation */}
         <Dialog open={showHireDialog} onOpenChange={setShowHireDialog}>
           <DialogContent>

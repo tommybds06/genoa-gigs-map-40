@@ -1,7 +1,8 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState, type PointerEvent } from "react";
 import { motion, useMotionValue, useTransform, useAnimation, PanInfo } from "framer-motion";
 import { CheckCheck, Reply } from "lucide-react";
-import { OrologioIcon } from "@/components/icons/uiIcons";
+import { DocumentoIcon, OrologioIcon } from "@/components/icons/uiIcons";
+import { eSegnaposto, etichettaMessaggio, nomeAllegato, tipoAllegato } from "@/lib/allegati";
 import { useAllegato } from "@/hooks/useAttachmentUrl";
 import { MISURA_FOTO } from "@/lib/foto";
 import { useMisure } from "@/hooks/useMisure";
@@ -15,6 +16,8 @@ interface MessageBubbleProps {
   isOwn: boolean;
   isEmployer: boolean;
   onReply: (message: Messaggio) => void;
+  /** Pressione lunga (o tasto destro): il menu del messaggio. */
+  onMenu?: (message: Messaggio) => void;
   /** Il messaggio prima è della stessa persona, vicino nel tempo: stesso gruppo. */
   continuaGruppo: boolean;
   /** Il messaggio dopo NON è della stessa persona: chiude il gruppo. */
@@ -24,6 +27,8 @@ interface MessageBubbleProps {
 }
 
 const SWIPE_THRESHOLD = 50; // px per far scattare la risposta
+const PRESSIONE_LUNGA = 450; // ms
+const TOLLERANZA_DITO = 10; // px: oltre, è uno scorrimento e non una pressione
 
 /**
  * LA BOLLA DI UN MESSAGGIO.
@@ -36,18 +41,63 @@ const SWIPE_THRESHOLD = 50; // px per far scattare la risposta
  *   staccato sopra, con un'altra forma).
  * - I miei messaggi appena scritti compaiono subito (vedi `useMessaggi`):
  *   orologio finché il database non conferma, «Non inviato» se fallisce.
+ * - RISPONDERE (12 novembre): trascinando la bolla verso destra, ANCHE le
+ *   proprie. Prima il gesto era acceso solo sui messaggi dell'altro, e a un
+ *   proprio messaggio non si poteva rispondere («non si può rispondere ad un
+ *   proprio messaggio», Tommaso).
+ * - PRESSIONE LUNGA (o tasto destro) → `onMenu`: Rispondi, Copia. Per questo
+ *   sul telefono il testo non si seleziona più tenendo premuto (c'è «Copia»);
+ *   col mouse sì.
+ * - ALLEGATI: una foto, oppure un DOCUMENTO PDF (`lib/allegati.ts`): una riga
+ *   con l'icona e il nome, che si apre toccandola. È un link vero (`<a>`), con
+ *   l'indirizzo firmato già pronto: aprire una finestra DOPO un'attesa, su
+ *   iPhone, viene bloccato come popup.
  */
 export const MessageBubble = ({
   message,
   isOwn,
   isEmployer,
   onReply,
+  onMenu,
   continuaGruppo,
   chiudeGruppo,
   onRiprova,
 }: MessageBubbleProps) => {
   const [, setShowReplyIcon] = useState(false);
-  const { url: attachmentUrl, ripiega: ripiegaAllegato, caricata: allegatoCaricato } = useAllegato(message.attachment_url, MISURA_FOTO.grande);
+  const documento = tipoAllegato(message.attachment_url) === "documento";
+  // Un documento si firma così com'è; una foto si chiede già ridimensionata.
+  const { url: attachmentUrl, ripiega: ripiegaAllegato, caricata: allegatoCaricato } = useAllegato(
+    message.attachment_url,
+    documento ? undefined : MISURA_FOTO.grande
+  );
+
+  /* La pressione lunga. Un timer che parte al tocco e si annulla se il dito
+     si sposta (è uno scorrimento, o il trascinamento della risposta) o si
+     alza. `contextmenu` copre il tasto destro e, su Android, la pressione
+     lunga del sistema: lì si ferma il menu nativo e si apre il nostro, una
+     volta sola. */
+  const pressione = useRef<{ timer: number; x: number; y: number } | null>(null);
+  const menuAperto = useRef(0);
+  const apriMenu = () => {
+    if (!onMenu || message.stato) return;
+    if (Date.now() - menuAperto.current < 800) return;
+    menuAperto.current = Date.now();
+    if (navigator.vibrate) navigator.vibrate(10);
+    onMenu(message);
+  };
+  const annullaPressione = () => {
+    if (pressione.current) window.clearTimeout(pressione.current.timer);
+    pressione.current = null;
+  };
+  const iniziaPressione = (e: PointerEvent) => {
+    if (e.pointerType === "mouse" || (e.target as HTMLElement).closest("a, button")) return;
+    annullaPressione();
+    pressione.current = { x: e.clientX, y: e.clientY, timer: window.setTimeout(apriMenu, PRESSIONE_LUNGA) };
+  };
+  const muoviPressione = (e: PointerEvent) => {
+    const p = pressione.current;
+    if (p && Math.hypot(e.clientX - p.x, e.clientY - p.y) > TOLLERANZA_DITO) annullaPressione();
+  };
   const x = useMotionValue(0);
   const controls = useAnimation();
   const { ref, misure } = useMisure<HTMLDivElement>();
@@ -94,20 +144,20 @@ export const MessageBubble = ({
 
   return (
     <div className={cn("group relative flex", isOwn ? "justify-end" : "justify-start", continuaGruppo ? "mt-0.5" : "mt-3")}>
-      {!isOwn && (
-        <motion.div
-          className="absolute left-0 top-1/2 -translate-y-1/2 rounded-full bg-muted p-2"
-          style={{ opacity: replyIconOpacity, scale: replyIconScale }}
-        >
-          <Reply className="h-4 w-4 text-muted-foreground" />
-        </motion.div>
-      )}
+      <motion.div
+        aria-hidden="true"
+        className="pointer-events-none absolute left-0 top-1/2 -translate-y-1/2 rounded-full bg-muted p-2"
+        style={{ opacity: replyIconOpacity, scale: replyIconScale }}
+      >
+        <Reply className="h-4 w-4 text-muted-foreground" />
+      </motion.div>
 
       <motion.div
         className="flex max-w-[78%] flex-col"
-        drag={!isOwn ? "x" : false}
+        drag="x"
         dragConstraints={{ left: 0, right: 0 }}
-        dragElastic={0.5}
+        // Solo verso destra: a sinistra la bolla non si muove.
+        dragElastic={{ left: 0, right: 0.5 }}
         onDrag={(_, info) => setShowReplyIcon(info.offset.x > 20)}
         onDragEnd={handleDragEnd}
         animate={controls}
@@ -115,24 +165,62 @@ export const MessageBubble = ({
       >
         <div
           ref={ref}
-          className={cn("relative px-3.5 pb-1.5 pt-2", colori, fallito && "opacity-70")}
+          className={cn(
+            "relative select-none px-3.5 pb-1.5 pt-2 [-webkit-touch-callout:none] md:select-auto",
+            colori,
+            fallito && "opacity-70"
+          )}
           // Finché non c'è la misura, un raggio CSS: niente lampo squadrato.
           style={clipPath ? { clipPath } : { borderRadius: 18 }}
+          onPointerDown={iniziaPressione}
+          onPointerMove={muoviPressione}
+          onPointerUp={annullaPressione}
+          onPointerCancel={annullaPressione}
+          onContextMenu={(e) => {
+            if (!onMenu) return;
+            e.preventDefault();
+            annullaPressione();
+            apriMenu();
+          }}
         >
           {message.reply_to && (
             <div className={cn("mb-1.5 rounded-lg border-l-2 px-2.5 py-1 text-xs", coloriCitazione)}>
-              <p className="line-clamp-2 font-medium opacity-90">{message.reply_to.content}</p>
+              <p className="line-clamp-2 font-medium opacity-90">{etichettaMessaggio(message.reply_to)}</p>
             </div>
           )}
 
-          {attachmentUrl && (
-            <div className="-mx-1.5 mb-1.5 mt-0.5">
-              <img src={attachmentUrl} onError={ripiegaAllegato} onLoad={allegatoCaricato} decoding="async" alt="Allegato" className="h-auto max-h-64 max-w-full rounded-xl object-cover" />
-            </div>
+          {documento ? (
+            /* Il documento: icona, nome, «PDF». Un link vero, così si apre al
+               tocco anche su iPhone. Finché l'indirizzo non è firmato è solo
+               una riga, senza link. */
+            <a
+              href={attachmentUrl ?? undefined}
+              target="_blank"
+              rel="noopener noreferrer"
+              draggable={false}
+              className={cn(
+                "-mx-1.5 mb-1.5 mt-0.5 flex min-w-[190px] items-center gap-2.5 rounded-xl px-2.5 py-2 transition-opacity active:opacity-70",
+                coloriCitazione.split(" ")[0]
+              )}
+            >
+              <DocumentoIcon className="h-7 w-7 shrink-0" />
+              <span className="min-w-0 flex-1">
+                <span className="line-clamp-2 break-all text-[14px] font-medium leading-snug">
+                  {nomeAllegato(message.attachment_url!)}
+                </span>
+                <span className="block text-[11px] opacity-75">PDF · tocca per aprire</span>
+              </span>
+            </a>
+          ) : (
+            attachmentUrl && (
+              <div className="-mx-1.5 mb-1.5 mt-0.5">
+                <img src={attachmentUrl} onError={ripiegaAllegato} onLoad={allegatoCaricato} decoding="async" alt="Allegato" className="h-auto max-h-64 max-w-full rounded-xl object-cover" />
+              </div>
+            )
           )}
 
-          {message.content && message.content !== "📷 Foto" && (
-            <p className="message-content select-text text-[15px] leading-snug">{message.content}</p>
+          {message.content && !eSegnaposto(message.content) && (
+            <p className="message-content text-[15px] leading-snug md:select-text">{message.content}</p>
           )}
 
           <div className={cn("mt-0.5 flex items-center justify-end gap-1", coloriOra)}>
@@ -161,17 +249,16 @@ export const MessageBubble = ({
           </div>
 
           {/* Desktop: rispondere col passaggio del mouse. */}
-          {!isOwn && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onReply(message);
-              }}
-              className="absolute -left-10 top-1/2 hidden -translate-y-1/2 rounded-full p-2 opacity-0 transition-colors hover:bg-muted group-hover:opacity-100 md:block"
-            >
-              <Reply className="h-4 w-4 text-muted-foreground" />
-            </button>
-          )}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onReply(message);
+            }}
+            aria-label="Rispondi"
+            className="absolute -left-10 top-1/2 hidden -translate-y-1/2 rounded-full p-2 opacity-0 transition-colors hover:bg-muted group-hover:opacity-100 md:block"
+          >
+            <Reply className="h-4 w-4 text-muted-foreground" />
+          </button>
         </div>
 
         {fallito && (

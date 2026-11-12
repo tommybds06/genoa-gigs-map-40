@@ -1,4 +1,5 @@
 import { eMessaggioDiSistema, testoDiSistema, type Lettore } from "@/lib/messaggiSistema";
+import { eSegnaposto, etichettaMessaggio } from "@/lib/allegati";
 /**
  * Formattazione date — sorgente unica per tutta l'app.
  *
@@ -91,7 +92,6 @@ export function formatOrarioChat(dateString: string | null | undefined): string 
  * (migration rimandata, CLAUDE.md §14): così non dice «Tu: …» a chi quel
  * messaggio non l'ha scritto, e lo scrive per chi legge.
  */
-const SEGNAPOSTO_ALLEGATO = "📷 Foto";
 
 /**
  * Anteprima dell'ultimo messaggio in lista.
@@ -108,8 +108,9 @@ export function anteprimaMessaggio(
 
   // Il segnaposto degli allegati è salvato con l'emoji dentro al DB. In lista
   // mostriamo l'etichetta pulita, coerente col resto dell'app.
-  if (testo === SEGNAPOSTO_ALLEGATO) {
-    return inviatoDaMe ? "Tu: Foto" : "Foto";
+  if (eSegnaposto(testo)) {
+    const cosa = etichettaMessaggio({ content: testo });
+    return inviatoDaMe ? `Tu: ${cosa}` : cosa;
   }
 
   // I messaggi automatici non sono "tuoi", anche se risultano inviati da te.

@@ -1712,6 +1712,53 @@ Rifatti in tre fasi, tutte e tre approvate.
   vuoto è `Tessera spenta` (carta incavata + icona tenue), non il pastello al
   40% che sembrava rotto.
 
+## La chat migliorata — il piano a fasi (12 novembre)
+
+Tommaso: «non si può eliminare o fissare una chat se tieni premuto, non si
+può rispondere a un proprio messaggio, non si può mandare foto scattandole
+sul momento, non si può allegare cose che non siano immagini, non si possono
+fare vocali, non si può cercare nella chat e vedere i media inviati».
+
+**Decisioni di Tommaso** (12 novembre):
+- «Elimina chat» = **NASCONDI PER ME**: sparisce dalla propria lista, i
+  messaggi restano, ricompare se l'altro scrive. Non si cancella per
+  entrambi: la chat è la traccia degli accordi di un'assunzione.
+- Allegati: oltre alle foto **SOLO PDF** (il caso vero è il CV), 10 MB.
+- **Vocali per ultimi**, si decide dopo le altre fasi (Android e iPhone
+  registrano in formati diversi: è la parte lunga e fragile).
+
+**Fase 1 — FATTA (nessuna migration):**
+- **Rispondere anche ai PROPRI messaggi**: il trascinamento verso destra era
+  acceso solo sulle bolle dell'altro (`drag={!isOwn ? "x" : false}`).
+- **Pressione lunga su un messaggio** (450 ms, annullata se il dito si sposta
+  di 10 px; anche `contextmenu`, che su Android è la pressione lunga di
+  sistema) → `chat/MenuMessaggio.tsx`, scheda dal basso: Rispondi, Copia.
+  Per questo sul telefono il testo della bolla non si seleziona più
+  (`select-none`, col mouse sì).
+- **`chat/SchedaAllega.tsx`**: il bottone a sinistra del campo apre una
+  scheda con Scatta una foto (`capture="environment"`), Galleria, Documento.
+  ⚠️ Il selettore foto di Android 13+ NON offre la fotocamera: per questo
+  «non si poteva scattare». ⚠️ I tre `<input type="file">` stanno fuori dalla
+  scheda, sempre montati: un input smontato col selettore aperto perde il file.
+- **Documenti** (`lib/allegati.ts`, test in `allegati.test.ts`): NESSUNA
+  colonna nuova. Il tipo si legge dall'estensione del percorso, il nome dal
+  file (`<chat>/<utente>/<ora>-<nome-pulito>.pdf`), e un messaggio fatto solo
+  del documento ha come testo «📄 nome.pdf» (come «📷 Foto»), così notifica
+  e anteprima in lista dicono cos'è senza toccare il trigger.
+  Nella bolla è un `<a>` vero con l'indirizzo firmato già pronto: una
+  `window.open` dopo un'attesa su iPhone viene bloccata come popup.
+- La riga «Rispondi a…» sopra il campo e la citazione nella bolla dicono
+  «Foto» / «Documento» invece del segnaposto con l'emoji.
+- Provato sul banco coi tocchi veri (CDP): trascinamento su un mio messaggio
+  → risposta; pressione lunga → menu, Copia negli appunti; uno scorrimento
+  non apre il menu; PDF caricato e mandato; un `.exe` rifiutato.
+
+**Fase 2 — da fare (serve una migration):** pressione lunga su una chat in
+lista → Fissa in alto / Nascondi. Tabella per utente e chat (fissata_il,
+nascosta_il), e la lista che ne tiene conto.
+**Fase 3 — da fare:** cerca nei messaggi; pagina «Foto e documenti» della chat.
+**Fase 4 — da decidere:** vocali.
+
 # 17. Lo splash d'apertura — ottobre 2026
 
 Il **logo animato in Lottie** all'apertura, a **ogni avvio a freddo**.
