@@ -168,6 +168,35 @@ export type Database = {
           },
         ]
       }
+      chat_utente: {
+        Row: {
+          chat_id: string
+          fissata_il: string | null
+          nascosta_il: string | null
+          user_id: string
+        }
+        Insert: {
+          chat_id: string
+          fissata_il?: string | null
+          nascosta_il?: string | null
+          user_id: string
+        }
+        Update: {
+          chat_id?: string
+          fissata_il?: string | null
+          nascosta_il?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_utente_chat_id_fkey"
+            columns: ["chat_id"]
+            isOneToOne: false
+            referencedRelation: "chats"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chats: {
         Row: {
           created_at: string

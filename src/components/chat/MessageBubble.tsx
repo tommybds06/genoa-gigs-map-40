@@ -143,17 +143,24 @@ export const MessageBubble = ({
   const fallito = message.stato === "errore";
 
   return (
-    <div className={cn("group relative flex", isOwn ? "justify-end" : "justify-start", continuaGruppo ? "mt-0.5" : "mt-3")}>
+    /* `data-messaggio`: «Cerca in chat» scorre fin qui e fa lampeggiare la
+       riga. `-mx-4 px-4`: la riga arriva ai bordi dello schermo (il
+       contenitore ha `px-4`), così il lampo e il trascinamento li prendono. */
+    <div data-messaggio={message.id} className={cn("group relative -mx-4 px-4", continuaGruppo ? "mt-0.5" : "mt-3")}>
       <motion.div
         aria-hidden="true"
-        className="pointer-events-none absolute left-0 top-1/2 -translate-y-1/2 rounded-full bg-muted p-2"
+        className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 rounded-full bg-muted p-2"
         style={{ opacity: replyIconOpacity, scale: replyIconScale }}
       >
         <Reply className="h-4 w-4 text-muted-foreground" />
       </motion.div>
 
+      {/* ⚠️ Si trascina TUTTA LA RIGA, non la bolla (13 novembre, Tommaso:
+          «funziona solo se trascini esattamente sopra il messaggio»): il gesto
+          parte anche dallo spazio vuoto accanto, come su WhatsApp. framer mette
+          da sé `touch-action: pan-y`, quindi in verticale la chat scorre. */}
       <motion.div
-        className="flex max-w-[78%] flex-col"
+        className={cn("flex w-full", isOwn ? "justify-end" : "justify-start")}
         drag="x"
         dragConstraints={{ left: 0, right: 0 }}
         // Solo verso destra: a sinistra la bolla non si muove.
@@ -163,6 +170,7 @@ export const MessageBubble = ({
         animate={controls}
         style={{ x }}
       >
+       <div className="flex max-w-[78%] flex-col">
         <div
           ref={ref}
           className={cn(
@@ -270,6 +278,7 @@ export const MessageBubble = ({
             Non inviato · Tocca per riprovare
           </button>
         )}
+       </div>
       </motion.div>
     </div>
   );

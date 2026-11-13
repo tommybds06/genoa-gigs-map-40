@@ -1753,10 +1753,51 @@ fare vocali, non si può cercare nella chat e vedere i media inviati».
   → risposta; pressione lunga → menu, Copia negli appunti; uno scorrimento
   non apre il menu; PDF caricato e mandato; un `.exe` rifiutato.
 
-**Fase 2 — da fare (serve una migration):** pressione lunga su una chat in
-lista → Fissa in alto / Nascondi. Tabella per utente e chat (fissata_il,
-nascosta_il), e la lista che ne tiene conto.
-**Fase 3 — da fare:** cerca nei messaggi; pagina «Foto e documenti» della chat.
+**Il trascinamento prende TUTTA LA RIGA** (13 novembre, Tommaso: «funziona
+solo se trascini esattamente sopra il messaggio»): il `drag="x"` sta su un
+contenitore largo quanto la riga, non sulla bolla; la riga ha `-mx-4 px-4`
+e arriva ai bordi dello schermo. La pressione lunga resta sulla bolla.
+
+**Fase 2 — FATTA (13 novembre), migration
+`20261113120000_chat_fissate_nascoste.sql`** (provata su PGlite, 9 casi,
+due giri). ⚠️ DA APPLICARE in Lovable: finché non c'è, la lista funziona
+uguale (la lettura di `chat_utente` fallisce e lo dice in console), ma
+Fissa e Nascondi danno «Non sono riuscito…».
+- Tabella **`chat_utente`** (chat, utente, `fissata_il`, `nascosta_il`):
+  una riga per utente e chat, RLS solo le proprie e solo se si è nella chat.
+  Tipi scritti a mano in `types.ts`: al commit di Lovable si tiene il suo.
+- ⚠️ **Le due date le scrive il DATABASE** (trigger `prepara_chat_utente`):
+  l'app manda una data qualunque per dire «sì». Con l'orologio del telefono
+  avanti, una chat nascosta «nel futuro» non tornerebbe più.
+- **Nascosta = l'ultimo messaggio è più vecchio di `nascosta_il`**
+  (`eNascosta` in `lib/chatLista.ts`, test in `chatLista.test.ts`): nessun
+  trigger sui messaggi, la chat torna da sola al primo messaggio nuovo.
+  `useChats` restituisce TUTTE le chat (una nascosta si apre ancora da
+  bacheca e notifiche); la lista mostra `chatInLista(chats)`, fissate in cima.
+- Pressione lunga su una riga (`hooks/usePressioneLunga`, un timer per tutta
+  la lista; ⚠️ il `click` che segue va fermato in CATTURA, se no si apre
+  anche la chat) → `chat/MenuChat.tsx`: «Fissa in alto» / «Togli dall'alto»
+  (la puntina della bacheca, che compare anche nella riga prima dell'ora) e
+  «Nascondi», con scritto sotto cosa succede. Dopo: toast con «Annulla».
+- ⚠️ Il banco: l'upsert finto (`postgrest.ts`) non capiva `on_conflict` con
+  due colonne e univa tutto nella prima riga. Corretto nel banco.
+
+**Fase 3 — FATTA (13 novembre, nessuna migration):** la lente nella testata
+della chat → `chat/CercaInChat.tsx`, una scheda alta fissa (88dvh).
+- Campo vuoto: linguette **Foto** | **Documenti** (dal più recente). Si
+  scrive: i messaggi col testo, senza badare ad accenti e maiuscole
+  (`cercaMessaggi`; `senzaAccenti` tiene UN carattere per carattere, così la
+  posizione trovata vale nel testo vero e si evidenzia il pezzo giusto).
+  Si cerca anche nel nome dei documenti; i messaggi automatici no.
+- I messaggi sono già tutti in memoria (`useMessaggi`): niente rete.
+- Foto o risultato → la scheda si chiude e la chat scorre al messaggio
+  (`data-messaggio` sulla riga), che lampeggia nella tinta tenue del ruolo.
+  Un documento invece si apre.
+- La tastiera non si apre da sola. ⚠️ Con la lente, nella testata il titolo
+  dell'annuncio si tronca prima («Cameriere per s…») quando c'è «Assumi».
+- Non fatto: la foto a tutto schermo (in chat non c'è nemmeno dalla bolla),
+  la ricerca fra TUTTE le chat dalla lista.
+
 **Fase 4 — da decidere:** vocali.
 
 # 17. Lo splash d'apertura — ottobre 2026

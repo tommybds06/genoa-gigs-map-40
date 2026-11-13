@@ -1,4 +1,4 @@
-import { Fragment, useState, useEffect, useLayoutEffect, useRef } from 'react';
+import { Fragment, useState, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import { srcLogo } from "@/lib/gerarchia";
 import { Campanella } from "@/components/notifiche/Campanella";
 import { impostaChatAperta, segnaLetteDellaChat } from "@/lib/notifiche/notifiche";
@@ -23,7 +23,13 @@ import { MessageBubble } from "@/components/chat/MessageBubble";
 import { SchedaAllega, type TipoScelta } from "@/components/chat/SchedaAllega";
 import { MenuMessaggio } from "@/components/chat/MenuMessaggio";
 import { MAX_BYTE_DOCUMENTO, ePdf, etichettaMessaggio, nomeAllegato, percorsoDocumento, segnapostoAllegato, tipoAllegato } from "@/lib/allegati";
-import { useChats, Chat } from "@/hooks/useChats";
+import { useChats, scegliPerChat, Chat } from "@/hooks/useChats";
+import { chatInLista } from "@/lib/chatLista";
+import { usePressioneLunga } from "@/hooks/usePressioneLunga";
+import { MenuChat } from "@/components/chat/MenuChat";
+import { CercaInChat } from "@/components/chat/CercaInChat";
+import { Puntina1 } from "@/components/icons/puntine";
+import { SearchIcon } from "@/components/icons/uiIcons";
 import { ChatListSkeleton } from "@/components/skeletons/ChatListSkeleton";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -85,6 +91,59 @@ const Messaggi = () => {
   // La scheda «Allega» e il menu di un messaggio (pressione lunga): 12 novembre.
   const [allegaAperta, setAllegaAperta] = useState(false);
   const [menuMessaggio, setMenuMessaggio] = useState<Message | null>(null);
+  // 13 novembre: il menu di una chat (pressione lunga in lista) e «Cerca in chat».
+  const [menuChat, setMenuChat] = useState<Chat | null>(null);
+  const [cercaAperta, setCercaAperta] = useState(false);
+  const premiChat = usePressioneLunga<Chat>(setMenuChat);
+  /* La lista che si vede: senza le chat nascoste, le fissate in cima
+     (`lib/chatLista.ts`). `chats` resta intera: una chat nascosta si apre
+     ancora dalla bacheca o da una notifica. */
+  const inLista = useMemo(() => chatInLista(chats), [chats]);
+
+  /* Ogni scelta con un `catch` che si VEDE (§2, lezione 13). */
+  const fissaChat = async (chat: Chat, fissa: boolean) => {
+    if (!user) return;
+    try {
+      await scegliPerChat(queryClient, user.id, chat.id, { fissata: fissa });
+    } catch (e) {
+      console.error('[Politask] fissa chat', e);
+      toast.error('Non sono riuscito a fissarla', { duration: 2300 });
+    }
+  };
+  const nascondiChat = async (chat: Chat, nascondi = true) => {
+    if (!user) return;
+    try {
+      await scegliPerChat(queryClient, user.id, chat.id, { nascosta: nascondi });
+      queryClient.invalidateQueries({ queryKey: ['chats'] });
+      if (nascondi) {
+        toast('Chat nascosta', {
+          description: 'Torna se arriva un messaggio.',
+          duration: 3000,
+          action: { label: 'Annulla', onClick: () => nascondiChat(chat, false) },
+        });
+      }
+    } catch (e) {
+      console.error('[Politask] nascondi chat', e);
+      toast.error('Non sono riuscito a nasconderla', { duration: 2300 });
+    }
+  };
+
+  /* Da «Cerca in chat»: la scheda si chiude e la chat scorre al messaggio,
+     che lampeggia nella tinta tenue del ruolo. Dopo un attimo: la scheda che
+     scende tiene il fuoco e lo scorrimento finché non ha finito. */
+  const vaiAlMessaggio = (id: string) => {
+    setCercaAperta(false);
+    window.setTimeout(() => {
+      const riga = messagesContainerRef.current?.querySelector<HTMLElement>(`[data-messaggio="${id}"]`);
+      if (!riga) return;
+      const fermo = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      riga.scrollIntoView({ block: 'center', behavior: fermo ? 'auto' : 'smooth' });
+      riga.animate(
+        [{ backgroundColor: 'hsl(var(--accent))' }, { backgroundColor: 'hsl(var(--accent))', offset: 0.6 }, { backgroundColor: 'transparent' }],
+        { duration: 1800, delay: fermo ? 0 : 250 }
+      );
+    }, 320);
+  };
 
   /* Bacheca: per tutti e due i ruoli — l'employer ci appende chi lavora con
      lui, il worker ci vede i lavori in cui è stato preso. La scheda attiva sta
@@ -135,6 +194,7 @@ const Messaggi = () => {
     setPendingAttachment(null);
     setAllegaAperta(false);
     setMenuMessaggio(null);
+    setCercaAperta(false);
   }, [attiva]);
 
   /* La chat aperta per le notifiche (§28): le sue si segnano lette aprendola,
@@ -620,6 +680,16 @@ const Messaggi = () => {
               )}
             </div>
 
+            {/* «Cerca in chat»: messaggi, foto e documenti (13 novembre). */}
+            <button
+              type="button"
+              onClick={() => setCercaAperta(true)}
+              aria-label="Cerca in chat"
+              className="-mx-1 flex h-11 w-9 shrink-0 items-center justify-center text-ink-soft transition-transform active:scale-90"
+            >
+              <SearchIcon className="h-5 w-5" />
+            </button>
+
             {/* HIRE button for Employer when status is 'accepted' (in colloquio) */}
             {isEmployer && applicationStatus === 'accepted' && (
               <Button
@@ -825,6 +895,15 @@ const Messaggi = () => {
           </div>
         </div>
         
+        <CercaInChat
+          aperta={cercaAperta}
+          messaggi={messages}
+          mioId={user?.id}
+          nomeAltro={selectedChat.other_user?.full_name || 'Utente'}
+          isEmployer={isEmployer}
+          onChiudi={() => setCercaAperta(false)}
+          onVai={vaiAlMessaggio}
+        />
         <SchedaAllega aperta={allegaAperta} onChiudi={() => setAllegaAperta(false)} onFile={caricaAllegato} />
         <MenuMessaggio
           messaggio={menuMessaggio}
@@ -905,7 +984,7 @@ const Messaggi = () => {
     <>
            {loading ? (
              <ChatListSkeleton count={5} />
-           ) : chats.length === 0 ? (
+           ) : inLista.length === 0 ? (
              <div className="flex flex-col items-center justify-center py-12">
                <div className="material-card-elevated p-8 text-center max-w-sm animate-scale-in">
                  <TesseraIcona icona={MessaggiVuotaIcon} misura="lg" className="mx-auto mb-4" />
@@ -922,7 +1001,7 @@ const Messaggi = () => {
                 ripetuta pesava più del contenuto, e ne stavano 5 per schermo.
                 Divise dalla linea disegnata, come la scheda annuncio. */
              <div>
-               {chats.map((chat) => {
+               {inLista.map((chat) => {
                  const isCompleted = chat.application_status === 'completed';
                  const isHired = chat.application_status === 'hired';
                  const nonLetti = chat.unread_count ?? 0;
@@ -936,6 +1015,7 @@ const Messaggi = () => {
                      )
                    : '';
                  const apri = () => setSelectedChat(chat);
+                 const premi = premiChat(chat);
 
                  return (
                    /* Niente linee fra le chat (Tommaso, 23 ottobre: «come WhatsApp»):
@@ -946,9 +1026,15 @@ const Messaggi = () => {
                        role="button"
                        tabIndex={0}
                        onClick={apri}
-                       onPointerDown={() => precaricaMessaggi(queryClient, chat.id)}
+                       /* Tenendo premuto: Fissa in alto / Nascondi (`MenuChat`).
+                          `select-none`: se no la pressione lunga seleziona il nome. */
+                       {...premi}
+                       onPointerDown={(e) => {
+                         precaricaMessaggi(queryClient, chat.id);
+                         premi.onPointerDown(e);
+                       }}
                        onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && apri()}
-                       className="-mx-2 flex cursor-pointer items-center gap-3 rounded-xl px-2 py-3 transition-colors active:bg-accent/50"
+                       className="-mx-2 flex cursor-pointer select-none items-center gap-3 rounded-xl px-2 py-3 transition-colors [-webkit-touch-callout:none] active:bg-accent/50"
                      >
                        <AvatarPreview
                          imageUrl={chat.other_user?.avatar_url}
@@ -964,10 +1050,20 @@ const Messaggi = () => {
                            </h3>
                            {isHired && <StatusBadge stato="hired" />}
                            {isCompleted && <StatusBadge stato="completed" />}
+                           {/* Fissata: la puntina della bacheca, piccola, prima dell'ora. */}
+                           {chat.fissata_il && (
+                             <Puntina1
+                               role="img"
+                               aria-hidden={false}
+                               aria-label="Fissata in alto"
+                               className={cn('ml-auto h-4 w-auto shrink-0', isEmployer ? 'text-employer-700' : 'text-primary')}
+                             />
+                           )}
                            {ultimo && (
                              <span
                                className={cn(
-                                 'ml-auto shrink-0 text-xs',
+                                 'shrink-0 text-xs',
+                                 !chat.fissata_il && 'ml-auto',
                                  // Non letti: l'ora nell'INCHIOSTRO del ruolo, mai il pastello.
                                  nonLetti > 0
                                    ? cn('font-semibold', isEmployer ? 'text-employer-800' : 'text-primary-strong')
@@ -1073,6 +1169,12 @@ const Messaggi = () => {
        </div>
      </div>
      {vistaChat}
+     <MenuChat
+       chat={menuChat}
+       onChiudi={() => setMenuChat(null)}
+       onFissa={fissaChat}
+       onNascondi={(c) => nascondiChat(c)}
+     />
     </>
   );
 };
