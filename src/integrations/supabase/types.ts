@@ -192,6 +192,13 @@ export type Database = {
             foreignKeyName: "chat_utente_chat_id_fkey"
             columns: ["chat_id"]
             isOneToOne: false
+            referencedRelation: "chat_overview"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_utente_chat_id_fkey"
+            columns: ["chat_id"]
+            isOneToOne: false
             referencedRelation: "chats"
             referencedColumns: ["id"]
           },
