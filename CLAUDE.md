@@ -1850,15 +1850,21 @@ della chat → `chat/CercaInChat.tsx`, una scheda alta fissa (88dvh).
   SOLO l'area dei messaggi, non con `scrollIntoView` (che scorre tutti i
   contenitori sopra e la parte visibile della pagina). Da riprovare sul
   Pixel; se succede ancora, serve sapere il momento esatto.
-- **Foto di «Cerca in chat» tutte con la stessa sagoma** (`sagoma-foto`):
-  alternare la `-b` su miniature da 110 px dava due forme diverse vicine.
+- **Foto di «Cerca in chat» come STAMPE** (`ui/FotoStampata`, come in
+  Modifica profilo), lo scotch nel colore del ruolo di chi l'ha mandata.
+  Prima `sagoma-foto` e `-b` alternate: due forme diverse vicine.
 - **LA TESTATA: un modulo da 48** (Tommaso: «la lente piccolina, il tasto
   indietro gigante, la foto più piccola, bisogna trovare una quadra»).
   Freccia (tessera 48), foto 48 (era 40), nome in una riga; la lente come
   la campanella delle altre pagine (28 px nel colore del ruolo, bersaglio
-  44). Sotto, la **STRISCIA DELL'ANNUNCIO**: icona del negozio + titolo su
-  due righe (tocca → scheda) e a destra Assumi / Concludi / lo stato, come
-  in Vinted, Subito, Airbnb. Prima stava tutto in una riga e al titolo
+  44). Sotto, la **STRISCIA DEL LAVORO**: l'icona del MESTIERE
+  (`getJobIconFromTags`: tag da cartellino/lavoro, se no dall'annuncio in
+  una query in cache; il worker non legge gli annunci chiusi → valigetta) +
+  titolo su due righe e a destra Assumi / Concludi / lo stato, come in
+  Vinted, Subito, Airbnb. **Toccandola** (Tommaso): se c'è un cartellino
+  (in prova, assunto, concluso) la sua scheda della bacheca — l'employer
+  `SchedaCartellino`, il worker `SchedaLavoro`, tutte e due `sopraChat` —
+  con orari e paga; se no l'annuncio. Prima stava tutto in una riga e al titolo
   restavano ~120 px. «Assumi» ora con `theme.btnFilled` (era
   `bg-employer-700` scritto a mano). In basso: allega 48, campo 48, invio 48.
 - **Per il VOCALE non serve un bottone in più**: come WhatsApp, Telegram e

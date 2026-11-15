@@ -31,6 +31,8 @@ interface SchedaLavoroProps {
   onClose: () => void;
   onApriChat: (chatId: string) => void;
   onRecensisci: (l: LavoroWorker) => void;
+  /** Aperta dalla striscia in testa alla chat (z-50): sale a z-[70]. */
+  sopraChat?: boolean;
 }
 
 /** Una riga d'informazione: icona, etichetta, valore. Separate dalla linea disegnata. */
@@ -81,7 +83,7 @@ function notaFinale(l: LavoroWorker): string | null {
  * distanza, non ha senso»). La chat diretta con l'attività è la tessera
  * Messaggi in alto; accanto, il profilo dell'attività.
  */
-export function SchedaLavoro({ lavoro, onClose, onApriChat, onRecensisci }: SchedaLavoroProps) {
+export function SchedaLavoro({ lavoro, onClose, onApriChat, onRecensisci, sopraChat = false }: SchedaLavoroProps) {
   const { theme, isEmployer } = useAppTheme();
   const navigate = useNavigate();
   // Resta montata con l'ultimo lavoro, così chiudendo scende (hooks/useUltimoAperto).
@@ -97,7 +99,7 @@ export function SchedaLavoro({ lavoro, onClose, onApriChat, onRecensisci }: Sche
 
   return (
     <Drawer open={aperta} onOpenChange={(o) => !o && onClose()}>
-      <DrawerContent className="max-h-[88vh]">
+      <DrawerContent className={cn("max-h-[88vh]", sopraChat && "z-[70]")} overlayClassName={sopraChat ? "z-[70]" : undefined}>
         <div className="min-h-0 overflow-y-auto px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
           {/* ---- CHI ---- */}
           <DrawerHeader className="flex items-center gap-3 p-0 pt-1 text-left">

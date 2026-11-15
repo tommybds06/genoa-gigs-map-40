@@ -28,9 +28,9 @@ import { usePressioneLunga } from "@/hooks/usePressioneLunga";
 import { MenuContestuale, type AncoraMenu } from "@/components/ui/MenuContestuale";
 import { CercaInChat } from "@/components/chat/CercaInChat";
 import { Puntina1 } from "@/components/icons/puntine";
-import { SearchIcon, BidoneIcon, AnnunciIcon } from "@/components/icons/uiIcons";
+import { SearchIcon, BidoneIcon } from "@/components/icons/uiIcons";
 import { ChatListSkeleton } from "@/components/skeletons/ChatListSkeleton";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Dialog,
   DialogContent,
@@ -45,6 +45,9 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Bacheca } from "@/components/bacheca/Bacheca";
 import { SchedaCartellino } from "@/components/bacheca/SchedaCartellino";
 import { BachecaWorker } from "@/components/bacheca/BachecaWorker";
+import { SchedaLavoro } from "@/components/bacheca/SchedaLavoro";
+import { apriRecensione } from "@/lib/recensione";
+import { getJobIconFromTags } from "@/lib/jobIcons";
 import { useLavoriWorker } from "@/hooks/useLavoriWorker";
 import { useCartellini, CHIAVE_CARTELLINI } from "@/hooks/useCartellini";
 import { eScaduto, chiudiAnnuncioSeNessunoResta } from "@/lib/bacheca";
@@ -181,6 +184,28 @@ const Messaggi = () => {
     ? cartellini.find((c) => c.jobId === compilaPer.jobId && c.workerId === compilaPer.workerId) ?? null
     : null;
   const { data: lavori = [] } = useLavoriWorker(!isEmployer ? user?.id : undefined);
+
+  /* LA STRISCIA IN TESTA ALLA CHAT porta dove serve (15 novembre, Tommaso):
+     se c'è un cartellino (in prova, assunto, concluso) alla SUA scheda della
+     bacheca — orari, paga, giorni —; se no all'annuncio. Per tutti e due i
+     ruoli: l'employer il cartellino, il worker la scheda del lavoro. */
+  const cartellinoChat = isEmployer && selectedChat ? cartellini.find((c) => c.chatId === selectedChat.id) ?? null : null;
+  const lavoroChat = !isEmployer && selectedChat ? lavori.find((l) => l.chatId === selectedChat.id) ?? null : null;
+  const [schedaBachecaAperta, setSchedaBachecaAperta] = useState(false);
+  /* L'icona del MESTIERE (dai tag dell'annuncio), non quella generica del
+     negozio. I tag li hanno già cartellino e lavoro; se no si leggono
+     dall'annuncio (una volta, in cache). Il worker non legge gli annunci
+     chiusi (§18): lì resta la valigetta generica. */
+  const { data: tagAnnuncio } = useQuery({
+    queryKey: ['tag-annuncio', selectedChat?.job_id],
+    queryFn: async () => {
+      const { data } = await supabase.from('jobs').select('tags').eq('id', selectedChat!.job_id).maybeSingle();
+      return (data?.tags as string[] | null) ?? [];
+    },
+    enabled: !!selectedChat?.job_id && !cartellinoChat && !lavoroChat,
+    staleTime: Infinity,
+  });
+  const IconaLavoro = getJobIconFromTags(cartellinoChat?.tags ?? lavoroChat?.tags ?? tagAnnuncio ?? []);
   /* Il pallino: qualcosa da decidere (employer: una data di fine passata) o
      da fare (worker: un lavoro da recensire). */
   const daFare = isEmployer
@@ -225,6 +250,7 @@ const Messaggi = () => {
     setAllegaAperta(false);
     setMenuMessaggio(null);
     setCercaAperta(false);
+    setSchedaBachecaAperta(false);
   }, [visibile]);
 
   /* La chat aperta per le notifiche (§28): le sue si segnano lette aprendola,
@@ -766,16 +792,17 @@ const Messaggi = () => {
           </div>
         </header>
 
-        {/* LA STRISCIA DELL'ANNUNCIO: di che lavoro si parla (toccandola si
-            riapre la scheda) e, a destra, l'azione o lo stato. */}
+        {/* LA STRISCIA DEL LAVORO: di che lavoro si parla, con l'icona del
+            mestiere. Toccandola: la scheda della bacheca se c'è un
+            cartellino, se no l'annuncio. A destra l'azione o lo stato. */}
         <div className="flex shrink-0 items-center gap-3 px-4 pb-2.5 pt-1">
           <button
             type="button"
-            onClick={apriAnnuncio}
-            disabled={!selectedChat.job?.title}
+            onClick={() => (cartellinoChat || lavoroChat ? setSchedaBachecaAperta(true) : apriAnnuncio())}
+            disabled={!selectedChat.job?.title && !cartellinoChat && !lavoroChat}
             className="flex min-h-[44px] min-w-0 flex-1 items-center gap-2 text-left transition-opacity active:opacity-60"
           >
-            <AnnunciIcon className="h-5 w-5 shrink-0 text-ink-soft" />
+            <IconaLavoro className="h-6 w-6 shrink-0 text-ink" />
             <span className="line-clamp-2 min-w-0 text-[14px] leading-snug text-ink">
               {selectedChat.job?.title || 'Annuncio'}
             </span>
@@ -1056,6 +1083,33 @@ const Messaggi = () => {
           showMiniMap
           sopraChat
         />
+
+        {/* Dalla striscia: la scheda della bacheca di QUESTO lavoro. */}
+        {isEmployer ? (
+          <SchedaCartellino
+            cartellino={schedaBachecaAperta ? cartellinoChat : null}
+            sopraChat
+            onClose={() => setSchedaBachecaAperta(false)}
+            onApriChat={() => setSchedaBachecaAperta(false)}
+          />
+        ) : (
+          <SchedaLavoro
+            lavoro={schedaBachecaAperta ? lavoroChat : null}
+            sopraChat
+            onClose={() => setSchedaBachecaAperta(false)}
+            onApriChat={() => setSchedaBachecaAperta(false)}
+            onRecensisci={(l) => {
+              setSchedaBachecaAperta(false);
+              apriRecensione({
+                applicationId: l.applicationId,
+                jobId: l.jobId,
+                employerId: l.employerId,
+                employerName: l.attivita,
+                jobTitle: l.ruolo,
+              });
+            }}
+          />
+        )}
 
         {/* Dopo l'assunzione: «Compila il cartellino», sopra la chat.
             Sempre montata: chiudendo scende (hooks/useUltimoAperto). */}

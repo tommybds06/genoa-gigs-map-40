@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { DocumentoIcon, SearchIcon, XIcon } from "@/components/icons/uiIcons";
 import { useAllegato } from "@/hooks/useAttachmentUrl";
 import { useTastiera } from "@/hooks/useTastiera";
+import { FotoStampata } from "@/components/ui/FotoStampata";
 import { MISURA_FOTO } from "@/lib/foto";
 import { eSegnaposto, nomeAllegato, tipoAllegato } from "@/lib/allegati";
 import { cercaMessaggi, ritaglio } from "@/lib/chatLista";
@@ -39,9 +40,9 @@ import { cn } from "@/lib/utils";
  *   conti che dipendono da come il telefono la gestisce (sul banco, con le
  *   due tastiere simulate, reggeva: non riprodotto). Ora la scheda resta
  *   ferma e la lista prende sotto lo spazio della tastiera (`useTastiera`).
- * - Le foto hanno TUTTE la stessa sagoma: alternare `sagoma-foto` e
- *   `-foto-b` (che in una griglia di profilo dà varietà) qui, su miniature da
- *   ~110 px, dava due forme diverse una accanto all'altra.
+ * - Le foto sono STAMPE (`FotoStampata`), come in Modifica profilo
+ *   (Tommaso, 15 novembre). Prima erano ritagliate con `sagoma-foto` e
+ *   `-foto-b` alternate: su miniature da ~110 px due forme diverse vicine.
  */
 type Vista = "foto" | "documenti";
 
@@ -53,17 +54,19 @@ const testoCercabile = (m: Messaggio) => {
 
 const quando = (iso: string) => `${etichettaGiorno(iso)}, ${oraMessaggio(iso)}`;
 
-function Miniatura({ m, onVai }: { m: Messaggio; onVai: (id: string) => void }) {
+function Miniatura({ m, employer, onVai }: { m: Messaggio; employer: boolean; onVai: (id: string) => void }) {
   const { url, ripiega, caricata } = useAllegato(m.attachment_url, MISURA_FOTO.miniatura);
   return (
     <button
       type="button"
       onClick={() => onVai(m.id)}
       aria-label={`Foto, ${quando(m.created_at)}`}
-      className="aspect-square w-full transition-transform active:scale-95"
+      className="block w-full transition-transform active:scale-95"
     >
-      {/* La maschera sul div interno: sul bottone taglierebbe l'anello del fuoco (§6). */}
-      <div className="sagoma-foto h-full w-full bg-paper-sunken">
+      {/* Le foto STAMPATE dell'app (ui/FotoStampata), come in Modifica
+          profilo: cornice di carta, un po' storte, lo scotch in alto nel
+          colore del ruolo di chi l'ha mandata. */}
+      <FotoStampata seme={m.id} employer={employer} scotch={[{ pezzo: "lungo", lato: "centro" }]}>
         {url && (
           <img
             src={url}
@@ -75,7 +78,7 @@ function Miniatura({ m, onVai }: { m: Messaggio; onVai: (id: string) => void }) 
             className="h-full w-full object-cover"
           />
         )}
-      </div>
+      </FotoStampata>
     </button>
   );
 }
@@ -232,9 +235,9 @@ export function CercaInChat({
                   foto.length === 0 ? (
                     vuoto("Nessuna foto in questa chat")
                   ) : (
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-3 gap-x-3 gap-y-5 px-1 pt-3">
                       {foto.map((m) => (
-                        <Miniatura key={m.id} m={m} onVai={onVai} />
+                        <Miniatura key={m.id} m={m} employer={m.sender_id === mioId ? isEmployer : !isEmployer} onVai={onVai} />
                       ))}
                     </div>
                   )
