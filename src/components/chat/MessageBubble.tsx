@@ -4,6 +4,7 @@ import { CheckCheck, Reply } from "lucide-react";
 import { DocumentoIcon, OrologioIcon } from "@/components/icons/uiIcons";
 import { eSegnaposto, etichettaMessaggio, nomeAllegato, tipoAllegato } from "@/lib/allegati";
 import { useAllegato } from "@/hooks/useAttachmentUrl";
+import { VocaleInBolla } from "@/components/chat/Vocale";
 import { MISURA_FOTO } from "@/lib/foto";
 import { useMisure } from "@/hooks/useMisure";
 import { formaBolla } from "@/lib/formaBolla";
@@ -64,11 +65,15 @@ export const MessageBubble = ({
   onRiprova,
 }: MessageBubbleProps) => {
   const [, setShowReplyIcon] = useState(false);
-  const documento = tipoAllegato(message.attachment_url) === "documento";
-  // Un documento si firma così com'è; una foto si chiede già ridimensionata.
+  const tipo = tipoAllegato(message.attachment_url);
+  const documento = tipo === "documento";
+  const vocale = tipo === "vocale";
+  // Un documento o un vocale si firmano così come sono; una foto si chiede
+  // già ridimensionata. ⚠️ Un vocale MIO appena registrato si carica mentre
+  // la bolla c'è già (`stato`): l'indirizzo si firma quando il file esiste.
   const { url: attachmentUrl, ripiega: ripiegaAllegato, caricata: allegatoCaricato } = useAllegato(
-    message.attachment_url,
-    documento ? undefined : MISURA_FOTO.grande
+    vocale && message.stato ? null : message.attachment_url,
+    documento || vocale ? undefined : MISURA_FOTO.grande
   );
 
   /* La pressione lunga. Un timer che parte al tocco e si annulla se il dito
@@ -199,7 +204,20 @@ export const MessageBubble = ({
             </div>
           )}
 
-          {documento ? (
+          {vocale ? (
+            <VocaleInBolla
+              percorso={message.attachment_url!}
+              url={attachmentUrl}
+              inInvio={message.stato === "invio"}
+              colori={
+                isOwn
+                  ? isEmployer
+                    ? "bg-employer-foreground text-employer-700"
+                    : "bg-primary-foreground text-primary"
+                  : "bg-ink text-paper-sunken"
+              }
+            />
+          ) : documento ? (
             /* Il documento: icona, nome, «PDF». Un link vero, così si apre al
                tocco anche su iPhone. Finché l'indirizzo non è firmato è solo
                una riga, senza link. */

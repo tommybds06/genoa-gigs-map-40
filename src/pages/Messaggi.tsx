@@ -21,7 +21,8 @@ import { Input } from "@/components/ui/input";
 import { toast } from 'sonner';
 import { MessageBubble } from "@/components/chat/MessageBubble";
 import { SchedaAllega, type TipoScelta } from "@/components/chat/SchedaAllega";
-import { MAX_BYTE_DOCUMENTO, ePdf, eSegnaposto, etichettaMessaggio, nomeAllegato, percorsoDocumento, segnapostoAllegato, tipoAllegato } from "@/lib/allegati";
+import { BarraRegistrazione, TastoMicrofono, registrazioneDisponibile, useVocale, type Registrazione } from "@/components/chat/Vocale";
+import { MAX_BYTE_DOCUMENTO, SEGNAPOSTO_VOCALE, percorsoVocale, ePdf, eSegnaposto, etichettaMessaggio, nomeAllegato, percorsoDocumento, segnapostoAllegato, tipoAllegato } from "@/lib/allegati";
 import { useChats, scegliPerChat, Chat } from "@/hooks/useChats";
 import { chatInLista } from "@/lib/chatLista";
 import { usePressioneLunga } from "@/hooks/usePressioneLunga";
@@ -540,8 +541,50 @@ const Messaggi = () => {
 
   const riprovaMessaggio = (m: Messaggio) => {
     aggiornaMessaggio(queryClient, m.chat_id, m.id, { stato: 'invio' });
-    void inviaAlDatabase(m);
+    void (vocaliDaCaricare.current.has(m.id) ? caricaVocaleEInvia(m) : inviaAlDatabase(m));
   };
+
+  /* I VOCALI (15 novembre, `components/chat/Vocale.tsx`). La bolla compare
+     SUBITO, con la rotellina, mentre il file sale; poi il messaggio va nel
+     database. Il file resta in memoria finché non è salito: se il
+     caricamento fallisce, «Tocca per riprovare» lo ricarica. */
+  const vocaliDaCaricare = useRef(new Map<string, File>());
+  const caricaVocaleEInvia = async (m: Messaggio) => {
+    const file = vocaliDaCaricare.current.get(m.id);
+    if (file && m.attachment_url) {
+      const { error } = await supabase.storage
+        .from('chat-attachments')
+        .upload(m.attachment_url, file, { contentType: file.type, upsert: true });
+      if (error) {
+        console.error('[Politask] caricamento vocale', error);
+        aggiornaMessaggio(queryClient, m.chat_id, m.id, { stato: 'errore' });
+        return;
+      }
+      vocaliDaCaricare.current.delete(m.id);
+    }
+    await inviaAlDatabase(m);
+  };
+  const inviaVocale = (reg: Registrazione) => {
+    if (!selectedChat || !user) return;
+    const m: Messaggio = {
+      id: crypto.randomUUID(),
+      chat_id: selectedChat.id,
+      sender_id: user.id,
+      content: SEGNAPOSTO_VOCALE,
+      created_at: new Date().toISOString(),
+      is_read: false,
+      reply_to_id: replyingTo?.id || null,
+      attachment_url: percorsoVocale(selectedChat.id, user.id, reg.secondi, reg.picchi, reg.estensione),
+      reply_to: replyingTo,
+      stato: 'invio',
+    };
+    vocaliDaCaricare.current.set(m.id, reg.file);
+    inserisciMessaggio(queryClient, m.chat_id, m);
+    setReplyingTo(null);
+    void caricaVocaleEInvia(m);
+  };
+  const vocaleRec = useVocale({ attivo: !!selectedChat && visibile, onPronto: inviaVocale });
+  const registrando = vocaleRec.stato !== 'fermo';
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -976,37 +1019,58 @@ const Messaggi = () => {
           style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 16px)' }}
         >
           <div className="flex items-center gap-2">
-            {/* Allegato e invio sono due tessere gemelle ai lati del campo.
-                L'allegato apre la scheda «Allega»: scatta, galleria, documento. */}
-            <Tessera
-              icona={uploadingImage ? Loader2 : ImmaginiIcon}
-              classeIcona={uploadingImage ? "animate-spin" : undefined}
-              etichetta="Allega"
-              onClick={() => setAllegaAperta(true)}
-              disabled={uploadingImage}
-            />
+            {registrando ? (
+              /* Mentre si registra, al posto di allega + campo: il tempo e
+                 «‹ Scorri per annullare», o (bloccato) cestino e onda. */
+              <BarraRegistrazione
+                stato={vocaleRec.stato}
+                secondi={vocaleRec.secondi}
+                livelli={vocaleRec.livelli}
+                spinta={vocaleRec.spinta}
+                onAnnulla={vocaleRec.annulla}
+              />
+            ) : (
+              <>
+                {/* Allegato e invio sono due tessere gemelle ai lati del campo.
+                    L'allegato apre la scheda «Allega»: scatta, galleria, documento. */}
+                <Tessera
+                  icona={uploadingImage ? Loader2 : ImmaginiIcon}
+                  classeIcona={uploadingImage ? "animate-spin" : undefined}
+                  etichetta="Allega"
+                  onClick={() => setAllegaAperta(true)}
+                  disabled={uploadingImage}
+                />
 
-            <Input
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder="Scrivi un messaggio..."
-              className="flex-1 rounded-full h-12 text-base"
-            />
-            {/* L'invio è una TESSERA (ui/Tessera), come la freccia indietro in
-                alto: pieno chiaro del ruolo e icona in inchiostro, per worker
-                ed employer. La coppia fondo+icona la decide la tessera —
-                niente più `bg-` scritti a mano (il bug ricorrente numero uno). */}
-            {/* Niente rotellina: il messaggio compare subito (vedi
-                handleSendMessage). A campo vuoto la tessera è SPENTA, non
-                slavata. */}
-            <Tessera
-              icona={InvioIcon}
-              etichetta="Invia"
-              onClick={handleSendMessage}
-              disabled={!newMessage.trim() && !pendingAttachment}
-              spenta={!newMessage.trim() && !pendingAttachment}
-            />
+                <Input
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  placeholder="Scrivi un messaggio..."
+                  className="flex-1 rounded-full h-12 text-base"
+                />
+              </>
+            )}
+            {/* A destra, una tessera sola che cambia (15 novembre):
+                - c'è del testo o un allegato → INVIO;
+                - campo vuoto → il MICROFONO (tieni premuto: `Vocale.tsx`),
+                  come in WhatsApp e Telegram. Prima a campo vuoto c'era
+                  l'invio SPENTO: un bottone che non faceva niente;
+                - vocale bloccato → INVIO del vocale.
+                L'invio è una TESSERA (ui/Tessera): la coppia fondo+icona la
+                decide lei, niente `bg-` scritti a mano (§5). */}
+            {vocaleRec.stato === 'bloccato' ? (
+              <Tessera icona={InvioIcon} etichetta="Invia il vocale" onClick={vocaleRec.invia} />
+            ) : !newMessage.trim() && !pendingAttachment && registrazioneDisponibile() ? (
+              <TastoMicrofono stato={vocaleRec.stato} spinta={vocaleRec.spinta} gestori={vocaleRec.gestori} />
+            ) : (
+              <Tessera
+                icona={InvioIcon}
+                etichetta="Invia"
+                onClick={handleSendMessage}
+                disabled={!newMessage.trim() && !pendingAttachment}
+                spenta={!newMessage.trim() && !pendingAttachment}
+              />
+            )}
           </div>
         </div>
         

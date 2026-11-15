@@ -1927,7 +1927,45 @@ casi, due giri):
 - Due lavori aperti insieme con la stessa persona: la striscia mostra il più
   recente, l'altro si raggiunge dalla bacheca. Caso raro, accettato.
 
-**Fase 4 — da decidere:** vocali.
+**Fase 4 — I VOCALI, fatta (15 novembre, nessuna migration)** —
+`components/chat/Vocale.tsx`:
+- **Il gesto di WhatsApp** (quello che chi usa l'app fa già): a campo vuoto
+  la tessera dell'invio diventa il MICROFONO (prima era l'invio spento, un
+  bottone morto). Tieni premuto → registra; lasci → parte; scorri a
+  sinistra oltre 110 px → annullato; scorri in su oltre 70 px → BLOCCATO
+  (cestino, tempo, onda dal vivo, e l'invio a destra). Tocco breve (sotto
+  1 s) → «Tieni premuto il microfono per registrare». Massimo 3 minuti, poi
+  parte da solo. ⚠️ Il microfono è un `button` suo con `touch-action:
+  none` e `setPointerCapture`: senza, il telefono prende il gesto per uno
+  scorrimento.
+- **Il permesso** si chiede al primo tocco: la finestra del telefono
+  interrompe il gesto, quindi quel primo tocco non registra. L'AudioContext
+  nasce DENTRO il tocco (su iPhone fuori da un gesto resta sospeso).
+- ⚠️ **IL FORMATO**: il primo che il telefono sa registrare fra
+  `audio/mp4;codecs=mp4a.40.2`, `audio/mp4`, `audio/webm;codecs=opus`,
+  `audio/webm`. MP4/AAC si ascolta ovunque; Chrome lo registra se il
+  sistema ha l'encoder (verificato: Chrome 157 sul Mac sì), Safari sempre.
+  WebM/Opus su iPhone si ascolta solo da iOS ~17.4 (fonti discordanti): se
+  un telefono non riesce, la bolla scrive «Non si riesce ad ascoltare su
+  questo telefono» invece di restare muta. 32 kbit/s: ~240 KB al minuto.
+- **Nessuna colonna**: durata e forma d'onda (40 cifre 0–9, il massimo di
+  ogni tratto normalizzato sul più forte) stanno nel NOME del file,
+  `<ora>-vocale-12s-0135….m4a` (`percorsoVocale` / `leggiVocale` in
+  `lib/allegati.ts`, con i test). La bolla si disegna senza scaricare
+  l'audio, e un WebM di Chrome la sua durata non la dichiara nemmeno.
+  Segnaposto «🎤 Vocale», etichetta «Vocale».
+- **L'invio**: la bolla compare SUBITO con la rotellina mentre il file sale;
+  l'indirizzo si firma solo quando il file c'è (`stato` del messaggio). Il
+  file resta in memoria finché non è salito: «Tocca per riprovare» lo
+  ricarica (`vocaliDaCaricare`).
+- **La bolla**: play/pausa (il colore del testo della bolla, icona nel colore
+  della bolla), la forma d'onda che si colora ascoltando e si tocca per
+  saltare, il tempo. Un vocale alla volta.
+- Provato sul banco col microfono finto di Chrome (che suona un bip) e i
+  tocchi veri: tenere/lasciare, annullare, bloccare e inviare, tocco breve,
+  ascolto fino alla fine, microfono → invio scrivendo.
+- Icone di lucide (`Mic`, `Play`, `Pause`): un disegno nostro del microfono
+  manca.
 
 # 17. Lo splash d'apertura — ottobre 2026
 
