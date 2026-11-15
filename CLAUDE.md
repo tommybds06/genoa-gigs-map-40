@@ -1929,18 +1929,24 @@ casi, due giri):
 
 **Fase 4 — I VOCALI, fatta (15 novembre, nessuna migration)** —
 `components/chat/Vocale.tsx`:
-- **Il gesto di WhatsApp** (quello che chi usa l'app fa già): a campo vuoto
-  la tessera dell'invio diventa il MICROFONO (prima era l'invio spento, un
-  bottone morto). Tieni premuto → registra; lasci → parte; scorri a
-  sinistra oltre 110 px → annullato; scorri in su oltre 70 px → BLOCCATO
-  (cestino, tempo, onda dal vivo, e l'invio a destra). Tocco breve (sotto
-  1 s) → «Tieni premuto il microfono per registrare». Massimo 3 minuti, poi
-  parte da solo. ⚠️ Il microfono è un `button` suo con `touch-action:
+- **Il gesto di WhatsApp e Telegram**: a campo vuoto la tessera dell'invio
+  diventa il MICROFONO (prima era l'invio spento, un bottone morto).
+  **Tocca → registra già BLOCCATO** (Tommaso: «le app più funzionanti ti
+  fanno registrare semplicemente toccando»; prima il tocco dava solo un
+  toast): cestino, tempo, onda dal vivo, e l'invio a destra. **Tieni
+  premuto** → registra; lasci → parte; scorri a sinistra oltre 110 px →
+  annullato; scorri in su oltre 70 px → bloccato. Tocco = lasciato entro
+  350 ms. Tenuto e lasciato sotto 1 s → «Vocale troppo breve». Massimo 3
+  minuti, poi parte da solo.
+  ⚠️ Il dito che si alza dal tocco genera un `click`, e dove c'era il
+  microfono compare l'INVIO: mandava subito un vocale vuoto. Per 450 ms
+  dopo il blocco l'invio non ascolta (`bloccatoIl`). ⚠️ Il microfono è un `button` suo con `touch-action:
   none` e `setPointerCapture`: senza, il telefono prende il gesto per uno
   scorrimento.
-- **Il permesso** si chiede al primo tocco: la finestra del telefono
-  interrompe il gesto, quindi quel primo tocco non registra. L'AudioContext
-  nasce DENTRO il tocco (su iPhone fuori da un gesto resta sospeso).
+- **Il permesso** si chiede al primo tocco; mentre il telefono chiede il
+  dito di solito si alza, e appena il permesso arriva si registra bloccato.
+  L'AudioContext nasce DENTRO il tocco (su iPhone fuori da un gesto resta
+  sospeso).
 - ⚠️ **IL FORMATO**: il primo che il telefono sa registrare fra
   `audio/mp4;codecs=mp4a.40.2`, `audio/mp4`, `audio/webm;codecs=opus`,
   `audio/webm`. MP4/AAC si ascolta ovunque; Chrome lo registra se il
@@ -1964,8 +1970,12 @@ casi, due giri):
 - Provato sul banco col microfono finto di Chrome (che suona un bip) e i
   tocchi veri: tenere/lasciare, annullare, bloccare e inviare, tocco breve,
   ascolto fino alla fine, microfono → invio scrivendo.
-- Icone di lucide (`Mic`, `Play`, `Pause`): un disegno nostro del microfono
-  manca.
+- **Icone di Tommaso** (15 novembre, originali in `brand/icone/`):
+  `MicrofonoIcon`, `PlayIcon`, `PausaIcon` (il simbolo è un BUCO nel
+  cerchio). Nella bolla il bottone è il **cerchio imperfetto** degli avatar
+  (`useCerchioImperfetto`, seme = il percorso) col solo simbolo dentro
+  (`PlaySimbolo`, `PausaSimbolo`: i buchi dei suoi disegni nella stessa
+  tavola, così restano al loro posto e alla loro misura).
 
 # 17. Lo splash d'apertura — ottobre 2026
 

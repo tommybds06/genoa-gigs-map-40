@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState, type PointerEvent as EventoPuntatore } from "react";
-import { ChevronUp, Loader2, Mic, Pause, Play } from "lucide-react";
+import { ChevronUp, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { BidoneIcon, LucchettoIcon } from "@/components/icons/uiIcons";
+import { BidoneIcon, LucchettoIcon, MicrofonoIcon, PausaSimbolo, PlaySimbolo } from "@/components/icons/uiIcons";
+import { useCerchioImperfetto } from "@/hooks/useCerchioImperfetto";
 import { useAppTheme } from "@/hooks/useAppTheme";
 import {
   BARRE_VOCALE,
@@ -17,13 +18,16 @@ import { cn } from "@/lib/utils";
 /**
  * I VOCALI — 15 novembre 2026 (Fase 4 della chat, §18).
  *
- * IL GESTO è quello di WhatsApp, che chi usa l'app fa già cento volte al
- * giorno: a campo vuoto il tasto d'invio diventa il MICROFONO.
+ * IL GESTO è quello di WhatsApp e Telegram: a campo vuoto il tasto d'invio
+ * diventa il MICROFONO.
+ * - TOCCA → registra già BLOCCATO, a mani libere: in basso il cestino e
+ *   l'invio. (Tommaso, 15 novembre: «le app più funzionanti ti fanno
+ *   registrare semplicemente toccando». Prima un tocco dava solo il toast
+ *   «Tieni premuto…».) Tocco = lasciato prima di `SOGLIA_TOCCO`.
  * - TIENI PREMUTO → registra; LASCI → parte.
  * - SCORRI A SINISTRA (oltre `SOGLIA_ANNULLA`) → annullato.
- * - SCORRI IN SU (oltre `SOGLIA_BLOCCO`) → BLOCCATO: si continua a mani
- *   libere, e in basso restano il cestino e l'invio.
- * - Un tocco breve (sotto `MIN_SECONDI_VOCALE`) → «Tieni premuto…».
+ * - SCORRI IN SU (oltre `SOGLIA_BLOCCO`) → bloccato, come col tocco.
+ * - Sotto `MIN_SECONDI_VOCALE` non parte niente: «Vocale troppo breve».
  * - Al massimo `MAX_SECONDI_VOCALE` (3 minuti): poi parte da solo.
  *
  * IL FORMATO. Android (Chrome) e iPhone (Safari) registrano in formati
@@ -33,9 +37,9 @@ import { cn } from "@/lib/utils";
  * (Safari lo legge solo dalle versioni recenti). Se un telefono non riesce ad
  * ascoltarlo, la bolla lo dice invece di restare muta.
  *
- * IL PERMESSO. Il microfono si chiede al primo tocco: la finestra del
- * telefono interrompe il gesto, quindi quel primo tocco non registra
- * («Tieni premuto il microfono per registrare»). Dal secondo in poi sì.
+ * IL PERMESSO. Il microfono si chiede al primo tocco. Mentre il telefono
+ * chiede, il dito di solito si alza: allora, appena il permesso arriva, si
+ * registra BLOCCATO, come dopo un tocco.
  *
  * Durata e forma d'onda vanno nel NOME del file (`lib/allegati.ts`): niente
  * colonne nuove, e la bolla si disegna senza scaricare l'audio.
@@ -44,6 +48,7 @@ import { cn } from "@/lib/utils";
 const TIPI = ["audio/mp4;codecs=mp4a.40.2", "audio/mp4", "audio/webm;codecs=opus", "audio/webm"];
 const SOGLIA_ANNULLA = 110; // px verso sinistra
 const SOGLIA_BLOCCO = 70; // px verso l'alto
+const SOGLIA_TOCCO = 350; // ms: lasciato prima, è un tocco (→ bloccato)
 const OGNI = 100; // ms fra due misure del livello
 
 export const registrazioneDisponibile = () =>
@@ -67,8 +72,13 @@ export type StatoVocale = "fermo" | "avvio" | "tieni" | "bloccato";
 export function useVocale({ attivo, onPronto }: { attivo: boolean; onPronto: (r: Registrazione) => void }) {
   const [stato, setStatoVero] = useState<StatoVocale>("fermo");
   const statoRif = useRef<StatoVocale>("fermo");
+  // ⚠️ Il dito che si alza dal tocco genera un `click`, e nel punto dove
+  // c'era il microfono compare l'INVIO: quel clic manderebbe subito un
+  // vocale vuoto. Per un attimo dopo il blocco l'invio non ascolta.
+  const bloccatoIl = useRef(0);
   const setStato = (s: StatoVocale) => {
     statoRif.current = s;
+    if (s === "bloccato") bloccatoIl.current = performance.now();
     setStatoVero(s);
   };
   const [secondi, setSecondi] = useState(0);
@@ -76,7 +86,9 @@ export function useVocale({ attivo, onPronto }: { attivo: boolean; onPronto: (r:
   const [spinta, setSpinta] = useState({ dx: 0, dy: 0 });
 
   const premuto = useRef(false);
-  const partenza = useRef({ x: 0, y: 0 });
+  const partenza = useRef({ x: 0, y: 0, t: 0 });
+  // Lasciato mentre si aspettava il microfono: si registra bloccato.
+  const bloccaAllAvvio = useRef(false);
   const r = useRef<{
     stream?: MediaStream;
     rec?: MediaRecorder;
@@ -127,7 +139,7 @@ export function useVocale({ attivo, onPronto }: { attivo: boolean; onPronto: (r:
         return;
       }
       if (durata < MIN_SECONDI_VOCALE || blob.size === 0) {
-        toast("Tieni premuto il microfono per registrare", { duration: 1900 });
+        toast("Vocale troppo breve", { duration: 1500 });
         return;
       }
       const estensione = estensioneVocale(tipo);
@@ -171,12 +183,12 @@ export function useVocale({ attivo, onPronto }: { attivo: boolean; onPronto: (r:
       );
       return;
     }
-    // Il dito si è alzato mentre si chiedeva il permesso (o era un tocco breve).
-    if (!premuto.current) {
+    // Il gesto è stato interrotto dal telefono mentre si aspettava il
+    // microfono (`pointercancel`): niente registrazione.
+    if (!premuto.current && !bloccaAllAvvio.current) {
       stream.getTracks().forEach((t) => t.stop());
       void ctx?.close().catch(() => {});
       setStato("fermo");
-      toast("Tieni premuto il microfono per registrare", { duration: 1900 });
       return;
     }
 
@@ -218,7 +230,10 @@ export function useVocale({ attivo, onPronto }: { attivo: boolean; onPronto: (r:
         if (s >= MAX_SECONDI_VOCALE) void concludi(true);
       }, OGNI);
       navigator.vibrate?.(10);
-      setStato("tieni");
+      // Toccato (o lasciato mentre il telefono chiedeva il permesso): bloccato.
+      setStato(bloccaAllAvvio.current || !premuto.current ? "bloccato" : "tieni");
+      if (bloccaAllAvvio.current) premuto.current = false;
+      bloccaAllAvvio.current = false;
     } catch (e) {
       console.error("[Politask] registrazione", e);
       stream.getTracks().forEach((t) => t.stop());
@@ -247,7 +262,8 @@ export function useVocale({ attivo, onPronto }: { attivo: boolean; onPronto: (r:
       e.preventDefault();
       e.currentTarget.setPointerCapture?.(e.pointerId);
       premuto.current = true;
-      partenza.current = { x: e.clientX, y: e.clientY };
+      bloccaAllAvvio.current = false;
+      partenza.current = { x: e.clientX, y: e.clientY, t: performance.now() };
       setSpinta({ dx: 0, dy: 0 });
       void avvia();
     },
@@ -270,12 +286,21 @@ export function useVocale({ attivo, onPronto }: { attivo: boolean; onPronto: (r:
     onPointerUp: () => {
       if (!premuto.current) return;
       premuto.current = false;
-      if (statoRif.current === "tieni") void concludi(true);
-      // In «avvio» decide `avvia`, appena il microfono risponde.
+      const tocco = performance.now() - partenza.current.t < SOGLIA_TOCCO;
+      if (statoRif.current === "avvio") {
+        // Il microfono non ha ancora risposto: appena risponde, bloccato.
+        bloccaAllAvvio.current = true;
+      } else if (statoRif.current === "tieni") {
+        if (tocco) {
+          setSpinta({ dx: 0, dy: 0 });
+          setStato("bloccato");
+        } else void concludi(true);
+      }
     },
     onPointerCancel: () => {
       if (!premuto.current) return;
       premuto.current = false;
+      bloccaAllAvvio.current = false;
       if (statoRif.current === "tieni") void concludi(false);
     },
     onContextMenu: (e: React.MouseEvent) => e.preventDefault(),
@@ -288,7 +313,10 @@ export function useVocale({ attivo, onPronto }: { attivo: boolean; onPronto: (r:
     spinta,
     gestori,
     annulla: () => void concludi(false),
-    invia: () => void concludi(true),
+    invia: () => {
+      if (performance.now() - bloccatoIl.current < 450) return;
+      void concludi(true);
+    },
   };
 }
 
@@ -329,8 +357,8 @@ export function TastoMicrofono({
       )}
       <button
         type="button"
-        aria-label="Tieni premuto per registrare un vocale"
-        title="Tieni premuto per registrare"
+        aria-label="Registra un vocale"
+        title="Tocca o tieni premuto per registrare"
         {...gestori}
         className="flex h-12 w-12 select-none items-center justify-center [-webkit-touch-callout:none] [touch-action:none]"
       >
@@ -342,7 +370,7 @@ export function TastoMicrofono({
           )}
           style={{ transform: tiene ? `translateX(${Math.max(spinta.dx, -SOGLIA_ANNULLA)}px) scale(1.25)` : undefined }}
         >
-          {stato === "avvio" ? <Loader2 className="h-6 w-6 animate-spin" /> : <Mic className="h-6 w-6" />}
+          {stato === "avvio" ? <Loader2 className="h-6 w-6 animate-spin" /> : <MicrofonoIcon className="h-6 w-6" />}
         </span>
       </button>
     </div>
@@ -432,6 +460,10 @@ let inRiproduzione: HTMLAudioElement | null = null;
  * mano che si ascolta, e si tocca per saltare a un punto) e il tempo.
  * Il bottone è il colore del testo della bolla, con l'icona nel colore della
  * bolla: si legge su tutte e tre (worker, employer, l'altro).
+ * Il bottone è un CERCHIO IMPERFETTO (quello degli avatar, §6) col simbolo
+ * di play o pausa disegnato da Tommaso dentro (`PlaySimbolo`,
+ * `PausaSimbolo`: i buchi dei suoi disegni, nella stessa tavola, quindi
+ * restano al loro posto e alla loro misura).
  */
 export function VocaleInBolla({
   percorso,
@@ -452,6 +484,7 @@ export function VocaleInBolla({
   const [adesso, setAdesso] = useState(0);
   const [errore, setErrore] = useState(false);
   const giro = useRef(0);
+  const cerchio = useCerchioImperfetto<HTMLButtonElement>(percorso);
 
   const durata = () => {
     const d = audio.current?.duration;
@@ -537,6 +570,8 @@ export function VocaleInBolla({
   return (
     <div className="-mx-1 mb-0.5 mt-0.5 flex w-[228px] max-w-full items-center gap-2.5">
       <button
+        ref={cerchio.ref}
+        style={cerchio.style}
         type="button"
         onClick={premiPlay}
         disabled={!url || errore}
@@ -549,9 +584,9 @@ export function VocaleInBolla({
         {inInvio || (!url && !errore) ? (
           <Loader2 className="h-5 w-5 animate-spin" />
         ) : suona ? (
-          <Pause className="h-5 w-5 fill-current" />
+          <PausaSimbolo className="h-10 w-10" />
         ) : (
-          <Play className="ml-0.5 h-5 w-5 fill-current" />
+          <PlaySimbolo className="h-10 w-10" />
         )}
       </button>
       <span className="min-w-0 flex-1">
