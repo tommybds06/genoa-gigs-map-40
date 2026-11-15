@@ -209,7 +209,9 @@ export type Database = {
           created_at: string
           employer_id: string
           id: string
-          job_id: string
+          job_id: string | null
+          lavoro_corrente: string | null
+          unita_in: string | null
           updated_at: string
           worker_id: string
         }
@@ -217,7 +219,9 @@ export type Database = {
           created_at?: string
           employer_id: string
           id?: string
-          job_id: string
+          job_id?: string | null
+          lavoro_corrente?: string | null
+          unita_in?: string | null
           updated_at?: string
           worker_id: string
         }
@@ -225,7 +229,9 @@ export type Database = {
           created_at?: string
           employer_id?: string
           id?: string
-          job_id?: string
+          job_id?: string | null
+          lavoro_corrente?: string | null
+          unita_in?: string | null
           updated_at?: string
           worker_id?: string
         }
@@ -249,6 +255,34 @@ export type Database = {
             columns: ["job_id"]
             isOneToOne: false
             referencedRelation: "statistiche_annunci_test"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chats_lavoro_corrente_fkey"
+            columns: ["lavoro_corrente"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chats_lavoro_corrente_fkey"
+            columns: ["lavoro_corrente"]
+            isOneToOne: false
+            referencedRelation: "statistiche_annunci_test"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chats_unita_in_fkey"
+            columns: ["unita_in"]
+            isOneToOne: false
+            referencedRelation: "chat_overview"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chats_unita_in_fkey"
+            columns: ["unita_in"]
+            isOneToOne: false
+            referencedRelation: "chats"
             referencedColumns: ["id"]
           },
           {
@@ -899,20 +933,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "chats_job_id_fkey"
-            columns: ["job_id"]
-            isOneToOne: false
-            referencedRelation: "jobs"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "chats_job_id_fkey"
-            columns: ["job_id"]
-            isOneToOne: false
-            referencedRelation: "statistiche_annunci_test"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "chats_worker_id_fkey"
             columns: ["worker_id"]
             isOneToOne: false
@@ -946,6 +966,11 @@ export type Database = {
       }
     }
     Functions: {
+      apri_chat: { Args: { p_candidatura: string }; Returns: string }
+      cambia_lavoro_chat: {
+        Args: { p_chat: string; p_job: string }
+        Returns: undefined
+      }
       chiama_invio_notifiche: { Args: never; Returns: undefined }
       chiudi_lavori_scaduti: { Args: never; Returns: number }
       crea_notifica: {
