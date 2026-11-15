@@ -2749,6 +2749,28 @@ no. Nel video: le animazioni scorrevano a 60, i difetti erano altri tre.
    56 px, dove i quattro angoli si toccano al centro: una croce sottile.
    Ora `.sagoma-tessera`, la stessa forma in un pezzo solo (§6).
 
+## 8. L'uscita che non usciva (15 novembre) — `lib/uscita.ts`
+
+Tommaso: «quando esci carica, ti porta un attimo al login e poi torna sulla
+mappa». ⚠️ `supabase.auth.signOut()` toglie la sessione dal telefono SOLO se
+il server conferma: con un errore di rete o del server (non 401/403/404)
+restituisce `{ error }` e la sessione RESTA (auth-js 2.91, `_signOut`). Il
+nostro `signOut` non guardava l'errore: la pagina di accesso trovava ancora
+l'utente e rimandava alla mappa. La causa sul telefono di Tommaso non la
+conosciamo (non si vede la console del Pixel); il difetto si riproduce
+identico con un 500 sull'uscita.
+- Ora `esciSempre`: notifiche scollegate (max 3 s), poi il server (max
+  6 s); se non conferma, la sessione si toglie come fa Supabase quando
+  riesce (`_removeSession`: storage + SIGNED_OUT) e lo stato si azzera.
+  Funzione pura con i test (`uscita.test.ts`, verificato che falliscono
+  senza la correzione).
+- **Il banco per l'accesso vero**: il server di sviluppo con TUTTA la rete
+  verso Supabase finta (Playwright `ctx.route` sull'host `supabase.co`), una
+  sessione inventata in `localStorage` (`sb-<ref>-auth-token`, JWT non
+  firmato), profilo finto. Nessuna richiesta arriva al database, nessuna
+  credenziale vera. Provati: uscita con 500 e con 204, poi accesso con un
+  altro account → mappa. Col codice vecchio e il 500: si tornava sulla mappa.
+
 ## 7. Il banco per il cambio account (7 novembre)
 
 Il blocco dell'accesso (§25.4) si è riprodotto sul banco della guida

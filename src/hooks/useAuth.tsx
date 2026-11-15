@@ -1,6 +1,7 @@
 import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
-import { canaleAttivo, entro } from '@/lib/notifiche/canale';
+import { canaleAttivo } from '@/lib/notifiche/canale';
+import { esciSempre } from '@/lib/uscita';
 import { supabase } from '@/integrations/supabase/client';
 
 interface AuthContextType {
@@ -66,12 +67,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return { error: error as Error | null };
   };
 
+  /* ⚠️ Si esce SEMPRE (15 novembre, `lib/uscita.ts`): se il server non
+     conferma, `supabase.auth.signOut()` lascia la sessione sul telefono, e
+     la pagina di accesso rimandava alla mappa («non riesce a farti
+     uscire»). Allora la sessione si toglie come fa Supabase quando l'uscita
+     riesce (`_removeSession`: storage + evento SIGNED_OUT), e lo stato qui
+     si azzera comunque. */
   const signOut = async () => {
-    // PRIMA di uscire (dopo, le policy non lasciano più toccare la riga): il
-    // telefono smette di ricevere le notifiche di questo account.
-    // ⚠️ Al massimo 3 s: uscire non deve mai dipendere dalle notifiche.
-    await entro(canaleAttivo.scollega(), 3000);
-    await supabase.auth.signOut();
+    const { errore } = await esciSempre({
+      scollegaNotifiche: () => canaleAttivo.scollega(),
+      esciDalServer: () => supabase.auth.signOut(),
+      togliSessioneLocale: async () => {
+        const auth = supabase.auth as unknown as { _removeSession?: () => Promise<void> };
+        await auth._removeSession?.();
+      },
+    });
+    if (errore) {
+      console.error('[Politask] uscita: il server non ha confermato, sessione chiusa su questo telefono', errore);
+      setSession(null);
+      setUser(null);
+    }
   };
 
   return (
