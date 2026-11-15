@@ -1927,6 +1927,15 @@ casi, due giri):
 - Due lavori aperti insieme con la stessa persona: la striscia mostra il più
   recente, l'altro si raggiunge dalla bacheca. Caso raro, accettato.
 
+**La linea sopra e sotto i messaggi è A CAVALLO del bordo** (15 novembre,
+Tommaso: «sembra mal ritagliata, si vede il bordino bianco»). Era una
+striscia di 4 px fra testata e messaggi: dove il tratto a mano è più sottile,
+fra il tratto e la bolla tagliata dritta restava la carta della striscia.
+Ora `.linea-a-cavallo` (index.css) la disegna sopra il bordo, metà di qua e
+metà di là, sopra i messaggi: le bolle passano sotto il tratto. Dopo la
+testata (un `div` alto zero), sulla barra della risposta, dell'allegato e
+del campo. Verificato ingrandendo a 2,625.
+
 **Fase 4 — I VOCALI, fatta (15 novembre, nessuna migration)** —
 `components/chat/Vocale.tsx`:
 - **Il gesto di WhatsApp e Telegram**: a campo vuoto la tessera dell'invio
@@ -1979,7 +1988,34 @@ casi, due giri):
 
 # 17. Lo splash d'apertura — ottobre 2026
 
-Il **logo animato in Lottie** all'apertura, a **ogni avvio a freddo**.
+⚠️ **Dal 15 novembre: UNA VOLTA AL GIORNO, e l'app sotto aspetta.**
+Tommaso: «sul telefono è scattosa… te la mostra tutte le volte… prima il
+logo per qualche secondo, poi l'animazione: un'attesa infinita».
+- **Una volta al giorno** (`politask.splash-visto-il` in localStorage,
+  `lib/splash.ts`): «a ogni avvio a freddo» (9 ottobre) voleva dire ogni
+  volta la schermata di Android con l'icona (resta finché l'app non disegna
+  qualcosa di non vuoto, cioè finché non è scaricata) + 4,5 s di animazione.
+  Quella schermata con l'icona è il «logo per qualche secondo»: è di
+  Android, non nostra, e c'è a ogni avvio dell'app installata.
+- **Scattava per l'avvio dell'app, non per il Lottie.** Misurato coi
+  fotogrammi che arrivano a schermo (screencast di Chrome), processore 4×
+  più lento: l'animazione restava ferma 1050, 450 e 430 ms mentre sotto si
+  montavano le pagine e la mappa, sullo stesso thread. Ora le pagine della
+  barra (`layout/Schede`) si montano solo a logo COMPLETO (`fineSplash`,
+  `useSplashInCorso`), coperte dal logo fermo; la dissolvenza parte quando il
+  thread è calmo da 8 fotogrammi (al massimo 1,5 s). Misurato dopo:
+  animazione e dissolvenza senza buchi sopra i 50 ms; il blocco del
+  montaggio (~630 ms) cade a logo fermo, dove non si vede.
+- Libreria e file del Lottie partono appena si carica l'app (prima: al primo
+  disegno dello splash).
+- ⚠️ **PROVATO E SCARTATO: `lottie_worker`** (l'animazione su un canvas in un
+  worker, fuori dal thread principale). Due problemi: dentro il bundle di
+  Vite il codice copiato nel worker si rompe («module is not defined», va
+  caricato com'è da `public/`); e soprattutto il disegno su CANVAS non sa
+  fare la maschera del tentacolo: la «P» del logo spariva.
+
+Il **logo animato in Lottie** all'apertura (fino al 15 novembre a **ogni
+avvio a freddo**).
 `components/layout/SplashScreen.tsx`, file in
 `src/assets/politask-logo-animato.json`: 1080×1920, **16 fps, 64 fotogrammi
 = 4 s**, 74 KB, senza immagini né font né espressioni, fondo `#F3EFE3`. Parte

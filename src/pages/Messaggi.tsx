@@ -883,8 +883,9 @@ const Messaggi = () => {
           {!isEmployer && applicationStatus === 'hired' && <StatusBadge stato="hired" />}
           {applicationStatus === 'completed' && <StatusBadge stato="completed" />}
         </div>
-        {/* La linea disegnata al posto del bordo CSS da 1 px. */}
-        <div aria-hidden="true" className="linea-divisoria-sopra shrink-0" />
+        {/* La linea disegnata, A CAVALLO del bordo dell'area dei messaggi
+            (`.linea-a-cavallo` in index.css): le bolle passano sotto il tratto. */}
+        <div aria-hidden="true" className="linea-a-cavallo z-20 h-0 shrink-0" />
 
         {/* Messages area - stile WhatsApp: i messaggi partono dall'alto; lo scroll
             va in fondo (messaggio più recente) all'apertura e sui nuovi messaggi via JS */}
@@ -980,7 +981,7 @@ const Messaggi = () => {
         {/* A chi si sta rispondendo: una riga sopra il campo, col filo del
             ruolo a sinistra come la citazione dentro la bolla. */}
         {replyingTo && (
-          <div className="linea-divisoria-sopra flex shrink-0 items-center gap-3 px-4 py-2">
+          <div className="linea-a-cavallo flex shrink-0 items-center gap-3 px-4 py-2">
             <div className={cn('min-w-0 flex-1 border-l-2 pl-2.5', isEmployer ? 'border-employer-800' : 'border-primary-strong')}>
               <p className={cn('text-xs font-medium', theme.primaryText)}>
                 {replyingTo.sender_id === user?.id ? 'Rispondi a te stesso' : `Rispondi a ${selectedChat.other_user?.full_name || 'Utente'}`}
@@ -995,7 +996,7 @@ const Messaggi = () => {
 
         {/* L'allegato in attesa: la foto in piccolo, o il nome del documento. */}
         {pendingAttachment && (
-          <div className="linea-divisoria-sopra flex shrink-0 items-center gap-3 px-4 py-2">
+          <div className="linea-a-cavallo flex shrink-0 items-center gap-3 px-4 py-2">
             {tipoAllegato(pendingAttachment) === 'documento' ? (
               <>
                 <DocumentoIcon className={cn('h-8 w-8 shrink-0', theme.primaryText)} />
@@ -1015,7 +1016,7 @@ const Messaggi = () => {
 
         {/* Message input - shrink-0 stays at bottom, never compressed */}
         <div
-          className="linea-divisoria-sopra shrink-0 bg-background px-4 pt-3"
+          className="linea-a-cavallo shrink-0 bg-background px-4 pt-3"
           style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 16px)' }}
         >
           <div className="flex items-center gap-2">

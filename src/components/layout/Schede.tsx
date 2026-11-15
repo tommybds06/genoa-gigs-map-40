@@ -1,3 +1,4 @@
+import { useSplashInCorso } from "@/lib/splash";
 import { memo, useCallback, useContext, useEffect, useMemo, useRef, useState, type ComponentType } from "react";
 import { UNSAFE_LocationContext, useLocation, useNavigate } from "react-router-dom";
 import { useQueryClient, type QueryKey } from "@tanstack/react-query";
@@ -123,7 +124,12 @@ export function Schede() {
   useEffect(() => {
     if (!user) setPreparate([]);
   }, [user]);
-  const montata = (p: string) => p === mostrata || (!!user && (viste.current.has(p) || preparate.includes(p)));
+  // Mentre suona lo splash d'apertura nessuna pagina si monta: il lavoro
+  // dell'avvio (la mappa soprattutto) faceva scattare l'animazione, e l'app
+  // è comunque coperta (`lib/splash.ts`).
+  const splash = useSplashInCorso();
+  const montata = (p: string) =>
+    !splash && (p === mostrata || (!!user && (viste.current.has(p) || preparate.includes(p))));
 
   const prepara = useCallback((p: string | null | undefined) => {
     if (p) setPreparate((prima) => (prima.includes(p) ? prima : [...prima, p]));

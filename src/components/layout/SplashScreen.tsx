@@ -1,9 +1,12 @@
 import { PointerEvent, useCallback, useEffect, useRef, useState } from "react";
-import { consumaSaltoSplash, splashDaSaltare } from "@/lib/splash";
+import { consumaSaltoSplash, fineSplash, segnaSplashVisto, splashDaMostrare, splashDaSaltare } from "@/lib/splash";
 import type { AnimationItem } from "lottie-web";
 
 /**
- * SPLASH D'APERTURA — il logo animato in Lottie, a ogni avvio a freddo.
+ * SPLASH D'APERTURA — il logo animato in Lottie, alla PRIMA APERTURA DELLA
+ * GIORNATA (dal 15 novembre; prima a ogni avvio a freddo: `lib/splash.ts`).
+ * Mentre suona, le pagine della barra aspettano a montarsi (`fineSplash`):
+ * l'animazione non scatta più per il lavoro dell'avvio.
  *
  * È uno STRATO sopra l'app, non un cancello prima: l'app sotto è già montata
  * e intanto carica sessione, profilo e mappa. Il componente vive una volta
@@ -29,6 +32,42 @@ const FERMO_MS = 1000;
 const CARICAMENTO_MAX_MS = 2500;
 const SICUREZZA_MS = 7000;
 
+/**
+ * Libreria e file partono APPENA si carica questo modulo (con l'app), non
+ * quando lo splash si disegna la prima volta: è il tempo di carta vuota prima
+ * che l'animazione cominci. Solo se lo splash oggi si vede.
+ */
+const avviaCaricamento = () =>
+  Promise.all([import("lottie-web/build/player/lottie_light"), import("@/assets/politask-logo-animato.json")]);
+let caricamento: ReturnType<typeof avviaCaricamento> | null = null;
+const caricaLottie = () => (caricamento ??= avviaCaricamento());
+if (typeof window !== "undefined" && splashDaMostrare()) void caricaLottie().catch(() => {});
+
+/**
+ * La dissolvenza parte quando il thread è CALMO (con un tetto): subito dopo
+ * il logo completo si montano le pagine (`fineSplash`) e la mappa lavora a
+ * tratti, e una dissolvenza in mezzo a quel lavoro scatta. Misurato: ~630 ms
+ * di blocco appena dopo la fine dell'animazione (a logo fermo: non si vede),
+ * poi altri da 200–250 ms. «Calmo» = `FOTOGRAMMI_CALMI` fotogrammi di fila
+ * sotto i 25 ms; al massimo `ATTESA_QUIETE_MAX_MS`, poi si esce comunque.
+ */
+const ATTESA_QUIETE_MAX_MS = 1500;
+const FOTOGRAMMI_CALMI = 8;
+const quandoCalmo = (fn: () => void) => {
+  const inizio = performance.now();
+  let prima = inizio;
+  let calmi = 0;
+  const giro = (t: number) => {
+    calmi = t - prima < 25 ? calmi + 1 : 0;
+    prima = t;
+    if (calmi >= FOTOGRAMMI_CALMI || t - inizio > ATTESA_QUIETE_MAX_MS) fn();
+    else requestAnimationFrame(giro);
+  };
+  requestAnimationFrame(giro);
+  // Rete: se i fotogrammi non arrivano (scheda in background), si esce lo stesso.
+  window.setTimeout(fn, ATTESA_QUIETE_MAX_MS + 300);
+};
+
 function movimentoRidotto(): boolean {
   return (
     typeof window.matchMedia === "function" &&
@@ -44,10 +83,11 @@ function movimentoRidotto(): boolean {
  */
 export function SplashScreen() {
   const [salta] = useState(splashDaSaltare);
+  const [mostra] = useState(splashDaMostrare);
   useEffect(() => {
     if (salta) consumaSaltoSplash();
   }, [salta]);
-  if (salta) return null;
+  if (!mostra) return null;
   return <SplashAnimato />;
 }
 
@@ -59,7 +99,13 @@ function SplashAnimato() {
   const chiuso = useRef(false);
   const timerUscita = useRef<number>();
 
+  useEffect(() => {
+    segnaSplashVisto();
+  }, []);
+
   const esci = useCallback(() => {
+    // Qualunque uscita (tocco, rete di sicurezza): le pagine si montano.
+    fineSplash();
     if (chiuso.current) return;
     chiuso.current = true;
     window.clearTimeout(timerUscita.current);
@@ -92,6 +138,7 @@ function SplashAnimato() {
       animazione?.destroy();
       animazione = null;
       setStatico(true);
+      fineSplash(); // un logo fermo non scatta: l'app può montarsi
       esciTra(FERMO_MS);
     };
     const limite = window.setTimeout(ripiego, CARICAMENTO_MAX_MS);
@@ -100,10 +147,7 @@ function SplashAnimato() {
     // bundle e non pesano sull'avvio dell'app. `lottie_light` è lottie-web
     // col solo renderer SVG e senza motore delle espressioni — il file non
     // ne usa — a circa metà del peso.
-    Promise.all([
-      import("lottie-web/build/player/lottie_light"),
-      import("@/assets/politask-logo-animato.json"),
-    ])
+    caricaLottie()
       .then(([{ default: lottie }, { default: dati }]) => {
         if (annullato || chiuso.current || !contenitore.current) return;
         const ridotto = movimentoRidotto();
@@ -125,9 +169,15 @@ function SplashAnimato() {
         if (ridotto) {
           // Direttamente l'ultimo fotogramma: il logo completo, fermo.
           animazione.goToAndStop(animazione.totalFrames - 1, true);
+          fineSplash();
           esciTra(FERMO_MS);
         } else {
-          animazione.addEventListener("complete", () => esciTra(PAUSA_FINALE_MS));
+          animazione.addEventListener("complete", () => {
+            // Il logo è completo e fermo: ora le pagine possono montarsi,
+            // coperte dalla pausa; la dissolvenza a thread libero.
+            fineSplash();
+            window.setTimeout(() => quandoCalmo(esci), PAUSA_FINALE_MS);
+          });
         }
       })
       .catch((e) => {

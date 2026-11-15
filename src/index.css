@@ -796,6 +796,34 @@
       padding-top: 4px;
     }
 
+    /* LA LINEA A CAVALLO DI UN BORDO, sopra un'area che SCORRE (15 novembre).
+       Tommaso: in chat «quando la linea passa sopra ai messaggi sembra mal
+       ritagliata, si vede il bordino bianco». La linea era una striscia di
+       4 px FRA la testata e i messaggi: dove il tratto a mano è più sottile
+       della striscia, fra il tratto e la bolla (tagliata dritta dal bordo
+       dell'area) restava la carta della striscia. Qui la linea è disegnata
+       SOPRA il bordo, metà di qua e metà di là (`top: -2px`), con lo strato
+       sopra ai messaggi: le bolle passano sotto il tratto. Sull'elemento che
+       sta PRIMA o DOPO l'area che scorre: un `div` alto zero dopo la testata,
+       o il fondo (risposta, allegato, campo). */
+    .linea-a-cavallo {
+      position: relative;
+    }
+    .linea-a-cavallo::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: -2px;
+      height: 4px;
+      z-index: 20;
+      pointer-events: none;
+      background-image: url("/images/cornici/linea-divisoria-3x.png");
+      background-repeat: repeat-x;
+      background-position: center;
+      background-size: 241px 4px;
+    }
+
     /* La stessa linea più SOTTILE (2,5 px invece di 4), per separare le righe
        della lista chat: a 4 px, ripetuta ogni 76 px, pesava («cicciona»,
        Tommaso, 22 ottobre). Il disegno si stira libero in altezza
