@@ -275,31 +275,12 @@ const Annunci = () => {
 
       if (updateError) throw updateError;
 
-      // 2. Create or get existing chat
-      const { data: existingChat } = await supabase
-        .from('chats')
-        .select('id')
-        .eq('job_id', app.job_id)
-        .eq('worker_id', app.applicant.id)
-        .eq('employer_id', user.id)
-        .maybeSingle();
-
-      let chatId = existingChat?.id;
-
-      if (!chatId) {
-        const { data: newChat, error: chatError } = await supabase
-          .from('chats')
-          .insert({
-            job_id: app.job_id,
-            worker_id: app.applicant.id,
-            employer_id: user.id,
-          })
-          .select('id')
-          .single();
-
-        if (chatError) throw chatError;
-        chatId = newChat.id;
-      }
+      // 2. La chat della COPPIA (una sola per attività e studente, 15
+      //    novembre): se esiste già, passa a questo lavoro con un timbro
+      //    «Nuovo lavoro: …»; se no nasce. La decide il database
+      //    (`apri_chat`, migration 20261115120000_una_chat_per_coppia).
+      const { data: chatId, error: chatError } = await supabase.rpc('apri_chat', { p_candidatura: app.id });
+      if (chatError || !chatId) throw chatError ?? new Error('chat non aperta');
 
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['applications'] }),

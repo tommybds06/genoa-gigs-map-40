@@ -28,7 +28,7 @@ import { usePressioneLunga } from "@/hooks/usePressioneLunga";
 import { MenuContestuale, type AncoraMenu } from "@/components/ui/MenuContestuale";
 import { CercaInChat } from "@/components/chat/CercaInChat";
 import { Puntina1 } from "@/components/icons/puntine";
-import { SearchIcon, BidoneIcon } from "@/components/icons/uiIcons";
+import { SearchIcon, BidoneIcon, AnnunciIcon } from "@/components/icons/uiIcons";
 import { ChatListSkeleton } from "@/components/skeletons/ChatListSkeleton";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -189,8 +189,14 @@ const Messaggi = () => {
      se c'è un cartellino (in prova, assunto, concluso) alla SUA scheda della
      bacheca — orari, paga, giorni —; se no all'annuncio. Per tutti e due i
      ruoli: l'employer il cartellino, il worker la scheda del lavoro. */
-  const cartellinoChat = isEmployer && selectedChat ? cartellini.find((c) => c.chatId === selectedChat.id) ?? null : null;
-  const lavoroChat = !isEmployer && selectedChat ? lavori.find((l) => l.chatId === selectedChat.id) ?? null : null;
+  // ⚠️ Del lavoro CORRENTE della chat: con una chat per coppia (15 novembre)
+  // la stessa chat ha anche i cartellini dei lavori di prima.
+  const cartellinoChat = isEmployer && selectedChat
+    ? cartellini.find((c) => c.chatId === selectedChat.id && c.jobId === selectedChat.job_id) ?? null
+    : null;
+  const lavoroChat = !isEmployer && selectedChat
+    ? lavori.find((l) => l.chatId === selectedChat.id && l.jobId === selectedChat.job_id) ?? null
+    : null;
   const [schedaBachecaAperta, setSchedaBachecaAperta] = useState(false);
   /* L'icona del MESTIERE (dai tag dell'annuncio), non quella generica del
      negozio. I tag li hanno già cartellino e lavoro; se no si leggono
@@ -886,7 +892,8 @@ const Messaggi = () => {
                      «Assunto», con la valigetta: è il momento da ritrovare
                      scorrendo. Il testo è scritto per chi legge. */
                   const tipo = tipoDiSistema(msg.content);
-                  const Icona = tipo === 'assunzione' ? GenericoIcon : tipo === 'chiusura' ? OrologioIcon : InfoIcon;
+                  const Icona =
+                    tipo === 'assunzione' ? GenericoIcon : tipo === 'chiusura' ? OrologioIcon : tipo === 'lavoro' ? AnnunciIcon : InfoIcon;
                   return (
                     <Fragment key={msg.id}>
                       {separatore}

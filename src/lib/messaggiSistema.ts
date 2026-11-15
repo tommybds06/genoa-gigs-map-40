@@ -31,10 +31,18 @@ const TESTI_ASSUNZIONE = [MESSAGGIO_ASSUNZIONE, "🎉 Complimenti! Sei stato ass
  */
 const INIZIO_CHIUSURA_AUTOMATICA = "Il lavoro si è chiuso automaticamente";
 
+/**
+ * Una chat per coppia (15 novembre): quando la stessa attività riprende lo
+ * stesso studente per un altro annuncio la chat è quella di prima, e il
+ * database ci scrive «Nuovo lavoro: <titolo>» (`cambia_lavoro_chat`). È il
+ * timbro che divide la conversazione per lavoro, come i giorni.
+ */
+const INIZIO_NUOVO_LAVORO = "Nuovo lavoro:";
+
 /** È un messaggio scritto dall'app? (Per l'anteprima, che non ha `is_system`.) */
 export function eMessaggioDiSistema(contenuto: string | null | undefined): boolean {
   const t = (contenuto || "").trim();
-  return TESTI_ASSUNZIONE.includes(t) || t.startsWith(INIZIO_CHIUSURA_AUTOMATICA);
+  return TESTI_ASSUNZIONE.includes(t) || t.startsWith(INIZIO_CHIUSURA_AUTOMATICA) || t.startsWith(INIZIO_NUOVO_LAVORO);
 }
 
 export interface Lettore {
@@ -56,9 +64,10 @@ export function testoDiSistema(contenuto: string | null | undefined, lettore: Le
 }
 
 /** Che messaggio automatico è: decide l'icona e il colore del «timbro» in chat. */
-export function tipoDiSistema(contenuto: string | null | undefined): "assunzione" | "chiusura" | "altro" {
+export function tipoDiSistema(contenuto: string | null | undefined): "assunzione" | "chiusura" | "lavoro" | "altro" {
   const t = (contenuto || "").trim();
   if (TESTI_ASSUNZIONE.includes(t)) return "assunzione";
   if (t.startsWith(INIZIO_CHIUSURA_AUTOMATICA)) return "chiusura";
+  if (t.startsWith(INIZIO_NUOVO_LAVORO)) return "lavoro";
   return "altro";
 }

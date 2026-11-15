@@ -1871,6 +1871,52 @@ della chat → `chat/CercaInChat.tsx`, una scheda alta fissa (88dvh).
   Messenger, a campo vuoto la tessera dell'invio diventa il microfono (oggi
   è la tessera «spenta», cioè un bottone morto: è proprio quel posto).
 
+## UNA CHAT PER COPPIA attività–studente (15 novembre)
+
+Tommaso: «se un employer assume per una seconda volta lo stesso worker si
+aprono due chat, confusionario». Nella sua lista «Masetto» compariva tre
+volte. Decisione (sua, su mio parere): una chat sola per coppia, che passa al
+lavoro nuovo. Il rapporto qui SI RIPETE (il bar che richiama lo studente è il
+successo dell'app), e gli accordi stanno nel cartellino, non in chat: non c'è
+niente da tenere separato. Vinted e Subito fanno una chat per oggetto perché
+lì la vendita fra sconosciuti è una volta sola.
+
+Migration `20261115120000_una_chat_per_coppia.sql` (provata su PGlite, 17
+casi, due giri):
+- ⚠️ **Le righe di `chats` restano una per LAVORO**; una per coppia è la
+  PRINCIPALE (`unita_in` NULL), le altre ci puntano (`unita_in`) e non hanno
+  messaggi. NON si cancellano: gli allegati stanno in cartelle col nome della
+  chat (`<chat>/<utente>/…`) e le regole dello Storage controllano che quella
+  chat esista. E tutto ciò che cerca «la chat di un annuncio» continua a
+  trovare la sua riga: nell'app si legge `unita_in ?? id`
+  (`useChatForApplication`, `useCartellini`, `useLavoriWorker`).
+- **`lavoro_corrente`** sulla principale: la striscia, lo stato, «Assumi».
+  `chat_overview` dà `coalesce(lavoro_corrente, job_id)` come `job_id` e
+  mostra solo le principali.
+- **Timbro «Nuovo lavoro: <titolo>»** quando il lavoro corrente cambia
+  (`cambia_lavoro_chat`, solo database). In chat ha l'icona del negozio
+  (`tipoDiSistema` → `lavoro`). Non fa notifica (`is_system`).
+- **`apri_chat(candidatura)`**: l'unico modo in cui l'app apre una chat
+  (Annunci → «Accetta»). Solo il proprietario dell'annuncio.
+- **I deviatori**: `aggancia_chat` (una chat nuova per una coppia che ne ha
+  già una diventa agganciata, anche da una versione vecchia dell'app),
+  `reindirizza_messaggio` (un messaggio scritto su una riga agganciata va
+  nella principale: per questo `chiudi_lavori_scaduti` non è stata
+  riscritta), `reindirizza_notifica` (idem per le notifiche «chat»: per
+  questo «ti ha scelto» non è stata riscritta).
+- ⚠️ **Eliminare un annuncio NON cancella più la chat**: era `ON DELETE
+  CASCADE`, e con una chat per coppia avrebbe portato via la storia degli
+  altri lavori. Ora `SET NULL` e `job_id` può essere vuoto.
+- **Le doppie di prima si uniscono**: principale la più vecchia, lavoro
+  corrente quello della più recente, messaggi spostati, un timbro al momento
+  in cui era nata ogni chat in più, notifiche ripuntate, «fissata» passata.
+  Durante l'unione `update_chats_updated_at` e `touch_chat_updated_at` sono
+  spenti, se no ogni chat unita salirebbe in cima con la data di oggi.
+- Nella striscia, cartellino e lavoro si cercano per chat **e** lavoro
+  corrente: la stessa chat ha anche quelli dei lavori di prima.
+- Due lavori aperti insieme con la stessa persona: la striscia mostra il più
+  recente, l'altro si raggiunge dalla bacheca. Caso raro, accettato.
+
 **Fase 4 — da decidere:** vocali.
 
 # 17. Lo splash d'apertura — ottobre 2026

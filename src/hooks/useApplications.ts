@@ -67,16 +67,18 @@ export function useChatForApplication(jobId: string | undefined, workerId: strin
     queryFn: async () => {
       if (!jobId || !workerId) return null;
 
+      // La riga di QUESTO lavoro; se è agganciata (una chat per coppia, 15
+      // novembre) la chat vera è la principale.
       const { data, error } = await supabase
         .from("chats")
-        .select("id")
+        .select("id, unita_in")
         .eq("job_id", jobId)
         .eq("worker_id", workerId)
-        .single();
+        .maybeSingle();
 
-      if (error && error.code !== "PGRST116") throw error;
+      if (error) throw error;
 
-      return data?.id || null;
+      return data ? data.unita_in ?? data.id : null;
     },
     enabled: !!jobId && !!workerId,
   });

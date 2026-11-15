@@ -34,12 +34,13 @@ async function caricaCartellini(employerId: string): Promise<Cartellino[]> {
   if (!data || data.length === 0) return [];
 
   // La chat serve per il tasto «Chat»: una sola query per tutte, non una a testa.
+  // Una riga agganciata (una chat per coppia, 15 novembre) porta alla principale.
   const { data: chats } = await supabase
     .from("chats")
-    .select("id, job_id, worker_id")
+    .select("id, job_id, worker_id, unita_in")
     .eq("employer_id", employerId)
     .in("job_id", [...new Set(data.map((r) => r.job_id))]);
-  const chatPer = new Map((chats || []).map((c) => [`${c.job_id}:${c.worker_id}`, c.id]));
+  const chatPer = new Map((chats || []).map((c) => [`${c.job_id}:${c.worker_id}`, c.unita_in ?? c.id]));
 
   return data.flatMap((r): Cartellino[] => {
     const stato = STATO_DA_CANDIDATURA[r.candidatura?.status ?? ""];

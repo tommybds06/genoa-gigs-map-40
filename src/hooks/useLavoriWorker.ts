@@ -57,10 +57,11 @@ async function carica(workerId: string): Promise<LavoroWorker[]> {
   const idLavori = [...new Set(data.map((r) => r.job_id))];
   const [{ data: recensioni }, { data: chats }] = await Promise.all([
     supabase.from("reviews").select("job_id").eq("worker_id", workerId).in("job_id", idLavori),
-    supabase.from("chats").select("id, job_id, employer_id").eq("worker_id", workerId).in("job_id", idLavori),
+    // Una riga agganciata (una chat per coppia) porta alla principale.
+    supabase.from("chats").select("id, job_id, employer_id, unita_in").eq("worker_id", workerId).in("job_id", idLavori),
   ]);
   const recensiti = new Set((recensioni || []).map((r) => r.job_id));
-  const chatPer = new Map((chats || []).map((c) => [`${c.job_id}:${c.employer_id}`, c.id]));
+  const chatPer = new Map((chats || []).map((c) => [`${c.job_id}:${c.employer_id}`, c.unita_in ?? c.id]));
 
   const lavori = data.flatMap((r): LavoroWorker[] => {
     const stato = statoLavoro(r.candidatura?.status, recensiti.has(r.job_id), r.data_fine);
