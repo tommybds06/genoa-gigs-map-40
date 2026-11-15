@@ -1732,7 +1732,8 @@ fare vocali, non si può cercare nella chat e vedere i media inviati».
   acceso solo sulle bolle dell'altro (`drag={!isOwn ? "x" : false}`).
 - **Pressione lunga su un messaggio** (450 ms, annullata se il dito si sposta
   di 10 px; anche `contextmenu`, che su Android è la pressione lunga di
-  sistema) → `chat/MenuMessaggio.tsx`, scheda dal basso: Rispondi, Copia.
+  sistema) → Rispondi, Copia (dal 15 novembre nel menu accanto alla bolla,
+  vedi sotto).
   Per questo sul telefono il testo della bolla non si seleziona più
   (`select-none`, col mouse sì).
 - **`chat/SchedaAllega.tsx`**: il bottone a sinistra del campo apre una
@@ -1776,9 +1777,13 @@ Fissa e Nascondi danno «Non sono riuscito…».
   bacheca e notifiche); la lista mostra `chatInLista(chats)`, fissate in cima.
 - Pressione lunga su una riga (`hooks/usePressioneLunga`, un timer per tutta
   la lista; ⚠️ il `click` che segue va fermato in CATTURA, se no si apre
-  anche la chat) → `chat/MenuChat.tsx`: «Fissa in alto» / «Togli dall'alto»
-  (la puntina della bacheca, che compare anche nella riga prima dell'ora) e
-  «Nascondi», con scritto sotto cosa succede. Dopo: toast con «Annulla».
+  anche la chat) → «Fissa in alto» / «Togli dall'alto» (la puntina della
+  bacheca, che compare anche nella riga prima dell'ora) e **«Elimina»**
+  (Tommaso, 15 novembre: la parola è Elimina, la funzione resta nascondere;
+  è anche ciò che fa WhatsApp, dove la chat eliminata torna se l'altro
+  scrive). Dopo: toast «Chat eliminata · Torna se arriva un messaggio
+  nuovo» con «Annulla». ✅ Migration applicata da Lovable il 14 novembre
+  (drizzle 0013).
 - ⚠️ Il banco: l'upsert finto (`postgrest.ts`) non capiva `on_conflict` con
   due colonne e univa tutto nella prima riga. Corretto nel banco.
 
@@ -1797,6 +1802,68 @@ della chat → `chat/CercaInChat.tsx`, una scheda alta fissa (88dvh).
   dell'annuncio si tronca prima («Cameriere per s…») quando c'è «Assumi».
 - Non fatto: la foto a tutto schermo (in chat non c'è nemmeno dalla bolla),
   la ricerca fra TUTTE le chat dalla lista.
+
+**Il secondo giro, 15 novembre** (Tommaso, dal Pixel con dati veri):
+
+- ⚠️ **LA CHAT SI APRIVA A METÀ.** Si andava in fondo in un
+  `requestAnimationFrame` (dopo il primo disegno: un fotogramma in alto,
+  poi il salto) e soprattutto le FOTO arrivano dopo (prima l'indirizzo
+  firmato, poi l'immagine): ognuna allungava la conversazione sopra il
+  punto in cui si era, e il fondo scappava giù. Ora la chat è **incollata
+  al fondo** (`incollato` in Messaggi) finché chi legge non sale oltre
+  80 px: un ResizeObserver su contenuto e area la rimette in fondo a ogni
+  cambio di misura, prima del disegno; all'apertura in un layout effect.
+  Misurato sul banco con 7 foto che arrivano dopo 1,2 s: 160 fotogrammi,
+  sempre a 0 px dal fondo.
+- ⚠️ **LA CHAT RESTA SOTTO IL PROFILO.** Stava a z-[60], sopra le pagine di
+  dettaglio: aprendo un profilo si chiudeva, e tornando rientrava scorrendo
+  da destra MENTRE il profilo usciva a destra, con lo scorrimento da capo
+  («molti scatti»). Ora è a **z-50** come i dettagli ma PRIMA nel documento
+  (le schede stanno prima di `AnimatePresence` in App): il profilo le scorre
+  sopra e al ritorno la scopre ferma. Si chiude solo quando Messaggi non è
+  più `visibile` (un'altra scheda della barra), non più quando non è
+  `attiva`. Per starci sopra, **la barra in basso e `BannerIphone` sono
+  scesi a z-[49]** (a pari z-50 la barra, dopo nel documento, copriva la
+  chat). Verificato: stesso pannello, zero animazioni al rientro, stesso
+  scorrimento. Le schede aperte dalla chat restano a z-[70].
+- **I MENU DELLA PRESSIONE LUNGA sono accanto alla cosa premuta**
+  (`ui/MenuContestuale.tsx`), non più schede dal basso con le righe divise
+  dalla linea (Tommaso: «ripetitiva, imita una gestualità già vista molto
+  nell'app»). È il menu di iOS e Telegram: un velo `ink/35` con un BUCO
+  (`clip-path: path(evenodd, …)`) sulla cosa premuta, che resta chiara, e
+  un foglietto `.material-card` sotto (o sopra se non c'è posto),
+  allineato al lato della bolla. Righe da 48, icone da 20 tutte in
+  inchiostro, niente linee, niente intestazione (la cosa premuta si vede).
+  ⚠️ **Il dito che si alza dalla pressione lunga genera un `click`** che
+  cade sul velo appena comparso: lo richiudeva all'istante (sul banco il
+  menu «non si apriva»). Valgono solo i tocchi COMINCIATI dopo l'apertura
+  (`toccatoDopo`). Cancellati `MenuChat` e `MenuMessaggio`.
+- ⚠️ **LA RICERCA «FA SPARIRE TUTTO»** (cercando, schermo tutto color
+  carta). NON riprodotta: sul banco con la tastiera simulata in tutti e due
+  i modi (copre / rimpicciolisce la finestra) la scheda reggeva. Tolto il
+  sospettato principale: vaul, con un campo a fuoco, RIDIMENSIONA e SPOSTA
+  la scheda seguendo la tastiera con conti che dipendono dal telefono. Ora
+  `repositionInputs={false}` (anche in `NeighborhoodSelect`, stesso
+  schema) e la lista prende sotto lo spazio della tastiera
+  (`hooks/useTastiera`: altezza della pagina meno la parte visibile). E
+  andando al risultato: prima si chiude la tastiera (`blur`) e si scorre
+  SOLO l'area dei messaggi, non con `scrollIntoView` (che scorre tutti i
+  contenitori sopra e la parte visibile della pagina). Da riprovare sul
+  Pixel; se succede ancora, serve sapere il momento esatto.
+- **Foto di «Cerca in chat» tutte con la stessa sagoma** (`sagoma-foto`):
+  alternare la `-b` su miniature da 110 px dava due forme diverse vicine.
+- **LA TESTATA: un modulo da 48** (Tommaso: «la lente piccolina, il tasto
+  indietro gigante, la foto più piccola, bisogna trovare una quadra»).
+  Freccia (tessera 48), foto 48 (era 40), nome in una riga; la lente come
+  la campanella delle altre pagine (28 px nel colore del ruolo, bersaglio
+  44). Sotto, la **STRISCIA DELL'ANNUNCIO**: icona del negozio + titolo su
+  due righe (tocca → scheda) e a destra Assumi / Concludi / lo stato, come
+  in Vinted, Subito, Airbnb. Prima stava tutto in una riga e al titolo
+  restavano ~120 px. «Assumi» ora con `theme.btnFilled` (era
+  `bg-employer-700` scritto a mano). In basso: allega 48, campo 48, invio 48.
+- **Per il VOCALE non serve un bottone in più**: come WhatsApp, Telegram e
+  Messenger, a campo vuoto la tessera dell'invio diventa il microfono (oggi
+  è la tessera «spenta», cioè un bottone morto: è proprio quel posto).
 
 **Fase 4 — da decidere:** vocali.
 

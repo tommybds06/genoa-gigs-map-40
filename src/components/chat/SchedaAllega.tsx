@@ -19,7 +19,7 @@ import { DocumentoIcon, FotoIcon, ImmaginiIcon } from "@/components/icons/uiIcon
  * ⚠️ I tre `<input type="file">` stanno FUORI dalla scheda e restano montati:
  * la scheda si chiude appena si sceglie una voce, e un input smontato mentre
  * il selettore del telefono è aperto perde il file scelto.
- * ⚠️ `z-[70]`: la chat aperta è `z-[60]` (§16).
+ * `z-[70]`: sopra la chat aperta (z-50) e tutto il resto (§18).
  */
 export type TipoScelta = "foto" | "documento";
 

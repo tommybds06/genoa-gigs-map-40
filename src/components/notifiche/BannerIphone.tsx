@@ -42,7 +42,7 @@ export function BannerIphone() {
   };
 
   return (
-    <div className="fixed inset-x-3 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-50">
+    <div className="fixed inset-x-3 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-[49]">
       <div className="material-card flex items-center gap-3 py-3 pl-4 pr-2">
         <img src="/icons/icona-192-v1.png" alt="" className="h-10 w-10 shrink-0 rounded-[10px]" />
         <p className="min-w-0 flex-1 text-sm leading-snug text-ink">

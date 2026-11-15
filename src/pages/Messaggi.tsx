@@ -1,4 +1,4 @@
-import { Fragment, useState, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
+import { Fragment, useCallback, useState, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import { srcLogo } from "@/lib/gerarchia";
 import { Campanella } from "@/components/notifiche/Campanella";
 import { impostaChatAperta, segnaLetteDellaChat } from "@/lib/notifiche/notifiche";
@@ -21,15 +21,14 @@ import { Input } from "@/components/ui/input";
 import { toast } from 'sonner';
 import { MessageBubble } from "@/components/chat/MessageBubble";
 import { SchedaAllega, type TipoScelta } from "@/components/chat/SchedaAllega";
-import { MenuMessaggio } from "@/components/chat/MenuMessaggio";
-import { MAX_BYTE_DOCUMENTO, ePdf, etichettaMessaggio, nomeAllegato, percorsoDocumento, segnapostoAllegato, tipoAllegato } from "@/lib/allegati";
+import { MAX_BYTE_DOCUMENTO, ePdf, eSegnaposto, etichettaMessaggio, nomeAllegato, percorsoDocumento, segnapostoAllegato, tipoAllegato } from "@/lib/allegati";
 import { useChats, scegliPerChat, Chat } from "@/hooks/useChats";
 import { chatInLista } from "@/lib/chatLista";
 import { usePressioneLunga } from "@/hooks/usePressioneLunga";
-import { MenuChat } from "@/components/chat/MenuChat";
+import { MenuContestuale, type AncoraMenu } from "@/components/ui/MenuContestuale";
 import { CercaInChat } from "@/components/chat/CercaInChat";
 import { Puntina1 } from "@/components/icons/puntine";
-import { SearchIcon } from "@/components/icons/uiIcons";
+import { SearchIcon, BidoneIcon, AnnunciIcon } from "@/components/icons/uiIcons";
 import { ChatListSkeleton } from "@/components/skeletons/ChatListSkeleton";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -55,7 +54,7 @@ import { JobDetailsSheet } from "@/components/map/JobDetailsSheet";
 import type { Job } from "@/hooks/useJobs";
 import { GenericoIcon } from "@/components/icons/roleIcons";
 import { OrologioIcon, InfoIcon } from "@/components/icons/uiIcons";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Copy, Reply } from "lucide-react";
 import { useAttachmentUrl } from "@/hooks/useAttachmentUrl";
 import { useMessaggi, inserisciMessaggio, aggiornaMessaggio, type Messaggio, precaricaMessaggi } from "@/hooks/useMessaggi";
 
@@ -68,7 +67,7 @@ const Messaggi = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const { attiva } = useScheda();
+  const { attiva, visibile } = useScheda();
   const queryClient = useQueryClient();
   
   // Use React Query for cached chat list
@@ -90,11 +89,17 @@ const Messaggi = () => {
   const [compilaPer, setCompilaPer] = useState<{ jobId: string; workerId: string } | null>(null);
   // La scheda «Allega» e il menu di un messaggio (pressione lunga): 12 novembre.
   const [allegaAperta, setAllegaAperta] = useState(false);
-  const [menuMessaggio, setMenuMessaggio] = useState<Message | null>(null);
-  // 13 novembre: il menu di una chat (pressione lunga in lista) e «Cerca in chat».
-  const [menuChat, setMenuChat] = useState<Chat | null>(null);
+  /* I menu della pressione lunga (messaggio, chat in lista): accanto alla
+     cosa premuta, non più una scheda dal basso (`ui/MenuContestuale`, 15
+     novembre). L'àncora è il rettangolo della cosa premuta. */
+  const [menuMessaggio, setMenuMessaggio] = useState<{ msg: Message; ancora: AncoraMenu } | null>(null);
+  const [menuChat, setMenuChat] = useState<{ chat: Chat; ancora: AncoraMenu } | null>(null);
   const [cercaAperta, setCercaAperta] = useState(false);
-  const premiChat = usePressioneLunga<Chat>(setMenuChat);
+  const premiChat = usePressioneLunga<Chat>((chat, el) =>
+    setMenuChat({ chat, ancora: { rett: el.getBoundingClientRect(), lato: 'sx', raggio: 14 } })
+  );
+  const apriMenuMessaggio = (msg: Message, bolla: DOMRect) =>
+    setMenuMessaggio({ msg, ancora: { rett: bolla, lato: msg.sender_id === user?.id ? 'dx' : 'sx', raggio: 18 } });
   /* La lista che si vede: senza le chat nascoste, le fissate in cima
      (`lib/chatLista.ts`). `chats` resta intera: una chat nascosta si apre
      ancora dalla bacheca o da una notifica. */
@@ -110,34 +115,53 @@ const Messaggi = () => {
       toast.error('Non sono riuscito a fissarla', { duration: 2300 });
     }
   };
-  const nascondiChat = async (chat: Chat, nascondi = true) => {
+  /* «ELIMINA» — che NASCONDE (15 novembre). Tommaso vuole la parola
+     «Elimina»; la funzione resta quella decisa il 12: sparisce dalla mia
+     lista e torna se arriva un messaggio, coi messaggi di prima. È quello che
+     fa anche WhatsApp con «Elimina chat»: la chat torna se l'altro scrive. Lo
+     dice il toast, con «Annulla». */
+  const eliminaChat = async (chat: Chat, elimina = true) => {
     if (!user) return;
     try {
-      await scegliPerChat(queryClient, user.id, chat.id, { nascosta: nascondi });
+      await scegliPerChat(queryClient, user.id, chat.id, { nascosta: elimina });
       queryClient.invalidateQueries({ queryKey: ['chats'] });
-      if (nascondi) {
-        toast('Chat nascosta', {
-          description: 'Torna se arriva un messaggio.',
+      if (elimina) {
+        toast('Chat eliminata', {
+          description: 'Torna se arriva un messaggio nuovo.',
           duration: 3000,
-          action: { label: 'Annulla', onClick: () => nascondiChat(chat, false) },
+          action: { label: 'Annulla', onClick: () => eliminaChat(chat, false) },
         });
       }
     } catch (e) {
-      console.error('[Politask] nascondi chat', e);
-      toast.error('Non sono riuscito a nasconderla', { duration: 2300 });
+      console.error('[Politask] elimina chat', e);
+      toast.error('Non sono riuscito a eliminarla', { duration: 2300 });
     }
   };
 
   /* Da «Cerca in chat»: la scheda si chiude e la chat scorre al messaggio,
      che lampeggia nella tinta tenue del ruolo. Dopo un attimo: la scheda che
-     scende tiene il fuoco e lo scorrimento finché non ha finito. */
+     scende tiene il fuoco e lo scorrimento finché non ha finito.
+     ⚠️ Prima si chiude la TASTIERA (blur), e si scorre SOLO l'area dei
+     messaggi (`scrollTo` sul suo contenitore). `scrollIntoView` scorre anche
+     tutti i contenitori sopra e la parte visibile della pagina: con la
+     tastiera che si chiude nello stesso momento, è il modo più sicuro di
+     spostare lo schermo dove non c'è niente. E la chat smette di restare
+     incollata in fondo, se no la prima foto che si carica la riporterebbe giù. */
   const vaiAlMessaggio = (id: string) => {
+    (document.activeElement as HTMLElement | null)?.blur();
     setCercaAperta(false);
     window.setTimeout(() => {
-      const riga = messagesContainerRef.current?.querySelector<HTMLElement>(`[data-messaggio="${id}"]`);
-      if (!riga) return;
+      const area = messagesContainerRef.current;
+      const riga = area?.querySelector<HTMLElement>(`[data-messaggio="${id}"]`);
+      if (!area || !riga) return;
       const fermo = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      riga.scrollIntoView({ block: 'center', behavior: fermo ? 'auto' : 'smooth' });
+      const a = area.getBoundingClientRect();
+      const r = riga.getBoundingClientRect();
+      incollato.current = false;
+      area.scrollTo({
+        top: area.scrollTop + r.top - a.top - Math.max(0, (a.height - r.height) / 2),
+        behavior: fermo ? 'auto' : 'smooth',
+      });
       riga.animate(
         [{ backgroundColor: 'hsl(var(--accent))' }, { backgroundColor: 'hsl(var(--accent))', offset: 0.6 }, { backgroundColor: 'transparent' }],
         { duration: 1800, delay: fermo ? 0 : 250 }
@@ -183,19 +207,25 @@ const Messaggi = () => {
     }
   }, [searchParams, chats, location.key]);
 
-  /* La chat è `fixed` a z-[60], sopra le pagine di dettaglio (z-50): quando
-     Messaggi smette di essere attiva si chiude, PRIMA del disegno (se no per
-     un fotogramma coprirebbe la pagina nuova). Per tornarci, il profilo
-     aperto dalla chat lascia «?chat=» nell'indirizzo (`apriProfiloDallaChat`). */
+  /* LA CHAT RESTA SOTTO IL PROFILO (15 novembre). Tommaso: «molti scatti
+     quando si clicca sul profilo e si torna indietro». La chat stava a
+     z-[60], SOPRA le pagine di dettaglio: aprendo un profilo andava chiusa,
+     e al ritorno si riapriva da zero — rientrava scorrendo da destra MENTRE
+     il profilo usciva verso destra, e ripartiva lo scorrimento dei messaggi.
+     Ora sta a z-50, come i dettagli ma prima di loro nel documento: il
+     profilo le scorre SOPRA e al ritorno la scopre ferma com'era, come in
+     una pila di schermate vera. Si chiude solo quando Messaggi non è più
+     SULLO SCHERMO (un'altra scheda della barra), PRIMA del disegno.
+     «?chat=» nell'indirizzo resta, per il gesto «indietro» di Android. */
   useLayoutEffect(() => {
-    if (attiva) return;
+    if (visibile) return;
     setSelectedChat(null);
     setReplyingTo(null);
     setPendingAttachment(null);
     setAllegaAperta(false);
     setMenuMessaggio(null);
     setCercaAperta(false);
-  }, [attiva]);
+  }, [visibile]);
 
   /* La chat aperta per le notifiche (§28): le sue si segnano lette aprendola,
      e quelle che arrivano mentre la si guarda non fanno il toast. */
@@ -309,37 +339,78 @@ const Messaggi = () => {
       });
   }, [messages, selectedChat?.id, user?.id, queryClient]);
 
-  // Scroll management (stile WhatsApp): all'apertura la chat va in fondo (messaggio
-  // più recente) senza animazione; sui nuovi messaggi scrolla in fondo in modo fluido.
-  // Con pochi messaggi il contenuto non riempie l'area, quindi restano in alto (nessuno
-  // scroll necessario) — esattamente come WhatsApp.
+  /* LO SCORRIMENTO: la chat si apre IN FONDO e ci resta (15 novembre).
+     Tommaso: «entri in una chat, fa un piccolo scatto e ti porta da qualche
+     parte a metà». Due difetti:
+     - si andava in fondo in un `requestAnimationFrame`, cioè DOPO il primo
+       disegno: un fotogramma in alto, poi il salto;
+     - e soprattutto le FOTO: l'indirizzo firmato arriva dopo, l'immagine si
+       carica dopo ancora, e ogni foto che compare allunga la conversazione
+       SOPRA il punto in cui si era: il fondo scappava giù e si restava a metà.
+     Ora la chat è «incollata» al fondo finché chi legge non sale da solo
+     (oltre 80 px dal fondo): un ResizeObserver sul contenuto e sull'area la
+     rimette in fondo a ogni cambio di misura — foto caricate, tastiera,
+     messaggi nuovi — prima del disegno. All'apertura si va in fondo in un
+     layout effect, prima del primo disegno. */
   const prevMessagesCountRef = useRef(0);
   const statoUltimo = messages[messages.length - 1]?.stato;
   const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const contenutoChatRef = useRef<HTMLDivElement>(null);
+  const incollato = useRef(true);
+  const ciSonoMessaggi = messages.length > 0;
+  const inFondo = () => {
+    const area = messagesContainerRef.current;
+    if (area) area.scrollTop = area.scrollHeight;
+  };
+
+  // Aprendo una chat: incollata, e in fondo prima del primo disegno.
+  useLayoutEffect(() => {
+    incollato.current = true;
+    prevMessagesCountRef.current = 0;
+    inFondo();
+  }, [selectedChat?.id, messaggiCaricati]);
+
+  // Chi sale da solo si stacca; chi torna in fondo si riattacca.
+  useEffect(() => {
+    const area = messagesContainerRef.current;
+    if (!area) return;
+    const allo = () => {
+      incollato.current = area.scrollHeight - area.scrollTop - area.clientHeight < 80;
+    };
+    area.addEventListener('scroll', allo, { passive: true });
+    return () => area.removeEventListener('scroll', allo);
+  }, [selectedChat?.id, visibile]);
+
+  // Ogni cambio di misura (foto che arrivano, tastiera): se incollata, in fondo.
+  useEffect(() => {
+    const area = messagesContainerRef.current;
+    const contenuto = contenutoChatRef.current;
+    if (!area) return;
+    const osservatore = new ResizeObserver(() => {
+      if (incollato.current) inFondo();
+    });
+    osservatore.observe(area);
+    if (contenuto) osservatore.observe(contenuto);
+    return () => osservatore.disconnect();
+  }, [selectedChat?.id, visibile, ciSonoMessaggi]);
+
+  // Un messaggio nuovo: se è MIO si va sempre in fondo (anche da più su).
   useEffect(() => {
     if (messages.length === 0) {
       prevMessagesCountRef.current = 0;
       return;
     }
-    const container = messagesContainerRef.current;
-    if (!container) return;
-
-    const isInitialLoad = prevMessagesCountRef.current === 0;
-    const hasNewMessages = messages.length > prevMessagesCountRef.current;
-
-    if (isInitialLoad) {
-      // rAF per assicurarsi che il layout sia calcolato prima di scrollare
-      requestAnimationFrame(() => {
-        container.scrollTo({ top: container.scrollHeight });
-      });
-    } else if (hasNewMessages || statoUltimo === 'errore') {
+    const area = messagesContainerRef.current;
+    const nuovi = messages.length > prevMessagesCountRef.current && prevMessagesCountRef.current > 0;
+    const ultimoMio = messages[messages.length - 1]?.sender_id === user?.id;
+    if (area && ((nuovi && ultimoMio) || statoUltimo === 'errore')) {
       // Anche quando l'ultimo messaggio NON PARTE: sotto la bolla compare
-      // «Non inviato · Tocca per riprovare», e senza questo restava sotto il
-      // bordo, invisibile (visto in anteprima).
-      container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
+      // «Non inviato · Tocca per riprovare», e senza questo restava sotto il bordo.
+      incollato.current = true;
+      area.scrollTo({ top: area.scrollHeight, behavior: 'smooth' });
     }
     prevMessagesCountRef.current = messages.length;
-  }, [messages.length, statoUltimo]);
+  }, [messages, statoUltimo, user?.id]);
 
   /* UN ALLEGATO scelto dalla scheda «Allega»: una foto (scattata o dalla
      galleria) o un documento PDF. Si carica subito e resta «in attesa» sopra
@@ -449,6 +520,16 @@ const Messaggi = () => {
 
   const handleReply = (msg: Message) => {
     setReplyingTo(msg);
+  };
+  const chiudiMenuMessaggio = useCallback(() => setMenuMessaggio(null), []);
+  const chiudiMenuChat = useCallback(() => setMenuChat(null), []);
+  const copiaMessaggio = async (msg: Message) => {
+    try {
+      await navigator.clipboard.writeText(msg.content);
+      toast.success('Copiato', { duration: 1500 });
+    } catch {
+      toast.error('Non sono riuscito a copiare', { duration: 1900 });
+    }
   };
 
   // Handle hiring worker (accepted -> hired) - use refs to avoid re-render loops
@@ -631,101 +712,101 @@ const Messaggi = () => {
   };
 
   // Chat detail view
-  const vistaChat = selectedChat && attiva ? (
-      // Fullscreen chat container - covers entire viewport including navbar
-      // z-[60] to be ABOVE the BottomNav which is z-50
+  const vistaChat = selectedChat && visibile ? (
+      // Sopra la barra in basso (z-[49]) e SOTTO le pagine di dettaglio
+      // (z-50, ma dopo nel documento): vedi «la chat resta sotto il profilo».
       <div
         ref={pannelloChat}
         // Dentro la chat il trascinamento orizzontale non cambia scheda
         // (layout/Schede.tsx).
         data-senza-swipe-tab
-        className="fixed inset-0 flex flex-col bg-background z-[60]"
+        className="fixed inset-0 z-50 flex flex-col bg-background"
         style={{ height: '100dvh' }}
       >
-        {/* Chat header - shrink-0 so it doesn't compress */}
-        <header className="shrink-0 z-40 bg-background px-4 pt-8 pb-3">
-          <div className="flex items-center gap-2">
+        {/* LA TESTATA (15 novembre). Tommaso: «la lente piccolina e grigia,
+            il tasto indietro gigante, la foto profilo più piccola: bisogna
+            trovare una quadra», e prepararsi al vocale in basso.
+            Un modulo solo, 48 px, sopra e sotto: freccia (tessera), foto
+            (era 40), e in basso allega, campo e invio. La lente è un'icona
+            di testata come la campanella delle altre pagine: 28 px nel
+            colore del ruolo, bersaglio da 44.
+            Il titolo dell'annuncio e l'azione (Assumi / Concludi / lo stato)
+            scendono in una STRISCIA sotto, come in Vinted, Subito, Airbnb:
+            nelle chat di un marketplace la cosa di cui si parla sta sotto
+            la persona, con la sua azione. Prima stavano tutti in una riga, e
+            al titolo restavano ~120 px («cameriere per sab…»). */}
+        <header className="shrink-0 bg-background px-4 pb-2 pt-8">
+          <div className="flex items-center gap-3">
             <TesseraIndietro onClick={chiudiChat} />
             <button
               type="button"
-              className="shrink-0 touch-feedback"
+              className="flex min-w-0 flex-1 items-center gap-3 text-left transition-opacity active:opacity-70"
               onClick={apriProfiloDallaChat}
               aria-label={`Profilo di ${selectedChat.other_user?.full_name || 'utente'}`}
             >
-              <Avatar seme={selectedChat.other_user?.id} className="h-10 w-10">
+              <Avatar seme={selectedChat.other_user?.id} className="h-12 w-12 shrink-0">
                 <AvatarImage src={selectedChat.other_user?.avatar_url || undefined} />
                 <AvatarFallback className={`${theme.accentBg} ${theme.primaryText}`}>
                   {(selectedChat.other_user?.full_name || 'U')[0].toUpperCase()}
                 </AvatarFallback>
               </Avatar>
-            </button>
-            <div className="flex-1 min-w-0">
-              <button
-                type="button"
-                className="block max-w-full truncate text-left font-semibold text-[15px] leading-tight transition-opacity active:opacity-60"
-                onClick={apriProfiloDallaChat}
-              >
+              <span className="min-w-0 flex-1 truncate text-[17px] font-semibold leading-tight">
                 {selectedChat.other_user?.full_name || 'Utente'}
-              </button>
-              {/* Di che lavoro si parla: toccandolo si riapre la scheda. */}
-              {selectedChat.job?.title && (
-                <button
-                  type="button"
-                  onClick={apriAnnuncio}
-                  className="mt-0.5 flex max-w-full items-center gap-0.5 text-left text-xs text-muted-foreground active:opacity-70"
-                >
-                  <span className="truncate">{selectedChat.job.title}</span>
-                  <ChevronRight className="h-3.5 w-3.5 shrink-0" />
-                </button>
-              )}
-            </div>
-
-            {/* «Cerca in chat»: messaggi, foto e documenti (13 novembre). */}
+              </span>
+            </button>
+            {/* «Cerca in chat»: messaggi, foto e documenti. */}
             <button
               type="button"
               onClick={() => setCercaAperta(true)}
               aria-label="Cerca in chat"
-              className="-mx-1 flex h-11 w-9 shrink-0 items-center justify-center text-ink-soft transition-transform active:scale-90"
+              className="-mr-2 flex h-11 w-11 shrink-0 items-center justify-center transition-transform active:scale-90"
             >
-              <SearchIcon className="h-5 w-5" />
+              <SearchIcon className={cn('h-7 w-7', isEmployer ? 'text-employer' : 'text-primary')} />
             </button>
-
-            {/* HIRE button for Employer when status is 'accepted' (in colloquio) */}
-            {isEmployer && applicationStatus === 'accepted' && (
-              <Button
-                size="sm"
-                className="shrink-0 bg-employer-700 hover:bg-employer-800 text-employer-foreground"
-                onClick={() => setShowHireDialog(true)}
-              >
-                <CheckCircle className="h-4 w-4 mr-1" />
-                <span>Assumi</span>
-              </Button>
-            )}
-            
-            {/* COMPLETE JOB button for Employer when status is 'hired' */}
-            {isEmployer && applicationStatus === 'hired' && (
-              /* Gemello di «Assumi»: stesso chip ritagliato. Prima era un
-                 contorno CSS verde da 1 px accanto a un chip disegnato. Pieno
-                 TENUE nel verde di «Assunto»: chiude un lavoro, non è l'azione
-                 principale (§5, stati). */
-              <Button
-                size="sm"
-                className="shrink-0 bg-success-soft text-success-soft-foreground hover:bg-success-soft/80"
-                onClick={() => setShowCompleteDialog(true)}
-              >
-                <Check className="h-4 w-4 mr-1" />
-                <span className="hidden sm:inline">Concludi lavoro</span>
-                <span className="sm:hidden">Concludi</span>
-              </Button>
-            )}
-            
-            {/* Hired badge for Worker */}
-            {!isEmployer && applicationStatus === 'hired' && <StatusBadge stato="hired" />}
-
-            {/* Completed badge */}
-            {applicationStatus === 'completed' && <StatusBadge stato="completed" />}
           </div>
         </header>
+
+        {/* LA STRISCIA DELL'ANNUNCIO: di che lavoro si parla (toccandola si
+            riapre la scheda) e, a destra, l'azione o lo stato. */}
+        <div className="flex shrink-0 items-center gap-3 px-4 pb-2.5 pt-1">
+          <button
+            type="button"
+            onClick={apriAnnuncio}
+            disabled={!selectedChat.job?.title}
+            className="flex min-h-[44px] min-w-0 flex-1 items-center gap-2 text-left transition-opacity active:opacity-60"
+          >
+            <AnnunciIcon className="h-5 w-5 shrink-0 text-ink-soft" />
+            <span className="line-clamp-2 min-w-0 text-[14px] leading-snug text-ink">
+              {selectedChat.job?.title || 'Annuncio'}
+            </span>
+            <ChevronRight className="h-4 w-4 shrink-0 text-ink-soft" />
+          </button>
+
+          {/* Assumi: l'employer, a candidatura accettata (in colloquio).
+              `theme.btnFilled`: fondo e testo del ruolo insieme (§5). */}
+          {isEmployer && applicationStatus === 'accepted' && (
+            <Button size="sm" className={cn('shrink-0', theme.btnFilled)} onClick={() => setShowHireDialog(true)}>
+              <CheckCircle className="mr-1 h-4 w-4" />
+              <span>Assumi</span>
+            </Button>
+          )}
+
+          {/* Concludi: gemello di «Assumi», pieno TENUE nel verde di
+              «Assunto» (chiude un lavoro, non è l'azione principale). */}
+          {isEmployer && applicationStatus === 'hired' && (
+            <Button
+              size="sm"
+              className="shrink-0 bg-success-soft text-success-soft-foreground hover:bg-success-soft/80"
+              onClick={() => setShowCompleteDialog(true)}
+            >
+              <Check className="mr-1 h-4 w-4" />
+              <span>Concludi</span>
+            </Button>
+          )}
+
+          {!isEmployer && applicationStatus === 'hired' && <StatusBadge stato="hired" />}
+          {applicationStatus === 'completed' && <StatusBadge stato="completed" />}
+        </div>
         {/* La linea disegnata al posto del bordo CSS da 1 px. */}
         <div aria-hidden="true" className="linea-divisoria-sopra shrink-0" />
 
@@ -748,7 +829,7 @@ const Messaggi = () => {
             /* `mt-auto`: la conversazione sta IN FONDO, vicino a dove si
                scrive, e lo spazio vuoto va sopra — come in ogni app di chat.
                Prima partiva dall'alto e lasciava mezzo schermo vuoto in mezzo. */
-            <div className="mt-auto pb-3 pt-1">
+            <div ref={contenutoChatRef} className="mt-auto pb-3 pt-1">
               {messages.map((msg, i) => {
                 const prec = messages[i - 1];
                 const succ = messages[i + 1];
@@ -807,7 +888,7 @@ const Messaggi = () => {
                       isOwn={msg.sender_id === user?.id}
                       isEmployer={isEmployer}
                       onReply={handleReply}
-                      onMenu={setMenuMessaggio}
+                      onMenu={apriMenuMessaggio}
                       continuaGruppo={!nuovoGiorno && stessoGruppo(prec, msg)}
                       chiudeGruppo={!stessoGruppo(msg, succ)}
                       onRiprova={riprovaMessaggio}
@@ -905,12 +986,21 @@ const Messaggi = () => {
           onVai={vaiAlMessaggio}
         />
         <SchedaAllega aperta={allegaAperta} onChiudi={() => setAllegaAperta(false)} onFile={caricaAllegato} />
-        <MenuMessaggio
-          messaggio={menuMessaggio}
-          mio={menuMessaggio?.sender_id === user?.id}
-          nomeAltro={selectedChat.other_user?.full_name || 'Utente'}
-          onChiudi={() => setMenuMessaggio(null)}
-          onRispondi={handleReply}
+        <MenuContestuale
+          ancora={menuMessaggio?.ancora ?? null}
+          onChiudi={chiudiMenuMessaggio}
+          voci={[
+            {
+              chiave: 'rispondi',
+              testo: 'Rispondi',
+              icona: <Reply className="h-5 w-5" />,
+              onScegli: () => menuMessaggio && handleReply(menuMessaggio.msg),
+            },
+            // Copia solo se c'è del testo scritto (non il segnaposto di una foto).
+            ...(menuMessaggio?.msg.content && !eSegnaposto(menuMessaggio.msg.content)
+              ? [{ chiave: 'copia', testo: 'Copia', icona: <Copy className="h-5 w-5" />, onScegli: () => copiaMessaggio(menuMessaggio.msg) }]
+              : []),
+          ]}
         />
 
         {/* Dialog: Hire confirmation */}
@@ -1026,7 +1116,7 @@ const Messaggi = () => {
                        role="button"
                        tabIndex={0}
                        onClick={apri}
-                       /* Tenendo premuto: Fissa in alto / Nascondi (`MenuChat`).
+                       /* Tenendo premuto: Fissa in alto / Elimina (`MenuContestuale`).
                           `select-none`: se no la pressione lunga seleziona il nome. */
                        {...premi}
                        onPointerDown={(e) => {
@@ -1169,11 +1259,29 @@ const Messaggi = () => {
        </div>
      </div>
      {vistaChat}
-     <MenuChat
-       chat={menuChat}
-       onChiudi={() => setMenuChat(null)}
-       onFissa={fissaChat}
-       onNascondi={(c) => nascondiChat(c)}
+     {/* Tenendo premuta una chat: Fissa in alto / Elimina, accanto alla riga.
+         Le due icone uguali per colore e misura: inchiostro, 20 px. */}
+     <MenuContestuale
+       ancora={menuChat?.ancora ?? null}
+       onChiudi={chiudiMenuChat}
+       voci={
+         menuChat
+           ? [
+               {
+                 chiave: 'fissa',
+                 testo: menuChat.chat.fissata_il ? "Togli dall'alto" : 'Fissa in alto',
+                 icona: <Puntina1 className="h-5 w-auto text-ink" />,
+                 onScegli: () => fissaChat(menuChat.chat, !menuChat.chat.fissata_il),
+               },
+               {
+                 chiave: 'elimina',
+                 testo: 'Elimina',
+                 icona: <BidoneIcon className="h-5 w-5 text-ink" />,
+                 onScegli: () => eliminaChat(menuChat.chat),
+               },
+             ]
+           : []
+       }
      />
     </>
   );

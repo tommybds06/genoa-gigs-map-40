@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useTastiera } from "@/hooks/useTastiera";
 import { Check, ChevronDown } from "lucide-react";
 import { GENOA_NEIGHBORHOODS } from "@/constants/geofencing";
 import { MappaIcon, SearchIcon } from "@/components/icons/uiIcons";
@@ -53,6 +54,7 @@ export function NeighborhoodSelect({
   const { isEmployer } = useAppTheme();
   const [aperta, setAperta] = useState(false);
   const [cerca, setCerca] = useState("");
+  const tastiera = useTastiera(aperta);
 
   const blu = variant === "employer" || (variant === "default" && isEmployer);
   const inchiostro = blu ? "text-employer-800" : "text-primary-strong";
@@ -94,7 +96,10 @@ export function NeighborhoodSelect({
         <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
       </button>
 
+      {/* `repositionInputs={false}` + spazio della tastiera in fondo alla
+          lista: vedi `CercaInChat` e `hooks/useTastiera` (15 novembre). */}
       <Drawer
+        repositionInputs={false}
         open={aperta}
         onOpenChange={(o) => {
           setAperta(o);
@@ -122,7 +127,7 @@ export function NeighborhoodSelect({
               />
             </div>
 
-            <div className="mt-2 min-h-0 flex-1 overflow-y-auto overscroll-contain pb-[max(1rem,env(safe-area-inset-bottom))]">
+            <div className="mt-2 min-h-0 flex-1 overflow-y-auto overscroll-contain" style={{ paddingBottom: `max(1rem, calc(env(safe-area-inset-bottom) + ${tastiera}px))` }}>
               {gruppi.length === 0 ? (
                 <p className="py-10 text-center text-sm text-muted-foreground">
                   Nessun quartiere con questo nome

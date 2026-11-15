@@ -3,6 +3,7 @@ import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } f
 import { Input } from "@/components/ui/input";
 import { DocumentoIcon, SearchIcon, XIcon } from "@/components/icons/uiIcons";
 import { useAllegato } from "@/hooks/useAttachmentUrl";
+import { useTastiera } from "@/hooks/useTastiera";
 import { MISURA_FOTO } from "@/lib/foto";
 import { eSegnaposto, nomeAllegato, tipoAllegato } from "@/lib/allegati";
 import { cercaMessaggi, ritaglio } from "@/lib/chatLista";
@@ -32,6 +33,15 @@ import { cn } from "@/lib/utils";
  *   lente magari voleva quelle (come la scelta del quartiere, §22).
  * - I messaggi automatici non si cercano: non li ha scritti nessuno.
  * - `z-[70]`: sopra la chat aperta (§16).
+ * - ⚠️ `repositionInputs={false}` (15 novembre). Tommaso, dal Pixel: cercando
+ *   «sparisce tutto, lo schermo diventa del colore dello sfondo». Con un campo
+ *   a fuoco vaul RIDIMENSIONA e SPOSTA la scheda seguendo la tastiera, con
+ *   conti che dipendono da come il telefono la gestisce (sul banco, con le
+ *   due tastiere simulate, reggeva: non riprodotto). Ora la scheda resta
+ *   ferma e la lista prende sotto lo spazio della tastiera (`useTastiera`).
+ * - Le foto hanno TUTTE la stessa sagoma: alternare `sagoma-foto` e
+ *   `-foto-b` (che in una griglia di profilo dà varietà) qui, su miniature da
+ *   ~110 px, dava due forme diverse una accanto all'altra.
  */
 type Vista = "foto" | "documenti";
 
@@ -43,7 +53,7 @@ const testoCercabile = (m: Messaggio) => {
 
 const quando = (iso: string) => `${etichettaGiorno(iso)}, ${oraMessaggio(iso)}`;
 
-function Miniatura({ m, storta, onVai }: { m: Messaggio; storta: boolean; onVai: (id: string) => void }) {
+function Miniatura({ m, onVai }: { m: Messaggio; onVai: (id: string) => void }) {
   const { url, ripiega, caricata } = useAllegato(m.attachment_url, MISURA_FOTO.miniatura);
   return (
     <button
@@ -53,7 +63,7 @@ function Miniatura({ m, storta, onVai }: { m: Messaggio; storta: boolean; onVai:
       className="aspect-square w-full transition-transform active:scale-95"
     >
       {/* La maschera sul div interno: sul bottone taglierebbe l'anello del fuoco (§6). */}
-      <div className={cn("h-full w-full bg-paper-sunken", storta ? "sagoma-foto-b" : "sagoma-foto")}>
+      <div className="sagoma-foto h-full w-full bg-paper-sunken">
         {url && (
           <img
             src={url}
@@ -129,6 +139,8 @@ export function CercaInChat({
   const staCercando = cerca.trim().length >= 2;
   const chi = (m: Messaggio) => (m.sender_id === mioId ? "Tu" : nomeAltro);
   const inchiostro = isEmployer ? "text-employer-800" : "text-primary-strong";
+  const tastiera = useTastiera(aperta);
+  const fondoLista = { paddingBottom: `max(1rem, calc(env(safe-area-inset-bottom) + ${tastiera}px))` };
 
   const linguetta = (v: Vista, nome: string, n: number) => (
     <button
@@ -148,7 +160,7 @@ export function CercaInChat({
   const vuoto = (testo: string) => <p className="px-4 py-10 text-center text-sm text-ink-soft">{testo}</p>;
 
   return (
-    <Drawer open={aperta} onOpenChange={(o) => !o && onChiudi()}>
+    <Drawer open={aperta} onOpenChange={(o) => !o && onChiudi()} repositionInputs={false}>
       <DrawerContent className="z-[70] h-[88dvh]" overlayClassName="z-[70]">
         <div className="flex min-h-0 flex-1 flex-col px-4">
           <DrawerHeader className="p-0 pb-3 text-left">
@@ -185,7 +197,7 @@ export function CercaInChat({
           </div>
 
           {staCercando ? (
-            <div className="mt-2 min-h-0 flex-1 overflow-y-auto overscroll-contain pb-[max(1rem,env(safe-area-inset-bottom))]">
+            <div className="mt-2 min-h-0 flex-1 overflow-y-auto overscroll-contain" style={fondoLista}>
               {trovati.length === 0
                 ? vuoto(`Nessun messaggio con «${cerca.trim()}»`)
                 : trovati.map((t) => {
@@ -215,14 +227,14 @@ export function CercaInChat({
                 {linguetta("foto", "Foto", foto.length)}
                 {linguetta("documenti", "Documenti", documenti.length)}
               </div>
-              <div className="mt-3 min-h-0 flex-1 overflow-y-auto overscroll-contain pb-[max(1rem,env(safe-area-inset-bottom))]">
+              <div className="mt-3 min-h-0 flex-1 overflow-y-auto overscroll-contain" style={fondoLista}>
                 {vista === "foto" ? (
                   foto.length === 0 ? (
                     vuoto("Nessuna foto in questa chat")
                   ) : (
                     <div className="grid grid-cols-3 gap-2">
-                      {foto.map((m, i) => (
-                        <Miniatura key={m.id} m={m} storta={i % 2 === 1} onVai={onVai} />
+                      {foto.map((m) => (
+                        <Miniatura key={m.id} m={m} onVai={onVai} />
                       ))}
                     </div>
                   )

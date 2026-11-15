@@ -16,8 +16,8 @@ interface MessageBubbleProps {
   isOwn: boolean;
   isEmployer: boolean;
   onReply: (message: Messaggio) => void;
-  /** Pressione lunga (o tasto destro): il menu del messaggio. */
-  onMenu?: (message: Messaggio) => void;
+  /** Pressione lunga (o tasto destro): il menu del messaggio, accanto alla bolla. */
+  onMenu?: (message: Messaggio, bolla: DOMRect) => void;
   /** Il messaggio prima è della stessa persona, vicino nel tempo: stesso gruppo. */
   continuaGruppo: boolean;
   /** Il messaggio dopo NON è della stessa persona: chiude il gruppo. */
@@ -82,8 +82,10 @@ export const MessageBubble = ({
     if (!onMenu || message.stato) return;
     if (Date.now() - menuAperto.current < 800) return;
     menuAperto.current = Date.now();
+    const bolla = ref.current?.getBoundingClientRect();
+    if (!bolla) return;
     if (navigator.vibrate) navigator.vibrate(10);
-    onMenu(message);
+    onMenu(message, bolla);
   };
   const annullaPressione = () => {
     if (pressione.current) window.clearTimeout(pressione.current.timer);
