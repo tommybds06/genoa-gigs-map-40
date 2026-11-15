@@ -1914,6 +1914,16 @@ casi, due giri):
   spenti, se no ogni chat unita salirebbe in cima con la data di oggi.
 - Nella striscia, cartellino e lavoro si cercano per chat **e** lavoro
   corrente: la stessa chat ha anche quelli dei lavori di prima.
+- ⚠️ **L'UNIONE AVEVA NASCOSTO LE CHAT** (Tommaso, account worker: «mi sono
+  scomparse tutte le chat col Masetto»). La principale teneva il SUO stato
+  «nascosta»: chi aveva eliminato proprio quella durante le prove si è
+  ritrovato nascosta la chat unita, cioè tutte le conversazioni con quella
+  persona (torna solo con un messaggio più recente, e quelli uniti erano
+  tutti più vecchi). Correzione `20261115130000_chat_unite_visibili.sql`:
+  toglie «nascosta» alle principali con chat agganciate, solo se messa
+  PRIMA dell'unione (15 novembre, 00:52 UTC). Riprodotto e provato su
+  PGlite. La lezione: unendo dei dati, lo STATO dell'utente legato a uno dei
+  pezzi (nascosta, fissata, letta) non vale per l'insieme.
 - Due lavori aperti insieme con la stessa persona: la striscia mostra il più
   recente, l'altro si raggiunge dalla bacheca. Caso raro, accettato.
 
