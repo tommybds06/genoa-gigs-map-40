@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { GalleryDialog } from "@/components/profile/GalleryDialog";
 import { JobDetailsSheet } from "@/components/map/JobDetailsSheet";
-import { OrologioIcon, CalendarioIcon, IndietroIcon, StellaIcon, DocumentoIcon, FotoIcon, AnnunciAttiviIcon, MappaIcon, StoricoLavoriIcon, AnnunciVuotaIcon, CuoreIcon } from "@/components/icons/uiIcons";
+import { OrologioIcon, IndietroIcon, StellaIcon, DocumentoIcon, FotoIcon, AnnunciAttiviIcon, MappaIcon, StoricoLavoriIcon } from "@/components/icons/uiIcons";
 import { useCuoriWorker } from "@/hooks/useCuoriWorker";
 import { GenericoIcon } from "@/components/icons/roleIcons";
 import { useAppTheme } from "@/hooks/useAppTheme";
@@ -20,6 +20,7 @@ import { Foglietto } from "@/components/ui/Foglietto";
 import { RecensioniRicevute } from "@/components/reviews/RecensioniRicevute";
 import { mediaRecensioni, useRecensioniRicevute } from "@/hooks/useRecensioni";
 import { FotoStampata } from "@/components/ui/FotoStampata";
+import { RigheStorico } from "@/components/profile/RigheStorico";
 import { numeroDa, Scotch, type StrisciaScotch } from "@/components/ui/Scotch";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { NomeConSegno } from "@/components/ui/SegnoVerificato";
@@ -232,7 +233,7 @@ const PublicProfile = () => {
             <div className="material-card p-5">
               <div className="flex items-center gap-2 mb-4">
                 <FotoIcon className={`w-5 h-5 ${isWorkerProfile ? 'text-primary-strong' : 'text-employer-800'}`} />
-                <h3 className="font-bold text-lg">Foto</h3>
+                <h3 className="titolo-mini">Foto</h3>
                 <span className="text-muted-foreground text-sm">({profile.photos.length})</span>
               </div>
               
@@ -284,7 +285,7 @@ const PublicProfile = () => {
               <div className="material-card p-5">
                 <div className="flex items-center gap-2 mb-3">
                   <DocumentoIcon className="w-5 h-5 text-primary-strong" />
-                  <h3 className="font-bold text-lg">Presentazione</h3>
+                  <h3 className="titolo-mini">Presentazione</h3>
                 </div>
                 <p className="text-foreground leading-relaxed">
                   {profile.bio || "Nessuna presentazione inserita."}
@@ -300,7 +301,7 @@ const PublicProfile = () => {
                 <div className="material-card p-5">
                   <div className="flex items-center gap-2 mb-3">
                     <GenericoIcon className="w-5 h-5 text-primary-strong" />
-                    <h3 className="font-bold text-lg">Esperienze</h3>
+                    <h3 className="titolo-mini">Esperienze</h3>
                   </div>
                   <p className="text-foreground leading-relaxed">{profile.experience}</p>
                 </div>
@@ -311,56 +312,26 @@ const PublicProfile = () => {
             {/* Sezione 3: Storico lavori Completati */}
             <div className="px-4 pb-6">
               <div className="material-card p-5">
-                <div className="flex items-center gap-2 mb-4">
+                <h3 className="titolo-mini mb-1 flex items-center gap-2">
                   <StoricoLavoriIcon className="w-5 h-5 text-primary-strong" />
-                  <h3 className="font-bold text-lg">Storico lavori</h3>
-                </div>
+                  Storico lavori
+                  {completedJobs.length > 0 && <span className="text-ink-soft">· {completedJobs.length}</span>}
+                </h3>
                 
                 {completedJobs.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-8 text-center">
-                    <AnnunciVuotaIcon className="w-10 h-10 text-muted-foreground/30 mb-2" />
-                    <p className="text-muted-foreground text-sm">Nessun lavoro completato ancora</p>
-                  </div>
+                  <p className="py-3 text-sm text-ink-soft">Ancora nessun lavoro concluso su Politask.</p>
                 ) : (
-                  <div className="space-y-3">
-                    {completedJobs.map((job) => {
-                      const Icon = getJobIconFromTags(job.tags);
-                      
-                      return (
-                        <div
-                          key={job.applicationId}
-                          className="flex items-start gap-3 p-3 rounded-xl bg-card border-2 border-primary/30"
-                        >
-                          <div className="flex items-center justify-center shrink-0">
-                            <Icon className="w-11 h-11 text-primary-strong" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <h4 className="font-semibold text-sm truncate">{job.title}</h4>
-                            <p className="text-xs text-muted-foreground">{job.employerName}</p>
-                            <div className="flex items-center gap-2 mt-1">
-                              <CalendarioIcon className="w-3 h-3 text-muted-foreground" />
-                              <span className="text-xs text-muted-foreground">
-                                {formatDate(job.completedAt)}
-                              </span>
-                            </div>
-                          </div>
-                          <div className="flex shrink-0 flex-col items-end gap-1.5">
-                            {/* Era un badge a contorno con testo in arancio pastello
-                                (1,8:1): lo stato «Concluso» ha la sua sorgente unica. */}
-                            <StatusBadge stato="completed" />
-                            {/* Il cuore dell'attività: pubblico, è la reputazione
-                                del worker. Senza cuore non si mostra niente. */}
-                            {cuori?.has(job.applicationId) && (
-                              <span className="flex items-center gap-1 text-xs font-medium text-primary-strong">
-                                <CuoreIcon className="h-4 w-4" aria-hidden="true" />
-                                Cuore
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
+                  <RigheStorico
+                    righe={completedJobs.map((job) => ({
+                      id: job.applicationId,
+                      titolo: job.title,
+                      attivita: job.employerName,
+                      data: job.completedAt,
+                      tags: job.tags,
+                      // Il cuore dell'attività: pubblico, è la reputazione del worker.
+                      cuore: !!cuori?.has(job.applicationId),
+                    }))}
+                  />
                 )}
               </div>
             </div>
@@ -377,7 +348,7 @@ const PublicProfile = () => {
                 <div className="material-card p-5">
                   <div className="flex items-center gap-2 mb-3">
                     <DocumentoIcon className="w-5 h-5 text-employer-800" />
-                    <h3 className="font-bold text-lg">Chi siamo</h3>
+                    <h3 className="titolo-mini">Chi siamo</h3>
                   </div>
                   <p className="text-foreground leading-relaxed">{profile.bio}</p>
                 </div>
@@ -392,7 +363,7 @@ const PublicProfile = () => {
                 <div className="material-card p-5">
                   <div className="flex items-center gap-2 mb-3">
                     <GenericoIcon className="w-5 h-5 text-employer-800" />
-                    <h3 className="font-bold text-lg">Chi cerchiamo</h3>
+                    <h3 className="titolo-mini">Chi cerchiamo</h3>
                   </div>
                   <p className="text-foreground leading-relaxed">{profile.looking_for}</p>
                 </div>
@@ -407,7 +378,7 @@ const PublicProfile = () => {
               <div className="material-card p-5">
                 <div className="flex items-center gap-2 mb-3">
                   <StellaIcon className="w-5 h-5 text-employer-800" />
-                  <h3 className="font-bold text-lg">Recensioni</h3>
+                  <h3 className="titolo-mini">Recensioni</h3>
                 </div>
                 <RecensioniRicevute recensioni={reviews} />
               </div>
@@ -419,7 +390,7 @@ const PublicProfile = () => {
               <div className="material-card p-5">
                 <div className="flex items-center gap-2 mb-4">
                   <AnnunciAttiviIcon className="w-5 h-5 text-employer-800" />
-                  <h3 className="font-bold text-lg">Annunci attivi</h3>
+                  <h3 className="titolo-mini">Annunci attivi</h3>
                 </div>
                 
                 {jobs.length === 0 ? (
@@ -465,7 +436,7 @@ const PublicProfile = () => {
                           {job.price && (
                             <p
                               className={cn(
-                                "line-clamp-2 max-w-[38%] shrink-0 text-right text-[15px] font-semibold leading-snug",
+                                "line-clamp-2 max-w-[38%] shrink-0 text-right font-[Shinjo,Outfit,sans-serif] [font-synthesis:none] tracking-[-0.04em] text-[18px] leading-tight",
                                 // L'inchiostro del ruolo di chi guarda, come in Lista: mai il pastello.
                                 isEmployer ? "text-employer-800" : "text-primary-strong"
                               )}

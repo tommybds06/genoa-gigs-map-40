@@ -1,6 +1,7 @@
+import { FreccettaIcon } from "@/components/icons/uiIcons";
 import { useNavigate } from "react-router-dom";
 import { MessaggiIcon } from "@/components/icons/uiIcons";
-import { ChevronRight } from "lucide-react";
+
 import { TesseraIcona } from "@/components/ui/Tessera";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Application, useChatForApplication } from "@/hooks/useApplications";
@@ -82,7 +83,7 @@ export function ApplicationCard({ application, userId }: ApplicationCardProps) {
           </div>
         </div>
 
-        {canOpen && <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />}
+        {canOpen && <FreccettaIcon className="h-5 w-5 shrink-0 text-muted-foreground" />}
       </div>
     </div>
   );

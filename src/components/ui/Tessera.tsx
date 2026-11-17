@@ -39,8 +39,9 @@ const MISURE = {
  * si vede tra mappa e lista. Carta su #A7531B ≈ 4,7:1. Token e non `white`,
  * così in tema scuro si rovescia da sé.
  */
-function useColoriTessera(evidenziata = false) {
-  const { isEmployer } = useAppTheme();
+function useColoriTessera(evidenziata = false, ruolo?: "worker" | "employer") {
+  const { isEmployer: diChiGuarda } = useAppTheme();
+  const isEmployer = ruolo ? ruolo === "employer" : diChiGuarda;
   // Colori come variabili (index.css, «la gerarchia»): con la gerarchia
   // scura il pieno di ruolo diventa scuro e l'evidenza pastello.
   if (evidenziata)
@@ -56,14 +57,18 @@ export function TesseraIcona({
   icona: I,
   misura = "md",
   evidenziata = false,
+  ruolo,
   className,
 }: {
   icona: Icona;
   misura?: keyof typeof MISURE;
   evidenziata?: boolean;
+  /** Il ruolo di cui prendere i colori, se non è quello di chi guarda (lo
+      storico di un worker aperto da un employer resta arancione). */
+  ruolo?: "worker" | "employer";
   className?: string;
 }) {
-  const colori = useColoriTessera(evidenziata);
+  const colori = useColoriTessera(evidenziata, ruolo);
   return (
     <div
       aria-hidden="true"

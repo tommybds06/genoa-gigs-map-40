@@ -1,15 +1,11 @@
+import { FreccettaIcon } from "@/components/icons/uiIcons";
 import { useState } from "react";
 import { Foglietto } from "@/components/ui/Foglietto";
 import { srcLogo } from "@/lib/gerarchia";
 import { TesseraIcona, TesseraIndietro } from "@/components/ui/Tessera";
 import { useNavigate } from "react-router-dom";
 import { MailIcon, DocumentoIcon, EsciIcon, BidoneIcon, ProfiloIcon, InfoIcon } from "@/components/icons/uiIcons";
-import {
-  User,
-  HelpCircle,
-  ChevronRight,
-  Loader2
-} from "lucide-react";
+import { User, HelpCircle, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useAppTheme } from "@/hooks/useAppTheme";
 import { ImpostazioniNotifiche } from "@/components/notifiche/ImpostazioniNotifiche";
@@ -105,7 +101,7 @@ const Settings = () => {
                 <ProfiloIcon className={`w-5 h-5 ${theme.primaryText}`} />
                 <span className="titolo-mini">Modifica profilo</span>
               </div>
-              <ChevronRight className="w-5 h-5 text-muted-foreground" />
+              <FreccettaIcon className="w-5 h-5 text-muted-foreground" />
             </button>
           </div>
         </div>
@@ -130,7 +126,7 @@ const Settings = () => {
                 <InfoIcon className={`w-5 h-5 ${theme.primaryText}`} />
                 <span className="titolo-mini">Assistenza</span>
               </div>
-              <ChevronRight className="w-5 h-5 text-muted-foreground" />
+              <FreccettaIcon className="w-5 h-5 text-muted-foreground" />
             </button>
 
             {/* Terms & Privacy */}
@@ -142,7 +138,7 @@ const Settings = () => {
                 <DocumentoIcon className={`w-5 h-5 ${theme.primaryText}`} />
                 <span className="titolo-mini">Termini e privacy</span>
               </div>
-              <ChevronRight className="w-5 h-5 text-muted-foreground" />
+              <FreccettaIcon className="w-5 h-5 text-muted-foreground" />
             </button>
           </div>
         </div>

@@ -13,6 +13,7 @@ import { useUserApplications } from "@/hooks/useApplications";
 import { JobCardSkeletonList } from "@/components/skeletons/JobCardSkeleton";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ApplicationCard, ApplicationCardSkeleton } from "@/components/applications/ApplicationCard";
+import { CartaCard } from "@/components/ui/CartaCard";
 import { TesseraIcona } from "@/components/ui/Tessera";
 import { inEvidenza, ordinaAnnunci, type Pertinenza } from "@/lib/potenziamento";
 import { registraVista } from "@/lib/statisticheAnnunci";
@@ -112,7 +113,7 @@ const Lista = () => {
 
               <TabsContent value="explore" className="mt-0 focus-visible:outline-none">
                 <h2 className="titolo-sezione mb-3">
-                  Impieghi per Te
+                  Impieghi per te
                 </h2>
                 <JobsList 
                   jobs={jobs} 
@@ -255,10 +256,12 @@ export function JobsList({ jobs, loading, isEmployer, hasTags, onJobClick, sotto
             : job.neighborhood || ((job.lat && job.lng) ? "Genova" : null);
 
         return (
-          <div
+          <CartaCard
             key={job.id}
+            seme={job.id}
+            raggio={RAGGIO_CARTA}
             data-annuncio={job.id}
-            className="material-card flex cursor-pointer items-center gap-3 p-3.5 touch-feedback"
+            className="flex cursor-pointer items-center gap-3 p-3.5 touch-feedback"
             onClick={() => onJobClick(job)}
           >
             {/* IN EVIDENZA = la tessera nell'arancio chiaro + l'etichetta, non
@@ -276,18 +279,21 @@ export function JobsList({ jobs, loading, isEmployer, hasTags, onJobClick, sotto
               <div className="flex max-w-[38%] shrink-0 flex-col items-end gap-1.5">
                 {evidenza && <EtichettaInEvidenza />}
                 {job.price && (
-                  <p className="text-right text-[15px] font-semibold leading-snug text-primary-strong line-clamp-2">
+                  <p className="text-right font-[Shinjo,Outfit,sans-serif] [font-synthesis:none] tracking-[-0.04em] text-[18px] leading-tight text-primary-strong line-clamp-2">
                     {job.price}
                   </p>
                 )}
               </div>
             )}
-          </div>
+          </CartaCard>
         );
       })}
     </div>
   );
 }
+
+/** Prototipo della card di carta (Atlante 2-2): gli angoli da confrontare. */
+const RAGGIO_CARTA = 20;
 
 /** «In evidenza»: l'arancio di brand pieno con l'inchiostro sopra (6,45:1). */
 export function EtichettaInEvidenza() {

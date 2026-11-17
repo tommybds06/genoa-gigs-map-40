@@ -1,6 +1,8 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { useScheda } from "@/hooks/useScheda";
+import { useAppTheme } from "@/hooks/useAppTheme";
+import { Puntina2 } from "@/components/icons/puntine";
 import { cn } from "@/lib/utils";
 
 /**
@@ -29,6 +31,14 @@ import { cn } from "@/lib/utils";
  *   prendeva per «tocco fuori» e richiudeva il menu all'istante) o una voce,
  *   se il foglietto è finito sotto il dito. Valgono solo i tocchi COMINCIATI
  *   dopo l'apertura (`toccatoDopo`).
+ *
+ * LA PUNTINA (Atlante 33/34, 17 novembre). Il foglietto era ancora «un menu
+ * qualunque». Ora è appuntato: una puntina della bacheca in alto al centro,
+ * nel colore del ruolo, che si PIANTA con lo scatto a 12 fps della tessera
+ * dei ruoli mentre il foglietto entra, e il foglietto pende di un grado verso
+ * la cosa premuta. Nel sistema dei segni (§22) la puntina vuol dire
+ * «appeso, si stacca, si tocca»: è proprio un menu, che si toglie al primo
+ * tocco fuori. L'animazione corre insieme all'ingresso: non ritarda niente.
  */
 export interface VoceMenu {
   chiave: string;
@@ -48,6 +58,16 @@ export interface AncoraMenu {
 
 const MARGINE = 16;
 const STACCO = 8;
+/** Sotto la cosa premuta serve più aria: la testa della puntina sporge. */
+const STACCO_SOTTO = 16;
+const FOTOGRAMMA = 1000 / 12;
+/* Come in TesseraRuolo: si alza, si pianta un filo più in basso, torna. */
+const POSE_PIANTA: [number, number, number][] = [
+  [-7, 1.14, -8],
+  [-3, 1.08, -4],
+  [2, 0.92, 3],
+  [0, 1, 0],
+];
 const LARGHEZZA = 232;
 const fermo = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -79,6 +99,8 @@ export function MenuContestuale({
   const foglio = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState<{ top: number; left: number; sotto: boolean } | null>(null);
   const toccatoDopo = useRef(false);
+  const puntina = useRef<HTMLSpanElement>(null);
+  const { isEmployer } = useAppTheme();
 
   useLayoutEffect(() => {
     if (ancora) {
@@ -110,9 +132,9 @@ export function MenuContestuale({
     const H = window.innerHeight;
     const h = el.offsetHeight;
     const w = el.offsetWidth;
-    const sotto = rett.bottom + STACCO + h <= H - MARGINE;
+    const sotto = rett.bottom + STACCO_SOTTO + h <= H - MARGINE;
     const sopra = rett.top - STACCO - h >= MARGINE;
-    const top = sotto ? rett.bottom + STACCO : sopra ? rett.top - STACCO - h : H - MARGINE - h;
+    const top = sotto ? rett.bottom + STACCO_SOTTO : sopra ? rett.top - STACCO - h : H - MARGINE - h;
     const desiderato = lato === "dx" ? rett.right - w : rett.left;
     const left = Math.min(Math.max(desiderato, MARGINE), W - MARGINE - w);
     setPos({ top, left, sotto: sotto || !sopra });
@@ -126,6 +148,13 @@ export function MenuContestuale({
       duration: 160,
       easing: "cubic-bezier(0.22, 1, 0.36, 1)",
     });
+    puntina.current?.animate(
+      POSE_PIANTA.map(([y, sc, g]) => ({
+        transform: `translateY(${y}px) scale(${sc}) rotate(${g}deg)`,
+        easing: "steps(1, end)",
+      })),
+      { duration: FOTOGRAMMA * POSE_PIANTA.length }
+    );
   }, [pos]);
 
   useEffect(() => {
@@ -165,33 +194,49 @@ export function MenuContestuale({
       />
       <div
         ref={foglio}
-        role="menu"
-        className="material-card absolute overflow-hidden bg-card py-1.5"
+        className="absolute"
         style={{
           width: LARGHEZZA,
           top: pos?.top ?? -9999,
           left: pos?.left ?? 0,
+          // Pende di un grado verso la cosa premuta. `rotate`, non
+          // `transform`: così l'ingresso (che anima `transform`) non lo annulla.
+          rotate: lato === "dx" ? "1deg" : "-1deg",
           transformOrigin: `${lato === "dx" ? "right" : "left"} ${pos?.sotto === false ? "bottom" : "top"}`,
         }}
       >
-        {mostrato.voci.map((v) => (
-          <button
-            key={v.chiave}
-            type="button"
-            role="menuitem"
-            onClick={() => {
-              if (!toccatoDopo.current || chiudendo) return;
-              onChiudi();
-              v.onScegli();
-            }}
+        <div role="menu" className="material-card overflow-hidden bg-card py-1.5">
+          {mostrato.voci.map((v) => (
+            <button
+              key={v.chiave}
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                if (!toccatoDopo.current || chiudendo) return;
+                onChiudi();
+                v.onScegli();
+              }}
+              className={cn(
+                "flex h-12 w-full items-center gap-3 px-4 text-left text-[16px] text-ink transition-colors active:bg-accent"
+              )}
+            >
+              <span className="flex h-5 w-5 shrink-0 items-center justify-center">{v.icona}</span>
+              {v.testo}
+            </button>
+          ))}
+        </div>
+        <span
+          ref={puntina}
+          aria-hidden="true"
+          className="pointer-events-none absolute -top-4 left-[calc(50%-10px)] z-10 block w-5 origin-bottom"
+        >
+          <Puntina2
             className={cn(
-              "flex h-12 w-full items-center gap-3 px-4 text-left text-[16px] text-ink transition-colors active:bg-accent"
+              "h-auto w-full drop-shadow-[0_1px_0_hsl(var(--ink)/0.15)]",
+              isEmployer ? "text-employer-700" : "text-primary"
             )}
-          >
-            <span className="flex h-5 w-5 shrink-0 items-center justify-center">{v.icona}</span>
-            {v.testo}
-          </button>
-        ))}
+          />
+        </span>
       </div>
     </div>,
     document.body

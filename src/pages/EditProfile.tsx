@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 // Le icone accanto alle etichette, come nella configurazione del profilo
 // (Atlante, 44-2: in Modifica profilo non c'erano).
 import { SalvaIcon, ProfiloIcon, MappaIcon, PennaIcon, SearchIcon, StoricoLavoriIcon, InstagramIcon, GloboIcon, HashtagIcon } from "@/components/icons/uiIcons";

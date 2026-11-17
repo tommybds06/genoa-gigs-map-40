@@ -1,10 +1,11 @@
+import { FreccettaIcon } from "@/components/icons/uiIcons";
 import { useEffect, useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Header } from '@/components/layout/Header';
 import { useAuth } from '@/hooks/useAuth';
 import { useAppTheme } from '@/hooks/useAppTheme';
 import { supabase } from '@/integrations/supabase/client';
-import { ChevronRight, Loader2, Check } from 'lucide-react';
+import { Loader2, Check } from 'lucide-react';
 import { PennaIcon, BidoneIcon, XIcon, AnnunciIcon, PiuIcon, OrologioIcon } from "@/components/icons/uiIcons";
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -420,7 +421,7 @@ const Annunci = () => {
                         </p>
                       )}
                     </div>
-                    <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
+                    <FreccettaIcon className="h-5 w-5 shrink-0 text-muted-foreground" />
                   </div>
 
                   <div className="mt-4 flex items-center justify-between">
@@ -557,7 +558,7 @@ const Annunci = () => {
                             )}
                           </p>
                         </div>
-                        <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
+                        <FreccettaIcon className="h-5 w-5 shrink-0 text-muted-foreground" />
                       </button>
                     ))}
                     {passati.length > passatiVisibili && (

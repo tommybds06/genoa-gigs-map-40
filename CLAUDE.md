@@ -1218,6 +1218,34 @@ memoria: si fotografano TUTTE le schermate, nei due ruoli e negli stati
 - ⚠️ Lo splash di oggi va segnato «visto» (localStorage), se no le pagine
   della barra aspettano lui e non si montano (§17).
 - Primo Atlante: 17 novembre, 51 scene, 77 immagini.
+- Le PROVE di poche scene: `ATLANTE_OUT=<cartella> node brand/scatta-atlante.mjs
+  lista-esplora,profilo-worker` (filtri separati da virgola, cartella a parte:
+  l'Atlante del giorno non si tocca).
+- **Secondo giro (17 novembre, sera)**:
+  - **`FreccettaIcon`** (disegno di Tommaso, `brand/icone/freccetta.svg`) al
+    posto di TUTTI i chevron di lucide; le altre direzioni con `rotate-*`.
+  - **Paga in Shinjo 18 px** nelle card (Lista, annunci attivi del profilo
+    pubblico, lista del locale sulla mappa): era un badge o Outfit.
+  - **Lo storico lavori** (`profile/RigheStorico.tsx`, una forma per Profilo
+    e Profilo pubblico): righe con la tessera del mestiere, titolo su due
+    righe, «Attività · 23 ott» (l'anno solo se non è quello in corso), il
+    cuore solo come icona; le prime tre, poi «Mostra tutti». Via la
+    fisarmonica, le card dentro la card, «Concluso» e la parola «Cuore».
+    `TesseraIcona ruolo="worker"`: lo storico di un worker visto da
+    un'attività resta arancione. ⚠️ Il worker non legge gli annunci chiusi:
+    nel suo profilo molte righe avranno la valigetta.
+  - **I menu della pressione lunga APPUNTATI** (`ui/MenuContestuale`): una
+    puntina della bacheca in alto al centro, nel colore del ruolo, che si
+    pianta a 12 fps mentre il foglietto entra; il foglietto pende di 1° verso
+    la cosa premuta (`rotate`, non `transform`). Sotto la cosa premuta lo
+    stacco è 16 px: la testa della puntina sporge.
+  - 🧪 **La card di carta** (`ui/CartaCard.tsx`, PROTOTIPO solo in Lista e
+    Profilo): contorno calcolato sulla misura vera (`formaStampa`, come la
+    Polaroid) + lo SPESSORE (la stessa forma 1,6 px più in basso in
+    `paper-line`), senza filtri. Confrontati angoli 12 e 20 contro la sagoma
+    a 9 sezioni: per ora 20, decide Tommaso. Se passa, va su tutte le
+    `.material-card`; se no si torna indietro togliendo `CartaCard`.
+  - Le sezioni del profilo pubblico hanno i titoli in Shinjo (`titolo-mini`).
 
 # 15. La scheda annuncio — la gerarchia, e perché
 

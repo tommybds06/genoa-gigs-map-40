@@ -1,5 +1,6 @@
+import { FreccettaIcon } from "@/components/icons/uiIcons";
 import { useCallback, useEffect, useRef, useState, type PointerEvent as EventoPuntatore } from "react";
-import { ChevronUp, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { BidoneIcon, LucchettoIcon, MicrofonoIcon, PausaSimbolo, PlaySimbolo } from "@/components/icons/uiIcons";
 import { useCerchioImperfetto } from "@/hooks/useCerchioImperfetto";
@@ -352,7 +353,7 @@ export function TastoMicrofono({
           style={{ transform: `translate(-50%, ${Math.max(spinta.dy, -SOGLIA_BLOCCO) * 0.6}px)` }}
         >
           <LucchettoIcon className="h-4 w-4" />
-          <ChevronUp className="h-4 w-4 animate-bounce" />
+          <FreccettaIcon className="-rotate-90 h-4 w-4 animate-bounce" />
         </div>
       )}
       <button

@@ -1,3 +1,4 @@
+import { FreccettaIcon } from "@/components/icons/uiIcons";
 import { Fragment, useCallback, useState, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import { srcLogo } from "@/lib/gerarchia";
 import { Campanella } from "@/components/notifiche/Campanella";
@@ -58,7 +59,7 @@ import { JobDetailsSheet } from "@/components/map/JobDetailsSheet";
 import type { Job } from "@/hooks/useJobs";
 import { GenericoIcon } from "@/components/icons/roleIcons";
 import { OrologioIcon, InfoIcon } from "@/components/icons/uiIcons";
-import { ChevronRight, Copy, Reply } from "lucide-react";
+import { Copy, Reply } from "lucide-react";
 import { useAttachmentUrl } from "@/hooks/useAttachmentUrl";
 import { useMessaggi, inserisciMessaggio, aggiornaMessaggio, type Messaggio, precaricaMessaggi } from "@/hooks/useMessaggi";
 
@@ -855,7 +856,7 @@ const Messaggi = () => {
             <span className="line-clamp-2 min-w-0 text-[14px] leading-snug text-ink">
               {selectedChat.job?.title || 'Annuncio'}
             </span>
-            <ChevronRight className="h-4 w-4 shrink-0 text-ink-soft" />
+            <FreccettaIcon className="h-4 w-4 shrink-0 text-ink-soft" />
           </button>
 
           {/* Assumi: l'employer, a candidatura accettata (in colloquio).

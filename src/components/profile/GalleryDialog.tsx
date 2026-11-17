@@ -1,9 +1,10 @@
+import { FreccettaIcon } from "@/components/icons/uiIcons";
 import { useCallback, useEffect, useRef } from "react";
 import { XIcon } from "@/components/icons/uiIcons";
 import { motion, AnimatePresence, type PanInfo } from "framer-motion";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { FotoStampata } from "@/components/ui/FotoStampata";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+
 import { MISURA_FOTO, ripiegaFoto, urlFoto } from "@/lib/foto";
 
 interface GalleryDialogProps {
@@ -102,7 +103,7 @@ export function GalleryDialog({
 
           {photosCount > 1 && (
             <button type="button" onClick={goToPrevious} aria-label="Foto precedente" className={`${COMANDO} left-2`}>
-              <ChevronLeft className="h-6 w-6" />
+              <FreccettaIcon className="rotate-180 h-6 w-6" />
             </button>
           )}
 
@@ -148,7 +149,7 @@ export function GalleryDialog({
 
           {photosCount > 1 && (
             <button type="button" onClick={goToNext} aria-label="Foto successiva" className={`${COMANDO} right-2`}>
-              <ChevronRight className="h-6 w-6" />
+              <FreccettaIcon className="h-6 w-6" />
             </button>
           )}
         </div>

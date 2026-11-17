@@ -1,3 +1,4 @@
+import { FreccettaIcon } from "@/components/icons/uiIcons";
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -8,7 +9,7 @@ import {
 } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ChevronRight, Loader2, Check } from "lucide-react";
+import { Loader2, Check } from "lucide-react";
 import { MappaIcon, OrologioIcon, InfoIcon } from "@/components/icons/uiIcons";
 import { annuncioScaduto } from "@/lib/scadenzaAnnunci";
 import { useUser } from "@/contexts/UserContext";
@@ -510,7 +511,7 @@ export function JobDetailsSheet({ job, isOpen, onClose, showMiniMap = false, sop
                 </p>
                 <p className="text-[13px] text-muted-foreground">Vedi profilo</p>
               </div>
-              <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0" />
+              <FreccettaIcon className="w-5 h-5 text-muted-foreground shrink-0" />
             </button>
 
             {/* 3. I DETTAGLI */}

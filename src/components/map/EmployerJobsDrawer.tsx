@@ -1,4 +1,5 @@
-import { ChevronRight } from "lucide-react";
+import { FreccettaIcon } from "@/components/icons/uiIcons";
+
 import { OrologioIcon } from "@/components/icons/uiIcons";
 import { MappaIcon } from "@/components/icons/uiIcons";
 import { useNavigate } from "react-router-dom";
@@ -9,7 +10,6 @@ import {
   DrawerTitle,
 } from "@/components/ui/drawer";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { TesseraIcona } from "@/components/ui/Tessera";
 import { useAppTheme } from "@/hooks/useAppTheme";
 import { getJobIconFromTags } from "@/lib/jobIcons";
@@ -96,7 +96,7 @@ export function EmployerJobsDrawer({
                   </p>
                 )}
               </div>
-              <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0" />
+              <FreccettaIcon className="w-5 h-5 text-muted-foreground shrink-0" />
             </button>
             <p className="text-sm text-muted-foreground">
               {jobs.length} annunci disponibili
@@ -157,15 +157,18 @@ export function EmployerJobsDrawer({
                           </div>
                         )}
                         {job.price && (
-                          <Badge className={`${theme.btnFilled} text-xs px-2 py-0.5 rounded-full`}>
+                          /* La paga come in tutte le card: Shinjo a 18 px
+                             nell'inchiostro del ruolo, non un badge pieno
+                             (sembrava un bottone, §15). */
+                          <p className={cn("font-[Shinjo,Outfit,sans-serif] [font-synthesis:none] tracking-[-0.04em] text-[18px] leading-tight", isEmployer ? "text-employer-800" : "text-primary-strong")}>
                             {job.price}
-                          </Badge>
+                          </p>
                         )}
                       </div>
                     </div>
                     
                     {/* Arrow */}
-                    <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0" />
+                    <FreccettaIcon className="w-5 h-5 text-muted-foreground shrink-0" />
                   </button>
                 );
               })}

@@ -1,6 +1,7 @@
+import { FreccettaIcon } from "@/components/icons/uiIcons";
 import { useMemo, useState } from "react";
 import { useTastiera } from "@/hooks/useTastiera";
-import { Check, ChevronDown } from "lucide-react";
+import { Check } from "lucide-react";
 import { GENOA_NEIGHBORHOODS } from "@/constants/geofencing";
 import { MappaIcon, SearchIcon } from "@/components/icons/uiIcons";
 import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
@@ -93,7 +94,7 @@ export function NeighborhoodSelect({
         <span className={cn("min-w-0 flex-1 truncate", !value && "text-muted-foreground")}>
           {value || placeholder}
         </span>
-        <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
+        <FreccettaIcon className="rotate-90 h-4 w-4 shrink-0 opacity-50" />
       </button>
 
       {/* `repositionInputs={false}` + spazio della tastiera in fondo alla

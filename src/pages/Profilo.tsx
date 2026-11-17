@@ -23,7 +23,11 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { soloRuoli } from "@/constants/tags";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
+import { CartaCard } from "@/components/ui/CartaCard";
 import { WorkerJobHistory } from "@/components/profile/WorkerJobHistory";
+
+/** Prototipo della card di carta (Atlante 2-2): gli angoli da confrontare. */
+const RAGGIO_CARTA = 20;
 
 const Profilo = () => {
   const { user } = useAuth();
@@ -158,7 +162,7 @@ const Profilo = () => {
             (Tommaso, 23 ottobre: «troppo incasinato»). Le sezioni con
             bottoni dentro (Interessi) e lo storico ne restano senza. */}
         <Foglietto seme="intestazione" scotch={[{ pezzo: "corto", lato: "sopraSx" }]}>
-        <div className="material-card-elevated p-6 mb-4">
+        <CartaCard seme="intestazione" raggio={RAGGIO_CARTA} className="p-6 mb-4">
           <div className="flex items-center gap-4">
             {/* Cerchio imperfetto (ui/avatar). Via l'ombra: il ritaglio la
                 taglierebbe a tratti. */}
@@ -200,29 +204,29 @@ const Profilo = () => {
           {/* Allineati a sinistra come il resto della card; `-ml-2` compensa
               il padding del primo link, che c'è per il bersaglio di tocco. */}
           <LinkSocial social={profile?.social_links} employer={isEmployer} className="mt-3 -ml-2 justify-start" />
-        </div>
+        </CartaCard>
         </Foglietto>
 
         {profile?.bio && (
           /* L'unica card con lo scotch sull'ANGOLO (Tommaso): in alto a destra. */
           <Foglietto seme="bio" scotch={[{ pezzo: "cortoB", lato: "dx" }]}>
-          <div className="material-card tilt-l p-4 mb-4">
+          <CartaCard seme="bio" raggio={RAGGIO_CARTA} className="tilt-l p-4 mb-4">
             <h3 className="titolo-mini mb-2 flex items-center gap-2">
               <ProfiloIcon className={`w-4 h-4 ${primaryTextClasses}`} />{isEmployer ? "Descrizione" : "Presentazione"}
             </h3>
             <p className="text-sm text-muted-foreground leading-relaxed">{profile.bio}</p>
-          </div>
+          </CartaCard>
           </Foglietto>
         )}
 
         {isEmployer && profile?.looking_for && (
           <Foglietto seme="cerco" scotch={[{ pezzo: "corto", lato: "sopraSx" }]}>
-          <div className="material-card tilt-r p-4 mb-4">
+          <CartaCard seme="cerco" raggio={RAGGIO_CARTA} className="tilt-r p-4 mb-4">
             <h3 className="titolo-mini mb-2 flex items-center gap-2">
               <GenericoIcon className={`w-4 h-4 ${primaryTextClasses}`} />Chi cerco
             </h3>
             <p className="text-sm text-muted-foreground leading-relaxed">{profile.looking_for}</p>
-          </div>
+          </CartaCard>
           </Foglietto>
         )}
 
@@ -231,7 +235,7 @@ const Profilo = () => {
             alla volta. I worker ricevono i cuori, non le recensioni. */}
         {isEmployer && (
           <Foglietto seme="recensioni" scotch={[{ pezzo: "cortoB", lato: "sopraDx" }]}>
-          <div className="material-card tilt-r p-4 mb-4">
+          <CartaCard seme="recensioni" raggio={RAGGIO_CARTA} className="tilt-r p-4 mb-4">
             <h3 className="titolo-mini mb-3 flex items-center gap-2">
               <StellaIcon className={`w-4 h-4 ${primaryTextClasses}`} />Le tue recensioni
             </h3>
@@ -239,23 +243,23 @@ const Profilo = () => {
               recensioni={recensioni}
               vuoto="Ancora nessuna. Arrivano quando un lavoro si conclude."
             />
-          </div>
+          </CartaCard>
           </Foglietto>
         )}
 
         {!isEmployer && profile?.experience && (
           <Foglietto seme="esperienze" scotch={[{ pezzo: "corto", lato: "sopraSx", dritto: true }]}>
-          <div className="material-card tilt-l p-4 mb-4">
+          <CartaCard seme="esperienze" raggio={RAGGIO_CARTA} className="tilt-l p-4 mb-4">
             <h3 className="titolo-mini mb-2 flex items-center gap-2">
               <GenericoIcon className={`w-4 h-4 ${primaryTextClasses}`} />Esperienze
             </h3>
             <p className="text-sm text-muted-foreground leading-relaxed">{profile.experience}</p>
-          </div>
+          </CartaCard>
           </Foglietto>
         )}
 
         {!isEmployer && (
-          <div className="material-card tilt-r p-4 mb-4">
+          <CartaCard seme="interessi" raggio={RAGGIO_CARTA} className="tilt-r p-4 mb-4">
             <div className="flex items-center justify-between mb-3">
               <h3 className="titolo-mini flex items-center gap-2"><CuoreIcon className={`w-4 h-4 ${primaryTextClasses}`} />I tuoi interessi</h3>
               <div className="flex gap-2">
@@ -280,7 +284,7 @@ const Profilo = () => {
               // così non serve nessuna migration sui dati.
               <TagBadges tags={soloRuoli(selectedTags)} />
             )}
-          </div>
+          </CartaCard>
         )}
 
         {!isEmployer && <WorkerJobHistory primaryTextClasses={primaryTextClasses} />}
@@ -288,7 +292,7 @@ const Profilo = () => {
         {/* Al CENTRO del bordo alto (Tommaso, 26 ottobre): a destra faceva
             coppia con quello delle recensioni appena sopra. */}
         <Foglietto seme="informazioni" scotch={[{ pezzo: "cortoB", lato: "centro" }]}>
-        <div className="material-card tilt-l p-4 mb-4">
+        <CartaCard seme="informazioni" raggio={RAGGIO_CARTA} className="tilt-l p-4 mb-4">
           <h3 className="titolo-mini mb-3 flex items-center gap-2"><InfoIcon className={`w-4 h-4 ${primaryTextClasses}`} />Informazioni</h3>
           <div className="space-y-3">
             {profile?.neighborhood ? (
@@ -301,7 +305,7 @@ const Profilo = () => {
               <span>Ruolo: <span className={`font-medium ${primaryTextClasses}`}>{isEmployer ? "Employer" : "Worker"}</span></span>
             </div>
           </div>
-        </div>
+        </CartaCard>
         </Foglietto>
 
            {/* "Esci" vive solo in Impostazioni: era duplicato qui e lì, e le

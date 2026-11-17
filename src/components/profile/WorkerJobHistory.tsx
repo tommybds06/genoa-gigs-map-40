@@ -2,16 +2,10 @@ import { useQuery } from '@tanstack/react-query';
 import { useCuoriWorker } from '@/hooks/useCuoriWorker';
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { Loader2, ChevronDown } from "lucide-react";
-import { CalendarioIcon, AnnunciIcon, StoricoLavoriIcon, CuoreIcon } from "@/components/icons/uiIcons";
-import { GenericoIcon } from "@/components/icons/roleIcons";
-import { useNavigate } from "react-router-dom";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+import { Loader2 } from "lucide-react";
+import { StoricoLavoriIcon } from "@/components/icons/uiIcons";
+import { CartaCard } from "@/components/ui/CartaCard";
+import { RigheStorico } from "@/components/profile/RigheStorico";
 
 interface CompletedJob {
   id: string;
@@ -25,20 +19,12 @@ interface CompletedJob {
     schedule: string | null;
     created_at: string;
     owner_id: string;
+    tags: string[] | null;
   } | null;
   employer: {
     id: string;
     full_name: string | null;
   } | null;
-}
-
-function formatJobDate(dateString: string): string {
-  const date = new Date(dateString);
-  return date.toLocaleDateString('it-IT', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric'
-  });
 }
 
 interface WorkerJobHistoryProps {
@@ -76,7 +62,7 @@ async function caricaStorico(userId: string): Promise<CompletedJob[]> {
   const { data: annunci } = idAnnunci.length
     ? await supabase
         .from('jobs')
-        .select('id, title, schedule, created_at, owner_id')
+        .select('id, title, schedule, created_at, owner_id, tags')
         .in('id', idAnnunci)
     : { data: [] };
 
@@ -103,6 +89,7 @@ async function caricaStorico(userId: string): Promise<CompletedJob[]> {
             schedule: annuncio.schedule,
             created_at: annuncio.created_at,
             owner_id: annuncio.owner_id,
+            tags: annuncio.tags,
           }
         : null,
       employer: annuncio?.owner_id ? employerPerId.get(annuncio.owner_id) ?? null : null,
@@ -112,7 +99,6 @@ async function caricaStorico(userId: string): Promise<CompletedJob[]> {
 
 export const WorkerJobHistory = ({ primaryTextClasses }: WorkerJobHistoryProps) => {
   const { user } = useAuth();
-  const navigate = useNavigate();
 
   const { data: cuori } = useCuoriWorker(user?.id);
   const { data: jobs = [], isLoading: loading } = useQuery({
@@ -121,73 +107,34 @@ export const WorkerJobHistory = ({ primaryTextClasses }: WorkerJobHistoryProps) 
     enabled: !!user?.id,
   });
 
-  if (loading) {
-    return (
-      <div className="material-card p-4 mb-4 animate-fade-in">
-        <h3 className="titolo-mini mb-3 flex items-center gap-2">
-          <StoricoLavoriIcon className={`w-4 h-4 ${primaryTextClasses}`} />
-          Storico lavori completati
-        </h3>
+  return (
+    <CartaCard seme="storico" raggio={20} className="p-4 mb-4">
+      <h3 className="titolo-mini mb-1 flex items-center gap-2">
+        <StoricoLavoriIcon className={`w-5 h-5 ${primaryTextClasses}`} />
+        Storico lavori
+        {jobs.length > 0 && <span className="text-ink-soft">· {jobs.length}</span>}
+      </h3>
+      {loading ? (
         <div className="flex items-center justify-center py-6">
           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
         </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="material-card p-4 mb-4">
-      <Accordion type="single" collapsible className="w-full">
-        <AccordionItem value="job-history" className="border-none">
-          <AccordionTrigger className="py-0 hover:no-underline">
-            <h3 className="titolo-mini flex items-center gap-2">
-              <StoricoLavoriIcon className={`w-4 h-4 ${primaryTextClasses}`} />
-              Storico lavori completati ({jobs.length})
-            </h3>
-          </AccordionTrigger>
-          <AccordionContent className="pt-3">
-            {jobs.length === 0 ? (
-              <div className="text-center py-4">
-                <p className="text-sm text-muted-foreground">
-                  Nessun lavoro completato ancora
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {jobs.map((job) => (
-                  <div
-                    key={job.id}
-                    className="bg-muted/50 rounded-xl p-3 cursor-pointer hover:bg-muted active:bg-muted transition-colors"
-                    onClick={() => job.employer?.id && navigate(`/profile/${job.employer.id}`)}
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <h4 className="font-medium text-sm">{job.job?.title || job.job_title || 'Lavoro'}</h4>
-                      {/* Il cuore dell'attività, se l'ha lasciato. Senza cuore
-                          non si mostra niente: non è un voto negativo. */}
-                      {cuori?.has(job.id) && (
-                        <span className="flex shrink-0 items-center gap-1 text-xs font-medium text-primary-strong">
-                          <CuoreIcon className="h-4 w-4" aria-hidden="true" />
-                          <span className="sr-only">Cuore dall'attività</span>
-                        </span>
-                      )}
-                    </div>
-                    
-                    <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
-                      <AnnunciIcon className="w-3.5 h-3.5" />
-                      <span>{job.employer?.full_name || job.employer_name || 'Attività'}</span>
-                    </div>
-                    
-                    <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
-                      <CalendarioIcon className="w-3.5 h-3.5" />
-                      <span>{formatJobDate(job.created_at)}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
-    </div>
+      ) : jobs.length === 0 ? (
+        <p className="py-3 text-sm text-ink-soft">
+          Qui finiranno i lavori conclusi, con il cuore di chi ti ha preso.
+        </p>
+      ) : (
+        <RigheStorico
+          righe={jobs.map((job) => ({
+            id: job.id,
+            titolo: job.job?.title || job.job_title || 'Lavoro',
+            attivita: job.employer?.full_name || job.employer_name || 'Attività',
+            data: job.created_at,
+            tags: job.job?.tags ?? [],
+            cuore: !!cuori?.has(job.id),
+            employerId: job.employer?.id ?? null,
+          }))}
+        />
+      )}
+    </CartaCard>
   );
 };

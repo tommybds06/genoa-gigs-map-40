@@ -1,5 +1,6 @@
+import { FreccettaIcon } from "@/components/icons/uiIcons";
 import { CSSProperties, useState } from "react";
-import { ChevronDown } from "lucide-react";
+
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { PiuIcon } from "@/components/icons/uiIcons";
 import { useAuth } from "@/hooks/useAuth";
@@ -97,7 +98,7 @@ export function Bacheca({ onApriChat }: BachecaProps) {
         <Collapsible className="mt-8">
           <CollapsibleTrigger className="group linea-divisoria-sopra flex w-full items-center justify-between pt-4 text-left">
             <span className="titolo-mini">Conclusi · {conclusi.length}</span>
-            <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
+            <FreccettaIcon className="rotate-90 h-5 w-5 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
           </CollapsibleTrigger>
           <CollapsibleContent>
             <ul className="mt-2">

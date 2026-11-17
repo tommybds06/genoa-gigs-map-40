@@ -1,11 +1,12 @@
 // L'ATLANTE — tutte le schermate, per la revisione di Tommaso.
-// node brand/scatta-atlante.mjs [filtro]   (banco montato: banco.sh su; server di sviluppo su 8080)
+// node brand/scatta-atlante.mjs [filtro[,filtro…]]   (ATLANTE_OUT=cartella per le prove)   (banco montato: banco.sh su; server di sviluppo su 8080)
 // Telefono: 390×844 a 2,625 (il Pixel 9a), JPEG. Le pagine lunghe in più parti.
 import { chromium } from "/Users/tommasobruschidesimone/Downloads/POLITASK/POLITASK.ASSET/node_modules/playwright/index.mjs";
 import fs from "node:fs";
 
 const OGGI = (() => { const x = new Date(); return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, "0")}-${String(x.getDate()).padStart(2, "0")}`; })();
-const OUT = `/Users/tommasobruschidesimone/Downloads/POLITASK/POLITASK.ASSET/atlante/${OGGI}`;
+// ATLANTE_OUT: una cartella a parte per le prove, così l'Atlante del giorno non si tocca.
+const OUT = process.env.ATLANTE_OUT ?? `/Users/tommasobruschidesimone/Downloads/POLITASK/POLITASK.ASSET/atlante/${OGGI}`;
 fs.mkdirSync(OUT, { recursive: true });
 const BASE = "http://127.0.0.1:8080/guida.html";
 const MAREA = "9d1da000-0000-4000-a000-000000000001";
@@ -184,7 +185,8 @@ const SCENE = [
 ];
 
 for (const [nome, titolo, fai, opz] of SCENE) {
-  if (FILTRO && !nome.includes(FILTRO)) continue;
+  // Più filtri separati da virgola: «lista-esplora,profilo-worker».
+  if (FILTRO && !FILTRO.split(",").some((f) => nome.includes(f))) continue;
   const { ctx, page } = await telefono(opz?.svuota ?? []);
   try { await fai(page); await foto(page, nome, titolo, opz); }
   catch (e) { numero += 1; console.log("✗", nome, "→", e.message.split("\n")[0].slice(0, 140)); indice.push({ nome: `${String(numero).padStart(2, "0")}-${nome}`, titolo, file: [], errore: e.message.split("\n")[0] }); }
