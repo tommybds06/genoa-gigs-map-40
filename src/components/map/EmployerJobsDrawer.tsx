@@ -157,10 +157,10 @@ export function EmployerJobsDrawer({
                           </div>
                         )}
                         {job.price && (
-                          /* La paga come in tutte le card: Shinjo a 18 px
-                             nell'inchiostro del ruolo, non un badge pieno
-                             (sembrava un bottone, §15). */
-                          <p className={cn("font-[Shinjo,Outfit,sans-serif] [font-synthesis:none] tracking-[-0.04em] text-[18px] leading-tight", isEmployer ? "text-employer-800" : "text-primary-strong")}>
+                          /* La paga come in tutte le card: Outfit nell'inchiostro
+                             del ruolo, non un badge pieno (sembrava un bottone,
+                             §15). Provata in Shinjo 18: bocciata, andava a capo. */
+                          <p className={cn("text-[15px] font-semibold leading-snug", isEmployer ? "text-employer-800" : "text-primary-strong")}>
                             {job.price}
                           </p>
                         )}

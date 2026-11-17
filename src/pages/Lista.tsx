@@ -279,7 +279,7 @@ export function JobsList({ jobs, loading, isEmployer, hasTags, onJobClick, sotto
               <div className="flex max-w-[38%] shrink-0 flex-col items-end gap-1.5">
                 {evidenza && <EtichettaInEvidenza />}
                 {job.price && (
-                  <p className="text-right font-[Shinjo,Outfit,sans-serif] [font-synthesis:none] tracking-[-0.04em] text-[18px] leading-tight text-primary-strong line-clamp-2">
+                  <p className="text-right text-[15px] font-semibold leading-snug text-primary-strong line-clamp-2">
                     {job.price}
                   </p>
                 )}

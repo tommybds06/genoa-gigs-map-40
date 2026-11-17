@@ -1224,8 +1224,10 @@ memoria: si fotografano TUTTE le schermate, nei due ruoli e negli stati
 - **Secondo giro (17 novembre, sera)**:
   - **`FreccettaIcon`** (disegno di Tommaso, `brand/icone/freccetta.svg`) al
     posto di TUTTI i chevron di lucide; le altre direzioni con `rotate-*`.
-  - **Paga in Shinjo 18 px** nelle card (Lista, annunci attivi del profilo
-    pubblico, lista del locale sulla mappa): era un badge o Outfit.
+  - **Paga in Shinjo 18 px** nelle card: PROVATA E BOCCIATA (Tommaso:
+    «stavano meglio prima in Outfit su una riga»; in Shinjo «60€ forfait
+    netti» andava a capo). Resta Outfit 15 semibold nell'inchiostro del
+    ruolo, anche nella lista del locale sulla mappa (era un badge pieno).
   - **Lo storico lavori** (`profile/RigheStorico.tsx`, una forma per Profilo
     e Profilo pubblico): righe con la tessera del mestiere, titolo su due
     righe, «Attività · 23 ott» (l'anno solo se non è quello in corso), il
@@ -1238,7 +1240,14 @@ memoria: si fotografano TUTTE le schermate, nei due ruoli e negli stati
     puntina della bacheca in alto al centro, nel colore del ruolo, che si
     pianta a 12 fps mentre il foglietto entra; il foglietto pende di 1° verso
     la cosa premuta (`rotate`, non `transform`). Sotto la cosa premuta lo
-    stacco è 16 px: la testa della puntina sporge.
+    stacco è 16 px: la testa della puntina sporge. Piantata la puntina, il
+    foglietto DONDOLA attorno a lei e si ferma (pose del pendolo dello scotch,
+    più piccole, 12 fps, mezzo secondo: un menu che continua a muoversi fa
+    sbagliare il tocco). Misurato: 0 → 1,8 → −1,4 → 0,9 → −0,5 → 0,2 → fermo.
+  - **La PUNTINA anche sulle card** (`Foglietto puntina="sopraSx|sopraDx"`):
+    sulle sezioni che si TOCCANO — Interessi e Storico del proprio Profilo.
+    Senza niente erano un buco nel ritmo fra fogli attaccati. Lo storico nel
+    profilo PUBBLICO si legge soltanto (righe non toccabili): lì lo scotch.
   - 🧪 **La card di carta** (`ui/CartaCard.tsx`, PROTOTIPO solo in Lista e
     Profilo): contorno calcolato sulla misura vera (`formaStampa`, come la
     Polaroid) + lo SPESSORE (la stessa forma 1,6 px più in basso in

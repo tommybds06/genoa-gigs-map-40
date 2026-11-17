@@ -311,6 +311,10 @@ const PublicProfile = () => {
 
             {/* Sezione 3: Storico lavori Completati */}
             <div className="px-4 pb-6">
+              {/* Qui lo storico si LEGGE (le righe non portano da nessuna parte): lo
+                  scotch, come le altre sezioni. Nel proprio Profilo invece
+                  ha la puntina, perché le righe si toccano. */}
+              <Foglietto seme="storico" employer={false} scotch={[{ pezzo: "cortoB", lato: "sopraDx" }]}>
               <div className="material-card p-5">
                 <h3 className="titolo-mini mb-1 flex items-center gap-2">
                   <StoricoLavoriIcon className="w-5 h-5 text-primary-strong" />
@@ -334,6 +338,7 @@ const PublicProfile = () => {
                   />
                 )}
               </div>
+              </Foglietto>
             </div>
           </>
         )}
@@ -436,7 +441,7 @@ const PublicProfile = () => {
                           {job.price && (
                             <p
                               className={cn(
-                                "line-clamp-2 max-w-[38%] shrink-0 text-right font-[Shinjo,Outfit,sans-serif] [font-synthesis:none] tracking-[-0.04em] text-[18px] leading-tight",
+                                "line-clamp-2 max-w-[38%] shrink-0 text-right text-[15px] font-semibold leading-snug",
                                 // L'inchiostro del ruolo di chi guarda, come in Lista: mai il pastello.
                                 isEmployer ? "text-employer-800" : "text-primary-strong"
                               )}

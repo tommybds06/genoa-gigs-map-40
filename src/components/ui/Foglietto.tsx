@@ -8,6 +8,8 @@ import {
   type ReactElement,
 } from "react";
 import { DENTRO_X, DENTRO_Y, numeroDa, Scotch, SOPRA_DX, SOPRA_SX, type StrisciaScotch } from "@/components/ui/Scotch";
+import { PUNTINE } from "@/components/icons/puntine";
+import { useAppTheme } from "@/hooks/useAppTheme";
 
 /**
  * UN FOGLIETTO ATTACCATO CON LO SCOTCH (Tommaso, 23 ottobre).
@@ -31,13 +33,22 @@ import { DENTRO_X, DENTRO_Y, numeroDa, Scotch, SOPRA_DX, SOPRA_SX, type Striscia
  *    `pointercancel`, e comunque oltre gli 8 px di spostamento non vale;
  *  - non parte su link e bottoni dentro la card, né se si sta selezionando
  *    del testo; con «riduci movimento» non parte affatto.
+ *
+ * LA PUNTINA al posto dello scotch (`puntina`, 17 novembre): sulle sezioni
+ * che si TOCCANO (Interessi con «Modifica», lo storico con le righe che
+ * portano all'attività). Nel sistema dei segni la puntina vuol dire «appeso,
+ * si maneggia» (§22): senza niente, quelle due card restavano un buco nel
+ * ritmo del profilo, due fogli «da app» fra fogli attaccati. Il foglio
+ * oscilla attorno a lei, come attorno a uno scotch solo.
  */
 
 interface FogliettoProps {
   /** La card: un elemento solo (un `div` con `.material-card`). */
   children: ReactElement;
   /** Uno scotch in alto (centro o un angolo), o due sugli angoli. */
-  scotch: StrisciaScotch[];
+  scotch?: StrisciaScotch[];
+  /** Una puntina invece dello scotch, sul bordo alto (al 22% o al 78%). */
+  puntina?: "sopraSx" | "sopraDx";
   /** Per variare l'inclinazione da una card all'altra, sempre uguale per la stessa. */
   seme: string;
   /**
@@ -66,7 +77,8 @@ const POSE_SVOLAZZO: [number, number][] = [
 ];
 
 /** Il punto attorno a cui oscilla il foglio: lo scotch, se è uno solo. */
-function perno(scotch: StrisciaScotch[]): string {
+function perno(scotch: StrisciaScotch[], puntina?: "sopraSx" | "sopraDx"): string {
+  if (puntina) return `${puntina === "sopraSx" ? SOPRA_SX : SOPRA_DX} 6px`;
   if (scotch.length !== 1) return "50% 0";
   const { lato } = scotch[0];
   if (lato === "sopraSx") return `${SOPRA_SX} 0`;
@@ -78,7 +90,7 @@ function perno(scotch: StrisciaScotch[]): string {
 
 const INTERATTIVI = 'a, button, input, textarea, select, label, [role="button"]';
 
-export function Foglietto({ children, scotch, seme, employer }: FogliettoProps) {
+export function Foglietto({ children, scotch = [], puntina, seme, employer }: FogliettoProps) {
   const nodo = useRef<HTMLElement | null>(null);
   const inizio = useRef<{ x: number; y: number; t: number } | null>(null);
   const animazione = useRef<Animation | null>(null);
@@ -92,7 +104,7 @@ export function Foglietto({ children, scotch, seme, employer }: FogliettoProps) 
       // Spinto dal lato in cui lo tocchi.
       const verso = xTocco >= r.left + r.width / 2 ? 1 : -1;
       const fotogrammi =
-        scotch.length === 1
+        scotch.length === 1 || puntina
           ? POSE_PENDOLO.map((g) => ({ rotate: `${g * verso}deg`, easing: "steps(1, end)" }))
           : POSE_SVOLAZZO.map(([s, g]) => ({
               scale: `1 ${s}`,
@@ -107,7 +119,7 @@ export function Foglietto({ children, scotch, seme, employer }: FogliettoProps) 
         duration: FOTOGRAMMA * (fotogrammi.length - 1),
       });
     },
-    [scotch.length]
+    [scotch.length, puntina]
   );
 
   const props = children.props as {
@@ -121,7 +133,7 @@ export function Foglietto({ children, scotch, seme, employer }: FogliettoProps) 
     ref: (el: HTMLElement | null) => {
       nodo.current = el;
     },
-    style: { ...props.style, transformOrigin: perno(scotch) },
+    style: { ...props.style, transformOrigin: perno(scotch, puntina) },
     onPointerDown: (e: PointerEvent<HTMLElement>) => {
       props.onPointerDown?.(e);
       inizio.current = { x: e.clientX, y: e.clientY, t: e.timeStamp };
@@ -148,8 +160,23 @@ export function Foglietto({ children, scotch, seme, employer }: FogliettoProps) 
         {scotch.map((s, i) => (
           <Scotch key={i} {...s} seme={n + i * 3} employer={employer} />
         ))}
+        {puntina && <PuntinaFoglio dove={puntina} n={n} employer={employer} />}
       </span>
       {card}
     </>
+  );
+}
+
+/** La puntina piantata nel bordo alto: testa nel colore del ruolo, ago in
+    inchiostro (icons/puntine), larga 20 px come quella dei menu. */
+function PuntinaFoglio({ dove, n, employer }: { dove: "sopraSx" | "sopraDx"; n: number; employer?: boolean }) {
+  const { isEmployer } = useAppTheme();
+  const P = PUNTINE[n % PUNTINE.length];
+  const blu = employer ?? isEmployer;
+  return (
+    <P
+      className={`absolute -top-3.5 h-auto w-5 drop-shadow-[0_1px_0_hsl(var(--ink)/0.15)] ${blu ? "text-employer-700" : "text-primary"}`}
+      style={{ left: `calc(${dove === "sopraSx" ? SOPRA_SX : SOPRA_DX} - 10px)` }}
+    />
   );
 }

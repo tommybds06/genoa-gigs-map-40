@@ -68,6 +68,11 @@ const POSE_PIANTA: [number, number, number][] = [
   [2, 0.92, 3],
   [0, 1, 0],
 ];
+/* Piantata la puntina, il foglietto DONDOLA attorno a lei e si ferma
+   (Tommaso: «come chicca»): le pose del pendolo dello scotch (§22), più
+   piccole, a scatti da 12 fps. Si smorza in mezzo secondo: un menu che
+   continua a muoversi sotto il dito farebbe sbagliare il tocco. */
+const POSE_DONDOLO = [0, 1.8, -1.4, 0.9, -0.5, 0.2, 0];
 const LARGHEZZA = 232;
 const fermo = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -100,6 +105,7 @@ export function MenuContestuale({
   const [pos, setPos] = useState<{ top: number; left: number; sotto: boolean } | null>(null);
   const toccatoDopo = useRef(false);
   const puntina = useRef<HTMLSpanElement>(null);
+  const dondolo = useRef<HTMLDivElement>(null);
   const { isEmployer } = useAppTheme();
 
   useLayoutEffect(() => {
@@ -155,6 +161,11 @@ export function MenuContestuale({
       })),
       { duration: FOTOGRAMMA * POSE_PIANTA.length }
     );
+    dondolo.current?.animate(
+      POSE_DONDOLO.map((g) => ({ rotate: `${g}deg`, easing: "steps(1, end)" })),
+      // Parte quando la puntina si è piantata (le prime due pose).
+      { duration: FOTOGRAMMA * POSE_DONDOLO.length, delay: FOTOGRAMMA * 2 }
+    );
   }, [pos]);
 
   useEffect(() => {
@@ -205,6 +216,8 @@ export function MenuContestuale({
           transformOrigin: `${lato === "dx" ? "right" : "left"} ${pos?.sotto === false ? "bottom" : "top"}`,
         }}
       >
+        {/* Il perno del dondolo è dove l'ago entra nella carta. */}
+        <div ref={dondolo} style={{ transformOrigin: "50% 6px" }}>
         <div role="menu" className="material-card overflow-hidden bg-card py-1.5">
           {mostrato.voci.map((v) => (
             <button
@@ -224,6 +237,7 @@ export function MenuContestuale({
               {v.testo}
             </button>
           ))}
+        </div>
         </div>
         <span
           ref={puntina}

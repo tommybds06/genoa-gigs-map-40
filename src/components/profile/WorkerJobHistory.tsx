@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Loader2 } from "lucide-react";
 import { StoricoLavoriIcon } from "@/components/icons/uiIcons";
+import { Foglietto } from "@/components/ui/Foglietto";
 import { CartaCard } from "@/components/ui/CartaCard";
 import { RigheStorico } from "@/components/profile/RigheStorico";
 
@@ -108,6 +109,8 @@ export const WorkerJobHistory = ({ primaryTextClasses }: WorkerJobHistoryProps) 
   });
 
   return (
+    // La puntina: le righe si toccano (portano all'attività), Foglietto.
+    <Foglietto seme="storico" puntina="sopraSx">
     <CartaCard seme="storico" raggio={20} className="p-4 mb-4">
       <h3 className="titolo-mini mb-1 flex items-center gap-2">
         <StoricoLavoriIcon className={`w-5 h-5 ${primaryTextClasses}`} />
@@ -136,5 +139,6 @@ export const WorkerJobHistory = ({ primaryTextClasses }: WorkerJobHistoryProps) 
         />
       )}
     </CartaCard>
+    </Foglietto>
   );
 };
