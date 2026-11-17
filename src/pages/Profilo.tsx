@@ -259,7 +259,7 @@ const Profilo = () => {
         )}
 
         {!isEmployer && (
-          <Foglietto seme="interessi" puntina="sopraDx">
+          <Foglietto seme="interessi" puntina="centro">
           <CartaCard seme="interessi" raggio={RAGGIO_CARTA} className="tilt-r p-4 mb-4">
             <div className="flex items-center justify-between mb-3">
               <h3 className="titolo-mini flex items-center gap-2"><CuoreIcon className={`w-4 h-4 ${primaryTextClasses}`} />I tuoi interessi</h3>

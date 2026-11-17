@@ -1,7 +1,7 @@
 import { forwardRef, type HTMLAttributes, type MutableRefObject } from "react";
 import { useMisure } from "@/hooks/useMisure";
 import { formaStampa } from "@/lib/formaStampa";
-import { TRATTO } from "@/lib/tratto";
+import { semeDa, TRATTO } from "@/lib/tratto";
 import { cn } from "@/lib/utils";
 
 /**
@@ -21,14 +21,23 @@ import { cn } from "@/lib/utils";
  * ⚠️ Il disegno sta a `-z-10` dentro un contesto proprio (`isolate`): un
  * `absolute` senza z-index si dipingerebbe SOPRA il contenuto non posizionato.
  *
- * `raggio`: gli angoli. Provati 12 e 20 (Tommaso teme che piccoli «sembrino
- * datati»): per ora 20, in attesa della sua scelta.
+ * `raggio`: gli angoli. Provati 12, 14 ± 2 e 20 a misura di telefono: fra 14
+ * e 20 la differenza quasi non si vede, e la variazione di ±2 per card non si
+ * vede affatto. Il «carta» lo fanno il bordo su tutti i lati e lo spessore,
+ * non il raggio: resta 20 (la morbidezza di prima). `variazione` c'è ma
+ * nessuno la usa.
  */
 export const CartaCard = forwardRef<
   HTMLDivElement,
-  HTMLAttributes<HTMLDivElement> & { seme: string; raggio?: number }
->(function CartaCard({ seme, raggio = 20, className, style, children, ...resto }, avanti) {
+  HTMLAttributes<HTMLDivElement> & {
+    seme: string;
+    raggio?: number;
+    /** ± px sugli angoli, dal seme: ogni card tagliata un filo diversa. */
+    variazione?: number;
+  }
+>(function CartaCard({ seme, raggio: base = 20, variazione = 0, className, style, children, ...resto }, avanti) {
   const { ref, misure } = useMisure<HTMLDivElement>();
+  const raggio = base + (((semeDa(seme) % 1000) / 1000) * 2 - 1) * variazione;
   const d = misure && misure.w > 0 ? formaStampa(misure.w, misure.h, seme, raggio) : null;
 
   return (

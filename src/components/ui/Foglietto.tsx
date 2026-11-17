@@ -47,8 +47,8 @@ interface FogliettoProps {
   children: ReactElement;
   /** Uno scotch in alto (centro o un angolo), o due sugli angoli. */
   scotch?: StrisciaScotch[];
-  /** Una puntina invece dello scotch, sul bordo alto (al 22% o al 78%). */
-  puntina?: "sopraSx" | "sopraDx";
+  /** Una puntina invece dello scotch, sul bordo alto (al 22%, al centro o al 78%). */
+  puntina?: "sopraSx" | "centro" | "sopraDx";
   /** Per variare l'inclinazione da una card all'altra, sempre uguale per la stessa. */
   seme: string;
   /**
@@ -77,8 +77,8 @@ const POSE_SVOLAZZO: [number, number][] = [
 ];
 
 /** Il punto attorno a cui oscilla il foglio: lo scotch, se è uno solo. */
-function perno(scotch: StrisciaScotch[], puntina?: "sopraSx" | "sopraDx"): string {
-  if (puntina) return `${puntina === "sopraSx" ? SOPRA_SX : SOPRA_DX} 6px`;
+function perno(scotch: StrisciaScotch[], puntina?: "sopraSx" | "centro" | "sopraDx"): string {
+  if (puntina) return `${xPuntina(puntina)} 6px`;
   if (scotch.length !== 1) return "50% 0";
   const { lato } = scotch[0];
   if (lato === "sopraSx") return `${SOPRA_SX} 0`;
@@ -167,16 +167,20 @@ export function Foglietto({ children, scotch = [], puntina, seme, employer }: Fo
   );
 }
 
+function xPuntina(dove: "sopraSx" | "centro" | "sopraDx") {
+  return dove === "sopraSx" ? SOPRA_SX : dove === "sopraDx" ? SOPRA_DX : "50%";
+}
+
 /** La puntina piantata nel bordo alto: testa nel colore del ruolo, ago in
     inchiostro (icons/puntine), larga 20 px come quella dei menu. */
-function PuntinaFoglio({ dove, n, employer }: { dove: "sopraSx" | "sopraDx"; n: number; employer?: boolean }) {
+function PuntinaFoglio({ dove, n, employer }: { dove: "sopraSx" | "centro" | "sopraDx"; n: number; employer?: boolean }) {
   const { isEmployer } = useAppTheme();
   const P = PUNTINE[n % PUNTINE.length];
   const blu = employer ?? isEmployer;
   return (
     <P
       className={`absolute -top-3.5 h-auto w-5 drop-shadow-[0_1px_0_hsl(var(--ink)/0.15)] ${blu ? "text-employer-700" : "text-primary"}`}
-      style={{ left: `calc(${dove === "sopraSx" ? SOPRA_SX : SOPRA_DX} - 10px)` }}
+      style={{ left: `calc(${xPuntina(dove)} - 10px)` }}
     />
   );
 }
