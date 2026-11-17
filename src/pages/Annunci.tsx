@@ -20,6 +20,7 @@ import { getJobIconFromTags } from "@/lib/jobIcons";
 import { TesseraIcona, TesseraIndietro } from "@/components/ui/Tessera";
 import { cn } from "@/lib/utils";
 import { CartaCard } from "@/components/ui/CartaCard";
+import { PostIt } from "@/components/ui/PostIt";
 
 /**
  * I TUOI ANNUNCI — la pagina dell'employer (rifatta l'11 novembre).
@@ -378,9 +379,10 @@ const Annunci = () => {
           </div>
 
           {!eAttivo && applications.some((a) => a.status === 'pending') && (
-            <p className="mb-4 text-sm text-ink-soft">
-              Non è più sulla mappa, ma a chi si è candidato puoi ancora rispondere.
-            </p>
+            /* La nota è un post-it (18 novembre): è un promemoria, non un dato. */
+            <PostIt seme={`passato-${selectedJob.id}`} className="mb-5 ml-1 max-w-[260px]">
+              Non è più sulla mappa, ma a chi si è candidato puoi ancora rispondere
+            </PostIt>
           )}
 
           <h3 className="titolo-mini mb-2">Candidature</h3>

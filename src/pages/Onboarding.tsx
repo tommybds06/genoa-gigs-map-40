@@ -23,6 +23,7 @@ import {
   ProfiloIcon, DocumentoIcon, FotoIcon, GloboIcon, InstagramIcon,
   HashtagIcon, SearchIcon, MappaIcon, AnnunciIcon, PennaIcon, VerificatoIcon,
 } from '@/components/icons/uiIcons';
+import { PostIt } from "@/components/ui/PostIt";
 
 const Onboarding = () => {
   const { user } = useAuth();
@@ -308,11 +309,12 @@ const Onboarding = () => {
             <span className="titolo-mini">{isEmployer ? testi.foto : 'La tua vetrina'}</span>
           </div>
           
-          <p className="text-sm text-muted-foreground">
-            {isEmployer
-              ? testi.testoFoto
-              : 'Carica fino a 10 foto per mostrarti al meglio'}
-          </p>
+          {/* Il consiglio sulle foto è una NOTA: il post-it (18 novembre). */}
+          <div className="flex justify-end pr-2">
+            <PostIt seme="onboarding-foto" className="max-w-[230px]">
+              {isEmployer ? testi.testoFoto : 'Carica fino a 10 foto per mostrarti al meglio'}
+            </PostIt>
+          </div>
           
           {/* Le stesse foto stampate di Modifica profilo (24 ottobre): erano
               riquadri tratteggiati col «+». */}

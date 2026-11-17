@@ -7,6 +7,7 @@ import {
   Cartellino,
   GIORNI,
   avvisoScadenza,
+  eScaduto,
   formatData,
   formatPaga,
   modoGiorni,
@@ -15,6 +16,7 @@ import {
 import { FORO_Y, SPAZIO_SOPRA } from "@/lib/formaCartellino";
 import { SagomaCartellino } from "./SagomaCartellino";
 import { MISURA_FOTO, ripiegaFoto, urlFoto } from "@/lib/foto";
+import { PostIt } from "@/components/ui/PostIt";
 
 /** Larghezza della puntina: la stessa di prima. */
 const PUNTINA_PX = 21;
@@ -154,6 +156,15 @@ export function CartellinoCard({ c, onClick }: CartellinoCardProps) {
             </span>
           )}
         </div>
+
+        {/* La data di fine è passata e il lavoro non è concluso: c'è da
+            decidere (estendere o concludere). Il post-it lo ricorda sulla
+            bacheca, prima della finestra del promemoria. */}
+        {eScaduto(c) && (
+          <PostIt seme={`finito-${c.id}`} misura="piccolo" className="pointer-events-none absolute -right-2 top-9 z-10">
+            Finito?
+          </PostIt>
+        )}
 
         <p className="titolo-mini mt-2 shrink-0 truncate">{c.nome}</p>
         <p className="shrink-0 truncate text-[12px] leading-tight text-muted-foreground">{c.mestiere}</p>

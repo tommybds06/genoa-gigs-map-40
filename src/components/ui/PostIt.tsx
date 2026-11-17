@@ -1,0 +1,173 @@
+import { useLayoutEffect, useRef, useState, type CSSProperties, type MutableRefObject, type ReactNode } from "react";
+import { useAppTheme } from "@/hooks/useAppTheme";
+import { useMisure } from "@/hooks/useMisure";
+import { semeDa } from "@/lib/tratto";
+import { cn } from "@/lib/utils";
+import {
+  POSTIT_A,
+  POSTIT_ANGOLO,
+  POSTIT_CONTORNO,
+  POSTIT_FOGLIO,
+  POSTIT_L,
+  POSTIT_OMBRA,
+} from "@/components/icons/postit";
+
+/**
+ * IL POST-IT (18 novembre) — il disegno di Tommaso (`icons/postit.ts`).
+ *
+ * LA REGOLA (decisa con Tommaso): il post-it è una NOTA o una COSA DA FARE,
+ * provvisoria. Va solo dove l'app ha già un consiglio o una nota, o dove
+ * serve davvero un promemoria; mai decorazione, mai più di uno per
+ * schermata. Nel sistema dei segni: scotch = attaccato, da leggere;
+ * puntina = appeso, si tocca; post-it = ricordati di questo.
+ *
+ * - COLORI come lo scotch e i toast: il foglio è il pastello del RUOLO al
+ *   55% sul foglio (opaco: ci si legge sopra), il risvolto più carico, il
+ *   contorno l'inchiostro del ruolo al 75%. Il testo in inchiostro.
+ * - LA MISURA la fa il testo. L'altezza decide la scala del disegno; se il
+ *   testo è più largo del quadrato, il disegno si allunga in TRE FETTE
+ *   verticali: le due esterne (con l'angolo arricciato a destra) in scala
+ *   uniforme, quella centrale stirata. Lì il bordo è quasi dritto, quindi
+ *   allungato non si vede; l'angolo resta quello disegnato a ogni misura.
+ *   La fetta centrale sborda di mezzo pixel sotto le altre: niente giunture.
+ *   ⚠️ Ogni fetta è un `<svg>` con `overflow="hidden"`: con `visible` la
+ *   fetta stirata disegnava anche il resto della tavola, allargato di 16
+ *   volte, e il post-it diventava una fascia larga quanto lo schermo.
+ * - Storto dal seme (±3°, `rotate`, che si somma a chi lo contiene).
+ * - Entrando si «attacca»: tre pose a 12 fps, come le puntine. Ferma con
+ *   «riduci movimento».
+ * - `misura`: «piccolo» per le parole sole sulle card (Recensisci, Finito?),
+ *   «grande» per le frasi. Il margine destro e quello basso lasciano libero
+ *   l'angolo arricciato: il testo non ci finisce mai sopra.
+ */
+
+/* Le tre fette, in unità della tavola: [0, A] e [B, L] restano in scala. */
+const FETTA_A = 38;
+const FETTA_B = 52;
+const FOTOGRAMMA = 1000 / 12;
+const POSE_ATTACCA: [number, number][] = [
+  [1.08, -2],
+  [0.97, 1],
+  [1, 0],
+];
+
+const MISURE = {
+  piccolo: "pl-2.5 pr-4 pt-2 pb-2.5 text-[18px] leading-[1.1]",
+  grande: "pl-3.5 pr-8 pt-3 pb-5 text-[18px] leading-[1.15]",
+};
+
+function Disegno({ colori }: { colori: { foglio: string; angolo: string; filo: string } }) {
+  return (
+    <>
+      <path d={POSTIT_OMBRA} fill="hsl(var(--paper-line))" />
+      <path d={POSTIT_CONTORNO} fill={colori.filo} stroke={colori.filo} strokeWidth={0.8} strokeLinejoin="round" />
+      <path d={POSTIT_FOGLIO} fill={colori.foglio} />
+      <path d={POSTIT_ANGOLO} fill={colori.angolo} />
+    </>
+  );
+}
+
+interface PostItProps {
+  children: ReactNode;
+  /** Per l'inclinazione: sempre la stessa per la stessa nota. */
+  seme: string;
+  /** Il ruolo di cui prendere i colori; di serie quello di chi guarda. */
+  employer?: boolean;
+  misura?: keyof typeof MISURE;
+  /** Un post-it che si tocca (porta a fare la cosa). Altrimenti è solo una nota. */
+  onClick?: () => void;
+  className?: string;
+  style?: CSSProperties;
+}
+
+export function PostIt({ children, seme, employer, misura = "grande", onClick, className, style }: PostItProps) {
+  const { isEmployer } = useAppTheme();
+  const blu = employer ?? isEmployer;
+  const { ref, misure } = useMisure<HTMLElement>();
+  const nodo = useRef<HTMLElement | null>(null);
+  const [minimo, setMinimo] = useState(0);
+
+  const pastello = blu ? "hsl(var(--brand-blue))" : "hsl(var(--brand-orange))";
+  const inchiostro = blu ? "hsl(var(--brand-blue-ink))" : "hsl(var(--brand-orange-ink))";
+  const colori = {
+    foglio: `color-mix(in srgb, ${pastello} 55%, hsl(var(--paper-sheet)))`,
+    angolo: `color-mix(in srgb, ${pastello} 85%, hsl(var(--paper-sheet)))`,
+    filo: `color-mix(in srgb, ${inchiostro} 75%, hsl(var(--paper-sheet)))`,
+  };
+  const gradi = (((semeDa(seme) % 1000) / 1000) * 2 - 1) * 3;
+
+  // Mai più stretto del quadrato: con un testo corto il disegno si
+  // schiaccerebbe. Il minimo si sa solo dopo aver misurato l'altezza.
+  useLayoutEffect(() => {
+    if (!misure) return;
+    const quadrato = Math.ceil((misure.h * POSTIT_L) / POSTIT_A);
+    if (quadrato !== minimo) setMinimo(quadrato);
+  }, [misure, minimo]);
+
+  useLayoutEffect(() => {
+    const el = nodo.current;
+    if (!el || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    el.animate(
+      POSE_ATTACCA.map(([sc, g]) => ({ scale: `${sc}`, rotate: `${gradi + g}deg`, easing: "steps(1, end)" })),
+      { duration: FOTOGRAMMA * POSE_ATTACCA.length }
+    );
+    // Solo al montaggio.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  let fette: ReactNode = null;
+  if (misure && misure.h > 0) {
+    const { w, h } = misure;
+    const s = h / POSTIT_A;
+    const extra = w - POSTIT_L * s;
+    if (extra <= 0.5) {
+      fette = (
+        <svg x={0} width={w} height={h} viewBox={`0 0 ${POSTIT_L} ${POSTIT_A}`} preserveAspectRatio="none" overflow="hidden">
+          <Disegno colori={colori} />
+        </svg>
+      );
+    } else {
+      const a = FETTA_A * s;
+      const mezzo = (FETTA_B - FETTA_A) * s + extra;
+      fette = (
+        <>
+          <svg x={a - 0.5} width={mezzo + 1} height={h} viewBox={`${FETTA_A} 0 ${FETTA_B - FETTA_A} ${POSTIT_A}`} preserveAspectRatio="none" overflow="hidden">
+            <Disegno colori={colori} />
+          </svg>
+          <svg x={0} width={a} height={h} viewBox={`0 0 ${FETTA_A} ${POSTIT_A}`} preserveAspectRatio="none" overflow="hidden">
+            <Disegno colori={colori} />
+          </svg>
+          <svg x={a + mezzo} width={(POSTIT_L - FETTA_B) * s} height={h} viewBox={`${FETTA_B} 0 ${POSTIT_L - FETTA_B} ${POSTIT_A}`} preserveAspectRatio="none" overflow="hidden">
+            <Disegno colori={colori} />
+          </svg>
+        </>
+      );
+    }
+  }
+
+  const Tag = onClick ? "button" : "span";
+  return (
+    <Tag
+      ref={(el: HTMLElement | null) => {
+        nodo.current = el;
+        (ref as MutableRefObject<HTMLElement | null>).current = el;
+      }}
+      type={onClick ? "button" : undefined}
+      onClick={onClick}
+      className={cn(
+        "relative isolate inline-block text-left font-[Shinjo,Outfit,sans-serif] tracking-[-0.02em] text-ink [font-synthesis:none]",
+        MISURE[misura],
+        onClick && "active:scale-95 transition-transform",
+        className
+      )}
+      style={{ rotate: `${gradi}deg`, minWidth: minimo || undefined, ...style }}
+    >
+      {fette && (
+        <svg aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 h-full w-full overflow-visible">
+          {fette}
+        </svg>
+      )}
+      {children}
+    </Tag>
+  );
+}

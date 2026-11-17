@@ -1278,6 +1278,41 @@ memoria: si fotografano TUTTE le schermate, nei due ruoli e negli stati
     COMPONENTE» in §6. Provata il 17 in Lista e Profilo, passata a tutta
     l'app il 18 novembre.
   - Le sezioni del profilo pubblico hanno i titoli in Shinjo (`titolo-mini`).
+- **IL POST-IT (18 novembre)** — `ui/PostIt.tsx`, disegno di Tommaso
+  (`brand/icone/post-it.svg` → `icons/postit.ts`: ombra, contorno, foglio,
+  angolo, tavola 90,86 × 91,18).
+  - **La regola** (Tommaso): post-it = una NOTA o una COSA DA FARE,
+    provvisoria. Solo dove l'app ha già un consiglio/nota o dove serve
+    davvero un promemoria: «non ne creerei di inutili per mettere i post-it».
+    Scotch = attaccato, da leggere; puntina = appeso, si tocca; post-it =
+    ricordati di questo.
+  - **Dove** (6 punti): configurazione → «Carica fino a 10 foto…» /
+    `testi.testoFoto`; area del privato → «Non mostreremo mai il tuo
+    indirizzo» SULLA mappa (fuori dal ritaglio, `pointer-events-none`);
+    annuncio passato con candidature da vedere → «Non è più sulla mappa…»;
+    Profilo incompleto → «Manca la foto» / «Scrivi due righe su di te» /
+    «Racconta la tua attività», sull'angolo dell'intestazione, porta a
+    Modifica profilo; bacheca worker → «Recensisci» (al posto dell'etichetta
+    «Da recensire» sulla foto); bacheca employer → «Finito?» sul cartellino
+    con la data di fine passata (`eScaduto`).
+  - **NON post-it**: gli stati («anteprima del tuo annuncio», «scaduto»), i
+    dati («Posizione approssimativa»), «Resta visibile 48 ore» sotto
+    «Pubblica» (sembrerebbe un bottone), i suggerimenti dei campi.
+  - **Colori come scotch e toast**: foglio = pastello del ruolo al 55% sul
+    foglio (opaco), risvolto all'85%, contorno l'inchiostro del ruolo al 75%,
+    ombra `paper-line`, testo inchiostro in Shinjo 18.
+  - **La misura la fa il testo**: l'altezza dà la scala; se il testo è più
+    largo del quadrato il disegno si allunga in TRE FETTE (0–38 e 52–90,86
+    in scala, la centrale stirata: lì il bordo è quasi dritto). ⚠️ Ogni
+    fetta `overflow="hidden"`: con `visible` quella stirata disegnava tutta
+    la tavola allargata 16 volte (fasce larghe quanto lo schermo). Mai più
+    stretto del quadrato (`minWidth` dopo la misura).
+  - `misura="piccolo"` (parole sole sulle card) / `"grande"` (frasi): i
+    margini destro e basso lasciano libero l'angolo arricciato.
+  - Storto dal seme ±3° (`rotate`), entrando «si attacca» (3 pose, 12 fps).
+  - Sul banco: `ritocco` dei dati finti nel setter di `window.__db` (lo
+    stesso trucco di `svuota`) per i casi che il banco non ha (cartellino
+    scaduto, candidature da vedere su un annuncio passato, privato).
 
 # 15. La scheda annuncio — la gerarchia, e perché
 

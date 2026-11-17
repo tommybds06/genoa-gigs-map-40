@@ -6,6 +6,7 @@ import { Iniziali } from "./CartellinoCard";
 import { SagomaNegozio } from "./SagomaNegozio";
 import { badgeLavoro } from "./statiLavoro";
 import { MISURA_FOTO, ripiegaFoto, urlFoto } from "@/lib/foto";
+import { PostIt } from "@/components/ui/PostIt";
 
 /**
  * LA CARD DI UN LAVORO, lato worker — la «vetrina» dell'attività per cui
@@ -56,15 +57,25 @@ export function LavoroCard({ l, onClick }: LavoroCardProps) {
           ) : (
             <Iniziali nome={l.attivita} className="text-3xl" />
           )}
-          <span
-            className={cn(
-              "sagoma-badge absolute bottom-2 left-1/2 -translate-x-1/2 whitespace-nowrap px-2 py-0.5 text-[11px] font-medium",
-              b.classe
-            )}
-          >
-            {b.testo}
-          </span>
+          {/* «Da recensire» è l'unico stato che chiede di FARE qualcosa: non
+              un'etichetta sulla foto ma un post-it sulla card (sotto). */}
+          {l.stato !== "da-recensire" && (
+            <span
+              className={cn(
+                "sagoma-badge absolute bottom-2 left-1/2 -translate-x-1/2 whitespace-nowrap px-2 py-0.5 text-[11px] font-medium",
+                b.classe
+              )}
+            >
+              {b.testo}
+            </span>
+          )}
         </div>
+
+        {l.stato === "da-recensire" && (
+          <PostIt seme={`recensisci-${l.id}`} misura="piccolo" className="pointer-events-none absolute -right-2 top-6 z-10">
+            Recensisci
+          </PostIt>
+        )}
 
         <p className="titolo-mini mt-2 shrink-0 truncate">{l.attivita}</p>
         <p className="shrink-0 truncate text-[12px] leading-tight text-muted-foreground">{l.ruolo}</p>

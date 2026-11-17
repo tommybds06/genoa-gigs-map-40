@@ -25,6 +25,7 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { CartaCard } from "@/components/ui/CartaCard";
 import { WorkerJobHistory } from "@/components/profile/WorkerJobHistory";
+import { PostIt } from "@/components/ui/PostIt";
 
 const Profilo = () => {
   const { user } = useAuth();
@@ -160,6 +161,26 @@ const Profilo = () => {
             bottoni dentro (Interessi) e lo storico ne restano senza. */}
         <Foglietto seme="intestazione" scotch={[{ pezzo: "corto", lato: "sopraSx" }]}>
         <CartaCard seme="intestazione" className="p-6 mb-4">
+          {/* PROFILO INCOMPLETO → un post-it, il promemoria di una cosa da
+              fare (18 novembre). Prima la foto, poi la presentazione; quando
+              c'è tutto non c'è niente. Toccandolo si va a Modifica profilo. */}
+          {(() => {
+            const manca = !profile?.photos?.length
+              ? "Manca la foto"
+              : !profile?.bio
+                ? isEmployer ? "Racconta la tua attività" : "Scrivi due righe su di te"
+                : null;
+            return manca ? (
+              <PostIt
+                seme="profilo-incompleto"
+                misura="piccolo"
+                onClick={() => navigate("/settings/edit-profile")}
+                className="absolute -right-2 -top-4 z-10 max-w-[150px]"
+              >
+                {manca}
+              </PostIt>
+            ) : null;
+          })()}
           <div className="flex items-center gap-4">
             {/* Cerchio imperfetto (ui/avatar). Via l'ombra: il ritaglio la
                 taglierebbe a tratti. */}

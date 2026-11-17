@@ -7,6 +7,7 @@ import { GEOFENCING_ERROR_MESSAGE, GENOVA_CENTER, isWithinGenovaBounds } from "@
 import { useMapboxToken } from "@/hooks/useMapboxToken";
 import { cerchioGeo, coloreToken } from "@/lib/area";
 import { RAGGIO_AREA } from "@/lib/registrazione";
+import { PostIt } from "@/components/ui/PostIt";
 
 const LIVELLO = "area-riempimento";
 
@@ -84,8 +85,15 @@ export function AreaPicker({
   return (
     <div className="space-y-2">
       <p className="text-sm text-foreground">
-        Scegli la zona in cui ti trovi. <strong className="font-semibold">Non mostreremo mai il tuo indirizzo.</strong>
+        Scegli la zona in cui ti trovi.
       </p>
+      {/* La rassicurazione è una nota attaccata sulla mappa (post-it, 18
+          novembre). Fuori dal ritaglio della mappa, se no la taglierebbe;
+          non prende i tocchi: la mappa sotto si trascina ancora. */}
+      <div className="relative pt-3">
+      <PostIt seme="area-indirizzo" employer className="pointer-events-none absolute -top-1 right-3 z-10 w-[200px]">
+        Non mostreremo mai il tuo indirizzo
+      </PostIt>
       {/* Ritagliata come le foto (`.sagoma-foto`): niente bordo CSS. */}
       <div className="sagoma-foto h-[240px] w-full overflow-hidden">
         <Map
@@ -118,6 +126,7 @@ export function AreaPicker({
             />
           </Source>
         </Map>
+      </div>
       </div>
       <p className="text-xs text-muted-foreground">Trascina il cerchio, o tocca la mappa per spostarlo lì.</p>
     </div>
