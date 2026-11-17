@@ -19,6 +19,7 @@ import { useUser } from "@/contexts/UserContext";
 import { inEvidenza, ordinaAnnunci, type Pertinenza } from "@/lib/potenziamento";
 import { EtichettaInEvidenza } from "@/pages/Lista";
 import { cn } from "@/lib/utils";
+import { CartaCard } from "@/components/ui/CartaCard";
 
 interface EmployerJobsDrawerProps {
   isOpen: boolean;
@@ -113,14 +114,16 @@ export function EmployerJobsDrawer({
                 const evidenza = !isEmployer && inEvidenza(job, pertinenza);
                 
                 return (
-                  <button
+                  <CartaCard
+                    come="button"
+                    seme={job.id}
                     key={job.id}
                     onClick={() => handleJobClick(job)}
-                    className={cn("w-full flex items-center gap-3 p-4 material-card active:scale-[0.98] transition-all text-left", evidenza && "card-evidenza")}
+                    className="w-full flex items-center gap-3 p-4 active:scale-[0.98] transition-transform text-left"
                   >
                     {/* La tessera delle altre liste (Lista, zona della mappa).
                         ⚠️ Prima: icona pastello su `accent`, ~1,6:1. */}
-                    <TesseraIcona icona={Icon} evidenziata={evidenziati?.has(job.id)} />
+                    <TesseraIcona icona={Icon} evidenziata={evidenza || evidenziati?.has(job.id)} />
 
                     {/* Content */}
                     <div className="flex-1 min-w-0">
@@ -169,7 +172,7 @@ export function EmployerJobsDrawer({
                     
                     {/* Arrow */}
                     <FreccettaIcon className="w-5 h-5 text-muted-foreground shrink-0" />
-                  </button>
+                  </CartaCard>
                 );
               })}
             </div>

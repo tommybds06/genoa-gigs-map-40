@@ -43,7 +43,7 @@ import { useAppTheme } from "@/hooks/useAppTheme";
  */
 
 interface FogliettoProps {
-  /** La card: un elemento solo (un `div` con `.material-card`). */
+  /** La card: un elemento solo (una `CartaCard`, o un `div`). */
   children: ReactElement;
   /** Uno scotch in alto (centro o un angolo), o due sugli angoli. */
   scotch?: StrisciaScotch[];

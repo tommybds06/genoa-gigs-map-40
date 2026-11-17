@@ -16,6 +16,7 @@ import { AnnunciIcon } from "@/components/icons/uiIcons";
 import { GenericoIcon } from "@/components/icons/roleIcons";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { CartaCard } from "@/components/ui/CartaCard";
 
 type Ruolo = "worker" | "employer";
 
@@ -160,7 +161,7 @@ const ScegliRuolo = () => {
           <h1 className="titolo-vuoto">Ancora due cose</h1>
         </div>
 
-        <div className="bg-card material-card-elevated p-8 rounded-3xl">
+        <CartaCard seme="scegli-ruolo" className="p-8">
           <div className="space-y-6">
             <div className="space-y-3">
               <label className="text-sm font-medium text-foreground">Chi sei?</label>
@@ -231,7 +232,7 @@ const ScegliRuolo = () => {
               {salvataggio ? <Loader2 className="w-5 h-5 animate-spin" /> : "Continua"}
             </Button>
           </div>
-        </div>
+        </CartaCard>
       </div>
     </div>
   );

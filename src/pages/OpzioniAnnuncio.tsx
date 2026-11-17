@@ -16,6 +16,7 @@ import { cancellaBozza, leggiBozza, type BozzaAnnuncio } from '@/lib/bozzaAnnunc
 import { chiediPermessoDopo } from '@/lib/notifiche/permesso';
 import { GIORNI_A_PAGAMENTO, ORE_GRATUITE } from '@/lib/scadenzaAnnunci';
 import { cn } from '@/lib/utils';
+import { CartaCard } from "@/components/ui/CartaCard";
 
 type OpzionePagata = Exclude<Opzione, 'nessuna'>;
 
@@ -179,7 +180,7 @@ const OpzioniAnnuncio = () => {
           (Atlante, 23-2: con un bottone solo restavano ~90 px vuoti). */}
       <div className={cn('space-y-6 px-6 py-6', scelta === 'nessuna' ? 'pb-40' : 'pb-56')}>
         {/* Il riepilogo: la riga della Lista, con la paga a destra. */}
-        <div className="material-card flex items-center gap-3 p-3.5">
+        <CartaCard seme="riepilogo-annuncio" className="flex items-center gap-3 p-3.5">
           <TesseraIcona icona={Icona} />
           <div className="min-w-0 flex-1">
             <p className="titolo-mini line-clamp-2 leading-tight">{bozza.title}</p>
@@ -188,22 +189,24 @@ const OpzioniAnnuncio = () => {
           <p className="max-w-[38%] shrink-0 text-right text-sm font-semibold text-employer-800">
             {testoPaga(bozza.pagaTipo, bozza.pagaImporto, bozza.pagaLorda)}
           </p>
-        </div>
+        </CartaCard>
 
         <div role="radiogroup" aria-label="Opzioni dell'annuncio" className="card-tilt space-y-3">
           {OPZIONI.map((o, i) => {
             const attiva = scelta === o.id;
             return (
-              <button
+              <CartaCard
+                come="button"
+                seme={o.id}
                 key={o.id}
                 type="button"
                 role="radio"
                 aria-checked={attiva}
                 onClick={() => setScelta(attiva ? 'nessuna' : o.id)}
+                fondo={attiva ? 'fill-employer-50' : undefined}
                 className={cn(
-                  'material-card flex w-full items-start gap-3 p-4 text-left touch-feedback-subtle transition-colors',
-                  i % 2 ? 'tilt-r' : 'tilt-l',
-                  attiva && 'bg-employer-50'
+                  'flex w-full items-start gap-3 p-4 text-left touch-feedback-subtle',
+                  i % 2 ? 'tilt-r' : 'tilt-l'
                 )}
               >
                 <div className="min-w-0 flex-1">
@@ -227,7 +230,7 @@ const OpzioniAnnuncio = () => {
                     {attiva && <Check className="h-3.5 w-3.5" strokeWidth={3} />}
                   </span>
                 </div>
-              </button>
+              </CartaCard>
             );
           })}
         </div>

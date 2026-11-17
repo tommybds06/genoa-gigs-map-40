@@ -4,6 +4,7 @@ import { useScheda } from "@/hooks/useScheda";
 import { useAppTheme } from "@/hooks/useAppTheme";
 import { Puntina2 } from "@/components/icons/puntine";
 import { cn } from "@/lib/utils";
+import { CartaCard } from "@/components/ui/CartaCard";
 
 /**
  * IL MENU DELLA PRESSIONE LUNGA — accanto a ciò che si è premuto (15 novembre).
@@ -19,7 +20,7 @@ import { cn } from "@/lib/utils";
  * scurisce, e un foglietto con le azioni compare subito sotto (o sopra, se
  * sotto non c'è posto). Niente intestazione: si vede già cosa si è premuto.
  *
- * - Il foglietto è una `.material-card`: la carta col margine a mano.
+ * - Il foglietto è una `CartaCard` ritagliata: la carta col margine a mano.
  * - Righe da 48 px, icona da 20 in inchiostro, nessuna linea fra le righe.
  * - Chiude: tocco fuori (anche sulla cosa premuta), tasto Esc, la pagina che
  *   smette di essere attiva. Entra scalando dal lato della cosa premuta
@@ -218,7 +219,7 @@ export function MenuContestuale({
       >
         {/* Il perno del dondolo è dove l'ago entra nella carta. */}
         <div ref={dondolo} style={{ transformOrigin: "50% 6px" }}>
-        <div role="menu" className="material-card overflow-hidden bg-card py-1.5">
+        <CartaCard seme="menu" ritaglia role="menu" className="py-1.5">
           {mostrato.voci.map((v) => (
             <button
               key={v.chiave}
@@ -237,7 +238,7 @@ export function MenuContestuale({
               {v.testo}
             </button>
           ))}
-        </div>
+        </CartaCard>
         </div>
         <span
           ref={puntina}

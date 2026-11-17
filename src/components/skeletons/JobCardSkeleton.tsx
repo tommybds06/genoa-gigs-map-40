@@ -1,8 +1,9 @@
 import { Skeleton } from "@/components/ui/skeleton";
+import { CartaCard } from "@/components/ui/CartaCard";
 
 export function JobCardSkeleton() {
   return (
-    <div className="material-card p-4">
+    <CartaCard seme="scheletro" className="p-4">
       <div className="flex items-start gap-3">
         <Skeleton className="w-12 h-12 rounded-2xl shrink-0" />
         <div className="flex-1 space-y-2">
@@ -20,7 +21,7 @@ export function JobCardSkeleton() {
         </div>
         <Skeleton className="h-3 w-14 shrink-0" />
       </div>
-    </div>
+    </CartaCard>
   );
 }
 

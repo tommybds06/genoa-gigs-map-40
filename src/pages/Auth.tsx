@@ -29,6 +29,7 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { doveMandare } from '@/lib/percorsoAccesso';
 import { messaggioErrorePassword, recuperoInCorso } from '@/lib/recuperoPassword';
+import { CartaCard } from "@/components/ui/CartaCard";
 
 type UserRole = 'worker' | 'employer';
 type Social = 'google' | 'apple';
@@ -459,7 +460,7 @@ const Auth = () => {
         </div>
 
         {/* Main Card */}
-        <div className="bg-card material-card-elevated p-8 rounded-3xl animate-scale-in transition-shadow duration-500">
+        <CartaCard seme="accesso" className="p-8 animate-scale-in">
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Role Selection (only for signup) */}
             {!isLogin && (
@@ -723,7 +724,7 @@ const Auth = () => {
               )}
             </button>
           </div>
-        </div>
+        </CartaCard>
 
         {/* Qui c'era «Lavoretti per studenti, a Genova»: tolta (Tommaso,
             Atlante 17 novembre). Al suo posto verrà qualcosa di disegnato. */}

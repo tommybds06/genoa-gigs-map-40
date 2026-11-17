@@ -26,9 +26,6 @@ import { toast } from "sonner";
 import { CartaCard } from "@/components/ui/CartaCard";
 import { WorkerJobHistory } from "@/components/profile/WorkerJobHistory";
 
-/** Prototipo della card di carta (Atlante 2-2): gli angoli da confrontare. */
-const RAGGIO_CARTA = 20;
-
 const Profilo = () => {
   const { user } = useAuth();
   const { profile, loading, updateTags } = useUser();
@@ -162,7 +159,7 @@ const Profilo = () => {
             (Tommaso, 23 ottobre: «troppo incasinato»). Le sezioni con
             bottoni dentro (Interessi) e lo storico ne restano senza. */}
         <Foglietto seme="intestazione" scotch={[{ pezzo: "corto", lato: "sopraSx" }]}>
-        <CartaCard seme="intestazione" raggio={RAGGIO_CARTA} className="p-6 mb-4">
+        <CartaCard seme="intestazione" className="p-6 mb-4">
           <div className="flex items-center gap-4">
             {/* Cerchio imperfetto (ui/avatar). Via l'ombra: il ritaglio la
                 taglierebbe a tratti. */}
@@ -210,7 +207,7 @@ const Profilo = () => {
         {profile?.bio && (
           /* L'unica card con lo scotch sull'ANGOLO (Tommaso): in alto a destra. */
           <Foglietto seme="bio" scotch={[{ pezzo: "cortoB", lato: "dx" }]}>
-          <CartaCard seme="bio" raggio={RAGGIO_CARTA} className="tilt-l p-4 mb-4">
+          <CartaCard seme="bio" className="tilt-l p-4 mb-4">
             <h3 className="titolo-mini mb-2 flex items-center gap-2">
               <ProfiloIcon className={`w-4 h-4 ${primaryTextClasses}`} />{isEmployer ? "Descrizione" : "Presentazione"}
             </h3>
@@ -221,7 +218,7 @@ const Profilo = () => {
 
         {isEmployer && profile?.looking_for && (
           <Foglietto seme="cerco" scotch={[{ pezzo: "corto", lato: "sopraSx" }]}>
-          <CartaCard seme="cerco" raggio={RAGGIO_CARTA} className="tilt-r p-4 mb-4">
+          <CartaCard seme="cerco" className="tilt-r p-4 mb-4">
             <h3 className="titolo-mini mb-2 flex items-center gap-2">
               <GenericoIcon className={`w-4 h-4 ${primaryTextClasses}`} />Chi cerco
             </h3>
@@ -235,7 +232,7 @@ const Profilo = () => {
             alla volta. I worker ricevono i cuori, non le recensioni. */}
         {isEmployer && (
           <Foglietto seme="recensioni" scotch={[{ pezzo: "cortoB", lato: "sopraDx" }]}>
-          <CartaCard seme="recensioni" raggio={RAGGIO_CARTA} className="tilt-r p-4 mb-4">
+          <CartaCard seme="recensioni" className="tilt-r p-4 mb-4">
             <h3 className="titolo-mini mb-3 flex items-center gap-2">
               <StellaIcon className={`w-4 h-4 ${primaryTextClasses}`} />Le tue recensioni
             </h3>
@@ -249,7 +246,7 @@ const Profilo = () => {
 
         {!isEmployer && profile?.experience && (
           <Foglietto seme="esperienze" scotch={[{ pezzo: "corto", lato: "sopraSx", dritto: true }]}>
-          <CartaCard seme="esperienze" raggio={RAGGIO_CARTA} className="tilt-l p-4 mb-4">
+          <CartaCard seme="esperienze" className="tilt-l p-4 mb-4">
             <h3 className="titolo-mini mb-2 flex items-center gap-2">
               <GenericoIcon className={`w-4 h-4 ${primaryTextClasses}`} />Esperienze
             </h3>
@@ -260,7 +257,7 @@ const Profilo = () => {
 
         {!isEmployer && (
           <Foglietto seme="interessi" puntina="centro">
-          <CartaCard seme="interessi" raggio={RAGGIO_CARTA} className="tilt-r p-4 mb-4">
+          <CartaCard seme="interessi" className="tilt-r p-4 mb-4">
             <div className="flex items-center justify-between mb-3">
               <h3 className="titolo-mini flex items-center gap-2"><CuoreIcon className={`w-4 h-4 ${primaryTextClasses}`} />I tuoi interessi</h3>
               <div className="flex gap-2">
@@ -294,7 +291,7 @@ const Profilo = () => {
         {/* Al CENTRO del bordo alto (Tommaso, 26 ottobre): a destra faceva
             coppia con quello delle recensioni appena sopra. */}
         <Foglietto seme="informazioni" scotch={[{ pezzo: "cortoB", lato: "centro" }]}>
-        <CartaCard seme="informazioni" raggio={RAGGIO_CARTA} className="tilt-l p-4 mb-4">
+        <CartaCard seme="informazioni" className="tilt-l p-4 mb-4">
           <h3 className="titolo-mini mb-3 flex items-center gap-2"><InfoIcon className={`w-4 h-4 ${primaryTextClasses}`} />Informazioni</h3>
           <div className="space-y-3">
             {profile?.neighborhood ? (

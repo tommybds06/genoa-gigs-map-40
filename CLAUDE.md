@@ -383,11 +383,37 @@ quattro angoli restano in scala uniforme, solo le bande centrali si allungano.
 | `sagoma-chip.svg` | 161×49, pillola | chip, tag, badge di stato |
 | `sagoma-tag.svg` | 120×100 | tessere quadrate con icona |
 | `sagoma-quartiere.svg` | 250×56 | righe larghe e basse |
-| `sagoma-card-{a,b,c,d}.svg` | 360×121 | tutte le `.material-card` |
-| `bordo-card-{a,b,c,d}.svg` | 360×121 | il filo sopra le card |
+| `sagoma-card-{a,b,c,d}.svg` | 360×121 | oggi solo `.sagoma-foto` (le card: `CartaCard`, sotto) |
+| `bordo-card-{a,b,c,d}.svg` | 360×121 | non più usati (erano il filo delle card) |
 | `bordo-bottone.svg` | 323×99 | contorno dei bottoni **vuoti** |
 | `bordo-campo*.svg` | 250×56 | tratto dei campi, riposo e attivo |
 | `linea-divisoria.svg` | 241×3,5 | separatori |
+
+## ⚠️ LA CARD È UN COMPONENTE: `CartaCard` (dal 18 novembre)
+
+`.material-card` NON ESISTE PIÙ (tolta dal CSS). Tommaso: «le card devono
+essere carta». La sagoma a 9 sezioni stirava la banda centrale dei lati e il
+tremolio diventava un'onda molle; nessuno spessore. Ora ogni card è
+`<CartaCard seme=…>`: contorno CALCOLATO sulla misura vera (`formaStampa`, lo
+stesso tratto, su tutti i lati) + SPESSORE (la stessa forma 1,6 px più in
+basso in `paper-line`). Angoli 20 (provati 12, 14 ± 2 e 20 a misura di
+telefono: la differenza quasi non si vede, il «carta» lo fanno bordo e
+spessore — scelta chiusa con Tommaso).
+- `seme`: l'id dell'oggetto (in una lista ognuna diversa), o un nome fisso.
+- `come="button"` per le card che sono bottoni.
+- `fondo="fill-…"` per le card colorate (le tessere dei ruoli scelte, le
+  opzioni dell'annuncio scelte). ⚠️ MAI `bg-…`: il disegno lo copre.
+- `ritaglia` per le card con righe che toccano il bordo e si colorano
+  premendole (Impostazioni, notifiche, il menu della pressione lunga):
+  `clip-path` su forma + spessore, filo a 2,2 (ne resta la metà). ⚠️ Mai
+  `overflow-hidden` su una CartaCard: taglierebbe lo spessore in basso.
+- Il disegno è un SVG a `-z-10` in un contesto `isolate`; nessun `filter`.
+- Dentro un `Foglietto` funziona (inoltra il ref e lo stile).
+- La finestra di modifica annuncio (`EditJobDialog`) è tornata un Dialog
+  normale: una card come finestra non ha senso.
+- L'evidenza dell'annuncio potenziato è solo la TESSERA (non più il bordo
+  arancio `card-evidenza`, tolto anche dal CSS; i PNG `bordo-card-*-evidenza`
+  restano nel repo, non usati).
 
 Le **foto** (carosello del profilo, griglia della gallery) non hanno un file
 proprio: `.sagoma-foto` rilegge `sagoma-card-a.svg`, e `.sagoma-foto-b` la `c`
@@ -1248,12 +1274,9 @@ memoria: si fotografano TUTTE le schermate, nei due ruoli e negli stati
     sulle sezioni che si TOCCANO — Interessi e Storico del proprio Profilo.
     Senza niente erano un buco nel ritmo fra fogli attaccati. Lo storico nel
     profilo PUBBLICO si legge soltanto (righe non toccabili): lì lo scotch.
-  - 🧪 **La card di carta** (`ui/CartaCard.tsx`, PROTOTIPO solo in Lista e
-    Profilo): contorno calcolato sulla misura vera (`formaStampa`, come la
-    Polaroid) + lo SPESSORE (la stessa forma 1,6 px più in basso in
-    `paper-line`), senza filtri. Confrontati angoli 12 e 20 contro la sagoma
-    a 9 sezioni: per ora 20, decide Tommaso. Se passa, va su tutte le
-    `.material-card`; se no si torna indietro togliendo `CartaCard`.
+  - **La card di carta** (`ui/CartaCard.tsx`): vedi «LA CARD È UN
+    COMPONENTE» in §6. Provata il 17 in Lista e Profilo, passata a tutta
+    l'app il 18 novembre.
   - Le sezioni del profilo pubblico hanno i titoli in Shinjo (`titolo-mini`).
 
 # 15. La scheda annuncio — la gerarchia, e perché

@@ -9,6 +9,7 @@ import { controllaPasswordNuova, PASSWORD_MINIMA } from "@/lib/registrazione";
 import { srcLogo } from "@/lib/gerarchia";
 import { doveMandare } from "@/lib/percorsoAccesso";
 import { chiudiRecupero, messaggioErrorePassword, segnaRecupero } from "@/lib/recuperoPassword";
+import { CartaCard } from "@/components/ui/CartaCard";
 
 type Stato = "controllo" | "pronta" | "scaduto";
 
@@ -111,7 +112,7 @@ const ReimpostaPassword = () => {
           <h1 className="titolo-vuoto">Scegli una nuova password</h1>
         </div>
 
-        <div className="material-card-elevated rounded-3xl bg-card p-8">
+        <CartaCard seme="reimposta" className="p-8">
           {stato === "controllo" && (
             <div className="flex justify-center py-6">
               <Loader2 className="h-6 w-6 animate-spin text-primary-strong" />
@@ -150,7 +151,7 @@ const ReimpostaPassword = () => {
               </Button>
             </form>
           )}
-        </div>
+        </CartaCard>
       </div>
     </div>
   );

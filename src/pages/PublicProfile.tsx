@@ -26,6 +26,7 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { NomeConSegno } from "@/components/ui/SegnoVerificato";
 import { MISURA_FOTO, ripiegaFoto, urlFoto } from "@/lib/foto";
 import { useProfiloPubblico, type AnnuncioPubblico, type ProfiloPubblico } from "@/hooks/useProfiloPubblico";
+import { CartaCard } from "@/components/ui/CartaCard";
 
 // Tag durata usati prima della rinomina, ancora presenti su annunci vecchi
 
@@ -230,7 +231,7 @@ const PublicProfile = () => {
         {profile.photos && profile.photos.length > 1 && (
           <div className="px-4 pb-6">
             <Foglietto seme="riquadro-foto" employer={!isWorkerProfile} scotch={[{ pezzo: "corto", lato: "sopraSx" }]}>
-            <div className="material-card p-5">
+            <CartaCard seme="profilo-pubblico-0" className="p-5">
               <div className="flex items-center gap-2 mb-4">
                 <FotoIcon className={`w-5 h-5 ${isWorkerProfile ? 'text-primary-strong' : 'text-employer-800'}`} />
                 <h3 className="titolo-mini">Foto</h3>
@@ -262,7 +263,7 @@ const PublicProfile = () => {
                   </button>
                 ))}
               </div>
-            </div>
+            </CartaCard>
             </Foglietto>
           </div>
         )}
@@ -282,7 +283,7 @@ const PublicProfile = () => {
             {/* Sezione 1: Presentazione (Bio) */}
             <div className="px-4 pb-6">
               <Foglietto seme="presentazione" employer={false} scotch={[{ pezzo: "cortoB", lato: "sopraDx" }]}>
-              <div className="material-card p-5">
+              <CartaCard seme="profilo-pubblico-1" className="p-5">
                 <div className="flex items-center gap-2 mb-3">
                   <DocumentoIcon className="w-5 h-5 text-primary-strong" />
                   <h3 className="titolo-mini">Presentazione</h3>
@@ -290,7 +291,7 @@ const PublicProfile = () => {
                 <p className="text-foreground leading-relaxed">
                   {profile.bio || "Nessuna presentazione inserita."}
                 </p>
-              </div>
+              </CartaCard>
               </Foglietto>
             </div>
 
@@ -298,13 +299,13 @@ const PublicProfile = () => {
             {profile.experience && (
               <div className="px-4 pb-6">
                 <Foglietto seme="esperienze" employer={false} scotch={[{ pezzo: "corto", lato: "sopraSx" }]}>
-                <div className="material-card p-5">
+                <CartaCard seme="profilo-pubblico-2" className="p-5">
                   <div className="flex items-center gap-2 mb-3">
                     <GenericoIcon className="w-5 h-5 text-primary-strong" />
                     <h3 className="titolo-mini">Esperienze</h3>
                   </div>
                   <p className="text-foreground leading-relaxed">{profile.experience}</p>
-                </div>
+                </CartaCard>
                 </Foglietto>
               </div>
             )}
@@ -315,7 +316,7 @@ const PublicProfile = () => {
                   scotch, come le altre sezioni. Nel proprio Profilo invece
                   ha la puntina, perché le righe si toccano. */}
               <Foglietto seme="storico" employer={false} scotch={[{ pezzo: "cortoB", lato: "sopraDx" }]}>
-              <div className="material-card p-5">
+              <CartaCard seme="profilo-pubblico-3" className="p-5">
                 <h3 className="titolo-mini mb-1 flex items-center gap-2">
                   <StoricoLavoriIcon className="w-5 h-5 text-primary-strong" />
                   Storico lavori
@@ -337,7 +338,7 @@ const PublicProfile = () => {
                     }))}
                   />
                 )}
-              </div>
+              </CartaCard>
               </Foglietto>
             </div>
           </>
@@ -350,13 +351,13 @@ const PublicProfile = () => {
             {profile.bio && (
               <div className="px-4 pb-6">
                 <Foglietto seme="chi-siamo" employer scotch={[{ pezzo: "cortoB", lato: "sopraDx" }]}>
-                <div className="material-card p-5">
+                <CartaCard seme="profilo-pubblico-4" className="p-5">
                   <div className="flex items-center gap-2 mb-3">
                     <DocumentoIcon className="w-5 h-5 text-employer-800" />
                     <h3 className="titolo-mini">Chi siamo</h3>
                   </div>
                   <p className="text-foreground leading-relaxed">{profile.bio}</p>
-                </div>
+                </CartaCard>
                 </Foglietto>
               </div>
             )}
@@ -365,13 +366,13 @@ const PublicProfile = () => {
             {profile.looking_for && (
               <div className="px-4 pb-6">
                 <Foglietto seme="chi-cerchiamo" employer scotch={[{ pezzo: "corto", lato: "sopraSx" }]}>
-                <div className="material-card p-5">
+                <CartaCard seme="profilo-pubblico-5" className="p-5">
                   <div className="flex items-center gap-2 mb-3">
                     <GenericoIcon className="w-5 h-5 text-employer-800" />
                     <h3 className="titolo-mini">Chi cerchiamo</h3>
                   </div>
                   <p className="text-foreground leading-relaxed">{profile.looking_for}</p>
-                </div>
+                </CartaCard>
                 </Foglietto>
               </div>
             )}
@@ -380,19 +381,19 @@ const PublicProfile = () => {
                 `scroll-mt` perché lo scotch sopra la card resti in vista. */}
             <div id="recensioni" className="scroll-mt-6 px-4 pb-6">
               <Foglietto seme="recensioni" employer scotch={[{ pezzo: "cortoB", lato: "sopraDx" }]}>
-              <div className="material-card p-5">
+              <CartaCard seme="profilo-pubblico-6" className="p-5">
                 <div className="flex items-center gap-2 mb-3">
                   <StellaIcon className="w-5 h-5 text-employer-800" />
                   <h3 className="titolo-mini">Recensioni</h3>
                 </div>
                 <RecensioniRicevute recensioni={reviews} />
-              </div>
+              </CartaCard>
               </Foglietto>
             </div>
 
             {/* Active Jobs Section */}
             <div className="px-4 pb-6">
-              <div className="material-card p-5">
+              <CartaCard seme="profilo-pubblico-7" className="p-5">
                 <div className="flex items-center gap-2 mb-4">
                   <AnnunciAttiviIcon className="w-5 h-5 text-employer-800" />
                   <h3 className="titolo-mini">Annunci attivi</h3>
@@ -454,7 +455,7 @@ const PublicProfile = () => {
                     })}
                   </div>
                 )}
-              </div>
+              </CartaCard>
             </div>
           </>
         )}

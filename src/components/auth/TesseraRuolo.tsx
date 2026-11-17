@@ -1,6 +1,7 @@
 import { useEffect, useRef, type ComponentType } from "react";
 import { PUNTINE } from "@/components/icons/puntine";
 import { cn } from "@/lib/utils";
+import { CartaCard } from "@/components/ui/CartaCard";
 
 /** A 12 fotogrammi al secondo: le pose dello stop motion (§«Lo scotch»). */
 const FOTOGRAMMA = 1000 / 12;
@@ -19,7 +20,7 @@ const POSE_PIANTA: [number, number, number][] = [
  * (Auth e ScegliRuolo), e la tessera scelta aveva un fondo grigio-verde: il
  * 15% del blu SCURO della gerarchia scura su carta.
  *
- * - Contorno disegnato delle card (`.material-card`); scelta, il fondo
+ * - La carta delle card (`CartaCard`, come bottone); scelta, il fondo
  *   tenue del ruolo (`employer-50` / `accent`).
  * - Al posto del pallino, una PUNTINA della bacheca, fuori dalla maschera
  *   (la taglierebbe): grigia finché la tessera non è scelta; scelta, prende
@@ -73,16 +74,18 @@ export function TesseraRuolo({
 
   return (
     <div className="relative">
-      <button
+      <CartaCard
+        come="button"
+        seme={titolo}
         type="button"
         onClick={onScegli}
         aria-pressed={scelto}
+        // Le tinte pensate per i fondi di ruolo. Un pastello velato sulla
+        // carta calda si spegneva in un grigio.
+        fondo={scelto ? (employer ? "fill-employer-50" : "fill-[hsl(var(--accent-worker))]") : undefined}
         className={cn(
-          "material-card relative block w-full text-left transition-colors duration-300 touch-feedback",
-          piccola ? "flex items-center gap-2.5 px-2.5 py-3" : "p-4",
-          // Le tinte pensate per i fondi di ruolo. Un pastello velato sulla
-          // carta calda si spegneva in un grigio.
-          scelto && (employer ? "bg-employer-50" : "bg-[hsl(var(--accent-worker))]")
+          "block w-full text-left touch-feedback",
+          piccola ? "flex items-center gap-2.5 px-2.5 py-3" : "p-4"
         )}
       >
         <div
@@ -107,7 +110,7 @@ export function TesseraRuolo({
             <p className={cn("mt-0.5 text-xs text-muted-foreground", piccola && "whitespace-nowrap")}>{sotto}</p>
           )}
         </div>
-      </button>
+      </CartaCard>
 
       <span
         ref={puntina}

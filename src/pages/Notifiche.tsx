@@ -9,6 +9,7 @@ import { iconaNotifica } from "@/lib/notifiche/icone";
 import { quandoArrivata, type Notifica } from "@/lib/notifiche/notifiche";
 import { chiaveGiorno, etichettaGiorno, oraMessaggio } from "@/lib/dates";
 import { cn } from "@/lib/utils";
+import { CartaCard } from "@/components/ui/CartaCard";
 
 /**
  * IL CENTRO NOTIFICHE (5 novembre 2026) — tutte, lette e non lette, dalla
@@ -66,7 +67,7 @@ const Notifiche = () => {
       <main className="flex-1 overflow-y-auto px-4 pb-8">
         {caricate && notifiche.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12">
-            <div className="material-card-elevated max-w-sm p-8 text-center">
+            <CartaCard seme="notifiche-vuote" className="max-w-sm p-8 text-center">
               <TesseraIcona icona={NotificheIcon} misura="lg" className="mx-auto mb-4" />
               <h2 className="titolo-vuoto mb-2">Nessuna notifica</h2>
               <p className="text-sm text-muted-foreground">
@@ -74,7 +75,7 @@ const Notifiche = () => {
                   ? "Qui troverai le candidature, i messaggi e gli avvisi sui tuoi annunci."
                   : "Qui troverai chi ti sceglie, i messaggi e i lavori in evidenza vicino a te."}
               </p>
-            </div>
+            </CartaCard>
           </div>
         ) : (
           giorni.map((g) => (

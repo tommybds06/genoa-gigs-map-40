@@ -11,6 +11,7 @@ import { TesseraIcona } from "@/components/ui/Tessera";
 import { LavoroCard } from "./LavoroCard";
 import { SagomaNegozio } from "./SagomaNegozio";
 import { SchedaLavoro } from "./SchedaLavoro";
+import { CartaCard } from "@/components/ui/CartaCard";
 
 interface BachecaWorkerProps {
   /** La chat si apre nella stessa pagina (Messaggi), non con un cambio di URL. */
@@ -55,17 +56,17 @@ export function BachecaWorker({ onApriChat }: BachecaWorkerProps) {
   if (error) {
     console.error("Bacheca worker:", error);
     return (
-      <div className="material-card-elevated p-6 text-center">
+      <CartaCard seme="bacheca-worker-chiusi" className="p-6 text-center">
         <h2 className="titolo-vuoto mb-2">Bacheca non disponibile</h2>
         <p className="text-sm text-muted-foreground">Non riesco a caricarla adesso. Riprova tra poco.</p>
-      </div>
+      </CartaCard>
     );
   }
 
   if (lavori.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-12">
-        <div className="material-card-elevated max-w-sm p-8 text-center">
+        <CartaCard seme="bacheca-worker-vuota" className="max-w-sm p-8 text-center">
           <TesseraIcona icona={AnnunciIcon} misura="lg" className="mx-auto mb-4" />
           <h2 className="titolo-vuoto mb-2">Ancora nessun lavoro</h2>
           <p className="mb-5 text-sm text-muted-foreground">
@@ -74,7 +75,7 @@ export function BachecaWorker({ onApriChat }: BachecaWorkerProps) {
           <Button className={cn("w-full", theme.btnFilled, theme.btnFilledHover)} onClick={() => navigate("/")}>
             Vai alla mappa
           </Button>
-        </div>
+        </CartaCard>
       </div>
     );
   }

@@ -19,6 +19,7 @@ import { annuncioScaduto, scadenzaDi, testoScadenza } from "@/lib/scadenzaAnnunc
 import { getJobIconFromTags } from "@/lib/jobIcons";
 import { TesseraIcona, TesseraIndietro } from "@/components/ui/Tessera";
 import { cn } from "@/lib/utils";
+import { CartaCard } from "@/components/ui/CartaCard";
 
 /**
  * I TUOI ANNUNCI — la pagina dell'employer (rifatta l'11 novembre).
@@ -399,7 +400,7 @@ const Annunci = () => {
           ) : (
             <div className="space-y-3">
               {applications.map((app) => (
-                <div key={app.id} className="material-card p-4">
+                <CartaCard key={app.id} seme={app.id} className="p-4">
                   <div
                     className="flex items-center gap-4 cursor-pointer touch-feedback"
                     onClick={() => navigate(`/profile/${app.applicant.id}`)}
@@ -463,7 +464,7 @@ const Annunci = () => {
                       </div>
                     )}
                   </div>
-                </div>
+                </CartaCard>
               ))}
             </div>
           )}
@@ -491,7 +492,7 @@ const Annunci = () => {
           {loading ? (
             <div className="space-y-3">
               {[1, 2].map((i) => (
-                <div key={i} className="material-card p-4 animate-pulse">
+                <CartaCard key={i} seme={`scheletro-${i}`} className="p-4 animate-pulse">
                   <div className="flex items-center gap-3">
                     <div className="h-12 w-12 rounded-2xl bg-muted" />
                     <div className="flex-1 space-y-2">
@@ -499,7 +500,7 @@ const Annunci = () => {
                       <div className="h-3 w-1/2 rounded bg-muted" />
                     </div>
                   </div>
-                </div>
+                </CartaCard>
               ))}
             </div>
           ) : jobs.length === 0 ? (
@@ -534,7 +535,7 @@ const Annunci = () => {
                   <h3 className="titolo-mini mb-2">
                     Passati <span className="text-ink-soft">· {passati.length}</span>
                   </h3>
-                  <div className="material-card px-4 py-1">
+                  <CartaCard seme="annunci-passati" className="px-4 py-1">
                     {passati.slice(0, passatiVisibili).map((job, i) => (
                       <button
                         key={job.id}
@@ -570,7 +571,7 @@ const Annunci = () => {
                         Mostra altri {Math.min(PASSATI_ALLA_VOLTA, passati.length - passatiVisibili)}
                       </button>
                     )}
-                  </div>
+                  </CartaCard>
                 </section>
               )}
             </>
@@ -589,10 +590,12 @@ function CardAttivo({ job, onClick }: { job: Annuncio; onClick: () => void }) {
   const scade = scadenzaDi(job);
   const urgente = !!scade && scade.getTime() - Date.now() < ORE_URGENTE * 3600_000;
   return (
-    <button
+    <CartaCard
+      come="button"
+      seme={job.id}
       type="button"
       onClick={onClick}
-      className="material-card flex w-full items-center gap-3 p-3.5 text-left touch-feedback"
+      className="flex w-full items-center gap-3 p-3.5 text-left touch-feedback"
     >
       <TesseraIcona icona={Icona} />
       <div className="min-w-0 flex-1">
@@ -619,7 +622,7 @@ function CardAttivo({ job, onClick }: { job: Annuncio; onClick: () => void }) {
         </span>
         <span className="mt-1 text-[11px] text-ink-soft">{job.candidature === 1 ? 'candidatura' : 'candidature'}</span>
       </div>
-    </button>
+    </CartaCard>
   );
 }
 

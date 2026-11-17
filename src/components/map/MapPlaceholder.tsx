@@ -1,4 +1,5 @@
 import { MapPin, Briefcase, GraduationCap, Truck, PartyPopper } from "lucide-react";
+import { CartaCard } from "@/components/ui/CartaCard";
 
 // Sample job markers for visualization
 const sampleJobs = [
@@ -96,19 +97,19 @@ export function MapPlaceholder() {
       </div>
 
       {/* Location Label Card */}
-      <div className="absolute bottom-4 left-4 material-card px-4 py-3">
+      <CartaCard seme="mappa-legenda" className="absolute bottom-4 left-4 px-4 py-3">
         <p className="text-sm font-semibold">📍 Genova Centro</p>
         <p className="text-xs text-muted-foreground">6 lavoretti disponibili</p>
-      </div>
+      </CartaCard>
 
       {/* Zoom Controls */}
       <div className="absolute top-4 right-4 flex flex-col gap-2">
-        <button className="w-10 h-10 material-card flex items-center justify-center text-lg font-medium hover:bg-muted transition-colors">
+        <CartaCard come="button" seme="mappa-zoom-0" raggio={12} className="w-10 h-10 flex items-center justify-center text-lg font-medium">
           +
-        </button>
-        <button className="w-10 h-10 material-card flex items-center justify-center text-lg font-medium hover:bg-muted transition-colors">
+        </CartaCard>
+        <CartaCard come="button" seme="mappa-zoom-1" raggio={12} className="w-10 h-10 flex items-center justify-center text-lg font-medium">
           −
-        </button>
+        </CartaCard>
       </div>
 
       {/* Map-First Chip */}

@@ -10,6 +10,7 @@ import { canaleAttivo, installata, suIos, type StatoPermesso } from "@/lib/notif
 import { toast } from "sonner";
 import { ProvaNotifiche } from "./ProvaNotifiche";
 import { cn } from "@/lib/utils";
+import { CartaCard } from "@/components/ui/CartaCard";
 
 interface Voce {
   categoria: CategoriaNotifiche;
@@ -70,7 +71,7 @@ export function ImpostazioniNotifiche() {
   return (
     <div className="mb-6">
       <h2 className="mb-2 px-1 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Notifiche</h2>
-      <div className="material-card overflow-hidden">
+      <CartaCard seme="impostazioni-notifiche" ritaglia>
         <div className={cn("flex items-center gap-3 p-4", stato === "concesso" ? "pb-3" : "linea-sotto-sottile")}>
           <NotificheIcon className={`h-5 w-5 shrink-0 ${theme.primaryText}`} />
           <div className="min-w-0 flex-1">
@@ -109,7 +110,7 @@ export function ImpostazioniNotifiche() {
             />
           </div>
         ))}
-      </div>
+      </CartaCard>
     </div>
   );
 }

@@ -62,6 +62,7 @@ import { OrologioIcon, InfoIcon } from "@/components/icons/uiIcons";
 import { Copy, Reply } from "lucide-react";
 import { useAttachmentUrl } from "@/hooks/useAttachmentUrl";
 import { useMessaggi, inserisciMessaggio, aggiornaMessaggio, type Messaggio, precaricaMessaggi } from "@/hooks/useMessaggi";
+import { CartaCard } from "@/components/ui/CartaCard";
 
 /** Il messaggio di una chat: vedi `hooks/useMessaggi.ts`. */
 type Message = Messaggio;
@@ -1203,13 +1204,13 @@ const Messaggi = () => {
              <ChatListSkeleton count={5} />
            ) : inLista.length === 0 ? (
              <div className="flex flex-col items-center justify-center py-12">
-               <div className="material-card-elevated p-8 text-center max-w-sm animate-scale-in">
+               <CartaCard seme="messaggi-vuoti" className="p-8 text-center max-w-sm animate-scale-in">
                  <TesseraIcona icona={MessaggiIcon} misura="lg" className="mx-auto mb-4" />
                  <h2 className="titolo-vuoto mb-2">Nessun messaggio</h2>
                  <p className="text-muted-foreground text-sm">
                    Quando contatterai un employer o riceverai messaggi, appariranno qui.
                  </p>
-              </div>
+              </CartaCard>
             </div>
            ) : (
              /* RIGHE PIATTE, non card (Tommaso, 22 ottobre). Le card sono per

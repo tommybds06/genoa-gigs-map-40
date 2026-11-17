@@ -470,123 +470,10 @@
     letter-spacing: -0.045em;
   }
 
-  /* La card e' un PEZZETTO DI CARTA: foglio appena piu' chiaro del fondo,
-     bordo visibile, ombra corta. La gerarchia la fa il bordo — il salto di
-     tono da solo la riporterebbe a essere un rettangolo bianco.
-
-     LA GRANA ANCHE QUI e' la parte che conta: con la texture solo sul body,
-     le card erano l'unica superficie liscia della pagina e leggevano come
-     plastica appoggiata sulla carta. Il tile e' lo stesso data-URI del fondo,
-     quindi il browser lo decodifica una volta sola e lo riusa ovunque. */
-  .material-card {
-    @apply bg-card rounded-2xl border border-border;
-    background-image: var(--grana);
-    background-size: var(--grana-scala);
-    box-shadow: var(--shadow-md);
-    transition: box-shadow 0.2s ease, transform 0.2s ease;
-  }
-
-  .material-card:hover {
-    box-shadow: var(--shadow-lg);
-  }
-
-  /* ---- CARD RITAGLIATE SUL DISEGNO ----
-     Il foglio e' piu' chiaro della carta di appena il 7%, quindi qui il bordo
-     serve davvero: senza, la card non si vede. Percio' la card usa DUE cose
-     dallo stesso tracciato — la sagoma che ritaglia il fondo (margine tagliato
-     a mano) e il filo tenue sopra, in `--paper-line` come ogni altro bordo
-     dell'app, ma a 2,3px invece che 1.
-
-     ⚠️ Niente `box-shadow` sulle card mascherate: la maschera ritaglia anche
-     l'ombra, che uscirebbe mozzata. Non e' una rinuncia — "contorni, campiture
-     piatte, niente ombre" e' la direzione outline-forte gia' scelta.
-
-     ⚠️ Quattro varianti = lo STESSO disegno ribaltato, alternate ogni quattro
-     card. La card candidatura compare cinque volte di fila: cinque copie
-     identiche leggono come fotocopia. E' la lezione della texture, applicata
-     prima di sbagliare invece che dopo. */
-  @supports (-webkit-mask-box-image: url("/images/cornici/sagoma-card-a-3x.png")) or
-            (mask-border: url("/images/cornici/sagoma-card-a-3x.png")) {
-    .material-card,
-    .material-card-elevated {
-      position: relative;
-      border-radius: 0;
-      border-color: transparent;
-      box-shadow: none;
-      -webkit-mask-box-image-source: url("/images/cornici/sagoma-card-a-3x.png");
-      -webkit-mask-box-image-slice: 84 fill;
-      -webkit-mask-box-image-width: 28px;
-      -webkit-mask-box-image-repeat: stretch;
-      mask-border-source: url("/images/cornici/sagoma-card-a-3x.png");
-      mask-border-slice: 84 fill;
-      mask-border-width: 28px;
-      mask-border-repeat: stretch;
-      --giunta-v: 28px;
-      --giunta-o: 28px;
-    }
-
-    .material-card:hover,
-    .material-card-elevated:hover {
-      box-shadow: none;
-    }
-
-    /* ---- Il filo del bordo ----
-       Terza versione. Le prime due erano spesse 2,3px e leggevano beige o
-       grigiastre: a quello spessore un tratto chiaro e' troppo largo per
-       sembrare una linea e troppo chiaro per sembrare un contorno. A 1,1px
-       il tratto puo' essere piu' SCURO senza urlare — e' la sottigliezza a
-       tenerlo tranquillo, non il colore.
-       ⚠️ La maschera del genitore taglia anche questo strato: tratto e taglio
-       stanno sulla stessa linea, quindi resta solo la meta' interna, cioe'
-       circa mezzo pixel effettivo. Se serve piu' presenza si alza il tratto
-       nei file bordo-card-*.svg, non qui. */
-    .material-card::after,
-    .material-card-elevated::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      border-style: solid;
-      border-color: transparent;
-      border-width: 28px;
-      border-image-source: url("/images/cornici/bordo-card-a-3x.png");
-      border-image-slice: 84;
-      border-image-width: 28px;
-      border-image-repeat: stretch;
-    }
-
-    /* Le varianti girano sui fratelli diretti (liste) e dentro .card-tilt
-       (sezioni che non sono fratelli). Chi non rientra resta sulla "a". */
-    .material-card:nth-of-type(4n + 2),
-    .card-tilt > *:nth-child(4n + 2) .material-card {
-      -webkit-mask-box-image-source: url("/images/cornici/sagoma-card-b-3x.png");
-      mask-border-source: url("/images/cornici/sagoma-card-b-3x.png");
-    }
-    .material-card:nth-of-type(4n + 2)::after,
-    .card-tilt > *:nth-child(4n + 2) .material-card::after {
-      border-image-source: url("/images/cornici/bordo-card-b-3x.png");
-    }
-
-    .material-card:nth-of-type(4n + 3),
-    .card-tilt > *:nth-child(4n + 3) .material-card {
-      -webkit-mask-box-image-source: url("/images/cornici/sagoma-card-c-3x.png");
-      mask-border-source: url("/images/cornici/sagoma-card-c-3x.png");
-    }
-    .material-card:nth-of-type(4n + 3)::after,
-    .card-tilt > *:nth-child(4n + 3) .material-card::after {
-      border-image-source: url("/images/cornici/bordo-card-c-3x.png");
-    }
-
-    .material-card:nth-of-type(4n + 4),
-    .card-tilt > *:nth-child(4n + 4) .material-card {
-      -webkit-mask-box-image-source: url("/images/cornici/sagoma-card-d-3x.png");
-      mask-border-source: url("/images/cornici/sagoma-card-d-3x.png");
-    }
-    .material-card:nth-of-type(4n + 4)::after,
-    .card-tilt > *:nth-child(4n + 4) .material-card::after {
-      border-image-source: url("/images/cornici/bordo-card-d-3x.png");
-    }
-  }
+  /* LA CARD — dal 18 novembre è un componente, `ui/CartaCard.tsx`: contorno
+     calcolato su tutti i lati + spessore. Qui c'era `.material-card`, la
+     sagoma a 9 sezioni con le quattro varianti ribaltate (sagoma-card-*,
+     bordo-card-*): i PNG restano, li usa ancora `.sagoma-foto`. */
 
   /* "Pezzetti di carta incollati": la sensazione viene dalla GEOMETRIA, non
      dalla texture. Rotazione alternata minima + angoli con raggi diversi.
@@ -609,15 +496,11 @@
 
   /* I raggi irregolari devono arrivare alla card anche quando il figlio
      diretto e' un wrapper (in ApplicationsList ogni card ha un <div key>). */
-  .card-tilt > *:nth-child(odd),
-  .card-tilt > *:nth-child(odd) .material-card,
-  .tilt-l.material-card {
+  .card-tilt > *:nth-child(odd) {
     border-radius: 17px 13px 18px 14px;
   }
 
-  .card-tilt > *:nth-child(even),
-  .card-tilt > *:nth-child(even) .material-card,
-  .tilt-r.material-card {
+  .card-tilt > *:nth-child(even) {
     border-radius: 13px 18px 14px 17px;
   }
 
@@ -662,12 +545,6 @@
     }
   }
 
-  .material-card-elevated {
-    @apply bg-card rounded-2xl border border-border;
-    background-size: var(--grana-scala);
-    background-image: var(--grana);
-    box-shadow: var(--shadow-lg);
-  }
   
   /* ---- SAGOME DISEGNATE (agosto 2026) ----
      I tracciati di Tommaso non fanno da BORDO ma da MASCHERA: il colore del
@@ -1004,8 +881,6 @@
        (`--giunta-v` sopra e sotto, `--giunta-o` ai lati); `max(4px, …)`
        copre anche il caso in cui il riquadro è più piccolo dei due angoli e
        il browser li rimpicciolisce fino a farli toccare al centro. */
-    .material-card,
-    .material-card-elevated,
     .sagoma-btn,
     .sagoma-chip,
     .sagoma-badge,
@@ -1418,32 +1293,6 @@ body [data-sonner-toaster] {
 .scheda-nascosta * {
   transition: none !important;
 }
-
-/* L'ANNUNCIO IN EVIDENZA (potenziato e pertinente, lib/potenziamento.ts) —
-   lo stesso filo disegnato delle card, più spesso (3,4 invece di 1,1: la
-   maschera ne lascia metà, ~1,7 px) e nell'arancio di brand, l'accento del
-   lato worker. Quattro varianti come il filo normale, nei file
-   bordo-card-*-evidenza-v1.svg. Fuori dai layer: deve battere le regole
-   delle varianti per posizione. */
-@supports (-webkit-mask-box-image: url("/images/cornici/sagoma-card-a-3x.png")) or
-          (mask-border: url("/images/cornici/sagoma-card-a-3x.png")) {
-  .material-card.card-evidenza::after {
-    border-image-source: url("/images/cornici/bordo-card-a-evidenza-v1-3x.png");
-  }
-  .material-card.card-evidenza:nth-of-type(4n + 2)::after,
-  .card-tilt > *:nth-child(4n + 2) .material-card.card-evidenza::after {
-    border-image-source: url("/images/cornici/bordo-card-b-evidenza-v1-3x.png");
-  }
-  .material-card.card-evidenza:nth-of-type(4n + 3)::after,
-  .card-tilt > *:nth-child(4n + 3) .material-card.card-evidenza::after {
-    border-image-source: url("/images/cornici/bordo-card-c-evidenza-v1-3x.png");
-  }
-  .material-card.card-evidenza:nth-of-type(4n + 4)::after,
-  .card-tilt > *:nth-child(4n + 4) .material-card.card-evidenza::after {
-    border-image-source: url("/images/cornici/bordo-card-d-evidenza-v1-3x.png");
-  }
-}
-
 
 /* LA LINEA DEL TEMPO (Crea annuncio, la durata: components/jobs/LineaDurata)
    — il tratto delle divisorie come MASCHERA, così prende il colore del

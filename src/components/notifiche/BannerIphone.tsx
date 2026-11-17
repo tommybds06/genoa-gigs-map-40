@@ -5,6 +5,7 @@ import { XIcon } from "@/components/icons/uiIcons";
 import { useAuth } from "@/hooks/useAuth";
 import { installata, suIos } from "@/lib/notifiche/canale";
 import { TAB_ROUTES } from "@/lib/schede";
+import { CartaCard } from "@/components/ui/CartaCard";
 
 const CHIUSO = "politask:banner-iphone-chiuso";
 
@@ -43,7 +44,7 @@ export function BannerIphone() {
 
   return (
     <div className="fixed inset-x-3 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-[49]">
-      <div className="material-card flex items-center gap-3 py-3 pl-4 pr-2">
+      <CartaCard seme="banner-iphone" className="flex items-center gap-3 py-3 pl-4 pr-2">
         <img src="/icons/icona-192-v1.png" alt="" className="h-10 w-10 shrink-0 rounded-[10px]" />
         <p className="min-w-0 flex-1 text-sm leading-snug text-ink">
           <span className="font-semibold">Installa Politask</span> per ricevere le notifiche: tocca{" "}
@@ -57,7 +58,7 @@ export function BannerIphone() {
         >
           <XIcon className="h-5 w-5" />
         </button>
-      </div>
+      </CartaCard>
     </div>
   );
 }

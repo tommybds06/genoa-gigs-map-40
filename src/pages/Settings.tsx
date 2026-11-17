@@ -20,6 +20,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
+import { CartaCard } from "@/components/ui/CartaCard";
 
 const Settings = () => {
   const navigate = useNavigate();
@@ -74,7 +75,7 @@ const Settings = () => {
         {/* User Info Card */}
         {user?.email && (
           <Foglietto seme="impostazioni-mail" scotch={[{ pezzo: "strappato", lato: "centro" }]}>
-          <div className="material-card p-4 mb-6">
+          <CartaCard seme="impostazioni-account" className="p-4 mb-6">
             <div className="flex items-center gap-3">
               <TesseraIcona icona={MailIcon} />
               <div>
@@ -82,7 +83,7 @@ const Settings = () => {
                 <p className="font-medium text-foreground">{user.email}</p>
               </div>
             </div>
-          </div>
+          </CartaCard>
           </Foglietto>
         )}
 
@@ -91,7 +92,7 @@ const Settings = () => {
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-2 px-1">
             Account
           </h2>
-          <div className="material-card overflow-hidden">
+          <CartaCard seme="impostazioni-0" ritaglia>
             {/* Edit Profile */}
             <button 
               onClick={() => navigate("/settings/edit-profile")}
@@ -103,7 +104,7 @@ const Settings = () => {
               </div>
               <FreccettaIcon className="w-5 h-5 text-muted-foreground" />
             </button>
-          </div>
+          </CartaCard>
         </div>
 
         {/* Le notifiche: il dispositivo e una voce per categoria (§28). Al
@@ -116,7 +117,7 @@ const Settings = () => {
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-2 px-1">
             Supporto & Info
           </h2>
-          <div className="material-card overflow-hidden">
+          <CartaCard seme="impostazioni-1" ritaglia>
             {/* Support */}
             <button 
               onClick={handleSupport}
@@ -140,7 +141,7 @@ const Settings = () => {
               </div>
               <FreccettaIcon className="w-5 h-5 text-muted-foreground" />
             </button>
-          </div>
+          </CartaCard>
         </div>
 
         {/* "Zona pericolo" era la traduzione letterale di Danger Zone, che e'
@@ -151,7 +152,7 @@ const Settings = () => {
             quella in cima allo schermo, due titoli identici a mezza pagina di
             distanza. Il rosso delle voci dice gia' che sono azioni serie. */}
         <div className="mb-6">
-          <div className="material-card overflow-hidden">
+          <CartaCard seme="impostazioni-2" ritaglia>
             {/* Logout */}
             <button 
               onClick={handleLogout}
@@ -178,7 +179,7 @@ const Settings = () => {
                 <span className="titolo-mini text-destructive">Elimina account</span>
               </div>
             </button>
-          </div>
+          </CartaCard>
         </div>
 
         {/* App Version */}

@@ -13,6 +13,7 @@ import { AggiungiCartellino } from "./AggiungiCartellino";
 import { SagomaCartellino } from "./SagomaCartellino";
 import { SPAZIO_SOPRA } from "@/lib/formaCartellino";
 import { MISURA_FOTO, ripiegaFoto, urlFoto } from "@/lib/foto";
+import { CartaCard } from "@/components/ui/CartaCard";
 
 interface BachecaProps {
   /** La chat si apre nella stessa pagina (Messaggi), non con un cambio di URL. */
@@ -53,10 +54,10 @@ export function Bacheca({ onApriChat }: BachecaProps) {
   if (error) {
     console.error("Bacheca:", error);
     return (
-      <div className="material-card-elevated p-6 text-center">
+      <CartaCard seme="bacheca-vuota" className="p-6 text-center">
         <h2 className="titolo-vuoto mb-2">Bacheca non disponibile</h2>
         <p className="text-sm text-muted-foreground">Non riesco a caricarla adesso. Riprova tra poco.</p>
-      </div>
+      </CartaCard>
     );
   }
 

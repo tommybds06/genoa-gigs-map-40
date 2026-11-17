@@ -69,7 +69,7 @@ export function EditJobDialog({ job, isOpen, onClose, onSuccess }: EditJobDialog
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-md material-card border-0">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Modifica annuncio</DialogTitle>
         </DialogHeader>

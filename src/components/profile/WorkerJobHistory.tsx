@@ -111,7 +111,7 @@ export const WorkerJobHistory = ({ primaryTextClasses }: WorkerJobHistoryProps) 
   return (
     // La puntina: le righe si toccano (portano all'attività), Foglietto.
     <Foglietto seme="storico" puntina="sopraDx">
-    <CartaCard seme="storico" raggio={20} className="p-4 mb-4">
+    <CartaCard seme="storico" className="p-4 mb-4">
       <h3 className="titolo-mini mb-1 flex items-center gap-2">
         <StoricoLavoriIcon className={`w-5 h-5 ${primaryTextClasses}`} />
         Storico lavori

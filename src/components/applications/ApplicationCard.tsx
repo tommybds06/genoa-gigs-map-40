@@ -8,6 +8,7 @@ import { Application, useChatForApplication } from "@/hooks/useApplications";
 import { getJobIconFromTags } from "@/lib/jobIcons";
 import { toast } from "sonner";
 import { formatTempoTrascorso } from "@/lib/dates";
+import { CartaCard } from "@/components/ui/CartaCard";
 
 interface ApplicationCardProps {
   application: Application;
@@ -54,9 +55,10 @@ export function ApplicationCard({ application, userId }: ApplicationCardProps) {
   };
 
   return (
-    <div
+    <CartaCard
+      seme={application.id}
       onClick={canOpen || isActiveStatus ? handleClick : undefined}
-      className={`material-card p-3 animate-fade-in ${
+      className={`p-3 animate-fade-in ${
         canOpen || isActiveStatus ? "cursor-pointer touch-feedback" : ""
       }`}
     >
@@ -85,7 +87,7 @@ export function ApplicationCard({ application, userId }: ApplicationCardProps) {
 
         {canOpen && <FreccettaIcon className="h-5 w-5 shrink-0 text-muted-foreground" />}
       </div>
-    </div>
+    </CartaCard>
   );
 }
 
@@ -94,7 +96,7 @@ export function ApplicationCard({ application, userId }: ApplicationCardProps) {
  *  al caricamento la lista faceva un salto verso l'alto. */
 export function ApplicationCardSkeleton() {
   return (
-    <div className="material-card p-3 animate-pulse">
+    <CartaCard seme="scheletro-candidatura" className="p-3 animate-pulse">
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 bg-muted rounded-2xl shrink-0" />
         <div className="flex-1 space-y-2">
@@ -103,6 +105,6 @@ export function ApplicationCardSkeleton() {
         </div>
         <div className="h-6 bg-muted rounded-full w-20 shrink-0" />
       </div>
-    </div>
+    </CartaCard>
   );
 }

@@ -259,7 +259,7 @@ export function JobsList({ jobs, loading, isEmployer, hasTags, onJobClick, sotto
           <CartaCard
             key={job.id}
             seme={job.id}
-            raggio={RAGGIO_CARTA}
+           
             data-annuncio={job.id}
             className="flex cursor-pointer items-center gap-3 p-3.5 touch-feedback"
             onClick={() => onJobClick(job)}
@@ -291,9 +291,6 @@ export function JobsList({ jobs, loading, isEmployer, hasTags, onJobClick, sotto
     </div>
   );
 }
-
-/** Prototipo della card di carta (Atlante 2-2): gli angoli da confrontare. */
-const RAGGIO_CARTA = 20;
 
 /** «In evidenza»: l'arancio di brand pieno con l'inchiostro sopra (6,45:1). */
 export function EtichettaInEvidenza() {
