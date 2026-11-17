@@ -1199,6 +1199,26 @@ LIKE '%@demo.politask.invalid'` (cascata) e togliere le colonne `is_demo` da
 
 ---
 
+# 14b. L'ATLANTE — la revisione di tutte le schermate (17 novembre)
+
+Per chiudere l'app «fino all'ultimo pixel» (Tommaso) non si rivede più a
+memoria: si fotografano TUTTE le schermate, nei due ruoli e negli stati
+(vuoto, pieno, schede aperte), e Tommaso annota sopra come al solito.
+- `node brand/scatta-atlante.mjs [filtro]` → `atlante/<data>/` (fuori dal
+  repo: `.gitignore`), JPEG a 390×844 ×2,625 (il Pixel), pagine lunghe in
+  più parti numerate, `indice.json`. Banco montato (`banco.sh su`) e server
+  di sviluppo su 8080. ⚠️ Col filtro la numerazione riparte da 1 e
+  l'indice si sovrascrive: per l'Atlante vero, senza filtro.
+- `node brand/provino-atlante.mjs <cartella> <da> <a>` → un provino a
+  contatto, per controllare in un colpo che ogni scatto sia la schermata
+  giusta (finiscono in `00-panoramica-*.png`).
+- Stati VUOTI: il banco non ha permessi per riga (tutti vedono tutto), quindi
+  le scene con `svuota: [tabelle]` svuotano le tabelle finte nel momento in
+  cui il banco le espone (`window.__db`), prima di ogni lettura.
+- ⚠️ Lo splash di oggi va segnato «visto» (localStorage), se no le pagine
+  della barra aspettano lui e non si montano (§17).
+- Primo Atlante: 17 novembre, 51 scene, 77 immagini.
+
 # 15. La scheda annuncio — la gerarchia, e perché
 
 `components/map/JobDetailsSheet.tsx`. Aperta dal pin sulla mappa, dalla lista e

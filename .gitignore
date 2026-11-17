@@ -44,3 +44,6 @@ supabase/demo/
 
 # I segreti delle notifiche (chiavi VAPID, segreto di invio): mai nel repo.
 supabase/segreti/
+
+# Atlante delle schermate per la revisione (generato, non va nel repo)
+atlante/
