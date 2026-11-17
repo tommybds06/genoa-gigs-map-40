@@ -1,8 +1,8 @@
 import { useNavigate } from "react-router-dom";
 import { MessaggiIcon } from "@/components/icons/uiIcons";
 import { ChevronRight } from "lucide-react";
+import { TesseraIcona } from "@/components/ui/Tessera";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Application, useChatForApplication } from "@/hooks/useApplications";
 import { getJobIconFromTags } from "@/lib/jobIcons";
 import { toast } from "sonner";
@@ -59,43 +59,30 @@ export function ApplicationCard({ application, userId }: ApplicationCardProps) {
         canOpen || isActiveStatus ? "cursor-pointer touch-feedback" : ""
       }`}
     >
+      {/* Come la card della Lista (Atlante, 17 novembre: «non si leggono mai
+          titoli e nome dell'attività»). Prima stato, icona della chat e
+          freccia stavano tutti sulla riga del titolo e se ne mangiavano la
+          larghezza: «Cameriere per…», «Caffè …». Ora: la tessera del
+          mestiere, il titolo intero (due righe), l'attività intera, e lo
+          stato in una riga sua con il tempo. */}
       <div className="flex items-center gap-3">
-        {/* Job Icon */}
-        <div className="w-10 h-10 flex items-center justify-center shrink-0">
-          <Icon className="w-9 h-9 text-primary" />
-        </div>
+        <TesseraIcona icona={Icon} />
 
-        {/* Content — employer e data su UNA riga sola: erano due righe di
-            metadati impilate, e la card era alta il doppio del necessario
-            per quattro informazioni. */}
-        <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-base truncate">{job?.title || application.job_title || "Lavoro"}</h3>
-
-          <div className="flex items-center gap-1.5 mt-0.5 text-xs text-muted-foreground min-w-0">
-            {nomeEmployer && (
-              <>
-                <Avatar seme={nomeEmployer} className="w-4 h-4 shrink-0">
-                  <AvatarImage src={job?.profiles?.avatar_url || undefined} />
-                  <AvatarFallback className="text-[8px]">
-                    {nomeEmployer.charAt(0)}
-                  </AvatarFallback>
-                </Avatar>
-                <span className="truncate max-w-[110px]">{nomeEmployer}</span>
-                <span aria-hidden className="shrink-0">·</span>
-              </>
+        <div className="min-w-0 flex-1">
+          <h3 className="line-clamp-2 text-[15px] font-semibold leading-snug">
+            {job?.title || application.job_title || "Lavoro"}
+          </h3>
+          {nomeEmployer && <p className="mt-0.5 truncate text-[13px] text-ink-soft">{nomeEmployer}</p>}
+          <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1">
+            <StatusBadge stato={application.status} />
+            <span className="text-xs text-muted-foreground">{formatTempoTrascorso(application.created_at)}</span>
+            {hasChat && (
+              <MessaggiIcon className="h-4 w-4 text-primary-strong" aria-label="Conversazione attiva" />
             )}
-            <span className="shrink-0">{formatTempoTrascorso(application.created_at)}</span>
           </div>
         </div>
 
-        {/* Stato, indicatore chat, chevron — nello stesso ordine su ogni riga */}
-        <div className="flex items-center gap-1.5 shrink-0">
-          <StatusBadge stato={application.status} />
-          {hasChat && (
-            <MessaggiIcon className="w-4 h-4 text-primary-strong" aria-label="Conversazione attiva" />
-          )}
-          {canOpen && <ChevronRight className="w-4 h-4 text-muted-foreground" />}
-        </div>
+        {canOpen && <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />}
       </div>
     </div>
   );

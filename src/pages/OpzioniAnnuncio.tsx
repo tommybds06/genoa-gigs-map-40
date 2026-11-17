@@ -167,7 +167,7 @@ const OpzioniAnnuncio = () => {
 
   return (
     <div className="fixed inset-0 overflow-y-auto bg-background" style={{ touchAction: 'pan-y' }}>
-      <div className="border-b-2 border-border bg-background px-6 pb-4 pt-8">
+      <div className="linea-sotto-sottile bg-background px-6 pb-4 pt-8">
         <div className="mb-1 flex items-center gap-3">
           <TesseraIndietro onClick={() => navigate(-1)} />
           <h1 className="titolo-sezione">Prima di pubblicare</h1>
@@ -175,7 +175,9 @@ const OpzioniAnnuncio = () => {
         <p className="text-sm text-muted-foreground">Vuoi dare una spinta al tuo annuncio?</p>
       </div>
 
-      <div className="space-y-6 px-6 py-6 pb-56">
+      {/* Lo spazio in fondo segue il piè di pagina fisso: un bottone o due
+          (Atlante, 23-2: con un bottone solo restavano ~90 px vuoti). */}
+      <div className={cn('space-y-6 px-6 py-6', scelta === 'nessuna' ? 'pb-40' : 'pb-56')}>
         {/* Il riepilogo: la riga della Lista, con la paga a destra. */}
         <div className="material-card flex items-center gap-3 p-3.5">
           <TesseraIcona icona={Icona} />
@@ -233,7 +235,7 @@ const OpzioniAnnuncio = () => {
 
       {/* In fondo: con un'opzione scelta due bottoni della stessa misura,
           così «Pubblica gratis» non diventa un link nascosto. */}
-      <div className="fixed bottom-0 left-0 right-0 space-y-2 border-t bg-background p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+      <div className="linea-a-cavallo-sottile fixed bottom-0 left-0 right-0 space-y-2 bg-background p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
         {scelta !== 'nessuna' && (
           <Button
             onClick={() => pubblica(scelta)}

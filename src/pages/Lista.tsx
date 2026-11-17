@@ -1,6 +1,6 @@
 import { Header } from "@/components/layout/Header";
 import { MapPin, Clock, Euro, SearchX, Tag, Briefcase, FileText } from "lucide-react";
-import { XIcon, DocumentoIcon, AnnunciVuotaIcon, CuoreIcon } from "@/components/icons/uiIcons";
+import { XIcon, DocumentoIcon, AnnunciIcon, CuoreIcon } from "@/components/icons/uiIcons";
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useUser } from "@/contexts/UserContext";
@@ -258,10 +258,14 @@ export function JobsList({ jobs, loading, isEmployer, hasTags, onJobClick, sotto
           <div
             key={job.id}
             data-annuncio={job.id}
-            className={cn("material-card flex cursor-pointer items-center gap-3 p-3.5 touch-feedback", evidenza && "card-evidenza")}
+            className="material-card flex cursor-pointer items-center gap-3 p-3.5 touch-feedback"
             onClick={() => onJobClick(job)}
           >
-            <TesseraIcona icona={Icon} evidenziata={evidenziati?.has(job.id)} />
+            {/* IN EVIDENZA = la tessera nell'arancio chiaro + l'etichetta, non
+                più il contorno arancione spesso (Tommaso, Atlante 17
+                novembre: «bruttino»). La paga resta nell'arancio SCURO: il
+                chiaro come testo non si legge (~1,9:1). */}
+            <TesseraIcona icona={Icon} evidenziata={evidenza || evidenziati?.has(job.id)} />
             <div className="min-w-0 flex-1">
               <h3 className="line-clamp-2 text-[15px] font-semibold leading-snug">{job.title}</h3>
               {zona && <p className="mt-0.5 truncate text-[13px] text-muted-foreground">{zona}</p>}
@@ -338,7 +342,7 @@ function EmptyState({ isEmployer, hasTags }: { isEmployer: boolean; hasTags: boo
   if (isEmployer) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center">
-        <TesseraIcona icona={AnnunciVuotaIcon} misura="lg" className="mb-4" />
+        <TesseraIcona icona={AnnunciIcon} misura="lg" className="mb-4" />
         <h3 className="titolo-vuoto mb-2">Nessun annuncio creato</h3>
         <p className="text-muted-foreground text-sm max-w-xs">
           Crea il tuo primo annuncio di lavoro per trovare lavoratori

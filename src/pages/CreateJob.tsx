@@ -242,7 +242,7 @@ const CreateJob = () => {
       {/* Header — era un blocco blu pieno che si interrompeva di netto sulla
           carta: l'unica schermata dell'app fatta cosi'. Ora e' carta come le
           altre, e il colore del ruolo resta sulla freccia e sul bordo. */}
-      <div className="bg-background border-b-2 border-border px-6 pt-8 pb-4">
+      <div className="linea-sotto-sottile bg-background px-6 pt-8 pb-4">
         <div className="flex items-center gap-3 mb-1">
           <TesseraIndietro onClick={() => navigate(-1)} />
           <h1 className="titolo-sezione">Crea annuncio</h1>
@@ -445,7 +445,7 @@ const CreateJob = () => {
 
       {/* Fixed Footer — le opzioni e la pubblicazione sono nella pagina
           dopo (OpzioniAnnuncio). */}
-      <div className="fixed bottom-0 left-0 right-0 bg-background border-t p-4">
+      <div className="linea-a-cavallo-sottile fixed bottom-0 left-0 right-0 bg-background p-4">
         <Button
           onClick={prosegui}
           size="lg"

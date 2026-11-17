@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { AnnunciVuotaIcon } from "@/components/icons/uiIcons";
+import { AnnunciIcon } from "@/components/icons/uiIcons";
 import { apriRecensione } from "@/lib/recensione";
 import { useAuth } from "@/hooks/useAuth";
 import { useAppTheme } from "@/hooks/useAppTheme";
@@ -66,7 +66,7 @@ export function BachecaWorker({ onApriChat }: BachecaWorkerProps) {
     return (
       <div className="flex flex-col items-center justify-center py-12">
         <div className="material-card-elevated max-w-sm p-8 text-center">
-          <TesseraIcona icona={AnnunciVuotaIcon} misura="lg" className="mx-auto mb-4" />
+          <TesseraIcona icona={AnnunciIcon} misura="lg" className="mx-auto mb-4" />
           <h2 className="titolo-vuoto mb-2">Ancora nessun lavoro</h2>
           <p className="mb-5 text-sm text-muted-foreground">
             Qui troverai i lavori in cui sei stato preso. Intanto, guarda cosa c'è vicino a te.

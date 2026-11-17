@@ -1,6 +1,6 @@
 import * as React from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
-import { X } from "lucide-react";
+import { XIcon } from "@/components/icons/uiIcons";
 
 import { cn } from "@/lib/utils";
 import { useApertaSoloInScheda } from "@/hooks/useScheda";
@@ -50,9 +50,11 @@ const DialogContent = React.forwardRef<
       {...props}
     >
       {children}
+      {/* La X nostra (`XIcon`), tenue, con un bersaglio da 44 px (Atlante, 50:
+          era quella generica di lucide, piccola e nera). */}
       {!senzaChiudi && (
-      <DialogPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity data-[state=open]:bg-accent data-[state=open]:text-muted-foreground hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none">
-        <X className="h-4 w-4" />
+      <DialogPrimitive.Close className="absolute right-2 top-2 flex h-11 w-11 items-center justify-center rounded-full text-ink-soft transition-transform active:scale-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none">
+        <XIcon className="h-4 w-4" />
         <span className="sr-only">Chiudi</span>
       </DialogPrimitive.Close>
       )}

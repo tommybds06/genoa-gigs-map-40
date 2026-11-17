@@ -651,9 +651,10 @@ const Auth = () => {
               crearsi un secondo accesso per lo stesso indirizzo. */}
           <div className="mt-6">
             <div className="flex items-center gap-3">
-              <span className="h-px flex-1 bg-border" />
+              {/* La linea disegnata (sottile), non il filo CSS da 1 px (Atlante, 17 novembre). */}
+              <span aria-hidden="true" className="linea-divisoria-sottile h-0 flex-1" />
               <span className="text-xs text-muted-foreground">oppure</span>
-              <span className="h-px flex-1 bg-border" />
+              <span aria-hidden="true" className="linea-divisoria-sottile h-0 flex-1" />
             </div>
 
             {/* Google e Apple SENZA contorno, come sono sempre stati a schermo:
@@ -724,15 +725,8 @@ const Auth = () => {
           </div>
         </div>
 
-        {/* Il claim serve a chi non conosce ancora l'app, quindi ha senso in
-            REGISTRAZIONE e non in accesso: chi accede sa gia' cos'e'.
-            "Gig economy" era gergo da addetti ai lavori — uno studente di
-            Genova cerca "lavoretti", non "gig". */}
-        {!isLogin && (
-          <p className="text-center text-xs text-muted-foreground mt-6">
-            Lavoretti per studenti, a Genova
-          </p>
-        )}
+        {/* Qui c'era «Lavoretti per studenti, a Genova»: tolta (Tommaso,
+            Atlante 17 novembre). Al suo posto verrà qualcosa di disegnato. */}
       </div>
     </div>
   );

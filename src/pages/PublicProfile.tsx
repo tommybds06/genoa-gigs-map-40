@@ -424,7 +424,10 @@ const PublicProfile = () => {
                 
                 {jobs.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-8 text-center">
-                    <TesseraIcona icona={AnnunciVuotaIcon} misura="lg" className="mb-3" />
+                    {/* La stessa icona del titolo, nel blu dell'attività (il
+                        profilo è suo, non di chi guarda): era la tessera nel
+                        colore di chi guarda, con un'altra icona (Atlante, 43). */}
+                    <AnnunciAttiviIcon className="mb-3 h-10 w-10 text-employer-800" />
                     <p className="text-muted-foreground text-sm">Nessun annuncio attivo</p>
                   </div>
                 ) : (

@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft, Loader2 } from "lucide-react";
-import { SalvaIcon } from "@/components/icons/uiIcons";
+// Le icone accanto alle etichette, come nella configurazione del profilo
+// (Atlante, 44-2: in Modifica profilo non c'erano).
+import { SalvaIcon, ProfiloIcon, MappaIcon, PennaIcon, SearchIcon, StoricoLavoriIcon, InstagramIcon, GloboIcon, HashtagIcon } from "@/components/icons/uiIcons";
 import { useAuth } from "@/hooks/useAuth";
 import { useUser } from "@/contexts/UserContext";
 import { useAppTheme } from "@/hooks/useAppTheme";
@@ -171,7 +173,7 @@ const EditProfile = () => {
           che nel browser vale 0 e, arrivando dopo nel CSS compilato, ANNULLA
           il `pt-4`. La forma sotto tiene entrambe le cose: almeno 1rem, di piu'
           se il dispositivo ha una tacca. */}
-      <header className="sticky top-0 z-40 bg-background px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-3 border-b border-border">
+      <header className="sticky top-0 z-40 bg-background px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-3 linea-sotto-sottile">
         <div className="flex items-center gap-3">
           <TesseraIndietro onClick={handleBack} />
           <h1 className="text-xl font-bold text-foreground">Modifica profilo</h1>
@@ -195,7 +197,8 @@ const EditProfile = () => {
         <div className="space-y-5">
           {/* Name Field */}
           <div className="space-y-2">
-            <Label htmlFor="fullName" className="text-sm font-medium">
+            <Label htmlFor="fullName" className="text-sm font-medium flex items-center gap-2">
+              <ProfiloIcon className="h-4 w-4 shrink-0" />
               {isEmployer && !privato ? "Nome" : "Nome e cognome"}
             </Label>
               <Input
@@ -209,7 +212,8 @@ const EditProfile = () => {
 
           {/* Neighborhood Field */}
           <div className="space-y-2">
-            <Label className="text-sm font-medium">
+            <Label className="text-sm font-medium flex items-center gap-2">
+              <MappaIcon className="h-4 w-4 shrink-0" />
               Quartiere / Zona
             </Label>
             <NeighborhoodSelect
@@ -223,7 +227,8 @@ const EditProfile = () => {
           {/* Address Field - solo per le ATTIVITÀ: un privato non lo dà mai. */}
           {isEmployer && !privato && (
             <div className="space-y-2">
-              <Label htmlFor="address" className="text-sm font-medium">
+              <Label htmlFor="address" className="text-sm font-medium flex items-center gap-2">
+              <MappaIcon className="h-4 w-4 shrink-0" />
                 Indirizzo
               </Label>
                 <Input
@@ -238,7 +243,8 @@ const EditProfile = () => {
 
           {/* Bio Field */}
           <div className="space-y-2">
-            <Label htmlFor="bio" className="text-sm font-medium">
+            <Label htmlFor="bio" className="text-sm font-medium flex items-center gap-2">
+              <PennaIcon className="h-4 w-4 shrink-0" />
               {isEmployer ? "Descrizione" : "Presentazione"}
             </Label>
               <Textarea
@@ -260,7 +266,8 @@ const EditProfile = () => {
           {/* Role-Specific Fields */}
           {isEmployer ? (
             <div className="space-y-2">
-              <Label htmlFor="lookingFor" className="text-sm font-medium">
+              <Label htmlFor="lookingFor" className="text-sm font-medium flex items-center gap-2">
+              <SearchIcon className="h-4 w-4 shrink-0" />
                 Chi cerco
               </Label>
                 <Textarea
@@ -274,7 +281,8 @@ const EditProfile = () => {
             </div>
           ) : (
             <div className="space-y-2">
-              <Label htmlFor="experience" className="text-sm font-medium">
+              <Label htmlFor="experience" className="text-sm font-medium flex items-center gap-2">
+              <StoricoLavoriIcon className="h-4 w-4 shrink-0" />
                 Esperienze
               </Label>
                 <Textarea
@@ -291,7 +299,8 @@ const EditProfile = () => {
           {/* Social: prima si scrivevano solo nell'onboarding, e da lì non si
               potevano più cambiare. Puliti e controllati da `lib/social.ts`. */}
           <div className="space-y-2">
-            <Label htmlFor="instagram" className="text-sm font-medium">
+            <Label htmlFor="instagram" className="text-sm font-medium flex items-center gap-2">
+              <InstagramIcon className="h-4 w-4 shrink-0" />
               Instagram
             </Label>
             <Input
@@ -307,7 +316,8 @@ const EditProfile = () => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="website" className="text-sm font-medium">
+            <Label htmlFor="website" className="text-sm font-medium flex items-center gap-2">
+              <GloboIcon className="h-4 w-4 shrink-0" />
               Sito web
             </Label>
             <Input
@@ -327,7 +337,8 @@ const EditProfile = () => {
           {/* Le verifiche facoltative, anche dopo la configurazione (24 ottobre). */}
           {isEmployer && (
             <div className="space-y-2 pt-2">
-              <Label htmlFor="partita-iva" className="text-sm font-medium">
+              <Label htmlFor="partita-iva" className="text-sm font-medium flex items-center gap-2">
+              <HashtagIcon className="h-4 w-4 shrink-0" />
                 {privato ? "Verifica dell'identità" : "Partita IVA"}
               </Label>
               {privato ? (

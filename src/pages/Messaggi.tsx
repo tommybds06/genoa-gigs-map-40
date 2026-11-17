@@ -3,7 +3,7 @@ import { srcLogo } from "@/lib/gerarchia";
 import { Campanella } from "@/components/notifiche/Campanella";
 import { impostaChatAperta, segnaLetteDellaChat } from "@/lib/notifiche/notifiche";
 import { MessageCircle, ArrowLeft, Send, Loader2, ImagePlus, CheckCircle, Check } from "lucide-react";
-import { InvioIcon, ImmaginiIcon, MessaggiVuotaIcon, DocumentoIcon, XIcon } from "@/components/icons/uiIcons";
+import { InvioIcon, ImmaginiIcon, MessaggiIcon, DocumentoIcon, XIcon } from "@/components/icons/uiIcons";
 import { useAppTheme } from "@/hooks/useAppTheme";
 import { cn } from "@/lib/utils";
 import { Tessera, TesseraIcona, TesseraIndietro } from "@/components/ui/Tessera";
@@ -1203,7 +1203,7 @@ const Messaggi = () => {
            ) : inLista.length === 0 ? (
              <div className="flex flex-col items-center justify-center py-12">
                <div className="material-card-elevated p-8 text-center max-w-sm animate-scale-in">
-                 <TesseraIcona icona={MessaggiVuotaIcon} misura="lg" className="mx-auto mb-4" />
+                 <TesseraIcona icona={MessaggiIcon} misura="lg" className="mx-auto mb-4" />
                  <h2 className="titolo-vuoto mb-2">Nessun messaggio</h2>
                  <p className="text-muted-foreground text-sm">
                    Quando contatterai un employer o riceverai messaggi, appariranno qui.
@@ -1291,10 +1291,14 @@ const Messaggi = () => {
                            )}
                          </div>
 
-                         {/* Di che lavoro si parla: è l'unica cosa che distingue
-                             due chat con la stessa persona (una per annuncio). */}
+                         {/* Di che lavoro si parla. Era grigio come l'ultimo
+                             messaggio sotto, e le due righe si confondevano
+                             (Atlante, 25): ora nell'inchiostro del ruolo, come
+                             un'etichetta; il messaggio resta testo. */}
                          {chat.job?.title && (
-                           <p className="mt-0.5 truncate text-[13px] text-ink-soft">{chat.job.title}</p>
+                           <p className={cn('mt-0.5 truncate text-[13px] font-medium', isEmployer ? 'text-employer-800' : 'text-primary-strong')}>
+                             {chat.job.title}
+                           </p>
                          )}
 
                          <div className="mt-0.5 flex items-center gap-2">

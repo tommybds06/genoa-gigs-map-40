@@ -71,7 +71,7 @@ export function ImpostazioniNotifiche() {
     <div className="mb-6">
       <h2 className="mb-2 px-1 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Notifiche</h2>
       <div className="material-card overflow-hidden">
-        <div className={cn("flex items-center gap-3 p-4", stato === "concesso" ? "pb-3" : "border-b border-border")}>
+        <div className={cn("flex items-center gap-3 p-4", stato === "concesso" ? "pb-3" : "linea-sotto-sottile")}>
           <NotificheIcon className={`h-5 w-5 shrink-0 ${theme.primaryText}`} />
           <div className="min-w-0 flex-1">
             <p className="titolo-mini">Su questo telefono</p>
@@ -95,7 +95,7 @@ export function ImpostazioniNotifiche() {
           <div
             key={v.categoria}
             onClick={(e) => !(e.target as HTMLElement).closest("button") && cambia(v.categoria, !preferenze[v.categoria])}
-            className={cn("flex cursor-pointer items-center gap-3 p-4", i < voci.length - 1 && "border-b border-border")}
+            className={cn("flex cursor-pointer items-center gap-3 p-4", i < voci.length - 1 && "linea-sotto-sottile")}
           >
             <v.icona className={`h-5 w-5 shrink-0 ${theme.primaryText}`} />
             <div className="min-w-0 flex-1">

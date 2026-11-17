@@ -115,7 +115,7 @@ export function AvatarPreview({
             >
               {/* Header - Name bar: stessa superficie della barra azioni, così
                   incorniciano la foto. Prima era bianco su nero, fuori palette. */}
-              <div className="bg-card pl-12 pr-2 py-3 border-b border-border flex items-center gap-2">
+              <div className="bg-card pl-12 pr-2 py-3 linea-sotto-sottile flex items-center gap-2">
                 <h3 className="flex-1 text-foreground font-semibold text-lg truncate text-center">
                   {displayName}
                 </h3>
@@ -153,7 +153,7 @@ export function AvatarPreview({
 
               {/* Footer - Action bar: le TESSERE (ui/Tessera), le stesse della
                   scheda del lavoro — erano due cerchi grigi `bg-muted`. */}
-              <div className="bg-card px-6 py-4 border-t border-border flex items-start justify-center gap-12">
+              <div className="bg-card px-6 py-4 linea-a-cavallo-sottile flex items-start justify-center gap-12">
                 <Tessera
                   icona={MessaggiIcon}
                   etichetta={`Scrivi a ${displayName}`}

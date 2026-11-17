@@ -64,7 +64,10 @@ const ScegliRuolo = () => {
   useEffect(() => {
     // Stesso motivo di Auth: si scrive solo dopo una scelta vera, mai un
     // fallback che sovrascriverebbe il ruolo gia' noto.
-    if (ruolo) document.documentElement.dataset.ruolo = ruolo;
+    // Prima della scelta i campi sono NEUTRI (arancio, come in Auth): qui
+    // si arriva proprio perché un ruolo non è stato ancora scelto, e i campi
+    // blu prima di aver toccato niente (Atlante, 7) dicevano il contrario.
+    document.documentElement.dataset.ruolo = ruolo ?? "worker";
   }, [ruolo]);
 
   useEffect(() => {

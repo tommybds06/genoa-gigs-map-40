@@ -5,7 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useAppTheme } from '@/hooks/useAppTheme';
 import { supabase } from '@/integrations/supabase/client';
 import { ChevronRight, Loader2, Check } from 'lucide-react';
-import { PennaIcon, BidoneIcon, XIcon, AnnunciVuotaIcon, PiuIcon, OrologioIcon } from "@/components/icons/uiIcons";
+import { PennaIcon, BidoneIcon, XIcon, AnnunciIcon, PiuIcon, OrologioIcon } from "@/components/icons/uiIcons";
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { StatusBadge } from '@/components/ui/StatusBadge';
@@ -354,7 +354,11 @@ const Annunci = () => {
           {/* Le azioni sull'annuncio stanno qui, non su ogni riga dell'elenco.
               Modifica solo se è ancora sulla mappa. Misura normale (44 px):
               sotto quella il bottone vuoto non ha il contorno disegnato. */}
-          <div className="mb-4 flex items-center gap-2">
+          {/* Due metà uguali, allineate al contenuto (Atlante, 20: «decentrati
+              male, stortini» — un bottone col contorno e uno senza, di
+              larghezze diverse, appesi a sinistra). Senza «Modifica» (annuncio
+              passato), «Elimina» prende tutta la riga. */}
+          <div className={cn('mb-4 grid gap-2', eAttivo ? 'grid-cols-2' : 'grid-cols-1')}>
             {eAttivo && (
               <Button variant="outline" onClick={() => setEditingJob(selectedJob)}>
                 <PennaIcon className="h-4 w-4" />
@@ -362,7 +366,7 @@ const Annunci = () => {
               </Button>
             )}
             <Button
-              variant="ghost"
+              variant="outline"
               className="text-danger hover:bg-danger-soft hover:text-danger"
               onClick={() => setDeletingJob(selectedJob)}
             >
@@ -432,7 +436,7 @@ const Annunci = () => {
                             <Loader2 className="h-4 w-4 animate-spin" />
                           ) : (
                             <>
-                              <XIcon className="h-4 w-4" />
+                              <XIcon className="h-3.5 w-3.5 text-ink-soft" />
                               Rifiuta
                             </>
                           )}
@@ -499,7 +503,7 @@ const Annunci = () => {
             </div>
           ) : jobs.length === 0 ? (
             <div className="py-8 text-center">
-              <TesseraIcona icona={AnnunciVuotaIcon} misura="lg" className="mx-auto mb-4" />
+              <TesseraIcona icona={AnnunciIcon} misura="lg" className="mx-auto mb-4" />
               <h3 className="titolo-vuoto mb-1">Nessun annuncio</h3>
               <p className="mx-auto max-w-[280px] text-sm text-muted-foreground">
                 Resta sulla mappa 48 ore, e ti avvisiamo a ogni candidatura.
@@ -541,7 +545,7 @@ const Annunci = () => {
                         )}
                       >
                         <div className="min-w-0 flex-1">
-                          <p className="line-clamp-2 text-[15px] leading-snug text-ink">{job.title}</p>
+                          <p className="titolo-mini line-clamp-2 text-[17px] leading-snug">{job.title}</p>
                           {/* Testo che scorre, non colonne: con «da vedere» in una
                               colonna a destra la riga si spezzava a metà
                               («· 3 / candidature»). «Da vedere» nell'inchiostro del
@@ -591,7 +595,7 @@ function CardAttivo({ job, onClick }: { job: Annuncio; onClick: () => void }) {
     >
       <TesseraIcona icona={Icona} />
       <div className="min-w-0 flex-1">
-        <h3 className="line-clamp-2 text-[15px] font-semibold leading-snug">{job.title}</h3>
+        <h3 className="titolo-mini line-clamp-2 text-[17px] leading-snug">{job.title}</h3>
         <p
           className={cn(
             'mt-1 flex items-center gap-1 text-[13px]',

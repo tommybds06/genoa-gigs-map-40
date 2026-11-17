@@ -112,7 +112,7 @@ export function ProvaNotifiche() {
   };
 
   return (
-    <div className="border-b border-border px-4 pb-4">
+    <div className="linea-sotto-sottile px-4 pb-4">
       <Button size="sm" variant="outline" className="w-full" onClick={prova} disabled={inCorso}>
         {inCorso && <Loader2 className="animate-spin" />}
         Mandami una notifica di prova

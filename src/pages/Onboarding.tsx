@@ -18,10 +18,10 @@ import { VerificaIdentita } from '@/components/profile/VerificaIdentita';
 import { MESSAGGI_PARTITA_IVA, RAGGIO_AREA, salvaRiservati, testiEmployer, verificaPartitaIva } from '@/lib/registrazione';
 import { LocationPicker } from '@/components/onboarding/LocationPicker';
 import { toast } from 'sonner';
-import { BadgeCheck, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import {
   ProfiloIcon, DocumentoIcon, FotoIcon, GloboIcon, InstagramIcon,
-  HashtagIcon, SearchIcon, MappaIcon, AnnunciIcon,
+  HashtagIcon, SearchIcon, MappaIcon, AnnunciIcon, PennaIcon, VerificatoIcon,
 } from '@/components/icons/uiIcons';
 
 const Onboarding = () => {
@@ -192,7 +192,7 @@ const Onboarding = () => {
           l'ultima sezione ci finiva sotto. In compenso non serve piu' spazio
           extra dopo i tag durata, che qui non ci sono: la durata si sceglie
           creando un annuncio, non compilando il profilo. */}
-      <div className="px-6 py-6 space-y-8 pb-28">
+      <div className="px-6 py-6 space-y-8 pb-24">
         {/* Section A: Chi sei / Descrizione attività */}
         <section className="space-y-4">
           <div className="flex items-center gap-2 text-lg font-semibold">
@@ -206,7 +206,8 @@ const Onboarding = () => {
           
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="bio" className="text-base font-medium">
+              <Label htmlFor="bio" className="text-base font-medium flex items-center gap-2">
+                <PennaIcon className="h-4 w-4 shrink-0" />
                 {isEmployer ? testi.descrizione : 'Presentazione'} <span className="text-destructive">*</span>
               </Label>
               <Textarea
@@ -329,7 +330,7 @@ const Onboarding = () => {
         {isEmployer && (
           <section className="space-y-4">
             <div className="flex items-center gap-2 text-lg font-semibold">
-              <BadgeCheck className={`h-5 w-5 shrink-0 ${iconColorClass}`} />
+              <VerificatoIcon className={`h-5 w-5 shrink-0 ${iconColorClass}`} />
               <span className="titolo-mini">Verifica (facoltativa)</span>
             </div>
             {privato ? (
@@ -420,7 +421,7 @@ const Onboarding = () => {
       </div>
 
       {/* Fixed Footer */}
-      <div className="fixed bottom-0 left-0 right-0 bg-background border-t p-4">
+      <div className="linea-a-cavallo-sottile fixed bottom-0 left-0 right-0 bg-background p-4">
         <Button
           onClick={handleComplete}
           disabled={loading}

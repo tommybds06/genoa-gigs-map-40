@@ -376,13 +376,14 @@ export function JobDetailsSheet({ job, isOpen, onClose, showMiniMap = false, sop
               </DrawerTitle>
 
               {job.price && (
-                /* Shinjo a 28px: e' un uso da DISPLAY, non un'etichetta di
-                   campo — sopra i 18px l'irregolarita' del tratto legge come
+                /* Shinjo a 22px (era 28: più grande del titolo, che è 24 —
+                   la paga è la SECONDA domanda, Atlante 17 novembre): uso da
+                   DISPLAY, non un'etichetta di campo — sopra i 18px l'irregolarita' del tratto legge come
                    carattere, non come rumore. `break-words` perche' il campo
                    della paga e' libero. */
                 <p
                   className={cn(
-                    "mt-1.5 font-[Shinjo,Outfit,sans-serif] [font-synthesis:none] tracking-[-0.045em] text-[28px] leading-[1.15] break-words",
+                    "mt-1.5 font-[Shinjo,Outfit,sans-serif] [font-synthesis:none] tracking-[-0.045em] text-[22px] leading-[1.15] break-words",
                     inchiostroRuolo
                   )}
                 >
@@ -489,7 +490,7 @@ export function JobDetailsSheet({ job, isOpen, onClose, showMiniMap = false, sop
                    qui: sta sotto la mappa, dove serve. */}
             <button
               onClick={handleEmployerClick}
-              className="linea-divisoria-sopra w-full flex items-center gap-3 py-3 text-left transition-colors active:bg-accent/40"
+              className="linea-divisoria-sottile w-full flex items-center gap-3 py-3 text-left transition-colors active:bg-accent/40"
             >
               <Avatar seme={job.owner_id || employerName} className="w-11 h-11 shrink-0">
                 <AvatarImage src={employerAvatar || undefined} alt={employerName} />
@@ -514,7 +515,7 @@ export function JobDetailsSheet({ job, isOpen, onClose, showMiniMap = false, sop
 
             {/* 3. I DETTAGLI */}
             {job.description && (
-              <div className="linea-divisoria-sopra pt-4 pb-1">
+              <div className="linea-divisoria-sottile pt-4 pb-1">
                 <h3 className="titolo-mini mb-1.5">Descrizione</h3>
                 <p className="text-[15px] leading-[1.6] text-foreground whitespace-pre-line">
                   {job.description}
@@ -526,7 +527,7 @@ export function JobDetailsSheet({ job, isOpen, onClose, showMiniMap = false, sop
                    stampiamo qui sotto, allineato a sinistra come tutto il
                    resto. Passare `neighborhood`/`address` alla minimappa
                    accendeva il suo blocco di testo CENTRATO. */}
-            <div className="linea-divisoria-sopra mt-4 pt-4 pb-5">
+            <div className="linea-divisoria-sottile mt-4 pt-4 pb-5">
               <h3 className="titolo-mini mb-2.5">Dove</h3>
               {haMiniMappa ? (
                 <>

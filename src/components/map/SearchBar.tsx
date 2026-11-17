@@ -110,7 +110,7 @@ export function SearchBar({
           size="icon"
           onClick={openFilters}
           aria-label="Filtri"
-          className="relative h-12 w-12 shrink-0 mr-2"
+          className="relative h-12 w-12 shrink-0 -mr-2.5"
         >
           {/* ⚠️ `!` obbligatorio: il componente Button impone `[&_svg]:size-4`
               a tutte le icone che contiene, ed essendo un selettore discendente
@@ -124,7 +124,7 @@ export function SearchBar({
             )}
           />
           {activeFiltersCount > 0 && (
-            <span className="absolute -top-1 -right-1 w-5 h-5 bg-primary-strong text-white text-xs rounded-full flex items-center justify-center font-medium">
+            <span className="absolute -top-1 -right-1 w-5 h-5 bg-primary-strong text-paper-sheet text-xs rounded-full flex items-center justify-center font-medium">
               {activeFiltersCount}
             </span>
           )}
@@ -135,7 +135,7 @@ export function SearchBar({
       <Drawer open={isFilterOpen} onOpenChange={setIsFilterOpen}>
         <DrawerContent className="h-[85vh] flex flex-col">
           {/* Header */}
-          <DrawerHeader className="flex-shrink-0 border-b pb-4">
+          <DrawerHeader className="flex-shrink-0 pb-2">
             <div className="flex items-center justify-between">
               <DrawerTitle className="text-xl font-bold">Filtri</DrawerTitle>
               <div className="flex items-center gap-2">
@@ -151,7 +151,7 @@ export function SearchBar({
                   onClick={() => setIsFilterOpen(false)}
                   className="p-2 rounded-full hover:bg-muted transition active:scale-90 active:bg-muted"
                 >
-                  <XIcon className="w-5 h-5" />
+                  <XIcon className="w-4 h-4 text-ink-soft" />
                 </button>
               </div>
             </div>
@@ -187,7 +187,7 @@ export function SearchBar({
             {/* Type Tags */}
             <div>
               <h4 className="text-base font-semibold text-foreground mb-3 flex items-center gap-2">
-                <CalendarioIcon className="w-4 h-4 text-employer" />
+                <CalendarioIcon className="w-4 h-4 text-primary" />
                 Durata
               </h4>
               <div className="flex flex-wrap gap-2">
@@ -239,7 +239,7 @@ export function SearchBar({
           </div>
 
           {/* Sticky Footer */}
-          <DrawerFooter className="flex-shrink-0 border-t pt-4">
+          <DrawerFooter className="linea-divisoria-sottile flex-shrink-0 pt-4">
             {/* size="lg" invece di py-6: la cornice disegnata e' tarata sulle
                 altezze delle size, non su padding messi a mano. */}
             <Button
@@ -249,7 +249,7 @@ export function SearchBar({
             >
               Applica
               {tempFiltersCount > 0 && (
-                <span className="ml-2 bg-white/20 px-2 py-0.5 rounded-full text-sm">
+                <span className="ml-2 bg-paper-sheet/20 px-2 py-0.5 rounded-full text-sm">
                   {tempFiltersCount}
                 </span>
               )}

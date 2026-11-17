@@ -93,7 +93,7 @@ const Notifiche = () => {
                     <TesseraIcona icona={Icona} className={nuova ? undefined : "bg-paper-sunken text-ink-soft"} />
                     <div className="min-w-0 flex-1">
                       <div className="flex items-baseline gap-2">
-                        <p className={cn("min-w-0 flex-1 text-[15px] leading-snug text-ink", nuova ? "font-bold" : "font-medium")}>
+                        <p className={cn("titolo-mini min-w-0 flex-1 text-[17px] leading-snug text-ink", nuova && "underline decoration-2 underline-offset-4")}>
                           {n.titolo}
                         </p>
                         <span className="shrink-0 text-xs text-ink-soft">{oraMessaggio(quandoArrivata(n))}</span>

@@ -63,7 +63,7 @@ const Settings = () => {
   return (
     <div className="flex flex-col min-h-screen bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-background px-4 pt-8 pb-3 border-b border-border">
+      <header className="linea-sotto-sottile sticky top-0 z-40 bg-background px-4 pt-8 pb-3">
         <div className="flex items-center gap-3">
           <TesseraIndietro onClick={handleBack} />
           <img
@@ -124,7 +124,7 @@ const Settings = () => {
             {/* Support */}
             <button 
               onClick={handleSupport}
-              className="w-full flex items-center justify-between p-4 hover:bg-muted/50 active:bg-muted/70 transition-colors border-b border-border"
+              className="linea-sotto-sottile w-full flex items-center justify-between p-4 hover:bg-muted/50 active:bg-muted/70 transition-colors"
             >
               <div className="flex items-center gap-3">
                 <InfoIcon className={`w-5 h-5 ${theme.primaryText}`} />
@@ -160,7 +160,7 @@ const Settings = () => {
             <button 
               onClick={handleLogout}
               disabled={isLoggingOut}
-              className="w-full flex items-center justify-between p-4 hover:bg-destructive/5 active:bg-destructive/10 transition-colors border-b border-border disabled:opacity-50"
+              className="w-full flex items-center justify-between p-4 hover:bg-destructive/5 active:bg-destructive/10 transition-colors linea-sotto-sottile disabled:opacity-50"
             >
               <div className="flex items-center gap-3">
                 {isLoggingOut ? (

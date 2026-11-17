@@ -824,6 +824,38 @@
       background-size: 241px 4px;
     }
 
+    /* Le stesse, SOTTILI (2,5 px), per testate e piè di pagina delle pagine
+       con un modulo, e per le righe di un elenco (Atlante, 17 novembre: erano
+       ancora fili CSS da 1 px, `border-b` / `border-t`). La prima sul bordo
+       ALTO dell'elemento (un piè di pagina fisso sopra il contenuto che
+       scorre), la seconda sul bordo BASSO (una testata, una riga). */
+    .linea-a-cavallo-sottile {
+      position: relative;
+    }
+    .linea-a-cavallo-sottile::before,
+    .linea-sotto-sottile::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 2.5px;
+      z-index: 20;
+      pointer-events: none;
+      background-image: url("/images/cornici/linea-divisoria-3x.png");
+      background-repeat: repeat-x;
+      background-position: center;
+      background-size: 241px 2.5px;
+    }
+    .linea-a-cavallo-sottile::before {
+      top: -1.25px;
+    }
+    .linea-sotto-sottile {
+      position: relative;
+    }
+    .linea-sotto-sottile::after {
+      bottom: -1.25px;
+    }
+
     /* La stessa linea più SOTTILE (2,5 px invece di 4), per separare le righe
        della lista chat: a 4 px, ripetuta ogni 76 px, pesava («cicciona»,
        Tommaso, 22 ottobre). Il disegno si stira libero in altezza
