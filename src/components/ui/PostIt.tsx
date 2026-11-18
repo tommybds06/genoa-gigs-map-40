@@ -58,7 +58,7 @@ const MISURE = {
   /* Il QUADRATO a misura fissa (la larghezza la dà chi lo usa, l'altezza la
      proporzione della tavola). Il testo usa tutta la larghezza: l'angolo
      arricciato occupa solo l'ultimo quarto in basso, e lì c'è `pb`. */
-  quadrato: "pl-3 pr-2.5 pt-2.5 pb-8 text-[18px] leading-[1.08]",
+  quadrato: "pl-3 pr-2.5 pt-2.5 pb-7 text-[17px] leading-[1.05]",
 };
 
 function Disegno({ colori }: { colori: { foglio: string; angolo: string; filo: string } }) {
@@ -79,13 +79,17 @@ interface PostItProps {
   /** Il ruolo di cui prendere i colori; di serie quello di chi guarda. */
   employer?: boolean;
   misura?: keyof typeof MISURE;
+  /** L'inclinazione voluta, in gradi. Di serie viene dal seme (±3°); si fissa
+      quando due post-it stanno nella stessa schermata e non devono pendere
+      dallo stesso lato (Tommaso, 18 novembre). */
+  gradi?: number;
   /** Un post-it che si tocca (porta a fare la cosa). Altrimenti è solo una nota. */
   onClick?: () => void;
   className?: string;
   style?: CSSProperties;
 }
 
-export function PostIt({ children, seme, employer, misura = "grande", onClick, className, style }: PostItProps) {
+export function PostIt({ children, seme, employer, misura = "grande", gradi: voluti, onClick, className, style }: PostItProps) {
   const { isEmployer } = useAppTheme();
   const blu = employer ?? isEmployer;
   const { ref, misure } = useMisure<HTMLElement>();
@@ -99,7 +103,7 @@ export function PostIt({ children, seme, employer, misura = "grande", onClick, c
     angolo: `color-mix(in srgb, ${pastello} 85%, hsl(var(--paper-sheet)))`,
     filo: `color-mix(in srgb, ${inchiostro} 75%, hsl(var(--paper-sheet)))`,
   };
-  const gradi = (((semeDa(seme) % 1000) / 1000) * 2 - 1) * 3;
+  const gradi = voluti ?? (((semeDa(seme) % 1000) / 1000) * 2 - 1) * 3;
 
   // Mai più stretto del quadrato: con un testo corto il disegno si
   // schiaccerebbe. Il minimo si sa solo dopo aver misurato l'altezza.

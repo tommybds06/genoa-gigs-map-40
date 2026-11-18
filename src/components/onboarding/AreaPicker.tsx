@@ -91,7 +91,9 @@ export function AreaPicker({
           novembre). Fuori dal ritaglio della mappa, se no la taglierebbe;
           non prende i tocchi: la mappa sotto si trascina ancora. */}
       <div className="relative pt-3">
-      <PostIt seme="area-indirizzo" employer className="pointer-events-none absolute -top-1 right-3 z-10 w-[200px]">
+      {/* A SINISTRA e inclinato a sinistra: più sotto, nella stessa schermata,
+          c'è il post-it delle foto, a destra e inclinato a destra. */}
+      <PostIt seme="area-indirizzo" employer gradi={-3} className="pointer-events-none absolute -top-1 left-3 z-10 w-[200px]">
         Non mostreremo mai il tuo indirizzo
       </PostIt>
       {/* Ritagliata come le foto (`.sagoma-foto`): niente bordo CSS. */}
@@ -128,7 +130,7 @@ export function AreaPicker({
         </Map>
       </div>
       </div>
-      <p className="text-xs text-muted-foreground">Trascina il cerchio, o tocca la mappa per spostarlo lì.</p>
+      <p className="max-w-[60%] text-xs text-muted-foreground">Trascina il cerchio, o tocca la mappa per spostarlo lì.</p>
     </div>
   );
 }

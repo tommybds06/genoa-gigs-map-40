@@ -311,9 +311,10 @@ const Onboarding = () => {
           <PostIt
             seme="onboarding-foto"
             misura="quadrato"
-            className="pointer-events-none absolute -top-9 right-0 z-10 w-[136px]"
+            gradi={3}
+            className="pointer-events-none absolute -top-10 right-0 z-10 w-[120px]"
           >
-            {isEmployer ? testi.testoFoto : 'Carica fino a 10 foto per mostrarti al meglio'}
+            {isEmployer ? testi.testoFoto : 'Fino a 10 foto per mostrarti al meglio'}
           </PostIt>
           <div className="flex items-center gap-2 text-lg font-semibold">
             <FotoIcon className={`h-5 w-5 shrink-0 ${iconColorClass}`} />

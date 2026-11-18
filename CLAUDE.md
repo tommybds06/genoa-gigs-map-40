@@ -1314,10 +1314,17 @@ memoria: si fotografano TUTTE le schermate, nei due ruoli e negli stati
     dipendono dalla larghezza, e potrebbe rimbalzare.
   - ⚠️ **Una nota non deve spingere giù il contenuto** (Tommaso, 18
     novembre): il consiglio delle foto in configurazione in riga faceva
-    slittare la griglia. Ora è un QUADRATO da 136 px fuori dal flusso, in
-    alto a destra della sezione, mezzo sopra il bordo (`-top-9`). A 128 il
-    testo del worker lo allungava a 139: misurato `scrollHeight` contro
-    `clientHeight` nelle tre versioni (attività, worker, privato).
+    slittare la griglia. Ora è un QUADRATO da 120 px fuori dal flusso, in
+    alto a destra della sezione, nello spazio vuoto fra le due sezioni
+    (`-top-10`): sotto finisce prima della griglia (a 136 copriva la X della
+    terza foto), sopra entra solo nel margine (a `-top-9` copriva la fine del
+    suggerimento sotto la mappa del privato, ora `max-w-[60%]`). Righe a 1,05
+    e Shinjo 17 (`titolo-mini`); il testo del worker è diventato «Fino a 10 foto per mostrarti al meglio» («Carica» ripeteva «Aggiungi» sotto) perché ci stia: misurato `scrollHeight`
+    contro `clientHeight` nelle tre versioni.
+  - Due post-it nella stessa schermata (il privato in configurazione: area
+    e foto) restano tutti e due, ma MAI dallo stesso lato con la stessa
+    inclinazione (Tommaso): l'indirizzo a sinistra a −3°, le foto a destra a
+    +3° (prop `gradi`).
   - ⚠️ Un post-it sull'angolo di una card non deve uscire dallo schermo:
     «Manca la foto» a `-right-2` perdeva l'angolo arricciato oltre il bordo.
   - Storto dal seme ±3° (`rotate`), entrando «si attacca» (3 pose, 12 fps).
