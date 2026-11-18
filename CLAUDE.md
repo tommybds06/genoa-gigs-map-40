@@ -1300,7 +1300,8 @@ memoria: si fotografano TUTTE le schermate, nei due ruoli e negli stati
     «Pubblica» (sembrerebbe un bottone), i suggerimenti dei campi.
   - **Colori come scotch e toast**: foglio = pastello del ruolo al 55% sul
     foglio (opaco), risvolto all'85%, contorno l'inchiostro del ruolo al 75%,
-    ombra `paper-line`, testo inchiostro in Shinjo 18.
+    ombra `paper-line`, testo inchiostro in Shinjo 16 (era 18: «un po' grossi»,
+    Tommaso, 18 novembre; 16 è il minimo per Shinjo, sotto il tratto fa rumore).
   - **La misura la fa il testo**: l'altezza dà la scala; se il testo è più
     largo del quadrato il disegno si allunga in TRE FETTE (0–38 e 52–90,86
     in scala, la centrale stirata: lì il bordo è quasi dritto). ⚠️ Ogni
@@ -1314,7 +1315,7 @@ memoria: si fotografano TUTTE le schermate, nei due ruoli e negli stati
     dipendono dalla larghezza, e potrebbe rimbalzare.
   - ⚠️ **Una nota non deve spingere giù il contenuto** (Tommaso, 18
     novembre): il consiglio delle foto in configurazione in riga faceva
-    slittare la griglia. Ora è un QUADRATO da 120 px fuori dal flusso, in
+    slittare la griglia. Ora è un QUADRATO (120 px, poi 108 col testo a 16) fuori dal flusso, in
     alto a destra della sezione, nello spazio vuoto fra le due sezioni
     (`-top-10`): sotto finisce prima della griglia (a 136 copriva la X della
     terza foto), sopra entra solo nel margine (a `-top-9` copriva la fine del

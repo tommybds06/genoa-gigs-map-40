@@ -380,7 +380,7 @@ const Annunci = () => {
 
           {!eAttivo && applications.some((a) => a.status === 'pending') && (
             /* La nota è un post-it (18 novembre): è un promemoria, non un dato. */
-            <PostIt seme={`passato-${selectedJob.id}`} className="mb-5 ml-1 max-w-[260px]">
+            <PostIt seme={`passato-${selectedJob.id}`} className="mb-5 ml-1 max-w-[236px]">
               Non è più sulla mappa, ma a chi si è candidato puoi ancora rispondere
             </PostIt>
           )}

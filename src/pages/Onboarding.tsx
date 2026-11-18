@@ -312,7 +312,7 @@ const Onboarding = () => {
             seme="onboarding-foto"
             misura="quadrato"
             gradi={3}
-            className="pointer-events-none absolute -top-10 right-0 z-10 w-[120px]"
+            className="pointer-events-none absolute -top-8 right-0 z-10 w-[108px]"
           >
             {isEmployer ? testi.testoFoto : 'Fino a 10 foto per mostrarti al meglio'}
           </PostIt>

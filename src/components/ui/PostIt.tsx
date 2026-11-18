@@ -53,12 +53,14 @@ const POSE_ATTACCA: [number, number][] = [
 ];
 
 const MISURE = {
-  piccolo: "pl-2.5 pr-4 pt-2 pb-2.5 text-[18px] leading-[1.1]",
-  grande: "pl-3.5 pr-8 pt-3 pb-5 text-[18px] leading-[1.15]",
+  /* Testo a 16 (Tommaso, 18 novembre: «un po' grossi»). È il minimo per
+     Shinjo: sotto, l'irregolarità del tratto diventa rumore (§5). */
+  piccolo: "pl-2 pr-3.5 pt-1.5 pb-2 text-[16px] leading-[1.1]",
+  grande: "pl-3 pr-6 pt-2.5 pb-4 text-[16px] leading-[1.12]",
   /* Il QUADRATO a misura fissa (la larghezza la dà chi lo usa, l'altezza la
      proporzione della tavola). Il testo usa tutta la larghezza: l'angolo
      arricciato occupa solo l'ultimo quarto in basso, e lì c'è `pb`. */
-  quadrato: "pl-3 pr-2.5 pt-2.5 pb-7 text-[17px] leading-[1.05]",
+  quadrato: "pl-2.5 pr-2 pt-2 pb-6 text-[16px] leading-[1.05]",
 };
 
 function Disegno({ colori }: { colori: { foglio: string; angolo: string; filo: string } }) {
