@@ -175,7 +175,7 @@ const Profilo = () => {
                 seme="profilo-incompleto"
                 misura="piccolo"
                 onClick={() => navigate("/settings/edit-profile")}
-                className="absolute -right-2 -top-4 z-10 max-w-[150px]"
+                className="absolute -top-4 right-3 z-10 max-w-[150px]"
               >
                 {manca}
               </PostIt>

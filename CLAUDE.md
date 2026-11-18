@@ -1307,8 +1307,19 @@ memoria: si fotografano TUTTE le schermate, nei due ruoli e negli stati
     fetta `overflow="hidden"`: con `visible` quella stirata disegnava tutta
     la tavola allargata 16 volte (fasce larghe quanto lo schermo). Mai più
     stretto del quadrato (`minWidth` dopo la misura).
-  - `misura="piccolo"` (parole sole sulle card) / `"grande"` (frasi): i
-    margini destro e basso lasciano libero l'angolo arricciato.
+  - `misura="piccolo"` (parole sole sulle card) / `"grande"` (frasi in
+    riga) / `"quadrato"` (larghezza fissa `w-…`, altezza dalla proporzione
+    della tavola): i margini lasciano libero l'angolo arricciato. ⚠️ Il
+    quadrato non usa il `minWidth` calcolato: dipenderebbe dalle righe, che
+    dipendono dalla larghezza, e potrebbe rimbalzare.
+  - ⚠️ **Una nota non deve spingere giù il contenuto** (Tommaso, 18
+    novembre): il consiglio delle foto in configurazione in riga faceva
+    slittare la griglia. Ora è un QUADRATO da 136 px fuori dal flusso, in
+    alto a destra della sezione, mezzo sopra il bordo (`-top-9`). A 128 il
+    testo del worker lo allungava a 139: misurato `scrollHeight` contro
+    `clientHeight` nelle tre versioni (attività, worker, privato).
+  - ⚠️ Un post-it sull'angolo di una card non deve uscire dallo schermo:
+    «Manca la foto» a `-right-2` perdeva l'angolo arricciato oltre il bordo.
   - Storto dal seme ±3° (`rotate`), entrando «si attacca» (3 pose, 12 fps).
   - Sul banco: `ritocco` dei dati finti nel setter di `window.__db` (lo
     stesso trucco di `svuota`) per i casi che il banco non ha (cartellino

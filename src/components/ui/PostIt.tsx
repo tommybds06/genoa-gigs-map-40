@@ -37,7 +37,8 @@ import {
  * - Entrando si «attacca»: tre pose a 12 fps, come le puntine. Ferma con
  *   «riduci movimento».
  * - `misura`: «piccolo» per le parole sole sulle card (Recensisci, Finito?),
- *   «grande» per le frasi. Il margine destro e quello basso lasciano libero
+ *   «grande» per le frasi in riga, «quadrato» (con una larghezza `w-…`) per
+ *   le note staccate dal flusso, che non devono spingere giù niente. Il margine destro e quello basso lasciano libero
  *   l'angolo arricciato: il testo non ci finisce mai sopra.
  */
 
@@ -54,6 +55,10 @@ const POSE_ATTACCA: [number, number][] = [
 const MISURE = {
   piccolo: "pl-2.5 pr-4 pt-2 pb-2.5 text-[18px] leading-[1.1]",
   grande: "pl-3.5 pr-8 pt-3 pb-5 text-[18px] leading-[1.15]",
+  /* Il QUADRATO a misura fissa (la larghezza la dà chi lo usa, l'altezza la
+     proporzione della tavola). Il testo usa tutta la larghezza: l'angolo
+     arricciato occupa solo l'ultimo quarto in basso, e lì c'è `pb`. */
+  quadrato: "pl-3 pr-2.5 pt-2.5 pb-8 text-[18px] leading-[1.08]",
 };
 
 function Disegno({ colori }: { colori: { foglio: string; angolo: string; filo: string } }) {
@@ -98,11 +103,13 @@ export function PostIt({ children, seme, employer, misura = "grande", onClick, c
 
   // Mai più stretto del quadrato: con un testo corto il disegno si
   // schiaccerebbe. Il minimo si sa solo dopo aver misurato l'altezza.
+  // ⚠️ Non per il quadrato: lì la misura è fissa, e un minimo che dipende
+  // dall'altezza (che dipende dalle righe) potrebbe rimbalzare.
   useLayoutEffect(() => {
-    if (!misure) return;
+    if (!misure || misura === "quadrato") return;
     const quadrato = Math.ceil((misure.h * POSTIT_L) / POSTIT_A);
     if (quadrato !== minimo) setMinimo(quadrato);
-  }, [misure, minimo]);
+  }, [misure, minimo, misura]);
 
   useLayoutEffect(() => {
     const el = nodo.current;
@@ -160,7 +167,11 @@ export function PostIt({ children, seme, employer, misura = "grande", onClick, c
         onClick && "active:scale-95 transition-transform",
         className
       )}
-      style={{ rotate: `${gradi}deg`, minWidth: minimo || undefined, ...style }}
+      style={{
+        rotate: `${gradi}deg`,
+        ...(misura === "quadrato" ? { aspectRatio: `${POSTIT_L} / ${POSTIT_A}` } : { minWidth: minimo || undefined }),
+        ...style,
+      }}
     >
       {fette && (
         <svg aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 h-full w-full overflow-visible">

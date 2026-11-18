@@ -303,18 +303,23 @@ const Onboarding = () => {
         </section>
 
         {/* Section B: La tua Vetrina / Foto Attività */}
-        <section className="space-y-4">
+        <section className="relative space-y-4">
+          {/* Il consiglio sulle foto è una NOTA: un post-it QUADRATO attaccato
+              in alto a destra, mezzo sopra il bordo della sezione. Fuori dal
+              flusso: in riga spingeva giù le foto (Tommaso, 18 novembre).
+              Non prende i tocchi: sotto possono esserci mappa e foto. */}
+          <PostIt
+            seme="onboarding-foto"
+            misura="quadrato"
+            className="pointer-events-none absolute -top-9 right-0 z-10 w-[136px]"
+          >
+            {isEmployer ? testi.testoFoto : 'Carica fino a 10 foto per mostrarti al meglio'}
+          </PostIt>
           <div className="flex items-center gap-2 text-lg font-semibold">
             <FotoIcon className={`h-5 w-5 shrink-0 ${iconColorClass}`} />
             <span className="titolo-mini">{isEmployer ? testi.foto : 'La tua vetrina'}</span>
           </div>
           
-          {/* Il consiglio sulle foto è una NOTA: il post-it (18 novembre). */}
-          <div className="flex justify-end pr-2">
-            <PostIt seme="onboarding-foto" className="max-w-[230px]">
-              {isEmployer ? testi.testoFoto : 'Carica fino a 10 foto per mostrarti al meglio'}
-            </PostIt>
-          </div>
           
           {/* Le stesse foto stampate di Modifica profilo (24 ottobre): erano
               riquadri tratteggiati col «+». */}
