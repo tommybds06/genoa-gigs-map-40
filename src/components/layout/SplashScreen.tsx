@@ -1,10 +1,10 @@
 import { PointerEvent, useCallback, useEffect, useRef, useState } from "react";
-import { consumaSaltoSplash, fineSplash, segnaSplashVisto, splashDaMostrare, splashDaSaltare } from "@/lib/splash";
+import { consumaSaltoSplash, fineSplash, splashDaMostrare, splashDaSaltare } from "@/lib/splash";
 import type { AnimationItem } from "lottie-web";
 
 /**
- * SPLASH D'APERTURA — il logo animato in Lottie, alla PRIMA APERTURA DELLA
- * GIORNATA (dal 15 novembre; prima a ogni avvio a freddo: `lib/splash.ts`).
+ * SPLASH D'APERTURA — il logo animato in Lottie, a OGNI APERTURA dell'app
+ * (dal 19 novembre di nuovo; dal 15 al 19 una volta al giorno: `lib/splash.ts`).
  * Mentre suona, le pagine della barra aspettano a montarsi (`fineSplash`):
  * l'animazione non scatta più per il lavoro dell'avvio.
  *
@@ -98,10 +98,6 @@ function SplashAnimato() {
   const contenitore = useRef<HTMLDivElement>(null);
   const chiuso = useRef(false);
   const timerUscita = useRef<number>();
-
-  useEffect(() => {
-    segnaSplashVisto();
-  }, []);
 
   const esci = useCallback(() => {
     // Qualunque uscita (tocco, rete di sicurezza): le pagine si montano.

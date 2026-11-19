@@ -1241,8 +1241,9 @@ memoria: si fotografano TUTTE le schermate, nei due ruoli e negli stati
 - Stati VUOTI: il banco non ha permessi per riga (tutti vedono tutto), quindi
   le scene con `svuota: [tabelle]` svuotano le tabelle finte nel momento in
   cui il banco le espone (`window.__db`), prima di ogni lettura.
-- ⚠️ Lo splash di oggi va segnato «visto» (localStorage), se no le pagine
-  della barra aspettano lui e non si montano (§17).
+- ⚠️ Lo splash va saltato (`politask.salta-splash` in sessionStorage, a ogni
+  caricamento: lo script lo fa in `addInitScript`), se no le pagine della
+  barra aspettano lui e non si montano (§17).
 - Primo Atlante: 17 novembre, 51 scene, 77 immagini.
 - Le PROVE di poche scene: `ATLANTE_OUT=<cartella> node brand/scatta-atlante.mjs
   lista-esplora,profilo-worker` (filtri separati da virgola, cartella a parte:
@@ -2122,10 +2123,16 @@ del campo. Verificato ingrandendo a 2,625.
 
 # 17. Lo splash d'apertura — ottobre 2026
 
-⚠️ **Dal 15 novembre: UNA VOLTA AL GIORNO, e l'app sotto aspetta.**
+⚠️ **Dal 19 novembre di nuovo A OGNI APERTURA** (Tommaso: «rimetti
+l'animazione del logo ad ogni entrata»). Tolta solo la regola del giorno
+(`splashDaMostrare` guarda il salto della registrazione e basta); resta
+tutto il resto del 15: l'app sotto aspetta, il Lottie caricato subito. La
+chiave `politask.splash-visto-il` non la legge più nessuno.
+
+**Dal 15 al 19 novembre: UNA VOLTA AL GIORNO, e l'app sotto aspetta.**
 Tommaso: «sul telefono è scattosa… te la mostra tutte le volte… prima il
 logo per qualche secondo, poi l'animazione: un'attesa infinita».
-- **Una volta al giorno** (`politask.splash-visto-il` in localStorage,
+- ~~**Una volta al giorno**~~ (tolta il 19) (`politask.splash-visto-il` in localStorage,
   `lib/splash.ts`): «a ogni avvio a freddo» (9 ottobre) voleva dire ogni
   volta la schermata di Android con l'icona (resta finché l'app non disegna
   qualcosa di non vuoto, cioè finché non è scaricata) + 4,5 s di animazione.
@@ -2148,8 +2155,8 @@ logo per qualche secondo, poi l'animazione: un'attesa infinita».
   caricato com'è da `public/`); e soprattutto il disegno su CANVAS non sa
   fare la maschera del tentacolo: la «P» del logo spariva.
 
-Il **logo animato in Lottie** all'apertura (fino al 15 novembre a **ogni
-avvio a freddo**).
+Il **logo animato in Lottie** all'apertura (a **ogni avvio a freddo**,
+tranne dal 15 al 19 novembre).
 `components/layout/SplashScreen.tsx`, file in
 `src/assets/politask-logo-animato.json`: 1080×1920, **16 fps, 64 fotogrammi
 = 4 s**, 74 KB, senza immagini né font né espressioni, fondo `#F3EFE3`. Parte

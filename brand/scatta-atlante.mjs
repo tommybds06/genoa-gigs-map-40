@@ -26,7 +26,7 @@ async function telefono(svuota = []) {
     userAgent: "Mozilla/5.0 (Linux; Android 14; Pixel 9a) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Mobile Safari/537.36",
   });
   // Lo splash di oggi è «già visto»: se no le pagine aspettano lui (lib/splash.ts).
-  await ctx.addInitScript((oggi) => { const d = new Date(); try { localStorage.setItem("politask.splash-visto-il", `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`); } catch {} }, OGGI);
+  await ctx.addInitScript(() => { try { sessionStorage.setItem("politask.salta-splash", "1"); } catch {} });
   // Stati VUOTI: il banco non ha permessi per riga, quindi si svuotano le
   // tabelle finte nel momento in cui il banco le espone (prima di ogni lettura).
   if (svuota.length) await ctx.addInitScript((tabelle) => {

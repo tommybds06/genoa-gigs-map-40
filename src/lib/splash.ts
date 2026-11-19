@@ -43,36 +43,17 @@ export function consumaSaltoSplash() {
 }
 
 /* ------------------------------------------------------------------ */
-/* Una volta al giorno, e l'app sotto aspetta (15 novembre)            */
+/* A OGNI APERTURA (di nuovo, dal 19 novembre)                         */
 /* ------------------------------------------------------------------ */
 
-/**
- * UNA VOLTA AL GIORNO. Tommaso (15 novembre): «te la mostra tutte le volte…
- * è un'attesa infinita». A ogni avvio a freddo (la sua richiesta del 9
- * ottobre) voleva dire: la schermata di Android con l'icona finché l'app non
- * è scaricata, poi 4,5 s di animazione, ogni volta. Ora l'animazione c'è alla
- * prima apertura della giornata; le altre aperte vanno dritte all'app.
+/*
+ * Dal 15 al 19 novembre lo splash si vedeva una volta al giorno
+ * (`politask.splash-visto-il` in localStorage). Tommaso, 19 novembre:
+ * «rimetti l'animazione del logo ad ogni entrata». Resta quello che di quel
+ * giro serviva davvero: l'app sotto ASPETTA il logo (qui sotto), così
+ * l'animazione non scatta per il lavoro dell'avvio. La chiave vecchia può
+ * restare nel localStorage di chi l'ha già: nessuno la legge più.
  */
-const CHIAVE_GIORNO = "politask.splash-visto-il";
-const oggi = () => {
-  const d = new Date();
-  return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
-};
-function giaVistoOggi(): boolean {
-  try {
-    return localStorage.getItem(CHIAVE_GIORNO) === oggi();
-  } catch {
-    return false;
-  }
-}
-/** Da chiamare in un effetto, quando lo splash parte davvero. */
-export function segnaSplashVisto() {
-  try {
-    localStorage.setItem(CHIAVE_GIORNO, oggi());
-  } catch {
-    /* niente storage: domani come oggi */
-  }
-}
 
 /**
  * Lo splash si vede in questo caricamento? Deciso UNA volta per pagina (la
@@ -81,7 +62,7 @@ export function segnaSplashVisto() {
  */
 let decisione: boolean | null = null;
 export function splashDaMostrare(): boolean {
-  if (decisione === null) decisione = !splashDaSaltare() && !giaVistoOggi();
+  if (decisione === null) decisione = !splashDaSaltare();
   return decisione;
 }
 
