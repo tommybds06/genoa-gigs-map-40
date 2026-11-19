@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useState } from 'react';
-import { Loader2 } from 'lucide-react';
+import { Ventose } from "@/components/ui/Ventose";
 
 interface Job {
   id: string;
@@ -66,7 +66,7 @@ export const DeleteJobDialog = React.forwardRef<HTMLDivElement, DeleteJobDialogP
             >
               {loading ? (
                 <>
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  <Ventose className="h-4 w-4 mr-2" />
                   Eliminazione...
                 </>
               ) : (

@@ -8,7 +8,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 
 import { toast } from 'sonner';
-import { Loader2 } from 'lucide-react';
 import { ROLE_TAGS, TYPE_TAGS } from '@/constants/tags';
 import { getJobIcon } from '@/lib/jobIcons';
 import { PennaIcon, DocumentoIcon, OrologioIcon, CalendarioIcon, EuroIcon } from "@/components/icons/uiIcons";
@@ -20,6 +19,7 @@ import { leggiBozza, salvaBozza } from "@/lib/bozzaAnnuncio";
 import { cn } from "@/lib/utils";
 import { Pista } from "@/components/ui/Pista";
 import { LineaDurata } from "@/components/jobs/LineaDurata";
+import { Ventose } from "@/components/ui/Ventose";
 
 /** «9,5» o «9.5» → 9,5; vuoto o non valido → null. */
 const numero = (testo: string): number | null => {
@@ -229,7 +229,7 @@ const CreateJob = () => {
   if (profileLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-employer" />
+        <Ventose className="w-8 h-8 text-employer" />
       </div>
     );
   }

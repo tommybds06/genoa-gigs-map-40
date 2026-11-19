@@ -5,7 +5,7 @@ import { srcLogo } from "@/lib/gerarchia";
 import { TesseraIcona, TesseraIndietro } from "@/components/ui/Tessera";
 import { useNavigate } from "react-router-dom";
 import { MailIcon, DocumentoIcon, EsciIcon, BidoneIcon, ProfiloIcon, InfoIcon } from "@/components/icons/uiIcons";
-import { User, HelpCircle, Loader2 } from "lucide-react";
+import { User, HelpCircle } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useAppTheme } from "@/hooks/useAppTheme";
 import { ImpostazioniNotifiche } from "@/components/notifiche/ImpostazioniNotifiche";
@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { CartaCard } from "@/components/ui/CartaCard";
+import { Ventose } from "@/components/ui/Ventose";
 
 const Settings = () => {
   const navigate = useNavigate();
@@ -161,7 +162,7 @@ const Settings = () => {
             >
               <div className="flex items-center gap-3">
                 {isLoggingOut ? (
-                  <Loader2 className="w-5 h-5 text-destructive animate-spin" />
+                  <Ventose className="w-5 h-5 text-destructive" />
                 ) : (
                   <EsciIcon className="w-5 h-5 text-destructive" />
                 )}

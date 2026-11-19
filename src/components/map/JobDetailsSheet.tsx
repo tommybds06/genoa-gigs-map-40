@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Loader2, Check } from "lucide-react";
+import { Check } from "lucide-react";
 import { MappaIcon, OrologioIcon, InfoIcon } from "@/components/icons/uiIcons";
 import { annuncioScaduto } from "@/lib/scadenzaAnnunci";
 import { useUser } from "@/contexts/UserContext";
@@ -25,6 +25,7 @@ import { SegnoVerificato } from "@/components/ui/SegnoVerificato";
 import { precaricaProfiloPubblico } from "@/hooks/useProfiloPubblico";
 import { registraApertura } from "@/lib/statisticheAnnunci";
 import { chiediPermessoDopo } from "@/lib/notifiche/permesso";
+import { Ventose } from "@/components/ui/Ventose";
 
 interface JobProfile {
   full_name: string | null;
@@ -438,7 +439,7 @@ export function JobDetailsSheet({ job, isOpen, onClose, showMiniMap = false, sop
                 </div>
               ) : checkingStatus ? (
                 <Button size="lg" className={STATO_SPENTO} disabled>
-                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <Ventose className="w-5 h-5" />
                   Verifica...
                 </Button>
               ) : hasApplied ? (
@@ -467,7 +468,7 @@ export function JobDetailsSheet({ job, isOpen, onClose, showMiniMap = false, sop
                 >
                   {isApplying ? (
                     <>
-                      <Loader2 className="w-5 h-5 animate-spin" />
+                      <Ventose className="w-5 h-5" />
                       Invio...
                     </>
                   ) : (

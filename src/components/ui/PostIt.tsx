@@ -2,6 +2,7 @@ import { useLayoutEffect, useRef, useState, type CSSProperties, type MutableRefO
 import { useAppTheme } from "@/hooks/useAppTheme";
 import { useMisure } from "@/hooks/useMisure";
 import { semeDa } from "@/lib/tratto";
+import { FOTOGRAMMA, movimentoRidotto } from "@/lib/aScatti";
 import { cn } from "@/lib/utils";
 import {
   POSTIT_A,
@@ -36,6 +37,12 @@ import {
  * - Storto dal seme (±3°, `rotate`, che si somma a chi lo contiene).
  * - Entrando si «attacca»: tre pose a 12 fps, come le puntine. Ferma con
  *   «riduci movimento».
+ * - `staccabile`: le NOTE (non le cose da fare) si tolgono toccandole: il
+ *   post-it si stacca e CADE SVOLAZZANDO fino al fondo dello schermo, a
+ *   scatti (Tommaso, 19 novembre). Toccarla vuol dire «letto»: per questa
+ *   sessione non torna (un insieme nel modulo, non `window`, §2 lez. 8).
+ *   I post-it che chiedono di FARE qualcosa (Manca la foto, Recensisci,
+ *   Finito?) non si staccano: il tocco porta a farla.
  * - `misura`: «piccolo» per le parole sole sulle card (Recensisci, Finito?),
  *   «grande» per le frasi in riga, «quadrato» (con una larghezza `w-…`) per
  *   le note staccate dal flusso, che non devono spingere giù niente. Il margine destro e quello basso lasciano libero
@@ -45,12 +52,31 @@ import {
 /* Le tre fette, in unità della tavola: [0, A] e [B, L] restano in scala. */
 const FETTA_A = 38;
 const FETTA_B = 52;
-const FOTOGRAMMA = 1000 / 12;
 const POSE_ATTACCA: [number, number][] = [
   [1.08, -2],
   [0.97, 1],
   [1, 0],
 ];
+
+/** Le note già tolte in questa sessione (per seme). */
+const staccati = new Set<string>();
+
+/**
+ * La caduta: prima si solleva (si stacca), poi scende accelerando e intanto
+ * ondeggia di lato e gira, come un foglietto nell'aria. 12 pose al secondo.
+ */
+function poseCaduta(dy: number, gradi: number, verso: number) {
+  const pose: Keyframe[] = [{ translate: "0 -6px", rotate: `${gradi - 4 * verso}deg`, scale: "1.05", easing: "steps(1, end)" }];
+  const N = 11;
+  for (let k = 1; k <= N; k++) {
+    const t = k / N;
+    const x = Math.sin(t * Math.PI * 2.4) * 16 * verso;
+    const y = dy * Math.pow(t, 1.7);
+    const g = gradi + Math.sin(t * Math.PI * 2.4 + 0.7) * 16 * verso;
+    pose.push({ translate: `${x.toFixed(1)}px ${y.toFixed(1)}px`, rotate: `${g.toFixed(1)}deg`, scale: "1", easing: "steps(1, end)" });
+  }
+  return pose;
+}
 
 const MISURE = {
   /* Testo a 16 (Tommaso, 18 novembre: «un po' grossi»). È il minimo per
@@ -85,18 +111,22 @@ interface PostItProps {
       quando due post-it stanno nella stessa schermata e non devono pendere
       dallo stesso lato (Tommaso, 18 novembre). */
   gradi?: number;
+  /** Una NOTA: toccandola si stacca e cade (vedi sopra). */
+  staccabile?: boolean;
   /** Un post-it che si tocca (porta a fare la cosa). Altrimenti è solo una nota. */
   onClick?: () => void;
   className?: string;
   style?: CSSProperties;
 }
 
-export function PostIt({ children, seme, employer, misura = "grande", gradi: voluti, onClick, className, style }: PostItProps) {
+export function PostIt({ children, seme, employer, misura = "grande", gradi: voluti, staccabile, onClick, className, style }: PostItProps) {
   const { isEmployer } = useAppTheme();
   const blu = employer ?? isEmployer;
   const { ref, misure } = useMisure<HTMLElement>();
   const nodo = useRef<HTMLElement | null>(null);
   const [minimo, setMinimo] = useState(0);
+  const [via, setVia] = useState(() => staccabile && staccati.has(seme));
+  const [cade, setCade] = useState(false);
 
   const pastello = blu ? "hsl(var(--brand-blue))" : "hsl(var(--brand-orange))";
   const inchiostro = blu ? "hsl(var(--brand-blue-ink))" : "hsl(var(--brand-orange-ink))";
@@ -158,19 +188,37 @@ export function PostIt({ children, seme, employer, misura = "grande", gradi: vol
     }
   }
 
-  const Tag = onClick ? "button" : "span";
+  const stacca = () => {
+    const el = nodo.current;
+    if (!el || cade) return;
+    staccati.add(seme);
+    if (movimentoRidotto()) return setVia(true);
+    setCade(true);
+    const r = el.getBoundingClientRect();
+    const verso = semeDa(seme) % 2 ? 1 : -1;
+    el.animate(poseCaduta(window.innerHeight - r.top + 40, gradi, verso), {
+      duration: FOTOGRAMMA * 12,
+      fill: "forwards",
+    }).onfinish = () => setVia(true);
+  };
+
+  if (via) return null;
+
+  const Tag = onClick || staccabile ? "button" : "span";
   return (
     <Tag
       ref={(el: HTMLElement | null) => {
         nodo.current = el;
         (ref as MutableRefObject<HTMLElement | null>).current = el;
       }}
-      type={onClick ? "button" : undefined}
-      onClick={onClick}
+      type={onClick || staccabile ? "button" : undefined}
+      onClick={staccabile ? stacca : onClick}
+      aria-label={staccabile ? "Ho letto, togli la nota" : undefined}
       className={cn(
         "relative isolate inline-block text-left font-[Shinjo,Outfit,sans-serif] tracking-[-0.02em] text-ink [font-synthesis:none]",
         MISURE[misura],
         onClick && "active:scale-95 transition-transform",
+        cade && "pointer-events-none !z-50",
         className
       )}
       style={{

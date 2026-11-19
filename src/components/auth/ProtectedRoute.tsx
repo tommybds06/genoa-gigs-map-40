@@ -1,9 +1,9 @@
 import { ReactNode } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { Loader2 } from 'lucide-react';
 import { recuperoInCorso } from '@/lib/recuperoPassword';
 import { useScheda } from '@/hooks/useScheda';
+import { Ventose } from "@/components/ui/Ventose";
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -37,7 +37,7 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-secondary" />
+        <Ventose className="w-8 h-8 text-secondary" />
       </div>
     );
   }

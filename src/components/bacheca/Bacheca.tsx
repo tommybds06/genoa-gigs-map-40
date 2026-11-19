@@ -14,6 +14,7 @@ import { SagomaCartellino } from "./SagomaCartellino";
 import { SPAZIO_SOPRA } from "@/lib/formaCartellino";
 import { MISURA_FOTO, ripiegaFoto, urlFoto } from "@/lib/foto";
 import { CartaCard } from "@/components/ui/CartaCard";
+import { dondola } from "@/lib/aScatti";
 
 interface BachecaProps {
   /** La chat si apre nella stessa pagina (Messaggi), non con un cambio di URL. */
@@ -137,7 +138,16 @@ export function Bacheca({ onApriChat }: BachecaProps) {
 
       <SchedaCartellino
         cartellino={aperto}
-        onClose={() => setApertoId(null)}
+        onClose={() => {
+          // CHIUDENDO LA SCHEDA IL CARTELLINO DONDOLA sulla sua puntina
+          // (Tommaso, 19 novembre): lo si è appena «riappeso». Parte mentre
+          // la scheda scende e lo scopre. Verso dal seme: non tutti uguali.
+          if (apertoId) {
+            const el = document.querySelector(`[data-cartellino="${CSS.escape(apertoId)}"]`);
+            dondola(el, { ampiezza: 1.3, verso: apertoId.charCodeAt(0) % 2 ? 1 : -1, ritardo: 140 });
+          }
+          setApertoId(null);
+        }}
         onApriChat={(id) => {
           setApertoId(null);
           onApriChat(id);

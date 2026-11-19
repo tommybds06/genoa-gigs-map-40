@@ -527,6 +527,10 @@
     position: relative;
     aspect-ratio: 176 / 248;
     transform: rotate(var(--storto, 0deg));
+    /* Pende dal FORO (dove c'è la puntina, FORO_Y in lib/formaCartellino),
+       non dal centro: come un cartellino appeso vero. Serve anche al
+       dondolo quando si chiude la sua scheda (19 novembre). */
+    transform-origin: 50% 22px;
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -1305,4 +1309,22 @@ body [data-sonner-toaster] {
   mask-size: 100% 100%;
   -webkit-mask-repeat: no-repeat;
   mask-repeat: no-repeat;
+}
+
+/* LE VENTOSE — il caricamento (ui/Ventose.tsx). Ognuna resta accesa un terzo
+   del giro e poi si spegne di colpo: a scatti, come la carta (§30). Fuori dai
+   layer: le classi stanno solo in un componente e Tailwind non le genera. */
+@keyframes ventosa-accesa {
+  0% { opacity: 1; }
+  33.333% { opacity: 0.28; }
+  100% { opacity: 0.28; }
+}
+.ventose .ventosa {
+  opacity: 0.28;
+  animation: ventosa-accesa 750ms steps(1, end) infinite;
+}
+.ventose .ventosa:nth-child(2) { animation-delay: 250ms; }
+.ventose .ventosa:nth-child(3) { animation-delay: 500ms; }
+@media (prefers-reduced-motion: reduce) {
+  .ventose .ventosa { animation: none; opacity: 0.6; }
 }

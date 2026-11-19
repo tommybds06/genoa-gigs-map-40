@@ -2,11 +2,11 @@ import { useQuery } from '@tanstack/react-query';
 import { useCuoriWorker } from '@/hooks/useCuoriWorker';
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { Loader2 } from "lucide-react";
 import { StoricoLavoriIcon } from "@/components/icons/uiIcons";
 import { Foglietto } from "@/components/ui/Foglietto";
 import { CartaCard } from "@/components/ui/CartaCard";
 import { RigheStorico } from "@/components/profile/RigheStorico";
+import { Ventose } from "@/components/ui/Ventose";
 
 interface CompletedJob {
   id: string;
@@ -119,7 +119,7 @@ export const WorkerJobHistory = ({ primaryTextClasses }: WorkerJobHistoryProps) 
       </h3>
       {loading ? (
         <div className="flex items-center justify-center py-6">
-          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          <Ventose className="h-6 w-6 text-muted-foreground" />
         </div>
       ) : jobs.length === 0 ? (
         <p className="py-3 text-sm text-ink-soft">

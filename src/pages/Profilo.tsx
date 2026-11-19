@@ -6,10 +6,9 @@ import { Foglietto } from "@/components/ui/Foglietto";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { NomeConSegno } from "@/components/ui/SegnoVerificato";
-import { FotoStampata } from "@/components/ui/FotoStampata";
 import { RecensioniRicevute } from "@/components/reviews/RecensioniRicevute";
 import { mediaRecensioni, useRecensioniRicevute } from "@/hooks/useRecensioni";
-import { CaroselloFoto } from "@/components/profile/CaroselloFoto";
+import { PilaPolaroid } from "@/components/profile/PilaPolaroid";
 import { srcLogo } from "@/lib/gerarchia";
 import { SalvaIcon } from "@/components/icons/uiIcons";
 import { ImpostazioniIcon, ProfiloIcon, CuoreIcon, InfoIcon, StellaIcon, MappaIcon } from "@/components/icons/uiIcons";
@@ -119,39 +118,35 @@ const Profilo = () => {
          </header>
 
          <main className="flex-1 px-4 py-4 pb-4 overflow-y-auto">
-        {/* Photo Carousel — una foto STAMPATA (ui/FotoStampata, 23 ottobre):
-            cornice di carta col tratto delle card, tenuta dal pezzo lungo
-            di scotch in alto, i pallini nel margine basso come la scritta di una
-            Polaroid. Le foto sono in fila
-            in una striscia che segue il dito (CaroselloFoto). */}
+        {/* Le foto: una pila di Polaroid (profile/PilaPolaroid), i pallini
+            nel margine basso di ogni stampa come la scritta di una Polaroid. */}
         {profile?.photos && profile.photos.length > 0 && (
-          <FotoStampata
-            seme={`carosello-${profile.id}`}
-            misura="grande"
-            // Quadrata, come una Polaroid (Tommaso). Era 4:3.
-            formato="1 / 1"
-            className="mb-6 mt-2"
-            scotch={[{ pezzo: "lungo", lato: "centro" }]}
-            fondo={
-              profile.photos.length > 1 ? (
-                <div className="flex gap-1.5">
-                  {profile.photos.map((_, index) => (
-                    <button
-                      key={index}
-                      onClick={() => setCurrentPhotoIndex(index)}
-                      aria-label={`Foto ${index + 1}`}
-                      className={`h-2 rounded-full transition-all touch-feedback ${
-                        index === currentPhotoIndex ? `${theme.primary} w-4` : "w-2 bg-paper-line"
-                      }`}
-                    />
-                  ))}
-                </div>
-              ) : undefined
-            }
-          >
-            {/* Le foto scorrono sotto il dito; i pallini restano per chi tocca. */}
-            <CaroselloFoto foto={profile.photos} indice={currentPhotoIndex} onIndice={setCurrentPhotoIndex} />
-          </FotoStampata>
+          <div className="mb-6 mt-2">
+            {/* Una PILA di Polaroid che si sfoglia (19 novembre): ogni foto è
+                una stampa sua, non un'immagine che scorre in una cornice. */}
+            <PilaPolaroid
+              seme={`carosello-${profile.id}`}
+              foto={profile.photos}
+              indice={currentPhotoIndex}
+              onIndice={setCurrentPhotoIndex}
+              fondo={(i) =>
+                profile.photos!.length > 1 ? (
+                  <div className="flex gap-1.5">
+                    {profile.photos!.map((_, index) => (
+                      <button
+                        key={index}
+                        onClick={() => setCurrentPhotoIndex(index)}
+                        aria-label={`Foto ${index + 1}`}
+                        className={`h-2 rounded-full transition-all touch-feedback ${
+                          index === i ? `${theme.primary} w-4` : "w-2 bg-paper-line"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                ) : undefined
+              }
+            />
+          </div>
         )}
 
         {/* Profile Card */}

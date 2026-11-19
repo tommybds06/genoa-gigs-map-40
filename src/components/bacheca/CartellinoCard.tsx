@@ -109,6 +109,7 @@ export function CartellinoCard({ c, onClick }: CartellinoCardProps) {
       onClick={onClick}
       className="cartellino block w-full text-left touch-feedback focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-2xl"
       style={{ "--storto": `${v.gradi}deg` } as CSSProperties}
+      data-cartellino={c.id}
       aria-label={`${c.nome}, ${c.mestiere}${c.stato === "prova" ? ", in prova" : ""}`}
     >
       {/* Testa nel colore del ruolo, ago in inchiostro (vedi puntine.tsx).

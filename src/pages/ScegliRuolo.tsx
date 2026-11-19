@@ -5,7 +5,6 @@ import { controllaEta, MESSAGGIO_MINORENNE, salvaRiservati, testiEmployer, type 
 import { TesseraRuolo } from "@/components/auth/TesseraRuolo";
 import { srcLogo } from "@/lib/gerarchia";
 import { useNavigate } from "react-router-dom";
-import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useUser } from "@/contexts/UserContext";
@@ -17,6 +16,7 @@ import { GenericoIcon } from "@/components/icons/roleIcons";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { CartaCard } from "@/components/ui/CartaCard";
+import { Ventose } from "@/components/ui/Ventose";
 
 type Ruolo = "worker" | "employer";
 
@@ -127,7 +127,7 @@ const ScegliRuolo = () => {
   if (authLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <Ventose className="w-8 h-8 text-primary" />
       </div>
     );
   }
@@ -229,7 +229,7 @@ const ScegliRuolo = () => {
                   "bg-employer-700 hover:bg-employer-800 text-employer-foreground"
               )}
             >
-              {salvataggio ? <Loader2 className="w-5 h-5 animate-spin" /> : "Continua"}
+              {salvataggio ? <Ventose className="w-5 h-5" /> : "Continua"}
             </Button>
           </div>
         </CartaCard>

@@ -1,12 +1,13 @@
 import { useState, useRef } from "react";
 import { PiuIcon, XIcon } from "@/components/icons/uiIcons";
-import { Loader2, GripVertical } from "lucide-react";
+import { GripVertical } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { FotoStampata } from "@/components/ui/FotoStampata";
 import { MAX_BYTE_FOTO, ridimensionaFoto } from "@/lib/foto";
 import { MISURA_FOTO, ripiegaFoto, urlFoto } from "@/lib/foto";
+import { Ventose } from "@/components/ui/Ventose";
 
 interface PhotoGalleryManagerProps {
   photos: string[];
@@ -231,7 +232,7 @@ export function PhotoGalleryManager({
             <FotoStampata seme="aggiungi" vuota storta={false}>
               <div className="flex h-full w-full flex-col items-center justify-center gap-1">
                 {isUploading ? (
-                  <Loader2 className={cn("h-6 w-6 animate-spin", primaryColor)} />
+                  <Ventose className={cn("h-6 w-6", primaryColor)} />
                 ) : (
                   <>
                     <PiuIcon className={cn("h-6 w-6", primaryColor)} />

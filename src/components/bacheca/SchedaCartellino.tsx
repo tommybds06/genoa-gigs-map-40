@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
 import {
   Drawer,
   DrawerContent,
@@ -51,6 +50,7 @@ import {
   terminaLavoro,
 } from "@/lib/bacheca";
 import { Iniziali } from "./CartellinoCard";
+import { Ventose } from "@/components/ui/Ventose";
 
 interface SchedaCartellinoProps {
   cartellino: Cartellino | null;
@@ -583,7 +583,7 @@ export function SchedaCartellino({ cartellino, onClose, onApriChat, compila = fa
                   disabled={(!modoCompila && !sporco) || salvando || !importoValido || !dateValide}
                   onClick={salva}
                 >
-                  {salvando ? <Loader2 className="animate-spin" /> : <SalvaIcon />}
+                  {salvando ? <Ventose className="" /> : <SalvaIcon />}
                   {modoCompila ? "Salva il cartellino" : sporco ? "Salva" : "Salvato"}
                 </Button>
 
@@ -625,7 +625,7 @@ export function SchedaCartellino({ cartellino, onClose, onApriChat, compila = fa
                   }}
                   className={conferma === "assumi" ? cn(theme.btnFilled, theme.btnFilledHover) : "bg-danger text-danger-foreground hover:bg-danger/90"}
                 >
-                  {agendo && <Loader2 className="animate-spin" />}
+                  {agendo && <Ventose className="" />}
                   {testiConferma[conferma].azione}
                 </AlertDialogAction>
               </AlertDialogFooter>

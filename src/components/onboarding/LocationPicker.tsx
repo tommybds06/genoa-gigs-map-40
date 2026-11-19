@@ -1,12 +1,13 @@
 import { PinMappa } from "@/components/map/PinMappa";
 import { useState, useEffect, useCallback } from "react";
 import Map, { Marker } from "react-map-gl";
-import { Loader2, AlertTriangle } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 import { MappaIcon } from "@/components/icons/uiIcons";
 import { supabase } from "@/integrations/supabase/client";
 import { isWithinGenovaBounds, GEOFENCING_ERROR_MESSAGE, GENOVA_CENTER } from "@/constants/geofencing";
 import { toast } from "sonner";
 import "mapbox-gl/dist/mapbox-gl.css";
+import { Ventose } from "@/components/ui/Ventose";
 
 interface LocationPickerProps {
   lat: number | null;
@@ -73,7 +74,7 @@ export function LocationPicker({ lat, lng, onLocationChange }: LocationPickerPro
     return (
       <div className="w-full h-[200px] bg-muted rounded-xl flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="w-6 h-6 animate-spin text-employer mx-auto mb-2" />
+          <Ventose className="w-6 h-6 text-employer mx-auto mb-2" />
           <p className="text-sm text-muted-foreground">Caricamento mappa...</p>
         </div>
       </div>

@@ -1,6 +1,5 @@
 import { FreccettaIcon } from "@/components/icons/uiIcons";
 import { useCallback, useEffect, useRef, useState, type PointerEvent as EventoPuntatore } from "react";
-import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { BidoneIcon, LucchettoIcon, MicrofonoIcon, PausaSimbolo, PlaySimbolo } from "@/components/icons/uiIcons";
 import { useCerchioImperfetto } from "@/hooks/useCerchioImperfetto";
@@ -15,6 +14,7 @@ import {
   riduciPicchi,
 } from "@/lib/allegati";
 import { cn } from "@/lib/utils";
+import { Ventose } from "@/components/ui/Ventose";
 
 /**
  * I VOCALI — 15 novembre 2026 (Fase 4 della chat, §18).
@@ -371,7 +371,7 @@ export function TastoMicrofono({
           )}
           style={{ transform: tiene ? `translateX(${Math.max(spinta.dx, -SOGLIA_ANNULLA)}px) scale(1.25)` : undefined }}
         >
-          {stato === "avvio" ? <Loader2 className="h-6 w-6 animate-spin" /> : <MicrofonoIcon className="h-6 w-6" />}
+          {stato === "avvio" ? <Ventose className="h-6 w-6" /> : <MicrofonoIcon className="h-6 w-6" />}
         </span>
       </button>
     </div>
@@ -583,7 +583,7 @@ export function VocaleInBolla({
         )}
       >
         {inInvio || (!url && !errore) ? (
-          <Loader2 className="h-5 w-5 animate-spin" />
+          <Ventose className="h-5 w-5" />
         ) : suona ? (
           <PausaSimbolo className="h-10 w-10" />
         ) : (

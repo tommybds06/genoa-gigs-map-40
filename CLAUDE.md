@@ -2458,7 +2458,8 @@ bordo con lo stesso tratto. **`ui/FotoStampata.tsx`** + `lib/formaStampa.ts`.
 Tommaso: «non c'è un movimento naturale per scorrere», si cambiava foto solo
 coi pallini (Profilo) o con le frecce (galleria del profilo pubblico).
 
-- **`profile/CaroselloFoto.tsx`** (Profilo): una striscia che segue il
+- (Dal 19 novembre sostituito da `profile/PilaPolaroid.tsx`, §30.)
+  **`profile/CaroselloFoto.tsx`** (Profilo): una striscia che segue il
   dito; al rilascio va alla foto accanto se spinta oltre un quinto della
   larghezza o con un colpo veloce (400 px/s), se no torna. A molla, fluida:
   è un gesto. `touch-action: pan-y`, quindi la pagina scorre ancora in
@@ -3277,5 +3278,59 @@ Solo ciò che Tommaso ha DECISO; le proposte in discussione non stanno qui.
 - Gli piacciono: illustrazioni personalizzate, un caricamento col tentacolo,
   gli easter egg (lo scotch che oscilla, il menu che dondola).
 - **Gamification «ventose»**: idea approvata, per DOPO (Fase 9).
-- ⚠️ Prima di qualunque cosa stampata o fuori dall'app: il NOME (forse cambia,
-  §24) e la licenza Shinjo del wordmark (§13).
+- **Il nome RESTA Politask** (Tommaso, 19 novembre: «mi sa che non lo
+  cambio»). Quindi si sbloccano dominio, mittente e testi delle email (§24).
+- **Shinjo nel logo**: Tommaso ha modificato le lettere «abbastanza» e non
+  manda la mail per il logo. ⚠️ Restano aperte le altre due ragioni della
+  mail (§13): l'uso come font dell'app (web) e la licenza App per Despia.
+
+## Le regole (decise il 19 novembre)
+- **Il polpo per tracce, mai il corpo**: il TENTACOLO (un gesto: entra dal
+  bordo, uno alla volta, tiene/indica/tira/si arrotola/si ritira), le
+  VENTOSE, l'INCHIOSTRO (del polpo e della penna: coerente con la carta).
+  Personalità senza farla vedere, simpatico e abituale anche se è solo un
+  tentacolo. Mai faccia, mai corpo intero.
+- **Il movimento: la carta va a scatti (12 fps, pose ferme), il dito va
+  liscio** (`lib/aScatti.ts`: `FOTOGRAMMA`, `POSE_PENDOLO`, `dondola`,
+  `movimentoRidotto`). Da applicare DI PIÙ (Tommaso).
+- **Illustrazioni semplici e adattabili, col tentacolo**, NON a tema Genova
+  per forza; Genova sta negli easter egg.
+
+## Fatto il 19 novembre
+- **Caricamento = tre VENTOSE** (`ui/Ventose.tsx`) al posto della rotellina
+  di lucide in TUTTA l'app (25 file). Tommaso: niente tentacolo grande per le
+  attese, «solo la prima per tutto». A scatti (250 ms per ventosa, `steps`),
+  cerchi imperfetti, `currentColor`. L'altezza dalla classe (`h-4`…), la
+  larghezza dalla proporzione: il `w-…` di chi la usa viene ignorato (era la
+  misura del cerchio della rotellina e schiaccerebbe la fila). CSS «LE
+  VENTOSE» in fondo a `index.css`.
+- **Il cartellino DONDOLA quando si chiude la sua scheda** (Bacheca →
+  `dondola`, dopo 140 ms, verso dal seme). Il cartellino ora pende dal FORO
+  (`transform-origin: 50% 22px`), non dal centro: come uno appeso vero.
+  Misurato: 0 → 3,1 → −2,3 → 1,4 → −0,8 → 0,3 → fermo.
+- **Le NOTE post-it si staccano toccandole** (`staccabile`): si sollevano e
+  CADONO SVOLAZZANDO fino al fondo dello schermo (12 pose: ondeggiano e
+  girano, accelerando). «Letto»: per la sessione non tornano. Solo le note
+  (foto in configurazione, indirizzo del privato, annuncio passato); i
+  post-it che chiedono di fare qualcosa restano.
+- **Le foto si sfogliano come POLAROID vere** (`profile/PilaPolaroid.tsx`,
+  Profilo e galleria del profilo pubblico; `CaroselloFoto` cancellato): una
+  pila, ogni foto una stampa sua, sotto i bordi delle due dopo; quella in
+  cima segue il dito liscia e, lasciata oltre un quinto o con un colpo, vola
+  via; è un giro. Con più foto niente scotch (una pila che si sfoglia non è
+  attaccata). Provato col tocco vero: sinistra → la dopo, destra → quella
+  prima, trascinamento corto → resta.
+
+## Decisi, da fare (servono i disegni di Tommaso)
+- **Tirare giù per aggiornare** col tentacolo della P del logo.
+- **Timbri d'inchiostro** al posto dei toast: candidatura inviata,
+  assunzione, cuore.
+- **Il polpo del golfo**: allontanando la mappa, un tentacolo esce dal mare
+  davanti al porto.
+- **Il logo toccato 5 volte**: il tentacolo spruzza l'inchiostro.
+- **Il logo che cambia con l'ora**: dall'1 alle 7 in pigiama, dalle 7 alle 8
+  fa colazione col cappuccino (scelto da Tommaso al posto dell'«ottavo
+  lavoro»).
+- **Fuori dall'app**: il cartellino da pacco con lo spago sulle vetrine dei
+  locali che cercano (QR all'annuncio), cartellini e post-it sulle bacheche
+  dell'università, social con gli stessi componenti.

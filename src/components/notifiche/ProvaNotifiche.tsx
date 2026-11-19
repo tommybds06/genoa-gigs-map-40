@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { canaleAttivo, entro } from "@/lib/notifiche/canale";
+import { Ventose } from "@/components/ui/Ventose";
 
 /**
  * «MANDAMI UNA NOTIFICA DI PROVA» (11 novembre) — in Impostazioni, sotto
@@ -114,7 +114,7 @@ export function ProvaNotifiche() {
   return (
     <div className="linea-sotto-sottile px-4 pb-4">
       <Button size="sm" variant="outline" className="w-full" onClick={prova} disabled={inCorso}>
-        {inCorso && <Loader2 className="animate-spin" />}
+        {inCorso && <Ventose className="" />}
         Mandami una notifica di prova
       </Button>
       {esito && (

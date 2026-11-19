@@ -18,12 +18,12 @@ import { VerificaIdentita } from '@/components/profile/VerificaIdentita';
 import { MESSAGGI_PARTITA_IVA, RAGGIO_AREA, salvaRiservati, testiEmployer, verificaPartitaIva } from '@/lib/registrazione';
 import { LocationPicker } from '@/components/onboarding/LocationPicker';
 import { toast } from 'sonner';
-import { Loader2 } from 'lucide-react';
 import {
   ProfiloIcon, DocumentoIcon, FotoIcon, GloboIcon, InstagramIcon,
   HashtagIcon, SearchIcon, MappaIcon, AnnunciIcon, PennaIcon, VerificatoIcon,
 } from '@/components/icons/uiIcons';
 import { PostIt } from "@/components/ui/PostIt";
+import { Ventose } from "@/components/ui/Ventose";
 
 const Onboarding = () => {
   const { user } = useAuth();
@@ -154,7 +154,7 @@ const Onboarding = () => {
   if (profileLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <Ventose className="h-8 w-8 text-primary" />
       </div>
     );
   }
@@ -307,12 +307,13 @@ const Onboarding = () => {
           {/* Il consiglio sulle foto è una NOTA: un post-it QUADRATO attaccato
               in alto a destra, mezzo sopra il bordo della sezione. Fuori dal
               flusso: in riga spingeva giù le foto (Tommaso, 18 novembre).
-              Non prende i tocchi: sotto possono esserci mappa e foto. */}
+              Toccandola si stacca e cade (`staccabile`). */}
           <PostIt
             seme="onboarding-foto"
             misura="quadrato"
             gradi={3}
-            className="pointer-events-none absolute -top-8 right-0 z-10 w-[108px]"
+            staccabile
+            className="absolute -top-8 right-0 z-10 w-[108px]"
           >
             {isEmployer ? testi.testoFoto : 'Fino a 10 foto per mostrarti al meglio'}
           </PostIt>
@@ -438,7 +439,7 @@ const Onboarding = () => {
         >
           {loading ? (
             <>
-              <Loader2 className="h-5 w-5 animate-spin mr-2" />
+              <Ventose className="h-5 w-5 mr-2" />
               Salvataggio...
             </>
           ) : (

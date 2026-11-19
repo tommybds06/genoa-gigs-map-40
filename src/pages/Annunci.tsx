@@ -5,7 +5,7 @@ import { Header } from '@/components/layout/Header';
 import { useAuth } from '@/hooks/useAuth';
 import { useAppTheme } from '@/hooks/useAppTheme';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2, Check } from 'lucide-react';
+import { Check } from 'lucide-react';
 import { PennaIcon, BidoneIcon, XIcon, AnnunciIcon, PiuIcon, OrologioIcon } from "@/components/icons/uiIcons";
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -21,6 +21,7 @@ import { TesseraIcona, TesseraIndietro } from "@/components/ui/Tessera";
 import { cn } from "@/lib/utils";
 import { CartaCard } from "@/components/ui/CartaCard";
 import { PostIt } from "@/components/ui/PostIt";
+import { Ventose } from "@/components/ui/Ventose";
 
 /**
  * I TUOI ANNUNCI — la pagina dell'employer (rifatta l'11 novembre).
@@ -380,7 +381,7 @@ const Annunci = () => {
 
           {!eAttivo && applications.some((a) => a.status === 'pending') && (
             /* La nota è un post-it (18 novembre): è un promemoria, non un dato. */
-            <PostIt seme={`passato-${selectedJob.id}`} className="mb-5 ml-1 max-w-[236px]">
+            <PostIt seme={`passato-${selectedJob.id}`} staccabile className="mb-5 ml-1 max-w-[236px]">
               Non è più sulla mappa, ma a chi si è candidato puoi ancora rispondere
             </PostIt>
           )}
@@ -389,7 +390,7 @@ const Annunci = () => {
 
           {loadingApplications ? (
             <div className="flex items-center justify-center py-12">
-              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              <Ventose className="h-8 w-8 text-muted-foreground" />
             </div>
           ) : applications.length === 0 ? (
             <div className="text-center py-10">
@@ -437,7 +438,7 @@ const Annunci = () => {
                           className="flex-1 touch-feedback"
                         >
                           {processingAppId === app.id ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
+                            <Ventose className="h-4 w-4" />
                           ) : (
                             <>
                               <XIcon className="h-3.5 w-3.5 text-ink-soft" />
@@ -451,7 +452,7 @@ const Annunci = () => {
                           className={cn('flex-1 touch-feedback', theme.btnFilled)}
                         >
                           {processingAppId === app.id ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
+                            <Ventose className="h-4 w-4" />
                           ) : (
                             <>
                               <Check className="h-4 w-4" />

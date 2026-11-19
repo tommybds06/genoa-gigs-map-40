@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -10,6 +9,7 @@ import { srcLogo } from "@/lib/gerarchia";
 import { doveMandare } from "@/lib/percorsoAccesso";
 import { chiudiRecupero, messaggioErrorePassword, segnaRecupero } from "@/lib/recuperoPassword";
 import { CartaCard } from "@/components/ui/CartaCard";
+import { Ventose } from "@/components/ui/Ventose";
 
 type Stato = "controllo" | "pronta" | "scaduto";
 
@@ -115,7 +115,7 @@ const ReimpostaPassword = () => {
         <CartaCard seme="reimposta" className="p-8">
           {stato === "controllo" && (
             <div className="flex justify-center py-6">
-              <Loader2 className="h-6 w-6 animate-spin text-primary-strong" />
+              <Ventose className="h-6 w-6 text-primary-strong" />
             </div>
           )}
 
@@ -144,7 +144,7 @@ const ReimpostaPassword = () => {
                 )}
               </div>
               <Button type="submit" size="lg" className="w-full" disabled={salvataggio}>
-                {salvataggio ? <Loader2 className="h-5 w-5 animate-spin" /> : "Salva la password"}
+                {salvataggio ? <Ventose className="h-5 w-5" /> : "Salva la password"}
               </Button>
               <Button type="button" variant="ghost" className="w-full" onClick={annulla} disabled={salvataggio}>
                 Annulla

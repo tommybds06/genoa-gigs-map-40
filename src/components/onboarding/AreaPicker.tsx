@@ -1,6 +1,5 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import Map, { Layer, Source, type MapLayerMouseEvent, type MapLayerTouchEvent, type MapRef } from "react-map-gl";
-import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { GEOFENCING_ERROR_MESSAGE, GENOVA_CENTER, isWithinGenovaBounds } from "@/constants/geofencing";
@@ -8,6 +7,7 @@ import { useMapboxToken } from "@/hooks/useMapboxToken";
 import { cerchioGeo, coloreToken } from "@/lib/area";
 import { RAGGIO_AREA } from "@/lib/registrazione";
 import { PostIt } from "@/components/ui/PostIt";
+import { Ventose } from "@/components/ui/Ventose";
 
 const LIVELLO = "area-riempimento";
 
@@ -77,7 +77,7 @@ export function AreaPicker({
   if (token === null) {
     return (
       <div className="flex h-[240px] w-full items-center justify-center rounded-xl bg-muted">
-        <Loader2 className="h-6 w-6 animate-spin text-employer-800" />
+        <Ventose className="h-6 w-6 text-employer-800" />
       </div>
     );
   }
@@ -88,12 +88,12 @@ export function AreaPicker({
         Scegli la zona in cui ti trovi.
       </p>
       {/* La rassicurazione è una nota attaccata sulla mappa (post-it, 18
-          novembre). Fuori dal ritaglio della mappa, se no la taglierebbe;
-          non prende i tocchi: la mappa sotto si trascina ancora. */}
+          novembre). Fuori dal ritaglio della mappa, se no la taglierebbe.
+          Toccandola si stacca e cade (`staccabile`): la mappa resta libera. */}
       <div className="relative pt-3">
       {/* A SINISTRA e inclinato a sinistra: più sotto, nella stessa schermata,
           c'è il post-it delle foto, a destra e inclinato a destra. */}
-      <PostIt seme="area-indirizzo" employer gradi={-3} className="pointer-events-none absolute -top-1 left-3 z-10 w-[176px]">
+      <PostIt seme="area-indirizzo" employer gradi={-3} staccabile className="absolute -top-1 left-3 z-10 w-[176px]">
         Non mostreremo mai il tuo indirizzo
       </PostIt>
       {/* Ritagliata come le foto (`.sagoma-foto`): niente bordo CSS. */}

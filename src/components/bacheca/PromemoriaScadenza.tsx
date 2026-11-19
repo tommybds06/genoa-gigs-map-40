@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -32,6 +31,7 @@ import {
   prossimoPromemoria,
   type TipoPromemoria,
 } from "@/lib/bacheca";
+import { Ventose } from "@/components/ui/Ventose";
 
 /** Rimandati con «Più tardi»: non si ripropongono fino al prossimo avvio. */
 const rimandati = new Set<string>();
@@ -50,7 +50,7 @@ export function FinestraPromemoria({ tipo, c, fai, inCorso, rimanda }: FinestraP
   const { theme } = useAppTheme();
   const prova = c.stato === "prova";
   const occupato = !!inCorso;
-  const rotella = (k: string) => inCorso === k && <Loader2 className="animate-spin" />;
+  const rotella = (k: string) => inCorso === k && <Ventose className="" />;
 
   const concludi = () =>
     prova
@@ -218,7 +218,7 @@ export function FinestraAnnuncioScaduto({
           disabled={occupato}
           onClick={onCapito}
         >
-          {occupato && <Loader2 className="animate-spin" />}
+          {occupato && <Ventose className="" />}
           Ho capito
         </Button>
       </div>

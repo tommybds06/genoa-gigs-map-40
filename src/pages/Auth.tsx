@@ -20,7 +20,6 @@ import {
   Store,
   User,
   MapPin,
-  Loader2,
   ArrowRight
 } from 'lucide-react';
 import { MailIcon, AnnunciIcon, ProfiloIcon, MappaIcon } from '@/components/icons/uiIcons';
@@ -30,6 +29,7 @@ import { cn } from '@/lib/utils';
 import { doveMandare } from '@/lib/percorsoAccesso';
 import { messaggioErrorePassword, recuperoInCorso } from '@/lib/recuperoPassword';
 import { CartaCard } from "@/components/ui/CartaCard";
+import { Ventose } from "@/components/ui/Ventose";
 
 type UserRole = 'worker' | 'employer';
 type Social = 'google' | 'apple';
@@ -429,7 +429,7 @@ const Auth = () => {
   if (authLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-secondary" />
+        <Ventose className="w-8 h-8 text-secondary" />
       </div>
     );
   }
@@ -633,7 +633,7 @@ const Auth = () => {
               )}
             >
               {loading ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
+                <Ventose className="w-5 h-5" />
               ) : (
                 <>
                   {isLogin ? 'Accedi' : 'Prosegui'}
@@ -672,7 +672,7 @@ const Auth = () => {
                 className="w-full font-medium sagoma-btn sagoma-btn-lg rounded-full"
               >
                 {social === 'google' ? (
-                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <Ventose className="w-5 h-5" />
                 ) : (
                   <>
                     <LogoGoogle />
@@ -690,7 +690,7 @@ const Auth = () => {
                 className="w-full font-medium sagoma-btn sagoma-btn-lg rounded-full"
               >
                 {social === 'apple' ? (
-                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <Ventose className="w-5 h-5" />
                 ) : (
                   <>
                     <LogoApple />

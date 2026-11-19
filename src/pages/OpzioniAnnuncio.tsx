@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import { Check, Loader2 } from 'lucide-react';
+import { Check } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { useUser } from '@/contexts/UserContext';
@@ -17,6 +17,7 @@ import { chiediPermessoDopo } from '@/lib/notifiche/permesso';
 import { GIORNI_A_PAGAMENTO, ORE_GRATUITE } from '@/lib/scadenzaAnnunci';
 import { cn } from '@/lib/utils';
 import { CartaCard } from "@/components/ui/CartaCard";
+import { Ventose } from "@/components/ui/Ventose";
 
 type OpzionePagata = Exclude<Opzione, 'nessuna'>;
 
@@ -246,7 +247,7 @@ const OpzioniAnnuncio = () => {
             size="lg"
             className="w-full bg-employer-700 font-semibold text-employer-foreground hover:bg-employer-800"
           >
-            {pubblicando ? <Loader2 className="h-5 w-5 animate-spin" /> : `Pubblica ${conScelta}`}
+            {pubblicando ? <Ventose className="h-5 w-5" /> : `Pubblica ${conScelta}`}
           </Button>
         )}
         <Button
@@ -260,7 +261,7 @@ const OpzioniAnnuncio = () => {
           )}
         >
           {pubblicando && scelta === 'nessuna' ? (
-            <Loader2 className="h-5 w-5 animate-spin" />
+            <Ventose className="h-5 w-5" />
           ) : (
             <>
               <InvioIcon className="mr-2 h-5 w-5" />

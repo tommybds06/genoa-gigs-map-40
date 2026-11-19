@@ -2,8 +2,8 @@ import { useState, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { MAX_BYTE_FOTO, MISURA_FOTO, ridimensionaFoto, ripiegaFoto, urlFoto } from '@/lib/foto';
 import { toast } from 'sonner';
-import { Loader2 } from 'lucide-react';
 import { PiuIcon, XIcon } from "@/components/icons/uiIcons";
+import { Ventose } from "@/components/ui/Ventose";
 
 interface PhotoUploaderProps {
   photos: string[];
@@ -137,7 +137,7 @@ export const PhotoUploader = ({
                 className="aspect-square rounded-xl border-2 border-dashed border-muted-foreground/30 hover:border-primary/50 active:scale-95 transition-colors flex items-center justify-center bg-muted/30"
               >
                 {uploading && index === 0 ? (
-                  <Loader2 className="h-8 w-8 text-muted-foreground animate-spin" />
+                  <Ventose className="h-8 w-8 text-muted-foreground" />
                 ) : (
                   <PiuIcon className="h-8 w-8 text-muted-foreground" />
                 )}

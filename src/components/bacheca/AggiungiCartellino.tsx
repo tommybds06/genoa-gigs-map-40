@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
 import {
   Drawer,
   DrawerContent,
@@ -21,6 +20,7 @@ import { appendi } from "@/lib/bacheca";
 import { cn } from "@/lib/utils";
 import { Iniziali } from "./CartellinoCard";
 import { MISURA_FOTO, ripiegaFoto, urlFoto } from "@/lib/foto";
+import { Ventose } from "@/components/ui/Ventose";
 
 interface AggiungiCartellinoProps {
   aperto: boolean;
@@ -77,7 +77,7 @@ export function AggiungiCartellino({ aperto, onClose }: AggiungiCartellinoProps)
           <div className="mt-4">
             {isLoading ? (
               <div className="flex justify-center py-8">
-                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                <Ventose className="h-6 w-6 text-muted-foreground" />
               </div>
             ) : error ? (
               <p className="py-6 text-center text-[15px] text-muted-foreground">
@@ -111,7 +111,7 @@ export function AggiungiCartellino({ aperto, onClose }: AggiungiCartellinoProps)
                       disabled={inCorso !== null}
                       onClick={() => appendiCandidato(i)}
                     >
-                      {inCorso === p.applicationId && <Loader2 className="animate-spin" />}
+                      {inCorso === p.applicationId && <Ventose className="" />}
                       Appendi
                     </Button>
                   </li>

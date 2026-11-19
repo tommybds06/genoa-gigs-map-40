@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Loader2 } from "lucide-react";
 // Le icone accanto alle etichette, come nella configurazione del profilo
 // (Atlante, 44-2: in Modifica profilo non c'erano).
 import { SalvaIcon, ProfiloIcon, MappaIcon, PennaIcon, SearchIcon, StoricoLavoriIcon, InstagramIcon, GloboIcon, HashtagIcon } from "@/components/icons/uiIcons";
@@ -22,6 +21,7 @@ import { etichettaInstagram, leggiSocial } from "@/lib/social";
 import { MESSAGGI_PARTITA_IVA, verificaPartitaIva } from "@/lib/registrazione";
 import { VerificaIdentita } from "@/components/profile/VerificaIdentita";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { Ventose } from "@/components/ui/Ventose";
 
 const EditProfile = () => {
   const navigate = useNavigate();
@@ -160,7 +160,7 @@ const EditProfile = () => {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+        <Ventose className="w-8 h-8 text-muted-foreground" />
       </div>
     );
   }
@@ -362,7 +362,7 @@ const EditProfile = () => {
                       disabled={!partitaIva.trim() || verificaInCorso}
                       className="shrink-0"
                     >
-                      {verificaInCorso ? <Loader2 className="h-4 w-4 animate-spin" /> : "Verifica"}
+                      {verificaInCorso ? <Ventose className="h-4 w-4" /> : "Verifica"}
                     </Button>
                   </div>
                   {profile?.piva_verificata ? (
@@ -393,7 +393,7 @@ const EditProfile = () => {
         >
           {isSaving ? (
             <>
-              <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+              <Ventose className="w-5 h-5 mr-2" />
               Salvataggio...
             </>
           ) : (

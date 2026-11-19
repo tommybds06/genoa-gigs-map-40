@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2 } from 'lucide-react';
+import { Ventose } from "@/components/ui/Ventose";
 
 interface Job {
   id: string;
@@ -128,7 +128,7 @@ export function EditJobDialog({ job, isOpen, onClose, onSuccess }: EditJobDialog
           >
             {loading ? (
               <>
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                <Ventose className="h-4 w-4 mr-2" />
                 Salvataggio...
               </>
             ) : (

@@ -3,7 +3,7 @@ import { Fragment, useCallback, useState, useEffect, useLayoutEffect, useMemo, u
 import { srcLogo } from "@/lib/gerarchia";
 import { Campanella } from "@/components/notifiche/Campanella";
 import { impostaChatAperta, segnaLetteDellaChat } from "@/lib/notifiche/notifiche";
-import { MessageCircle, ArrowLeft, Send, Loader2, ImagePlus, CheckCircle, Check } from "lucide-react";
+import { MessageCircle, ArrowLeft, Send, ImagePlus, CheckCircle, Check } from "lucide-react";
 import { InvioIcon, ImmaginiIcon, MessaggiIcon, DocumentoIcon, XIcon } from "@/components/icons/uiIcons";
 import { useAppTheme } from "@/hooks/useAppTheme";
 import { cn } from "@/lib/utils";
@@ -63,6 +63,7 @@ import { Copy, Reply } from "lucide-react";
 import { useAttachmentUrl } from "@/hooks/useAttachmentUrl";
 import { useMessaggi, inserisciMessaggio, aggiornaMessaggio, type Messaggio, precaricaMessaggi } from "@/hooks/useMessaggi";
 import { CartaCard } from "@/components/ui/CartaCard";
+import { Ventose } from "@/components/ui/Ventose";
 
 /** Il messaggio di una chat: vedi `hooks/useMessaggi.ts`. */
 type Message = Messaggio;
@@ -1037,7 +1038,7 @@ const Messaggi = () => {
                 {/* Allegato e invio sono due tessere gemelle ai lati del campo.
                     L'allegato apre la scheda «Allega»: scatta, galleria, documento. */}
                 <Tessera
-                  icona={uploadingImage ? Loader2 : ImmaginiIcon}
+                  icona={uploadingImage ? Ventose : ImmaginiIcon}
                   classeIcona={uploadingImage ? "animate-spin" : undefined}
                   etichetta="Allega"
                   onClick={() => setAllegaAperta(true)}

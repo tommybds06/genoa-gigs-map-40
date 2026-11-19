@@ -13,10 +13,10 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2 } from "lucide-react";
 import { StellaIcon, StellaVuotaIcon } from "@/components/icons/uiIcons";
 import { toast } from "sonner";
 import { EVENTO_RECENSIONE, type PendingReview } from "@/lib/recensione";
+import { Ventose } from "@/components/ui/Ventose";
 
 
 // Session-level tracking to prevent re-showing after skip/close
@@ -341,7 +341,7 @@ export function ReviewPrompt() {
               className="flex-1"
             >
               {isSkipping ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
+                <Ventose className="w-4 h-4" />
               ) : (
                 "Salta"
               )}
@@ -353,7 +353,7 @@ export function ReviewPrompt() {
             >
               {isSubmitting ? (
                 <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  <Ventose className="w-4 h-4 mr-2" />
                   Invio...
                 </>
               ) : (

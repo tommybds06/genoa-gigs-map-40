@@ -1,11 +1,8 @@
 import { FreccettaIcon } from "@/components/icons/uiIcons";
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect } from "react";
 import { XIcon } from "@/components/icons/uiIcons";
-import { motion, AnimatePresence, type PanInfo } from "framer-motion";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { FotoStampata } from "@/components/ui/FotoStampata";
-
-import { MISURA_FOTO, ripiegaFoto, urlFoto } from "@/lib/foto";
+import { PilaPolaroid } from "@/components/profile/PilaPolaroid";
 
 interface GalleryDialogProps {
   isOpen: boolean;
@@ -17,11 +14,6 @@ interface GalleryDialogProps {
   employer?: boolean;
 }
 
-const slideVariants = {
-  enter: (dir: number) => ({ x: dir > 0 ? "55%" : "-55%", opacity: 0 }),
-  center: { x: 0, opacity: 1 },
-  exit: (dir: number) => ({ x: dir < 0 ? "55%" : "-55%", opacity: 0 }),
-};
 
 /* I comandi sopra lo sfondo scuro: tondi di carta con l'icona in inchiostro.
    Erano icone bianche su `bg-black/95`. */
@@ -36,8 +28,8 @@ const COMANDO =
  * margine basso come la scritta di una Polaroid. Prima era un rettangolo
  * nero con la foto dentro.
  *
- * Scorrere resta FLUIDO (è un gesto, §stop motion: fluido per i comandi,
- * a scatti solo per i momenti). Toccare lo sfondo fuori dalla foto chiude.
+ * Dal 19 novembre è la stessa pila del Profilo (`PilaPolaroid`): la stampa
+ * in cima si trascina e vola via. Toccare lo sfondo fuori dalla foto chiude.
  */
 export function GalleryDialog({
   isOpen,
@@ -48,7 +40,6 @@ export function GalleryDialog({
   employer,
 }: GalleryDialogProps) {
   const photosCount = photos.length;
-  const directionRef = useRef(0);
 
   // Preload all photos as soon as the dialog opens
   useEffect(() => {
@@ -60,24 +51,12 @@ export function GalleryDialog({
   }, [isOpen, photos]);
 
   const goToPrevious = useCallback(() => {
-    directionRef.current = -1;
     onIndexChange((currentIndex - 1 + photosCount) % photosCount);
   }, [currentIndex, photosCount, onIndexChange]);
 
   const goToNext = useCallback(() => {
-    directionRef.current = 1;
     onIndexChange((currentIndex + 1) % photosCount);
   }, [currentIndex, photosCount, onIndexChange]);
-
-  // La stampa segue il dito (Tommaso, 24 ottobre: «non c'è un movimento
-  // naturale»). Prima c'era uno swipe a soglia, senza che la foto si
-  // muovesse: sembrava di dover usare le frecce. Lasciata oltre 80 px, o con
-  // un colpo veloce, se ne va e arriva la prossima; se no torna al centro.
-  const rilascia = (_: unknown, info: PanInfo) => {
-    if (photosCount < 2) return;
-    if (info.offset.x < -80 || info.velocity.x < -500) goToNext();
-    else if (info.offset.x > 80 || info.velocity.x > 500) goToPrevious();
-  };
 
   if (photosCount === 0) return null;
 
@@ -107,45 +86,21 @@ export function GalleryDialog({
             </button>
           )}
 
-          <AnimatePresence initial={false} custom={directionRef.current} mode="popLayout">
-            <motion.div
-              key={currentIndex}
-              custom={directionRef.current}
-              variants={slideVariants}
-              initial="enter"
-              animate="center"
-              exit="exit"
-              transition={{ duration: 0.22, ease: "easeInOut" }}
-              drag={photosCount > 1 ? "x" : false}
-              dragSnapToOrigin
-              dragElastic={0.7}
-              onDragEnd={rilascia}
-              className="cursor-grab touch-pan-y active:cursor-grabbing"
-            >
-              <FotoStampata
-                seme={photos[currentIndex]}
-                misura="grande"
-                formato="1 / 1"
-                employer={employer}
-                className="w-[min(calc(100vw-7rem),62vh)]"
-                scotch={[{ pezzo: "lungo", lato: "centro" }]}
-                fondo={
-                  <span className="text-sm tabular-nums text-ink-soft">
-                    {currentIndex + 1} / {photosCount}
-                  </span>
-                }
-              >
-                <img
-                  src={urlFoto(photos[currentIndex], MISURA_FOTO.grande)}
-                  onError={ripiegaFoto(photos[currentIndex])}
-                  decoding="async"
-                  alt={`Foto ${currentIndex + 1}`}
-                  className="pointer-events-none h-full w-full select-none object-cover"
-                  draggable={false}
-                />
-              </FotoStampata>
-            </motion.div>
-          </AnimatePresence>
+          {/* La stessa PILA di Polaroid del Profilo (19 novembre): si sfoglia
+              trascinando la stampa in cima; le frecce restano per chi tocca. */}
+          <PilaPolaroid
+            seme="galleria"
+            foto={photos}
+            indice={currentIndex}
+            onIndice={onIndexChange}
+            employer={employer}
+            className="w-[min(calc(100vw-7rem),62vh)]"
+            fondo={(i) => (
+              <span className="text-sm tabular-nums text-ink-soft">
+                {i + 1} / {photosCount}
+              </span>
+            )}
+          />
 
           {photosCount > 1 && (
             <button type="button" onClick={goToNext} aria-label="Foto successiva" className={`${COMANDO} right-2`}>
