@@ -69,7 +69,24 @@ async function caricaStorico(userId: string): Promise<CompletedJob[]> {
 
   const perId = new Map((annunci || []).map((j) => [j.id, j]));
 
-  const idEmployer = [...new Set((annunci || []).map((j) => j.owner_id).filter(Boolean))];
+  // ⚠️ L'ATTIVITÀ NON SOLO DALL'ANNUNCIO (19 novembre, Tommaso: «in alcuni
+  // si può cliccare in altri no»). Il worker non legge gli annunci CHIUSI
+  // (§18), quindi per i lavori finiti l'annuncio spesso non torna, e la riga
+  // non sapeva a chi portare. Il cartellino (per candidatura) e la chat (per
+  // annuncio) il worker li legge sempre: l'attività si prende da lì.
+  const idCandidature = candidature.map((c) => c.id);
+  const [{ data: cartellini }, { data: chat }] = await Promise.all([
+    supabase.from('cartellini').select('application_id, employer_id').in('application_id', idCandidature),
+    idAnnunci.length
+      ? supabase.from('chats').select('job_id, employer_id').eq('worker_id', userId).in('job_id', idAnnunci)
+      : Promise.resolve({ data: [] as { job_id: string | null; employer_id: string }[] }),
+  ]);
+  const daCartellino = new Map((cartellini || []).map((c) => [c.application_id, c.employer_id]));
+  const daChat = new Map((chat || []).filter((c) => c.job_id).map((c) => [c.job_id as string, c.employer_id]));
+  const attivitaDi = (c: { id: string; job_id: string }) =>
+    perId.get(c.job_id)?.owner_id ?? daCartellino.get(c.id) ?? daChat.get(c.job_id) ?? null;
+
+  const idEmployer = [...new Set(candidature.map(attivitaDi).filter((x): x is string => !!x))];
   const { data: profili } = idEmployer.length
     ? await supabase.from('profiles').select('id, full_name').in('id', idEmployer)
     : { data: [] };
@@ -93,7 +110,11 @@ async function caricaStorico(userId: string): Promise<CompletedJob[]> {
             tags: annuncio.tags,
           }
         : null,
-      employer: annuncio?.owner_id ? employerPerId.get(annuncio.owner_id) ?? null : null,
+      employer: (() => {
+        const id = attivitaDi(c);
+        // Il nome, se il profilo non torna, resta quello salvato nella candidatura.
+        return id ? employerPerId.get(id) ?? { id, full_name: c.employer_name } : null;
+      })(),
     };
   });
 }

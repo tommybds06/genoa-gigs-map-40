@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from "react";
+import { useLayoutEffect, useRef, type ReactNode } from "react";
 import { animate, motion, useMotionValue, useTransform, type PanInfo } from "framer-motion";
 import { FotoStampata } from "@/components/ui/FotoStampata";
 import { useMisure } from "@/hooks/useMisure";
@@ -60,25 +60,52 @@ export function PilaPolaroid({
   const x = useMotionValue(0);
   const gira = useTransform(x, [-w, 0, w], [-14, 0, 14]);
   const volo = useRef(false);
+  /** Come entra la stampa che sta per andare in cima: ferma (1) o da sinistra (-1). */
+  const entra = useRef<0 | 1 | -1>(0);
 
-  // Cambiando foto dai pallini, la nuova in cima parte ferma.
-  useEffect(() => {
-    if (!volo.current) x.set(0);
-  }, [indice, x]);
+  // ⚠️ La posizione della stampa NUOVA in cima si imposta qui, a commit fatto
+  // e prima del disegno (19 novembre, Tommaso: «un po' buggato»). Prima si
+  // impostava subito dopo `onIndice`, quando in cima c'era ancora la stampa
+  // vecchia: per un fotogramma quella appena lanciata tornava al centro.
+  useLayoutEffect(() => {
+    if (entra.current === -1) {
+      // ALL'INDIETRO: la precedente stava in fondo alla pila, cioè non si
+      // vedeva. Non può «comparire» in cima: arriva da sinistra e si posa.
+      entra.current = 0;
+      x.set(-w * 1.3);
+      animate(x, 0, { type: "tween", duration: 0.26, ease: "easeOut" }).then(() => {
+        volo.current = false;
+      });
+      return;
+    }
+    entra.current = 0;
+    volo.current = false;
+    x.set(0);
+    // Solo al cambio di foto.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [indice]);
 
   const vai = (verso: 1 | -1) => {
     const prossimo = (indice + (verso === 1 ? 1 : -1) + n) % n;
     if (movimentoRidotto()) {
-      x.set(0);
       onIndice(prossimo);
       return;
     }
     volo.current = true;
-    animate(x, verso === 1 ? -w * 1.3 : w * 1.3, { type: "tween", duration: 0.22, ease: "easeOut" }).then(() => {
-      onIndice(prossimo);
-      x.set(0);
-      volo.current = false;
-    });
+    if (verso === 1) {
+      // AVANTI: quella in cima vola via a sinistra e va in fondo alla pila.
+      animate(x, -w * 1.3, { type: "tween", duration: 0.22, ease: "easeOut" }).then(() => {
+        entra.current = 1;
+        onIndice(prossimo);
+      });
+    } else {
+      // INDIETRO: quella in cima torna al suo posto, poi la precedente arriva
+      // da sinistra e le si posa sopra (vedi l'effetto qui sopra).
+      animate(x, 0, { type: "tween", duration: 0.12, ease: "easeOut" }).then(() => {
+        entra.current = -1;
+        onIndice(prossimo);
+      });
+    }
   };
 
   const rilascia = (_: unknown, info: PanInfo) => {

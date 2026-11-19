@@ -3326,9 +3326,10 @@ Solo ciò che Tommaso ha DECISO; le proposte in discussione non stanno qui.
   - **La Polaroid che si sviluppa**: una foto appena CARICATA (solo quelle,
     non quelle del profilo) parte da un velo grigio-bruno senza colore e
     l'immagine affiora in 4 pose (`.velo-sviluppo`, `.foto-si-sviluppa`).
-  - **Lo scotch del toast si stacca**: uscendo si solleva dal lato destro e
-    vola via in 3 pose. ⚠️ sonner smonta il toast 200 ms dopo `data-removed`
-    (`we=200` nel suo codice): le pose devono stare lì dentro.
+  - ~~Lo scotch del toast si stacca~~: PROVATO E TOLTO lo stesso giorno
+    (Tommaso, provato sul telefono: «sembra un bug da mobile»). Il toast
+    esce come lo fa sonner. (Nota: sonner smonta il toast 200 ms dopo
+    `data-removed`, `we=200` nel suo codice.)
   - **Il cartellino nuovo** (dal «+» o da un'assunzione) arriva con la
     puntina che si pianta e poi dondola (`nuovo`; Bacheca ricorda i
     cartellini già «visti» all'apertura).
@@ -3341,6 +3342,26 @@ Solo ciò che Tommaso ha DECISO; le proposte in discussione non stanno qui.
   −2,5°). «Resta visibile sulla mappa per 48 ore» nelle opzioni
   dell'annuncio: PROVATO come post-it sul bordo del fondo e TOLTO (Tommaso:
   «non mi piace, fallo tornare come prima»). Resta la riga di testo.
+
+## Correzioni dal telefono (19 novembre, sera)
+- **La pila di Polaroid all'indietro** era «un po' buggata»: la stampa in
+  cima volava a destra e la precedente, che stava in FONDO alla pila (non
+  si vedeva), compariva di colpo in cima. Ora quella in cima torna al suo
+  posto e la precedente ARRIVA DA SINISTRA e le si posa sopra. ⚠️ La
+  posizione della stampa nuova si imposta in un `useLayoutEffect` sul
+  cambio d'indice (prima del disegno), non subito dopo `onIndice`: lì in
+  cima c'era ancora la vecchia, e per un fotogramma tornava al centro.
+- **Lo storico lavori: righe toccabili e no.** L'attività veniva solo
+  dall'annuncio, e il worker non legge gli annunci chiusi. Ora anche dal
+  cartellino (per candidatura) e dalla chat (per annuncio). Provato sul
+  banco nascondendo gli annunci chiusi: 3 righe, 3 toccabili.
+- **Le «impalcature» dei bottoni aprendo l'app**: le sagome PNG (§6) le
+  chiedeva il CSS solo quando il primo bottone compariva; per quel tempo
+  restava la sola toppa delle giunture (una croce). Ora sono `<link
+  rel="preload" as="image">` in `index.html` (17, ⚠️ da tenere in sincrono
+  con le `url(...-3x.png)` di `index.css`). Misurato su una build vera con
+  la rete di un 4G: senza, il bottone a 4,9 s e la sua sagoma a 5,15 s
+  (~250 ms di impalcatura); con, la sagoma a 0,9 s e il bottone a 5,3 s.
 
 ## Le animazioni: POSE in Illustrator, non After Effects (19 novembre)
 Tommaso non sa fare animazioni complesse; il Lottie del logo l'ha pagato 50 €
