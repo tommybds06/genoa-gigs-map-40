@@ -3338,10 +3338,9 @@ Solo ciò che Tommaso ha DECISO; le proposte in discussione non stanno qui.
     (`POSE_PIANTA`, `POSE_POSA`, `pianta`, `posa`).
 - **Altri due post-it** (Tommaso, 19 novembre; io li avevo esclusi):
   «La prima foto sarà la tua immagine profilo» (staccabile, a sinistra a
-  −2,5°) e «Resta sulla mappa 48 ore / 7 giorni» nelle opzioni
-  dell'annuncio, attaccato sul bordo del fondo in alto a destra, fuori dal
-  flusso, NON staccabile (cambia con l'opzione scelta), su una riga
-  (`whitespace-nowrap`: un post-it assoluto si restringeva e andava a capo).
+  −2,5°). «Resta visibile sulla mappa per 48 ore» nelle opzioni
+  dell'annuncio: PROVATO come post-it sul bordo del fondo e TOLTO (Tommaso:
+  «non mi piace, fallo tornare come prima»). Resta la riga di testo.
 
 ## Le animazioni: POSE in Illustrator, non After Effects (19 novembre)
 Tommaso non sa fare animazioni complesse; il Lottie del logo l'ha pagato 50 €
