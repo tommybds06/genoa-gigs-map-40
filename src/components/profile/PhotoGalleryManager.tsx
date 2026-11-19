@@ -8,6 +8,7 @@ import { FotoStampata } from "@/components/ui/FotoStampata";
 import { MAX_BYTE_FOTO, ridimensionaFoto } from "@/lib/foto";
 import { MISURA_FOTO, ripiegaFoto, urlFoto } from "@/lib/foto";
 import { Ventose } from "@/components/ui/Ventose";
+import { PostIt } from "@/components/ui/PostIt";
 
 interface PhotoGalleryManagerProps {
   photos: string[];
@@ -28,6 +29,16 @@ export function PhotoGalleryManager({
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  // LE FOTO APPENA CARICATE SI SVILUPPANO come una Polaroid (19 novembre):
+  // dalla carta vuota all'immagine in quattro pose. Solo quelle caricate qui,
+  // adesso: non quelle che arrivano col profilo. Una volta sola.
+  const [daSviluppare, setDaSviluppare] = useState<Set<string>>(() => new Set());
+  const sviluppata = (url: string) =>
+    setDaSviluppare((s) => {
+      const n = new Set(s);
+      n.delete(url);
+      return n;
+    });
 
   // Inchiostri, non pastelli: sono testo e icone su carta (§5).
   const primaryColor = isEmployer ? "text-employer-800" : "text-primary-strong";
@@ -84,6 +95,7 @@ export function PhotoGalleryManager({
       }
 
       if (uploadedUrls.length > 0) {
+        setDaSviluppare((s) => new Set([...s, ...uploadedUrls]));
         onPhotosChange([...photos, ...uploadedUrls]);
         toast.success(
           uploadedUrls.length === 1
@@ -196,9 +208,16 @@ export function PhotoGalleryManager({
                 onError={ripiegaFoto(photo)}
                 decoding="async"
                 alt={`Foto ${index + 1}`}
-                className="h-full w-full object-cover"
+                className={cn("h-full w-full object-cover", daSviluppare.has(photo) && "foto-si-sviluppa")}
                 draggable={false}
               />
+              {daSviluppare.has(photo) && (
+                <span
+                  aria-hidden="true"
+                  className="velo-sviluppo pointer-events-none absolute inset-0"
+                  onAnimationEnd={() => sviluppata(photo)}
+                />
+              )}
 
               {/* Maniglia: solo col mouse, dove il trascinamento c'è davvero. */}
               <div className="absolute left-1 top-1 opacity-0 transition-opacity group-hover:opacity-100">
@@ -258,9 +277,13 @@ export function PhotoGalleryManager({
         className="hidden"
       />
 
-      <p className="text-xs text-muted-foreground text-center">
-        La prima foto sarà la tua immagine profilo
-      </p>
+      {/* Una NOTA: il post-it (Tommaso, 19 novembre), a sinistra e inclinato
+          a sinistra (in configurazione, sopra, ce n'è uno a destra). */}
+      <div className="pl-1 pt-1">
+        <PostIt seme="prima-foto" staccabile gradi={-2.5} className="max-w-[230px]">
+          La prima foto sarà la tua immagine profilo
+        </PostIt>
+      </div>
     </div>
   );
 }

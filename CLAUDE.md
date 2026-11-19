@@ -3321,6 +3321,39 @@ Solo ciò che Tommaso ha DECISO; le proposte in discussione non stanno qui.
   attaccata). Provato col tocco vero: sinistra → la dopo, destra → quella
   prima, trascinamento corto → resta.
 
+- **Altre quattro chicche a scatti** (approvate da Tommaso il 19), tutte
+  provate sul banco col tocco vero:
+  - **La Polaroid che si sviluppa**: una foto appena CARICATA (solo quelle,
+    non quelle del profilo) parte da un velo grigio-bruno senza colore e
+    l'immagine affiora in 4 pose (`.velo-sviluppo`, `.foto-si-sviluppa`).
+  - **Lo scotch del toast si stacca**: uscendo si solleva dal lato destro e
+    vola via in 3 pose. ⚠️ sonner smonta il toast 200 ms dopo `data-removed`
+    (`we=200` nel suo codice): le pose devono stare lì dentro.
+  - **Il cartellino nuovo** (dal «+» o da un'assunzione) arriva con la
+    puntina che si pianta e poi dondola (`nuovo`; Bacheca ricorda i
+    cartellini già «visti» all'apertura).
+  - **La barra in basso**: l'icona scelta fa una POSA (si gonfia, rimbalza,
+    si assesta) invece di sfumare e ingrandirsi liscia. Solo cambiando
+    scheda, non all'apertura. Pose comuni in `lib/aScatti.ts`
+    (`POSE_PIANTA`, `POSE_POSA`, `pianta`, `posa`).
+- **Altri due post-it** (Tommaso, 19 novembre; io li avevo esclusi):
+  «La prima foto sarà la tua immagine profilo» (staccabile, a sinistra a
+  −2,5°) e «Resta sulla mappa 48 ore / 7 giorni» nelle opzioni
+  dell'annuncio, attaccato sul bordo del fondo in alto a destra, fuori dal
+  flusso, NON staccabile (cambia con l'opzione scelta), su una riga
+  (`whitespace-nowrap`: un post-it assoluto si restringeva e andava a capo).
+
+## Le animazioni: POSE in Illustrator, non After Effects (19 novembre)
+Tommaso non sa fare animazioni complesse; il Lottie del logo l'ha pagato 50 €
+su Fiverr, e non si può per ogni microanimazione. Ma la regola «a scatti»
+rende inutile After Effects: un'animazione a 12 fps è una SEQUENZA DI
+DISEGNI FERMI. Tommaso disegna le pose (3–8 tavole uguali in Illustrator, lo
+stesso punto d'appoggio), il codice le cambia a 12 al secondo o, per il
+tirare giù, secondo quanto si tira. GIF e video (ChatGPT, Seedance) NO
+nell'app: niente trasparenza vera (bordo seghettato sulla carta), pesanti,
+sfocati a 2,625, non si ricolorano per ruolo, non si comandano col dito. Sì
+fuori dall'app (social).
+
 ## Decisi, da fare (servono i disegni di Tommaso)
 - **Tirare giù per aggiornare** col tentacolo della P del logo.
 - **Timbri d'inchiostro** al posto dei toast: candidatura inviata,

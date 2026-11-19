@@ -33,3 +33,37 @@ export function dondola(el: Element | null, { ampiezza = 1, verso = 1, ritardo =
     { duration: FOTOGRAMMA * POSE_PENDOLO.length, delay: ritardo }
   );
 }
+
+/** La puntina che si pianta: si alza, scende un filo più in basso, torna.
+    [y px, scala, gradi] — le stesse di TesseraRuolo. */
+export const POSE_PIANTA: [number, number, number][] = [
+  [-7, 1.14, -8],
+  [-3, 1.08, -4],
+  [2, 0.92, 3],
+  [0, 1, 0],
+];
+
+export function pianta(el: Element | null, ritardo = 0) {
+  if (!el || movimentoRidotto()) return;
+  el.animate(
+    POSE_PIANTA.map(([y, s, g]) => ({ transform: `translateY(${y}px) scale(${s}) rotate(${g}deg)`, easing: "steps(1, end)" })),
+    { duration: FOTOGRAMMA * POSE_PIANTA.length, delay: ritardo }
+  );
+}
+
+/** Una POSA: l'oggetto scelto si gonfia, rimbalza e si assesta (le icone
+    della barra in basso). [scala, gradi] */
+export const POSE_POSA: [number, number][] = [
+  [1.22, -7],
+  [0.96, 4],
+  [1.06, -1],
+  [1, 0],
+];
+
+export function posa(el: Element | null) {
+  if (!el || movimentoRidotto()) return;
+  el.animate(
+    POSE_POSA.map(([s, g]) => ({ scale: `${s}`, rotate: `${g}deg`, easing: "steps(1, end)" })),
+    { duration: FOTOGRAMMA * POSE_POSA.length }
+  );
+}

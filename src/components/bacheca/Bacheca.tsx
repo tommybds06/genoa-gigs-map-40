@@ -1,5 +1,5 @@
 import { FreccettaIcon } from "@/components/icons/uiIcons";
-import { CSSProperties, useState } from "react";
+import { CSSProperties, useEffect, useRef, useState } from "react";
 
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { PiuIcon } from "@/components/icons/uiIcons";
@@ -40,6 +40,16 @@ export function Bacheca({ onApriChat }: BachecaProps) {
   // un'assunzione mostra subito lo stato vero.
   const aperto = cartellini.find((c) => c.id === apertoId) ?? null;
 
+  // I cartellini già appesi quando la bacheca si è caricata: quelli che
+  // arrivano dopo (appesi dal «+» o comparsi con un'assunzione) entrano con
+  // la puntina che si pianta. Dopo la prima volta diventano «visti».
+  const visti = useRef<Set<string> | null>(null);
+  if (visti.current === null && !isLoading) visti.current = new Set(cartellini.map((c) => c.id));
+  useEffect(() => {
+    if (!visti.current) return;
+    cartellini.forEach((c) => visti.current!.add(c.id));
+  }, [cartellini]);
+
   if (isLoading) {
     return (
       <div className="bacheca" aria-busy="true">
@@ -72,7 +82,7 @@ export function Bacheca({ onApriChat }: BachecaProps) {
 
       <div className="bacheca">
         {attivi.map((c) => (
-          <CartellinoCard key={c.id} c={c} onClick={() => setApertoId(c.id)} />
+          <CartellinoCard key={c.id} c={c} nuovo={!!visti.current && !visti.current.has(c.id)} onClick={() => setApertoId(c.id)} />
         ))}
 
         <button

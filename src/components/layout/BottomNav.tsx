@@ -2,7 +2,9 @@ import {
   MappaIcon, ListaIcon, AnnunciIcon, MessaggiIcon, ProfiloIcon,
   MappaVuotaIcon, ListaVuotaIcon, AnnunciVuotaIcon, MessaggiVuotaIcon, ProfiloVuotaIcon,
 } from "@/components/icons/uiIcons";
+import { useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { posa } from "@/lib/aScatti";
 import { useUser } from "@/contexts/UserContext";
 
 interface NavItem {
@@ -16,6 +18,16 @@ interface NavItem {
 export function BottomNav() {
   const location = useLocation();
   const { isEmployer, loading, hasLoaded } = useUser();
+  // L'ICONA SCELTA FA UNA POSA a scatti (19 novembre): si gonfia, rimbalza e
+  // si assesta. Prima sfumava e si ingrandiva liscia in 300 ms: la carta va a
+  // scatti (§30). Non alla prima apertura: solo quando si CAMBIA scheda.
+  const icone = useRef(new Map<string, HTMLDivElement>());
+  const prima = useRef<string | null>(null);
+  useEffect(() => {
+    const ora = location.pathname;
+    if (prima.current !== null && prima.current !== ora) posa(icone.current.get(ora) ?? null);
+    prima.current = ora;
+  }, [location.pathname]);
 
   // Colore del ruolo; neutro finché il profilo non è caricato per evitare flash
   const colorClass =
@@ -57,19 +69,23 @@ export function BottomNav() {
                   ruolo — che e' quello che fa il lavoro nello schema da cui
                   questa nav e' ripresa. */}
               <div
-                className={`relative w-7 h-7 transition-all duration-300 ${
+                ref={(el) => {
+                  if (el) icone.current.set(item.path, el);
+                  else icone.current.delete(item.path);
+                }}
+                className={`relative w-7 h-7 ${
                   isActive
                     ? `${colorClass} scale-110`
                     : "text-muted-foreground scale-100"
                 }`}
               >
                 <Outline
-                  className={`absolute inset-0 w-7 h-7 transition-opacity duration-300 ${item.iconClass ?? ""} ${
+                  className={`absolute inset-0 w-7 h-7 ${item.iconClass ?? ""} ${
                     isActive ? "opacity-0" : "opacity-100"
                   }`}
                 />
                 <Filled
-                  className={`absolute inset-0 w-7 h-7 transition-opacity duration-300 ${item.iconClass ?? ""} ${
+                  className={`absolute inset-0 w-7 h-7 ${item.iconClass ?? ""} ${
                     isActive ? "opacity-100" : "opacity-0"
                   }`}
                 />

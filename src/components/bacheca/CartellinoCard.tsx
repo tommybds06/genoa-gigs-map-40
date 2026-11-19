@@ -1,4 +1,5 @@
-import { CSSProperties } from "react";
+import { useLayoutEffect, useRef, type CSSProperties } from "react";
+import { dondola, FOTOGRAMMA, pianta, POSE_PIANTA } from "@/lib/aScatti";
 import { cn } from "@/lib/utils";
 import { useAppTheme } from "@/hooks/useAppTheme";
 import { PUNTINE, PUNTE_PUNTINE } from "@/components/icons/puntine";
@@ -74,6 +75,9 @@ export function Iniziali({ nome, className }: { nome: string; className?: string
 interface CartellinoCardProps {
   c: Cartellino;
   onClick: () => void;
+  /** Appena appeso (non c'era quando si è aperta la bacheca): la puntina si
+      pianta e il cartellino dondola (19 novembre). */
+  nuovo?: boolean;
 }
 
 /**
@@ -94,8 +98,18 @@ interface CartellinoCardProps {
  * punta di ogni disegno sono misurate (PUNTE_PUNTINE), quindi la puntina si
  * posiziona da lì; la testa resta a cavallo del bordo alto.
  */
-export function CartellinoCard({ c, onClick }: CartellinoCardProps) {
+export function CartellinoCard({ c, onClick, nuovo }: CartellinoCardProps) {
   const { isEmployer } = useAppTheme();
+  const bottone = useRef<HTMLButtonElement>(null);
+  useLayoutEffect(() => {
+    if (!nuovo) return;
+    const b = bottone.current;
+    pianta(b?.querySelector(".puntina-cartellino") ?? null);
+    // Piantata la puntina, il cartellino ci dondola sotto.
+    dondola(b, { ampiezza: 1.4, ritardo: FOTOGRAMMA * POSE_PIANTA.length });
+    // Solo all'arrivo.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const v = varieta(c.id);
   const Puntina = PUNTINE[v.puntina];
   const punta = PUNTE_PUNTINE[v.puntina];
@@ -105,6 +119,7 @@ export function CartellinoCard({ c, onClick }: CartellinoCardProps) {
 
   return (
     <button
+      ref={bottone}
       type="button"
       onClick={onClick}
       className="cartellino block w-full text-left touch-feedback focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-2xl"
@@ -118,7 +133,7 @@ export function CartellinoCard({ c, onClick }: CartellinoCardProps) {
 
       <Puntina
         className={cn(
-          "absolute z-10 h-auto drop-shadow-[0_1px_0_hsl(var(--ink)/0.15)]",
+          "puntina-cartellino absolute z-10 h-auto origin-bottom drop-shadow-[0_1px_0_hsl(var(--ink)/0.15)]",
           isEmployer ? "text-employer-700" : "text-primary"
         )}
         style={{

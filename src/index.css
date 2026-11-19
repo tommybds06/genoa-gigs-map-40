@@ -1328,3 +1328,49 @@ body [data-sonner-toaster] {
 @media (prefers-reduced-motion: reduce) {
   .ventose .ventosa { animation: none; opacity: 0.6; }
 }
+
+/* LA POLAROID CHE SI SVILUPPA (PhotoGalleryManager, 19 novembre): una foto
+   appena caricata parte da un velo di carta grigio-bruna e senza colore, e
+   l'immagine affiora in quattro pose ferme. */
+@keyframes velo-sviluppo {
+  0% { opacity: 1; }
+  25% { opacity: 0.72; }
+  50% { opacity: 0.42; }
+  75% { opacity: 0.16; }
+  100% { opacity: 0; }
+}
+@keyframes foto-sviluppo {
+  0% { filter: saturate(0) sepia(0.5); }
+  25% { filter: saturate(0.25) sepia(0.4); }
+  50% { filter: saturate(0.55) sepia(0.25); }
+  75% { filter: saturate(0.85) sepia(0.1); }
+  100% { filter: none; }
+}
+.velo-sviluppo {
+  background: color-mix(in srgb, hsl(var(--ink)) 22%, hsl(var(--paper-sheet)));
+  animation: velo-sviluppo 1300ms steps(1, end) forwards;
+}
+.foto-si-sviluppa {
+  animation: foto-sviluppo 1300ms steps(1, end) forwards;
+}
+
+/* LO SCOTCH DEL TOAST SI STACCA (19 novembre): quando il toast se ne va, il
+   nastro si solleva dal lato destro e vola via, in tre pose, invece di
+   sfumare. ⚠️ sonner smonta il toast 200 ms dopo averlo segnato
+   `data-removed`: le pose stanno in quel tempo. Il trascinamento col dito
+   (`data-swipe-out`) resta quello di sonner: segue il dito. */
+@keyframes scotch-si-stacca {
+  0% { rotate: 0deg; translate: 0 0; opacity: 1; }
+  34% { rotate: -5deg; translate: 4px -5px; opacity: 1; }
+  67% { rotate: -12deg; translate: 36px -16px; opacity: 0.85; }
+  100% { rotate: -18deg; translate: 120px -36px; opacity: 0; }
+}
+[data-sonner-toaster] [data-sonner-toast].toast-scotch[data-removed="true"][data-swipe-out="false"] {
+  transform-origin: 0% 50%;
+  animation: scotch-si-stacca 200ms steps(1, end) forwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .velo-sviluppo, .foto-si-sviluppa { animation: none; opacity: 0; filter: none; }
+  .foto-si-sviluppa { opacity: 1; }
+  [data-sonner-toaster] [data-sonner-toast].toast-scotch[data-removed="true"] { animation: none; }
+}

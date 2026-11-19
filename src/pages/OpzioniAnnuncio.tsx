@@ -18,6 +18,7 @@ import { GIORNI_A_PAGAMENTO, ORE_GRATUITE } from '@/lib/scadenzaAnnunci';
 import { cn } from '@/lib/utils';
 import { CartaCard } from "@/components/ui/CartaCard";
 import { Ventose } from "@/components/ui/Ventose";
+import { PostIt } from "@/components/ui/PostIt";
 
 type OpzionePagata = Exclude<Opzione, 'nessuna'>;
 
@@ -269,9 +270,17 @@ const OpzioniAnnuncio = () => {
             </>
           )}
         </Button>
-        <p className="text-center text-[13px] text-muted-foreground">
-          Resta visibile sulla mappa per {conAllungamento ? `${GIORNI_A_PAGAMENTO} giorni` : `${ORE_GRATUITE} ore`}.
-        </p>
+        {/* La durata è una NOTA (Tommaso, 19 novembre): un post-it attaccato
+            sul bordo del fondo, in alto a destra, fuori dal flusso (il fondo
+            non si alza). Non si stacca: cambia con l'opzione scelta. */}
+        <PostIt
+          seme="resta-visibile"
+          misura="piccolo"
+          gradi={2.5}
+          className="!absolute -top-9 right-4 z-30 !mt-0 whitespace-nowrap"
+        >
+          Resta sulla mappa {conAllungamento ? `${GIORNI_A_PAGAMENTO} giorni` : `${ORE_GRATUITE} ore`}
+        </PostIt>
       </div>
     </div>
   );
