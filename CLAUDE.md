@@ -3263,3 +3263,19 @@ ripescare qualche candidato passato». `pages/Annunci.tsx`, rifatta.
 - Verificato sul banco a 390 px e 2,625: un attivo che scade tra 44 minuti
   e nove passati con titoli simili (il caso degli screenshot di Tommaso).
 
+
+---
+
+# 30. Il branding — le decisioni prese (dal 17 novembre)
+
+Solo ciò che Tommaso ha DECISO; le proposte in discussione non stanno qui.
+- **Niente mascotte.** «La mascotte del polpetto… banale e scontata»
+  (Tommaso, 17 novembre). Il polpo entra nel brand, ma non come personaggio.
+- Il polpo va unito al linguaggio già costruito: carta, contorni imperfetti,
+  inchiostro, oggetti fisici (scotch, puntine, post-it, cartellini, Polaroid).
+- **Tono**: più informale per il worker, normale per l'employer.
+- Gli piacciono: illustrazioni personalizzate, un caricamento col tentacolo,
+  gli easter egg (lo scotch che oscilla, il menu che dondola).
+- **Gamification «ventose»**: idea approvata, per DOPO (Fase 9).
+- ⚠️ Prima di qualunque cosa stampata o fuori dall'app: il NOME (forse cambia,
+  §24) e la licenza Shinjo del wordmark (§13).
