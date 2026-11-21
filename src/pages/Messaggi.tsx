@@ -744,6 +744,24 @@ const Messaggi = () => {
     return () => window.clearTimeout(t);
   }, [altroId, queryClient]);
 
+  // Un account ELIMINATO resta come profilo anonimo (migration
+  // 20261121120000): la chat si legge ancora, ma non gli si scrive più — il
+  // database rifiuterebbe il messaggio. Al posto del campo, una riga.
+  const { data: altroEliminato = false } = useQuery({
+    queryKey: ['account-eliminato', altroId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('eliminato_il')
+        .eq('id', altroId!)
+        .maybeSingle();
+      if (error) return false; // database senza la colonna: come prima
+      return !!data?.eliminato_il;
+    },
+    enabled: !!altroId,
+    staleTime: 5 * 60_000,
+  });
+
   /* Il profilo dell'altra persona, aperto dalla chat: prima si segna la chat
      nell'indirizzo di Messaggi, così «indietro» la ritrova aperta. */
   const apriProfiloDallaChat = () => {
@@ -1018,65 +1036,74 @@ const Messaggi = () => {
         )}
 
         {/* Message input - shrink-0 stays at bottom, never compressed */}
-        <div
-          className="linea-a-cavallo shrink-0 bg-background px-4 pt-3"
-          style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 16px)' }}
-        >
-          <div className="flex items-center gap-2">
-            {registrando ? (
-              /* Mentre si registra, al posto di allega + campo: il tempo e
-                 «‹ Scorri per annullare», o (bloccato) cestino e onda. */
-              <BarraRegistrazione
-                stato={vocaleRec.stato}
-                secondi={vocaleRec.secondi}
-                livelli={vocaleRec.livelli}
-                spinta={vocaleRec.spinta}
-                onAnnulla={vocaleRec.annulla}
-              />
-            ) : (
-              <>
-                {/* Allegato e invio sono due tessere gemelle ai lati del campo.
-                    L'allegato apre la scheda «Allega»: scatta, galleria, documento. */}
-                <Tessera
-                  icona={uploadingImage ? Ventose : ImmaginiIcon}
-                  classeIcona={uploadingImage ? "animate-spin" : undefined}
-                  etichetta="Allega"
-                  onClick={() => setAllegaAperta(true)}
-                  disabled={uploadingImage}
+        {altroEliminato ? (
+          <p
+            className="linea-a-cavallo shrink-0 bg-background px-4 pt-3 text-center text-sm text-ink-soft"
+            style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 16px)' }}
+          >
+            Questo account è stato eliminato: non puoi più scrivergli.
+          </p>
+        ) : (
+          <div
+            className="linea-a-cavallo shrink-0 bg-background px-4 pt-3"
+            style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 16px)' }}
+          >
+            <div className="flex items-center gap-2">
+              {registrando ? (
+                /* Mentre si registra, al posto di allega + campo: il tempo e
+                   «‹ Scorri per annullare», o (bloccato) cestino e onda. */
+                <BarraRegistrazione
+                  stato={vocaleRec.stato}
+                  secondi={vocaleRec.secondi}
+                  livelli={vocaleRec.livelli}
+                  spinta={vocaleRec.spinta}
+                  onAnnulla={vocaleRec.annulla}
                 />
+              ) : (
+                <>
+                  {/* Allegato e invio sono due tessere gemelle ai lati del campo.
+                      L'allegato apre la scheda «Allega»: scatta, galleria, documento. */}
+                  <Tessera
+                    icona={uploadingImage ? Ventose : ImmaginiIcon}
+                    classeIcona={uploadingImage ? "animate-spin" : undefined}
+                    etichetta="Allega"
+                    onClick={() => setAllegaAperta(true)}
+                    disabled={uploadingImage}
+                  />
 
-                <Input
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  onKeyPress={handleKeyPress}
-                  placeholder="Scrivi un messaggio..."
-                  className="flex-1 rounded-full h-12 text-base"
+                  <Input
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    placeholder="Scrivi un messaggio..."
+                    className="flex-1 rounded-full h-12 text-base"
+                  />
+                </>
+              )}
+              {/* A destra, una tessera sola che cambia (15 novembre):
+                  - c'è del testo o un allegato → INVIO;
+                  - campo vuoto → il MICROFONO (tieni premuto: `Vocale.tsx`),
+                    come in WhatsApp e Telegram. Prima a campo vuoto c'era
+                    l'invio SPENTO: un bottone che non faceva niente;
+                  - vocale bloccato → INVIO del vocale.
+                  L'invio è una TESSERA (ui/Tessera): la coppia fondo+icona la
+                  decide lei, niente `bg-` scritti a mano (§5). */}
+              {vocaleRec.stato === 'bloccato' ? (
+                <Tessera icona={InvioIcon} etichetta="Invia il vocale" onClick={vocaleRec.invia} />
+              ) : !newMessage.trim() && !pendingAttachment && registrazioneDisponibile() ? (
+                <TastoMicrofono stato={vocaleRec.stato} spinta={vocaleRec.spinta} gestori={vocaleRec.gestori} />
+              ) : (
+                <Tessera
+                  icona={InvioIcon}
+                  etichetta="Invia"
+                  onClick={handleSendMessage}
+                  disabled={!newMessage.trim() && !pendingAttachment}
+                  spenta={!newMessage.trim() && !pendingAttachment}
                 />
-              </>
-            )}
-            {/* A destra, una tessera sola che cambia (15 novembre):
-                - c'è del testo o un allegato → INVIO;
-                - campo vuoto → il MICROFONO (tieni premuto: `Vocale.tsx`),
-                  come in WhatsApp e Telegram. Prima a campo vuoto c'era
-                  l'invio SPENTO: un bottone che non faceva niente;
-                - vocale bloccato → INVIO del vocale.
-                L'invio è una TESSERA (ui/Tessera): la coppia fondo+icona la
-                decide lei, niente `bg-` scritti a mano (§5). */}
-            {vocaleRec.stato === 'bloccato' ? (
-              <Tessera icona={InvioIcon} etichetta="Invia il vocale" onClick={vocaleRec.invia} />
-            ) : !newMessage.trim() && !pendingAttachment && registrazioneDisponibile() ? (
-              <TastoMicrofono stato={vocaleRec.stato} spinta={vocaleRec.spinta} gestori={vocaleRec.gestori} />
-            ) : (
-              <Tessera
-                icona={InvioIcon}
-                etichetta="Invia"
-                onClick={handleSendMessage}
-                disabled={!newMessage.trim() && !pendingAttachment}
-                spenta={!newMessage.trim() && !pendingAttachment}
-              />
-            )}
+              )}
+            </div>
           </div>
-        </div>
+        )}
         
         <CercaInChat
           aperta={cercaAperta}

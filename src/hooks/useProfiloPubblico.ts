@@ -18,6 +18,8 @@ export interface ProfiloPubblico {
   tipo_employer?: "attivita" | "privato" | null;
   piva_verificata?: boolean;
   identita_verificata?: boolean;
+  /** L'account è stato eliminato: resta la lapide (migration 20261121120000). */
+  eliminato_il?: string | null;
 }
 
 export interface LavoroConcluso {

@@ -3394,3 +3394,37 @@ fuori dall'app (social).
 - **Fuori dall'app**: il cartellino da pacco con lo spago sulle vetrine dei
   locali che cercano (QR all'annuncio), cartellini e post-it sulle bacheche
   dell'università, social con gli stessi componenti.
+
+---
+
+# 31. Elimina account e Termini d'uso — 21 novembre 2026
+
+**Termini d'uso**: bozza in un documento Claude (scritta in prima persona,
+per «voi» generico: Tommaso la manda a persone che conosce, NON «note per
+gli avvocati»). Dentro: le 13 questioni aperte e una prima ricerca
+sull'intermediazione (D.lgs. 276/2003: i siti a scopo di lucro che fanno
+«incontro tra domanda e offerta» servono l'autorizzazione; Politask oggi sta
+dal lato bacheca — le linee da non superare: niente ricerca dei lavoratori
+da parte delle attività, niente candidati suggeriti, niente compensi legati
+alla persona, niente annunci anonimi). Verifica identità dei privati:
+**Yoti** (app Yoti ID), non ancora collegata.
+
+**Elimina account** — decisione di Tommaso: chat e recensioni RESTANO,
+anonime, come su WhatsApp.
+- Migration `20261121120000_elimina_account.sql` (provata su PGlite, 28
+  casi, due giri): il profilo diventa una LAPIDE («Account eliminato»,
+  `profiles.eliminato_il`); per questo è stato tolto il vincolo
+  profiles → auth.users (cancellava tutto a cascata). `elimina_dati_account`
+  (solo service_role) cancella riservati, push, notifiche, preferenze,
+  chat_utente, candidature in attesa/rifiutate senza cartellino, annunci
+  senza candidature; chiude gli altri. Trigger: a una lapide non si scrive
+  (`account_eliminato`) e non nascono notifiche.
+- Edge function `elimina-account`: dati → foto di `profile-photos/<id>/`
+  (gli allegati della chat restano) → `auth.admin.deleteUser`.
+- App: Impostazioni (finestra che aspetta il server, errore se fallisce),
+  profilo pubblico «Account eliminato», in chat la riga al posto del campo.
+- ⚠️ Ordine: migration in Lovable, POI il push (la funzione la pubblica
+  Lovable dal repo). Da provare dal vero con un account di prova.
+- ⚠️ Non verificato: se `deleteUser` fallisce per file dello Storage
+  intestati all'utente (allegati della chat). Se succede, la funzione
+  risponde `utente` e lo scrive nel registro.

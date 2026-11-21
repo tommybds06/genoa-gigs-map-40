@@ -103,14 +103,18 @@ const PublicProfile = () => {
     );
   }
 
-  if (!profile) {
+  // Un account eliminato resta come lapide (chat e recensioni lo citano):
+  // il suo profilo non ha più niente da mostrare.
+  if (!profile || profile.eliminato_il) {
     return (
       <div className="flex flex-col min-h-screen bg-background">
         <Header showSearch={false} campanella={false} />
         <main className="flex-1 flex items-center justify-center px-4">
           <div className="text-center">
-            <h2 className="titolo-vuoto mb-2">Profilo non trovato</h2>
-            <p className="text-muted-foreground mb-4">L'utente richiesto non esiste.</p>
+            <h2 className="titolo-vuoto mb-2">{profile ? "Account eliminato" : "Profilo non trovato"}</h2>
+            <p className="text-muted-foreground mb-4">
+              {profile ? "Questa persona ha eliminato il suo account." : "L'utente richiesto non esiste."}
+            </p>
             <Button onClick={() => navigate(-1)}>
               <IndietroIcon className="w-4 h-4 mr-2" />
               Torna indietro

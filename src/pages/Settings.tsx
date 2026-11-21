@@ -22,6 +22,7 @@ import {
 import { toast } from "sonner";
 import { CartaCard } from "@/components/ui/CartaCard";
 import { Ventose } from "@/components/ui/Ventose";
+import { supabase } from "@/integrations/supabase/client";
 
 const Settings = () => {
   const navigate = useNavigate();
@@ -30,6 +31,7 @@ const Settings = () => {
 
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [eliminando, setEliminando] = useState(false);
 
   const handleBack = () => {
     navigate(-1);
@@ -46,12 +48,27 @@ const Settings = () => {
     }
   };
 
-  const handleDeleteAccount = () => {
-    // For now, show a toast indicating this needs server-side implementation
-    toast.info("Funzione da implementare lato server", {
-      description: "Contatta il supporto per eliminare il tuo account.",
-    });
-    setShowDeleteDialog(false);
+  /* ELIMINARE L'ACCOUNT (21 novembre). Lo fa l'edge function
+     `elimina-account`: svuota l'account e lascia un profilo anonimo
+     («Account eliminato»), così chat e recensioni restano alle altre persone
+     (decisione di Tommaso). Poi si esce: l'utente non esiste più, e
+     `signOut` toglie comunque la sessione dal telefono (lib/uscita.ts). */
+  const handleDeleteAccount = async () => {
+    setEliminando(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("elimina-account");
+      if (error || !data?.ok) throw error ?? new Error(data?.errore ?? "risposta inattesa");
+      setShowDeleteDialog(false);
+      await signOut();
+      navigate("/auth");
+      toast.success("Account eliminato");
+    } catch (e) {
+      console.error("[Politask] eliminazione dell'account non riuscita", e);
+      toast.error("Non sono riuscito a eliminare l'account", {
+        description: "Riprova tra poco. Se continua, scrivi all'assistenza.",
+      });
+      setEliminando(false);
+    }
   };
 
   const handleSupport = () => {
@@ -190,21 +207,29 @@ const Settings = () => {
       </main>
 
       {/* Delete Account Confirmation Dialog */}
-      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+      <AlertDialog open={showDeleteDialog} onOpenChange={(aperto) => !eliminando && setShowDeleteDialog(aperto)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Sei sicuro?</AlertDialogTitle>
+            <AlertDialogTitle>Eliminare l'account?</AlertDialogTitle>
             <AlertDialogDescription>
-              Questa azione è irreversibile. Tutti i tuoi dati, annunci e messaggi verranno eliminati permanentemente.
+              Profilo, foto e annunci vengono cancellati e non potrai più entrare. Le chat e le
+              recensioni restano alle altre persone, con il nome «Account eliminato». Non si può
+              annullare.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Annulla</AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={handleDeleteAccount}
+            <AlertDialogCancel disabled={eliminando}>Annulla</AlertDialogCancel>
+            {/* `preventDefault`: l'azione di Radix chiuderebbe la finestra
+                subito, prima che il server risponda. */}
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                handleDeleteAccount();
+              }}
+              disabled={eliminando}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Elimina account
+              {eliminando ? <Ventose className="h-4" etichetta="Eliminazione in corso" /> : "Elimina account"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
