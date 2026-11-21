@@ -106,6 +106,13 @@
       "when": 1794703945695,
       "tag": "0014_una_chat_per_coppia",
       "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1795259151012,
+      "tag": "0015_elimina_account",
+      "breakpoints": true
     }
   ]
 }

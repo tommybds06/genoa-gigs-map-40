@@ -650,6 +650,7 @@ export type Database = {
           avatar_url: string | null
           bio: string | null
           created_at: string
+          eliminato_il: string | null
           experience: string | null
           full_name: string | null
           id: string
@@ -679,6 +680,7 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
+          eliminato_il?: string | null
           experience?: string | null
           full_name?: string | null
           id: string
@@ -708,6 +710,7 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
+          eliminato_il?: string | null
           experience?: string | null
           full_name?: string | null
           id?: string
@@ -992,6 +995,7 @@ export type Database = {
         Args: { lat1: number; lat2: number; lng1: number; lng2: number }
         Returns: number
       }
+      elimina_dati_account: { Args: { p_utente: string }; Returns: undefined }
       get_user_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["user_role"]
