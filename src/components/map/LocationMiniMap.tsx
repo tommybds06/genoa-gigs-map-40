@@ -4,6 +4,7 @@ import { MappaIcon } from "@/components/icons/uiIcons";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { useMapboxToken } from "@/hooks/useMapboxToken";
+import { useStileMappa } from "@/hooks/useStileMappa";
 import { useUser } from "@/contexts/UserContext";
 import { cerchioGeo, coloreToken } from "@/lib/area";
 
@@ -27,18 +28,19 @@ export function LocationMiniMap({ lat, lng, neighborhood, address, tags, raggio 
   const map = useRef<mapboxgl.Map | null>(null);
   /* Stessa cache di InteractiveMap: la minimappa non rifà il giro di rete. */
   const mapboxToken = useMapboxToken();
-  const isLoading = mapboxToken === null;
+  const stileMappa = useStileMappa(mapboxToken);
+  const isLoading = mapboxToken === null || stileMappa === null;
   const { isEmployer } = useUser();
 
   // Initialize map
   useEffect(() => {
-    if (!mapContainer.current || !mapboxToken || !lat || !lng) return;
+    if (!mapContainer.current || !mapboxToken || !stileMappa || !lat || !lng) return;
 
     mapboxgl.accessToken = mapboxToken;
 
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: "mapbox://styles/mapbox/streets-v12",
+      style: stileMappa as mapboxgl.StyleSpecification | string,
       center: [lng, lat],
       zoom: 14,
       interactive: false, // Static map - no interactions
@@ -109,7 +111,7 @@ export function LocationMiniMap({ lat, lng, neighborhood, address, tags, raggio 
     return () => {
       map.current?.remove();
     };
-  }, [mapboxToken, lat, lng, tagsKey, isEmployer, raggio]);
+  }, [mapboxToken, stileMappa, lat, lng, tagsKey, isEmployer, raggio]);
 
   if (isLoading) {
     return (

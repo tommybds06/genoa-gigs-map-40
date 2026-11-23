@@ -4,6 +4,8 @@ import { toast } from "sonner";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { GEOFENCING_ERROR_MESSAGE, GENOVA_CENTER, isWithinGenovaBounds } from "@/constants/geofencing";
 import { useMapboxToken } from "@/hooks/useMapboxToken";
+import { STILE_MAPPA_URL, useStileMappa } from "@/hooks/useStileMappa";
+import type { StyleSpecification } from "mapbox-gl";
 import { cerchioGeo, coloreToken } from "@/lib/area";
 import { RAGGIO_AREA } from "@/lib/registrazione";
 import { PostIt } from "@/components/ui/PostIt";
@@ -34,6 +36,7 @@ export function AreaPicker({
   onChange: (lat: number, lng: number) => void;
 }) {
   const token = useMapboxToken();
+  const stileMappa = useStileMappa(token);
   const mappa = useRef<MapRef>(null);
   const trascino = useRef(false);
   // Mentre il dito si muove il cerchio lo segue da qui; al rilascio si salva.
@@ -74,7 +77,7 @@ export function AreaPicker({
     setProvvisorio(null);
   };
 
-  if (token === null) {
+  if (token === null || stileMappa === null) {
     return (
       <div className="flex h-[240px] w-full items-center justify-center rounded-xl bg-muted">
         <Ventose className="h-6 w-6 text-employer-800" />
@@ -102,7 +105,7 @@ export function AreaPicker({
           ref={mappa}
           initialViewState={{ latitude: centro.lat, longitude: centro.lng, zoom: 14 }}
           style={{ width: "100%", height: "100%" }}
-          mapStyle="mapbox://styles/mapbox/streets-v12"
+          mapStyle={(stileMappa ?? STILE_MAPPA_URL) as string | StyleSpecification}
           mapboxAccessToken={token || undefined}
           interactiveLayerIds={[LIVELLO]}
           onMouseDown={inizio}

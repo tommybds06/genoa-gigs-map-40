@@ -1,4 +1,6 @@
 import { PinMappa } from "@/components/map/PinMappa";
+import { useStileMappa } from "@/hooks/useStileMappa";
+import type { StyleSpecification } from "mapbox-gl";
 import { useState, useEffect, useCallback } from "react";
 import Map, { Marker } from "react-map-gl";
 import { AlertTriangle } from "lucide-react";
@@ -17,6 +19,7 @@ interface LocationPickerProps {
 
 export function LocationPicker({ lat, lng, onLocationChange }: LocationPickerProps) {
   const [mapboxToken, setMapboxToken] = useState<string | null>(null);
+  const stileMappa = useStileMappa(mapboxToken);
   const [isOutOfBounds, setIsOutOfBounds] = useState(false);
   const [viewState, setViewState] = useState({
     longitude: lng || GENOVA_CENTER.lng,
@@ -70,7 +73,7 @@ export function LocationPicker({ lat, lng, onLocationChange }: LocationPickerPro
     handleLocationUpdate(event.lngLat.lat, event.lngLat.lng);
   }, [handleLocationUpdate]);
 
-  if (mapboxToken === null) {
+  if (mapboxToken === null || stileMappa === null) {
     return (
       <div className="w-full h-[200px] bg-muted rounded-xl flex items-center justify-center">
         <div className="text-center">
@@ -112,7 +115,7 @@ export function LocationPicker({ lat, lng, onLocationChange }: LocationPickerPro
           onMove={(evt) => setViewState(evt.viewState)}
           onClick={handleMapClick}
           style={{ width: "100%", height: "100%" }}
-          mapStyle="mapbox://styles/mapbox/streets-v12"
+          mapStyle={stileMappa as string | StyleSpecification}
           mapboxAccessToken={mapboxToken}
           reuseMaps
         >

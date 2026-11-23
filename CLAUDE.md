@@ -870,6 +870,24 @@ di react-map-gl non lo dichiarano e il typecheck fallisce (successo due volte).
 - **Il font della mappa lo disegna Mapbox**, non il browser: per usare Shinjo
   bisogna caricarlo su Mapbox Studio, cioè su server di terzi. **Bloccato dalla
   licenza** — vedi §13.
+- ✅ **Le scritte della mappa sono in OUTFIT** (23 novembre; licenza OFL,
+  caricarlo è permesso). Tommaso l'ha caricato nell'account Mapbox
+  `tommybds` (lo stesso del token: i caratteri valgono solo per l'account
+  che li ha) in Regular, Medium, SemiBold, dai file `static/`, non il
+  variabile. Si tiene `streets-v12`: `hooks/useStileMappa` lo scarica come
+  JSON una volta per sessione e `lib/stileMappa.ts` (`conOutfit`, con i
+  test) cambia `glyphs` → `mapbox://fonts/tommybds/…` e DIN Pro → Outfit
+  dello stesso peso (Italic → Regular, Bold → SemiBold; Arial Unicode resta
+  di riserva). ⚠️ I NOMI DELLE VIE (`road-label`) in **Outfit Light**
+  (caricato apposta): sono in nero pieno, e in Regular leggevano più scuri
+  di prima (Tommaso: «danno leggermente fastidio»). Provato prima a
+  schiarire il colore: al 30% di grigio non si distingueva dal nero, lo
+  scuro lo fa lo spessore del tratto. Tutte e quattro le mappe aspettano lo stile come il token; se
+  lo stile non arriva in 5 s, ripiegano sull'indirizzo normale (DIN Pro), mai
+  una mappa vuota. Misurato a 390 px ×2,625 sugli stessi punti: caruggi 50 →
+  49 scritte, centro 26 → 25, città 30 → 30 (Outfit è largo quasi come DIN).
+  ⚠️ Se si cambia account Mapbox, i caratteri vanno ricaricati lì e
+  `ACCOUNT_CARATTERI` aggiornato.
 - **Niente nuvoletta sull'annuncio.** Il `Popup` di Mapbox è stato tolto: il pin
   apre direttamente la scheda, che si ferma bassa. Vedi §15.
 - Marker con prezzo (stile Airbnb): **proposto e bocciato**, giustamente. Il
@@ -3424,7 +3442,9 @@ anonime, come su WhatsApp.
 - App: Impostazioni (finestra che aspetta il server, errore se fallisce),
   profilo pubblico «Account eliminato», in chat la riga al posto del campo.
 - ⚠️ Ordine: migration in Lovable, POI il push (la funzione la pubblica
-  Lovable dal repo). Da provare dal vero con un account di prova.
+  Lovable dal repo, ma va chiesto: dopo il push restava 404 finché Tommaso
+  non gliel'ha detto). ✅ Provata dal vero il 21 novembre con un account
+  di prova: funziona.
 - ⚠️ Non verificato: se `deleteUser` fallisce per file dello Storage
   intestati all'utente (allegati della chat). Se succede, la funzione
   risponde `utente` e lo scrive nel registro.

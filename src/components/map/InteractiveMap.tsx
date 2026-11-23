@@ -14,6 +14,8 @@ import { creaIndiceZone, elementiMappa, separaSovrapposti, DURATA_PIN, type Elem
 import { EmployerJobsDrawer } from "./EmployerJobsDrawer";
 import { UserLocationMarker } from "./UserLocationMarker";
 import { useMapboxToken } from "@/hooks/useMapboxToken";
+import { useStileMappa } from "@/hooks/useStileMappa";
+import type { StyleSpecification } from "mapbox-gl";
 import { useUser } from "@/contexts/UserContext";
 import { getJobIconFromTags } from "@/lib/jobIcons";
 import { groupJobsByEmployer, EmployerGroup } from "@/lib/groupJobsByEmployer";
@@ -130,6 +132,9 @@ function InteractiveMapInner({
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   /* Il token arriva dalla cache condivisa: vedi hooks/useMapboxToken.ts. */
   const mapboxToken = useMapboxToken();
+  /* Lo stile con Outfit (hooks/useStileMappa.ts): la mappa lo aspetta come
+     aspetta il token. */
+  const stileMappa = useStileMappa(mapboxToken);
   const [lastSelectedJob, setLastSelectedJob] = useState<Job | null>(null);
   
   // Employer group drawer state
@@ -439,7 +444,7 @@ function InteractiveMapInner({
   const loadingBgClass = isEmployer ? "bg-employer/20" : "bg-primary/20";
   const loadingIconClass = isEmployer ? "text-employer" : "text-primary";
 
-  if (mapboxToken === null) {
+  if (mapboxToken === null || stileMappa === null) {
     return (
       <div className="relative w-full h-full bg-muted overflow-hidden rounded-3xl flex items-center justify-center">
         <div className="text-center p-6">
@@ -462,7 +467,7 @@ function InteractiveMapInner({
         ref={mappaRef}
         initialViewState={vistaIniziale}
         style={{ width: "100%", height: "100%" }}
-        mapStyle="mapbox://styles/mapbox/streets-v12"
+        mapStyle={stileMappa as string | StyleSpecification}
         mapboxAccessToken={mapboxToken}
         reuseMaps
         // Fine di ogni movimento (trascinamento, pizzico, easeTo del GPS):
